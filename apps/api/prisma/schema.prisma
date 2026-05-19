@@ -6,12 +6,92 @@ datasource db {
   provider = "postgresql"
 }
 
+// ─── Enums ──────────────────────────────────────────
+
+enum UserRole {
+  USER      @map("user")
+  MENTOR    @map("mentor")
+  MODERATOR @map("moderator")
+  ADMIN     @map("admin")
+
+  @@map("user_role")
+}
+
+enum AuthProvider {
+  EMAIL  @map("email")
+  GOOGLE @map("google")
+
+  @@map("auth_provider")
+}
+
+enum VerificationType {
+  EMAIL_VERIFICATION @map("email_verification")
+  PASSWORD_RESET     @map("password_reset")
+
+  @@map("verification_type")
+}
+
+// ─── Models ─────────────────────────────────────────
+
 model User {
-  id        String   @id @default(uuid()) @db.Uuid
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id                    String    @id @default(uuid()) @db.Uuid
+  email                 String    @unique
+  name                  String?
+  emailVerifiedAt       DateTime? @map("email_verified_at")
+  onboardingCompletedAt DateTime? @map("onboarding_completed_at")
+  role                  UserRole  @default(USER)
+  deletedAt             DateTime? @map("deleted_at")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  authAccounts       AuthAccount[]
+  sessions           Session[]
+  verificationTokens VerificationToken[]
 
   @@map("users")
+}
+
+model AuthAccount {
+  id                String       @id @default(uuid()) @db.Uuid
+  userId            String       @map("user_id") @db.Uuid
+  provider          AuthProvider
+  providerAccountId String       @map("provider_account_id")
+  passwordHash      String?      @map("password_hash")
+  createdAt         DateTime     @default(now()) @map("created_at")
+  updatedAt         DateTime     @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([provider, providerAccountId])
+  @@map("auth_accounts")
+}
+
+model Session {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  token        String   @unique
+  expiresAt    DateTime @map("expires_at")
+  lastActiveAt DateTime @default(now()) @map("last_active_at")
+  ipAddress    String?  @map("ip_address")
+  userAgent    String?  @map("user_agent")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model VerificationToken {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
+  token     String           @unique
+  type      VerificationType
+  expiresAt DateTime         @map("expires_at")
+  usedAt    DateTime?        @map("used_at")
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("verification_tokens")
 }
