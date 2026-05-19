@@ -52,9 +52,13 @@ veervrat-app/
 └── .claude/                    # skills and commands
 ```
 
-## Architecture decision docs — READ THESE
-These define how code should be written. Follow them strictly.
+## Documentation — READ THESE
 
+### Start here
+- `documentation/System Decisions & Status.md` — **master list** of all tech decisions, their status, and what's pending. Read this first to understand where the project stands.
+- `documentation/Local Development Setup.md` — how to set up and run the local dev environment
+
+### Convention docs (how code should be written)
 - `documentation/Auth Architecture Decision - v1.md` — auth ownership, session model, identity, OAuth, account linking, CSRF
 - `documentation/Backend Conventions - v1.md` — layering (Controller → Service → Repository → Prisma), module structure, naming, validation, error handling, pagination, DB conventions, transactions, logging
 - `documentation/API Conventions - v1.md` — REST routes, HTTP methods, response/error shapes, filtering, sorting, idempotency, rate limiting
