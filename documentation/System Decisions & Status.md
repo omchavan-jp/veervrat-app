@@ -12,7 +12,7 @@ This is the master reference for all technology and architecture decisions. Read
 | ORM | Prisma | Scaffolded |
 | Search | Meilisearch | Decided, not set up |
 | File storage | S3-compatible (provider TBD) | Decided, not set up |
-| Auth | Custom in NestJS (cookie sessions, OAuth + credentials) | Decided, not built |
+| Auth | Custom in NestJS (cookie sessions, OAuth + credentials) | Built (backend) — see `openspec/specs/auth/spec.md` |
 | Email | Resend (prod) + console logging (dev) | Decided, not built |
 | Monorepo | pnpm workspaces + Turborepo | Scaffolded |
 | UI | Tailwind CSS + shadcn/ui | Scaffolded |
