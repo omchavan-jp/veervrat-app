@@ -43,6 +43,7 @@ User (1) ──→ (many) VerificationToken  # email verify + password reset
 | `/auth/reset-password` | POST | No | Change password via token |
 | `/auth/google` | GET | No | Redirect to Google OAuth |
 | `/auth/google/callback` | GET | No | Handle Google callback, redirect to frontend |
+| `/auth/complete-onboarding` | POST | Yes | Set onboardingCompletedAt, optionally update name |
 | `/auth/me` | GET | Yes | Return current user |
 
 All under `/api/v1/` prefix.
@@ -86,6 +87,36 @@ src/modules/auth/
 ```
 
 Follows Controller → Service → Repository → Prisma layering. Prisma only in repository.
+
+## Frontend Pages
+
+All pages use React Hook Form + Zod v4 for validation, TanStack Query for server state, and shadcn/ui (base-nova) for components.
+
+### Route Groups
+
+| Group | Guard | Behavior |
+|---|---|---|
+| `(public)` | Redirect to `/dashboard` if authenticated | Centered card layout |
+| `(app)` | Redirect to `/login` if unauthenticated; redirect to `/onboarding` if `onboardingCompletedAt === null` | Header + main content |
+
+### Pages
+
+| Route | Group | Purpose |
+|---|---|---|
+| `/login` | public | Email/password login, Google OAuth button, handles `?error=OAUTH_ACCOUNT_CONFLICT` |
+| `/register` | public | Registration form (name optional), shows "check email" on success |
+| `/forgot-password` | public | Email input, always shows "check email" on success |
+| `/reset-password?token=` | public | New password + confirm, reads token from URL |
+| `/verify-email?token=` | public | Auto-verifies on mount, shows result |
+| `/dashboard` | app | Placeholder with user info |
+| `/onboarding` | app | Name input (pre-filled from OAuth), calls complete-onboarding |
+
+### Infrastructure
+
+- `lib/api/auth.ts` — typed API functions with `{ data }` envelope unwrapping
+- `lib/validations/auth.ts` — Zod v4 schemas for all forms
+- `hooks/use-auth.ts` — `useAuth`, `useLogin`, `useRegister`, `useLogout`, `useVerifyEmail`, `useForgotPassword`, `useResetPassword`, `useCompleteOnboarding`
+- `components/layout/header.tsx` — app header with logout button
 
 ## Not Yet Implemented
 

@@ -144,6 +144,16 @@ export class AuthRepository {
     });
   }
 
+  async markOnboardingComplete(userId: string, name?: string) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        onboardingCompletedAt: new Date(),
+        ...(name ? { name } : {}),
+      },
+    });
+  }
+
   async invalidateTokensByUserAndType(userId: string, type: VerificationType) {
     return this.prisma.verificationToken.updateMany({
       where: { userId, type, usedAt: null },

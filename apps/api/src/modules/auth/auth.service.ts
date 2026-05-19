@@ -246,6 +246,11 @@ export class AuthService {
     return this.toSessionUser(session.user);
   }
 
+  async completeOnboarding(userId: string, name?: string): Promise<SessionUser> {
+    const user = await this.authRepository.markOnboardingComplete(userId, name);
+    return this.toSessionUser(user);
+  }
+
   async getCurrentUser(userId: string): Promise<SessionUser> {
     const user = await this.authRepository.findUserById(userId);
     if (!user) {
