@@ -3,14 +3,15 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AuthShell } from '@/components/auth/auth-shell';
+import { GoogleIcon } from '@/components/auth/google-icon';
 import { useRegister } from '@/hooks/use-auth';
 import { registerSchema, type RegisterInput } from '@/lib/validations/auth';
 import { ApiError } from '@/lib/api/client';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
 export default function RegisterPage() {
   const registerMutation = useRegister();
@@ -34,77 +35,125 @@ export default function RegisterPage() {
 
   if (registerMutation.isSuccess) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Check your email</CardTitle>
-          <CardDescription>
-            We sent a verification link to your email address. Please click the link
-            to verify your account before signing in.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Link href="/login" className="text-sm text-muted-foreground hover:underline">
-            Back to sign in
-          </Link>
-        </CardContent>
-      </Card>
+      <AuthShell
+        hero={{
+          eyebrow: 'Begin',
+          heading: 'A practice of becoming, one weakness at a time.',
+          devanagari: 'वीरव्रत — स्वतःशी प्रामाणिक राहण्याचा संकल्प.',
+          gloss: 'Veervrat — the vow to be honest with oneself. Identify what holds you back. Work on it daily. Track the shift.',
+        }}
+      >
+        <h2 className="mb-2 font-display text-[32px] tracking-tight">
+          Check your email
+        </h2>
+        <p className="mb-8 text-[15px] text-muted">
+          We sent a verification link to your email. Click the link to activate
+          your account.
+        </p>
+        <Link
+          href="/login"
+          className="inline-flex h-auto w-full items-center justify-center rounded-xl bg-accent px-6 py-3.5 text-[15px] font-medium text-bg hover:bg-accent-hover"
+        >
+          Back to login
+        </Link>
+      </AuthShell>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Create an account</CardTitle>
-        <CardDescription>Enter your details to get started</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {apiError && (
-          <Alert variant="destructive">
-            <AlertDescription>{apiError}</AlertDescription>
-          </Alert>
-        )}
+    <AuthShell
+      hero={{
+        eyebrow: 'Begin',
+        heading: 'A practice of becoming, one weakness at a time.',
+        devanagari: 'वीरव्रत — स्वतःशी प्रामाणिक राहण्याचा संकल्प.',
+        gloss: 'Veervrat — the vow to be honest with oneself. Identify what holds you back. Work on it daily. Track the shift.',
+      }}
+    >
+      <h2 className="mb-2 font-display text-[32px] tracking-tight">
+        Create your account
+      </h2>
+      <p className="mb-8 text-[15px] text-muted">
+        Takes about a minute. You&rsquo;ll set up your profile after.
+      </p>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Name (optional)</Label>
-            <Input id="name" type="text" placeholder="Your name" {...register('name')} />
-            {errors.name && (
-              <p className="text-sm text-destructive">{errors.name.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              {...register('email')}
-            />
-            {errors.email && (
-              <p className="text-sm text-destructive">{errors.email.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" {...register('password')} />
-            {errors.password && (
-              <p className="text-sm text-destructive">{errors.password.message}</p>
-            )}
-          </div>
-
-          <Button type="submit" className="w-full" disabled={registerMutation.isPending}>
-            {registerMutation.isPending ? 'Creating account...' : 'Create account'}
-          </Button>
-        </form>
-
-        <div className="text-center text-sm">
-          <Link href="/login" className="text-muted-foreground hover:underline">
-            Already have an account? Sign in
-          </Link>
+      {apiError && (
+        <div className="mb-4 rounded-xl border border-[rgba(192,81,47,0.2)] bg-[rgba(192,81,47,0.08)] px-4 py-3 text-sm text-accent">
+          {apiError}
         </div>
-      </CardContent>
-    </Card>
+      )}
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <div>
+          <label className="mb-2 block font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
+            Email
+          </label>
+          <Input
+            type="email"
+            placeholder="you@example.com"
+            className="rounded-none border-0 border-b border-border-strong bg-transparent px-0 py-3 text-base focus-visible:border-accent focus-visible:ring-0"
+            {...register('email')}
+          />
+          {errors.email && (
+            <p className="mt-1.5 text-xs text-accent">{errors.email.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="mb-2 block font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
+            Password
+          </label>
+          <Input
+            type="password"
+            placeholder="••••••••"
+            className="rounded-none border-0 border-b border-border-strong bg-transparent px-0 py-3 text-base focus-visible:border-accent focus-visible:ring-0"
+            {...register('password')}
+          />
+          <p className="mt-1.5 text-xs text-muted">
+            At least 8 characters. Use a phrase you&rsquo;ll remember.
+          </p>
+          {errors.password && (
+            <p className="mt-1 text-xs text-accent">
+              {errors.password.message}
+            </p>
+          )}
+        </div>
+
+        <Button
+          type="submit"
+          disabled={registerMutation.isPending}
+          className="h-auto w-full rounded-xl bg-accent px-6 py-3.5 text-[15px] text-bg hover:bg-accent-hover"
+        >
+          {registerMutation.isPending ? 'Creating account...' : 'Create account'}
+        </Button>
+      </form>
+
+      <div className="my-5 flex items-center gap-3">
+        <span className="h-px flex-1 bg-border" />
+        <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">
+          or
+        </span>
+        <span className="h-px flex-1 bg-border" />
+      </div>
+
+      <Button
+        variant="outline"
+        className="h-auto w-full rounded-xl border-border-strong bg-surface px-6 py-3.5 text-[15px] text-fg hover:bg-bg"
+        nativeButton={false}
+        render={<a href={`${API_URL}/auth/google`} />}
+      >
+        <GoogleIcon className="h-[18px] w-[18px]" />
+        Continue with Google
+      </Button>
+
+      <p className="mt-6 text-center text-sm text-muted">
+        Already a member?{' '}
+        <Link
+          href="/login"
+          className="text-accent underline decoration-accent/40 hover:no-underline"
+        >
+          Log in
+        </Link>
+      </p>
+    </AuthShell>
   );
 }

@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Logo } from '@/components/auth/logo';
 import { useLogout } from '@/hooks/use-auth';
 import type { User } from '@/lib/api/auth';
 
@@ -10,22 +10,22 @@ export function Header({ user }: { user: User }) {
   const logout = useLogout();
 
   return (
-    <header className="border-b">
-      <div className="container mx-auto flex h-14 items-center justify-between px-4">
-        <Link href="/dashboard" className="text-lg font-semibold">
-          Veervrat
+    <header className="border-b border-border">
+      <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4">
+        <Link href="/dashboard">
+          <Logo />
         </Link>
         <div className="flex items-center gap-4">
-          <span className="text-sm text-muted-foreground">
+          <span className="text-sm text-muted">
             {user.name ?? user.email}
           </span>
           <Button
-            variant="ghost"
-            size="icon"
+            variant="outline"
+            className="h-auto rounded-lg border-border-strong px-3 py-1.5 text-xs"
             onClick={() => logout.mutate()}
             disabled={logout.isPending}
           >
-            <LogOut className="h-4 w-4" />
+            {logout.isPending ? 'Logging out...' : 'Log out'}
           </Button>
         </div>
       </div>

@@ -3,14 +3,14 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AuthShell } from '@/components/auth/auth-shell';
 import { useForgotPassword } from '@/hooks/use-auth';
-import { forgotPasswordSchema, type ForgotPasswordInput } from '@/lib/validations/auth';
-import { ApiError } from '@/lib/api/client';
+import {
+  forgotPasswordSchema,
+  type ForgotPasswordInput,
+} from '@/lib/validations/auth';
 
 export default function ForgotPasswordPage() {
   const forgotPassword = useForgotPassword();
@@ -27,70 +27,84 @@ export default function ForgotPasswordPage() {
     forgotPassword.mutate(data.email);
   };
 
-  const apiError =
-    forgotPassword.error instanceof ApiError
-      ? forgotPassword.error.message
-      : forgotPassword.error?.message;
-
   if (forgotPassword.isSuccess) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Check your email</CardTitle>
-          <CardDescription>
-            If an account with that email exists, we sent a password reset link.
-            Please check your inbox.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Link href="/login" className="text-sm text-muted-foreground hover:underline">
-            Back to sign in
-          </Link>
-        </CardContent>
-      </Card>
+      <AuthShell
+        hero={{
+          eyebrow: 'Recover',
+          heading: 'Forgot how to come back in?',
+          devanagari: 'हरकत नाही. नवीन सुरुवात नेहमीच शक्य आहे.',
+          gloss: 'No matter. A fresh start is always possible.',
+        }}
+      >
+        <h2 className="mb-2 font-display text-[32px] tracking-tight">
+          Check your email
+        </h2>
+        <p className="mb-8 text-[15px] text-muted">
+          If an account exists for that email, we sent a reset link. The link
+          expires in 30 minutes.
+        </p>
+        <Link
+          href="/login"
+          className="inline-flex h-auto w-full items-center justify-center rounded-xl bg-accent px-6 py-3.5 text-[15px] font-medium text-bg hover:bg-accent-hover"
+        >
+          Back to login
+        </Link>
+      </AuthShell>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Reset your password</CardTitle>
-        <CardDescription>
-          Enter your email and we'll send you a reset link
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {apiError && (
-          <Alert variant="destructive">
-            <AlertDescription>{apiError}</AlertDescription>
-          </Alert>
-        )}
+    <AuthShell
+      hero={{
+        eyebrow: 'Recover',
+        heading: 'Forgot how to come back in?',
+        devanagari: 'हरकत नाही. नवीन सुरुवात नेहमीच शक्य आहे.',
+        gloss: 'No matter. A fresh start is always possible.',
+      }}
+    >
+      <h2 className="mb-2 font-display text-[32px] tracking-tight">
+        Reset your password
+      </h2>
+      <p className="mb-8 text-[15px] text-muted">
+        We&rsquo;ll email a link to the address on file. The link expires in 30
+        minutes.
+      </p>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              {...register('email')}
-            />
-            {errors.email && (
-              <p className="text-sm text-destructive">{errors.email.message}</p>
-            )}
-          </div>
-
-          <Button type="submit" className="w-full" disabled={forgotPassword.isPending}>
-            {forgotPassword.isPending ? 'Sending...' : 'Send reset link'}
-          </Button>
-        </form>
-
-        <div className="text-center text-sm">
-          <Link href="/login" className="text-muted-foreground hover:underline">
-            Back to sign in
-          </Link>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <div>
+          <label className="mb-2 block font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
+            Account email
+          </label>
+          <Input
+            type="email"
+            placeholder="you@example.com"
+            className="rounded-none border-0 border-b border-border-strong bg-transparent px-0 py-3 text-base focus-visible:border-accent focus-visible:ring-0"
+            {...register('email')}
+          />
+          {errors.email && (
+            <p className="mt-1.5 text-xs text-accent">{errors.email.message}</p>
+          )}
         </div>
-      </CardContent>
-    </Card>
+
+        <Button
+          type="submit"
+          disabled={forgotPassword.isPending}
+          className="h-auto w-full rounded-xl bg-accent px-6 py-3.5 text-[15px] text-bg hover:bg-accent-hover"
+        >
+          {forgotPassword.isPending ? 'Sending...' : 'Send reset link'}
+        </Button>
+      </form>
+
+      <p className="mt-8 text-center text-sm text-muted">
+        Remembered it?{' '}
+        <Link
+          href="/login"
+          className="text-accent underline decoration-accent/40 hover:no-underline"
+        >
+          Back to login
+        </Link>
+      </p>
+    </AuthShell>
   );
 }
