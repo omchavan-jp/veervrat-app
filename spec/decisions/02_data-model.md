@@ -8,11 +8,12 @@ _Last updated: 2026-05-31 | Round: R2_
 - **ERC pool:** exposures, resolutions, and challenges exist in a central pool, each anchored to a sentence. Each entity in the pool carries one or more weakness tags (exposure_weakness, resolution_weakness, challenge_weakness join tables).
 - **Journey ERC:** items in a journey are drawn from the central pool OR created fresh (by vratmitra or vratarthi) for that specific journey. Both sources can coexist in the same journey.
 - **Weakness tagging per ERC entity:** each individual exposure, resolution, and challenge carries its own weakness tag(s) — not just at the sentence level.
+- **Challenges per journey:** deferred — cardinality (one vs. many) not yet confirmed.
+- **Test result storage:** all attempts are stored (full history retained). Only the latest result per weakness per user is used for sentence suggestions. History is available for stats/trends.
+- **Journey title:** journeys have a user-editable title. Default is the sentence text or an auto-generated name (shown to user for approval). User can override at any time.
 
 ## Open Questions (area-specific)
-- One challenge per journey or many? — ⚠ see flag below — flagged R2
-- Is a test result stored per attempt (full history) or only latest retained? — flagged R2
-- Does a journey have a user-given title/name, or is it identified purely by its sentence? — flagged R2
+- One challenge per journey or many? — flagged R2 — deferred
 
 ## Flags
-- ⚠ Original description said "vratmitra proposes one *or many* challenges." Current DB schema supports one challenge per sentence in the central pool, but nothing prevents multiple per journey. One vs. many per journey must be confirmed before lifecycle is designed.
+- ⚠ Original description said "vratmitra proposes one *or many* challenges." Central pool has one per sentence. Journey-level cardinality must be confirmed before lifecycle is designed — deferred.

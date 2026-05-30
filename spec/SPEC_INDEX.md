@@ -14,15 +14,14 @@ _Last updated: 2026-05-31_
 | Out of Scope | ⬜ Not Started | — | — |
 
 ## Open Questions (consolidated)
-- What specific permissions does the moderator role hold vs. admin? — from User Roles — flagged R1
-- Can a vratarthi operate with no global vratmitra (journey-scoped only)? — from User Roles — flagged R1
-- Vratmitra credibility/verification mechanism design — from User Roles — flagged R1
-- Is a test result stored per attempt (history retained) or only latest? — from Data Model — flagged R2
-- Does a journey have a user-given title/name, or is it identified purely by its sentence? — from Data Model — flagged R2
-- One challenge per journey or many? — from Data Model — flagged R2
+- Moderator permissions vs. admin — User Roles — R1
+- Can vratarthi have zero global VM? — User Roles — R1
+- One challenge per journey or many? — Data Model — R2 — deferred
 
 ## Deferred Items
-- Vratmitra verification/credibility mechanism — context: user wants no visible hierarchy; deferred to near-future design — must resolve before v1 ships
+- Vratmitra verification/credibility mechanism — must resolve before v1 ships — R1
+- Challenge cardinality per journey — must resolve before lifecycle design — R2
 
 ## ⚠ Active Flags
-- "No hierarchy display" + "verification mechanism" need reconciling — User Roles — unresolved
+- "No hierarchy display" vs. "credibility mechanism" — User Roles — unresolved
+- One vs. many challenges per journey — Data Model — unresolved
