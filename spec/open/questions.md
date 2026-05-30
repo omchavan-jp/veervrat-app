@@ -1,0 +1,11 @@
+# Open Questions
+_Last updated: 2026-05-31_
+
+## User Roles
+- [ ] What specific permissions does the moderator role hold vs. admin? — R1
+- [ ] Can a vratarthi have no global VM and operate purely with journey-scoped VMs? — R1
+
+## Data Model
+- [ ] One challenge per journey or many? — R2
+- [ ] Test result storage: full history retained, or only latest per weakness per user? — R2
+- [ ] Does a journey have a user-given title/name, or identified purely by its sentence? — R2
