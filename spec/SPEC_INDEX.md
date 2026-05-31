@@ -19,6 +19,7 @@ _Last updated: 2026-05-31_
 | Edge Cases | 🔄 In Progress | R1 | decisions/06_edge-cases.md |
 | Integrations & Constraints | ✅ Confirmed | R2 | decisions/07_integrations.md |
 | Out of Scope | ✅ Confirmed | R1 | decisions/08_out-of-scope.md |
+| Guest Access | ✅ Confirmed | R1 | decisions/09_guest-access.md |
 
 ## Open Questions (consolidated)
 - Moderator permissions vs. admin — User Roles — R1
