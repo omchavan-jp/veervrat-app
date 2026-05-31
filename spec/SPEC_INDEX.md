@@ -17,8 +17,8 @@ _Last updated: 2026-05-31_
 | Lifecycle States | 🔄 In Progress | R2 | decisions/04_lifecycle.md |
 | Permissions | 🔄 In Progress | R4 | decisions/05_permissions.md |
 | Edge Cases | 🔄 In Progress | R1 | decisions/06_edge-cases.md |
-| Integrations & Constraints | 🔄 In Progress | R1 | decisions/07_integrations.md |
-| Out of Scope | ⬜ Not Started | — | — |
+| Integrations & Constraints | ✅ Confirmed | R2 | decisions/07_integrations.md |
+| Out of Scope | ✅ Confirmed | R1 | decisions/08_out-of-scope.md |
 
 ## Open Questions (consolidated)
 - Moderator permissions vs. admin — User Roles — R1

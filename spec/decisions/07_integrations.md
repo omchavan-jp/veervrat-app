@@ -23,9 +23,20 @@ _Last updated: 2026-05-31 | Round: R1_
 ### Notification Delivery
 - **v1:** in-app (bell icon, unread count) + email. Both channels for: VM invitation, new ERC available, custom ERC approved/rejected, journey state changes.
 
+### Storage & CDN
+- **Object storage:** MinIO — open-source, self-hostable, S3-compatible API. Used for chat image uploads and any file attachments. Migration path to AWS S3 or Cloudflare R2 is a single config change.
+- **CDN:** Cloudflare — doubles as CDN, DDoS protection, and proxy. Assets served from Cloudflare edge. No additional CDN service needed.
+- **Link preview rendering:** server-side in NestJS — fetch Open Graph metadata on link paste, return thumbnail/title/description to client. No third-party service.
+- **Chat limits (TBD):** file size limits, allowed file types, and retention policy for media in chat — to be decided.
+
+### Internationalisation (i18n)
+- UI is multilingual: English and Marathi (Devanagari) in v1. Architecture must support adding more languages without structural changes.
+- Content (sentences, ERC descriptions) is bilingual EN/MR in the database.
+- Language toggle persists per user preference.
+
 ### Hosting / Deployment
 - Docker + GitHub Actions CI/CD. `docker-compose.yml` already exists.
-- Cloudflare (CDN + DDoS protection) — deferred to deployment phase.
+- Cloudflare (CDN + DDoS protection) — covers storage CDN as well.
 - Staging environment: required before production. Detail TBD in deployment phase.
 
 ### Explicitly Out of Scope for v1
@@ -39,9 +50,11 @@ _Last updated: 2026-05-31 | Round: R1_
 - TensorFlow / ML — suggestion algorithm enhancement is a future initiative.
 
 ## Open Questions (area-specific)
+- Chat media: file size limits, allowed types, retention policy — TBD
 - Distributed lock strategy for scheduler when scaling horizontally — TBD (not v1)
 - Self-hosting vs. managed PostgreSQL — deferred to deployment phase
 - Redis managed vs. self-hosted — deferred to deployment phase
+- MinIO managed vs. self-hosted — deferred to deployment phase
 - GlitchTip self-hosted setup — deferred to deployment phase
 
 ## Flags
