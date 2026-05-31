@@ -1,12 +1,19 @@
 # Spec Index
 _Last updated: 2026-05-31_
 
+## Domain Glossary
+`spec/CONTEXT.md` — canonical terms: vratarthi, vratmitra, weakness, virtue, subvirtue, sentence, test, journey, exposure, resolution, challenge, ERC, global vratmitra, journey vratmitra, custom ERC
+
+## ADRs
+- [0001-sentence-as-journey-anchor.md](adr/0001-sentence-as-journey-anchor.md) — sentence (not weakness/subvirtue) is the atomic journey anchor
+- [0002-erc-directly-on-sentence.md](adr/0002-erc-directly-on-sentence.md) — ERC attaches directly to sentence; no intermediate plan entity
+
 ## Status
 | Area | Status | Last Round | File |
 |------|--------|------------|------|
 | User Roles | 🔄 In Progress | R1 | decisions/01_user-roles.md |
 | Data Model | 🔄 In Progress | R2 | decisions/02_data-model.md |
-| Flows | 🔄 In Progress | R3 | decisions/03_flows.md |
+| Flows | 🔄 In Progress | R4 | decisions/03_flows.md |
 | Lifecycle States | ⬜ Not Started | — | — |
 | Permissions | ⬜ Not Started | — | — |
 | Edge Cases | ⬜ Not Started | — | — |
