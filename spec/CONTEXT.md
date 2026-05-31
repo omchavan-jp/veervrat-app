@@ -77,6 +77,10 @@ _Avoid_: progress state, completion flag
 A named, atomic capability in the system. Format: `resource.action` (e.g. `journey.view`, `erc.suggest`). Code always checks permissions, never role names directly. Permissions are the source of truth for access decisions.
 _Avoid_: right, privilege, access level
 
+**Follow**
+A one-way relationship where one user subscribes to another VA's public activity. Does not grant access to private data. Guests cannot follow. What following enables (feed, notifications) is TBD.
+_Avoid_: friend, connect, subscribe
+
 **VM Invitation**
 The act of a vratarthi inviting another user to become their vratmitra (global or journey-scoped). Requires explicit acceptance by the invitee. Relationship is `pending` until accepted, `active` once accepted.
 _Avoid_: VM request, mentor request

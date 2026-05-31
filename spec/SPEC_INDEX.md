@@ -20,6 +20,7 @@ _Last updated: 2026-05-31_
 | Integrations & Constraints | ✅ Confirmed | R2 | decisions/07_integrations.md |
 | Out of Scope | ✅ Confirmed | R1 | decisions/08_out-of-scope.md |
 | Guest Access | ✅ Confirmed | R1 | decisions/09_guest-access.md |
+| Public Profile | 🔄 In Progress | R1 | decisions/10_public-profile.md |
 
 ## Open Questions (consolidated)
 - Moderator permissions vs. admin — User Roles — R1
