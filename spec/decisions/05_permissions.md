@@ -67,7 +67,7 @@ Acting *on* data, not *as* participants.
 
 ## Open Questions (area-specific)
 - `admin.view_chat` — always-on vs. explicit logged audit action — TBD
-- VA privacy controls over VM — can VA hide specific experience log entries from their VM? — TBD
+- VA privacy controls over VM — **none**. Everything in a journey is visible to the assigned VM by default. No hiding mechanism.
 - Moderator display content management — exact scope TBD (covered when app screen sections are specced)
 
 ## Flags
