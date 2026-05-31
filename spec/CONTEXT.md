@@ -70,5 +70,13 @@ A free-form reflection or experience entry written by the vratarthi within a jou
 _Avoid_: journal, diary, log entry
 
 **ERC Status**
-The lifecycle state of an individual exposure, resolution, or challenge within a journey. Exact states TBD. VA submits for closure; VM approves (or VA self-approves if no VM attached).
+The lifecycle state of an individual exposure, resolution, or challenge within a journey. States: `not_started`, `in_progress`, `submitted`, `approved`, `revisit`. VA submits; VM approves or returns to `revisit`. If no VM, VA self-approves.
 _Avoid_: progress state, completion flag
+
+**Pool-sourced ERC**
+An exposure, resolution, or challenge drawn from the central global ERC dataset (not created fresh for the journey). Contrast with custom ERC. When deactivated in a journey: stays visible greyed out; VA can permanently remove it from the journey.
+_Avoid_: global item, dataset item
+
+**Challenge Suggestion Threshold**
+The condition under which the system and VM suggest the VA attempt a challenge. Default: at least one exposure and one resolution marked approved. VM can override the threshold per journey. The threshold is a suggestion trigger only — it does not gate challenge access.
+_Avoid_: unlock condition, prerequisite

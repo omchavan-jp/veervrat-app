@@ -66,11 +66,32 @@ _Last updated: 2026-05-31 | Round: R5_
 - One-on-one between VA and their journey VM. Not a group chat.
 - Not visible to admin/moderator by default. TBD: sharing with admin for research/algorithm purposes (potentially anonymised).
 
+#### Journey Interior Navigation
+- Tab/section structure: **Status Overview · Exposures · Resolutions · Challenges · Chat**.
+- VA navigates freely between sections — no enforced linear sequence.
+- Status Overview is read-only; reflects live state across all sections.
+
+#### ERC Status States
+- Lifecycle: `not_started → in_progress → submitted → approved` or `submitted → revisit`
+- `revisit`: VM sends item back to VA for rework. Neutral — not failure. Ball returns to VA's court.
+- VA submits; VM approves or returns to `revisit`. If no VM: VA self-approves.
+
+#### Deactivated Pool Items
+- When VA deactivates a pool-sourced ERC item: it stays visible in the journey view, greyed out.
+- VA can then choose to **remove it completely** from the journey (permanent for that journey).
+- Custom ERC items follow the same deactivate/remove pattern.
+
+#### Challenge Suggestion Threshold
+- Challenges are not gated — VA can select a challenge at any point.
+- The system (and VM) **suggests** challenges only after a threshold is met.
+- Default threshold (system-set): at least one exposure and one resolution marked complete/approved by VA.
+- VM can **configure** the threshold for a specific journey (override the default).
+- "Complete" means VA has marked it approved — not that calendar duration has elapsed.
+
 ## Open Questions (area-specific)
-- Exact E/R/C status states (pending / in progress / completed / closed / other) — TBD
-- Journey interior navigation structure (how VA moves between overview, E/R/C, challenge, chat)
-- When/where is the VM philosophy note shown (onboarding vs. first VM interaction)?
-- Chat sharing with admin for research: anonymised or not, opt-in or opt-out — TBD
+- When/where is the VM philosophy note shown (onboarding vs. first VM interaction)? — R5
+- Chat sharing with admin for research: anonymised or not, opt-in or opt-out — R5
+- Duplicate custom ERC submission flagging mechanic — R5
 
 ## Flags
 - ⚠ Algorithm enhancement — v1 suggestion logic must be architected for future swap without rewrite.

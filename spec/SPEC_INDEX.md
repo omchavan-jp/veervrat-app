@@ -13,7 +13,7 @@ _Last updated: 2026-05-31_
 |------|--------|------------|------|
 | User Roles | 🔄 In Progress | R1 | decisions/01_user-roles.md |
 | Data Model | 🔄 In Progress | R2 | decisions/02_data-model.md |
-| Flows | 🔄 In Progress | R5 | decisions/03_flows.md |
+| Flows | 🔄 In Progress | R6 | decisions/03_flows.md |
 | Lifecycle States | ⬜ Not Started | — | — |
 | Permissions | ⬜ Not Started | — | — |
 | Edge Cases | ⬜ Not Started | — | — |
@@ -22,9 +22,7 @@ _Last updated: 2026-05-31_
 
 ## Open Questions (consolidated)
 - Moderator permissions vs. admin — User Roles — R1
-- VM philosophy note placement (onboarding vs. first interaction) — User Roles — R5
-- Exact ERC status states — Flows — R5
-- Journey interior navigation structure — Flows — R5
+- VM philosophy note placement — User Roles — R5
 - Chat sharing with admin (anonymised/opt-in) — Flows — R5
 - Duplicate custom ERC flagging mechanic — Flows — R5
 
