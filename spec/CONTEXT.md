@@ -73,6 +73,14 @@ _Avoid_: journal, diary, log entry
 The lifecycle state of an individual exposure, resolution, or challenge within a journey. States: `not_started`, `in_progress`, `submitted`, `approved`, `revisit`. VA submits; VM approves or returns to `revisit`. If no VM, VA self-approves.
 _Avoid_: progress state, completion flag
 
+**Dormant**
+A system-triggered journey state. Activates after `x` days of no VA views or updates. The journey is alive but sleeping — VA can resume. Distinct from `paused` (VA-initiated).
+_Avoid_: inactive, abandoned, stale
+
+**Paused**
+A VA-initiated journey state. VA manually suspends work. Can be resumed at any time.
+_Avoid_: stopped, on hold
+
 **Pool-sourced ERC**
 An exposure, resolution, or challenge drawn from the central global ERC dataset (not created fresh for the journey). Contrast with custom ERC. When deactivated in a journey: stays visible greyed out; VA can permanently remove it from the journey.
 _Avoid_: global item, dataset item

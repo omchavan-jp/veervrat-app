@@ -14,7 +14,7 @@ _Last updated: 2026-05-31_
 | User Roles | 🔄 In Progress | R1 | decisions/01_user-roles.md |
 | Data Model | 🔄 In Progress | R2 | decisions/02_data-model.md |
 | Flows | 🔄 In Progress | R6 | decisions/03_flows.md |
-| Lifecycle States | ⬜ Not Started | — | — |
+| Lifecycle States | 🔄 In Progress | R1 | decisions/04_lifecycle.md |
 | Permissions | ⬜ Not Started | — | — |
 | Edge Cases | ⬜ Not Started | — | — |
 | Integrations & Constraints | ⬜ Not Started | — | — |
@@ -36,3 +36,5 @@ _Last updated: 2026-05-31_
 - VM sidenote acknowledgement nullification on revocation — Flows — R5
 - Pending approval queue on mid-journey VM change — Flows — R5
 - Duplicate custom ERC submissions flagging — Flows — R5
+- Dormant state requires background scheduler — Lifecycle — R1
+- Journey ERC union filter must re-evaluate dynamically on weakness attachment — Lifecycle — R1

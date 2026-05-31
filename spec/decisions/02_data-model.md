@@ -12,8 +12,10 @@ _Last updated: 2026-05-31 | Round: R2_
 - **Test result storage:** all attempts are stored (full history retained). Only the latest result per weakness per user is used for sentence suggestions. History is available for stats/trends.
 - **Journey title:** journeys have a user-editable title. Default is the sentence text or an auto-generated name (shown to user for approval). User can override at any time.
 
+- **Journey weakness tags:** a journey has its own `journey_weakness` join table — records which weaknesses the journey was started from / has been attached to. Separate from ERC-level weakness tags.
+
 ## Open Questions (area-specific)
-- One challenge per journey or many? — flagged R2 — deferred
+- One challenge per journey or many? — RESOLVED R5: multiple allowed
 
 ## Flags
 - ⚠ Original description said "vratmitra proposes one *or many* challenges." Central pool has one per sentence. Journey-level cardinality must be confirmed before lifecycle is designed — deferred.
