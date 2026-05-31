@@ -24,7 +24,7 @@ Each field is individually togglable by the VA. Default state: public.
 - If a field is toggled off, it is hidden entirely from the profile (not shown as "hidden" or "—").
 
 ### Profile Discovery
-- Profile is accessible from any place a VA's name appears: blog author, experience card, search results, VM invitation flow.
+- Profile is accessible from any place a VA's name appears: blog author, experience card, user search results, VM invitation flow.
 - Profiles have a stable public URL (e.g. `/u/username` or similar).
 
 ### Follow
