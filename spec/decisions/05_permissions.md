@@ -12,20 +12,64 @@ _Last updated: 2026-05-31 | Round: R1_
 - **Dynamic DB-backed permission UI:** out of scope for v1. Permission definitions are code-based, not admin-configurable at runtime.
 
 ### Roles (grouping labels only)
-- **admin**: full access to all resources and actions.
-- **moderator**: subset of admin — at minimum, reviews submitted custom ERC. Exact permission set TBD.
+- **admin**: platform management layer. Can view any data, override journey state in emergencies.
+- **moderator**: reviews submitted custom ERC (with full submitter context); manages display content on app screens (shlokas etc — detail TBD). No journey state access.
 - **vratarthi (VA)**: owns their journeys, tests, experience logs. Scoped access only.
 - **vratmitra (VM)**: scoped access only — sees journeys they are explicitly assigned to, nothing else.
-- A user can hold multiple roles simultaneously.
+- A user can hold multiple roles simultaneously. Both layers evaluate independently via `hasPermission`.
 
-### Scoping Rules (confirmed so far)
-- VM can only view/act on journeys they are **assigned to**. Having the VM role alone grants no journey access.
-- A VA's test results are visible to: the VA, their assigned VMs (for the relevant journeys), and admin. Not moderators, not other VAs.
+### Two Permission Layers
+
+#### Layer 1 — User-side permissions (participant actions)
+VA and VM acting as participants. A user who is also admin holds these only for their own journeys as VA/VM — not for others'.
+
+| Permission | VA (own) | VM (assigned journey) |
+|---|---|---|
+| `journey.create` | ✅ | ❌ |
+| `journey.view` | ✅ own | ✅ assigned only |
+| `journey.pause` | ✅ own | ❌ |
+| `journey.complete` | ✅ own (submit) | ✅ assigned (approve) |
+| `erc.select` | ✅ own journey | ❌ |
+| `erc.suggest` | ❌ | ✅ assigned journey |
+| `erc.approve_closure` | ✅ self-only (no VM present) | ✅ assigned journey |
+| `custom_erc.create` | ✅ own journey | ✅ assigned journey |
+| `custom_erc.submit_for_review` | ✅ | ✅ |
+| `test.take` | ✅ | ❌ |
+| `test.view_results` | ✅ own | ✅ assigned VA only |
+| `chat.view` | ✅ own | ✅ assigned journey |
+| `chat.send` | ✅ own | ✅ assigned journey |
+| `experience_log.create` | ✅ own journey | ❌ |
+| `experience_log.view` | ✅ own | ✅ assigned journey |
+| `vm_invitation.send` | ✅ | ❌ |
+| `vm_invitation.accept` | ❌ | ✅ (the invitee) |
+
+#### Layer 2 — Platform permissions (admin/moderator actions)
+Acting *on* data, not *as* participants.
+
+| Permission | Admin | Moderator |
+|---|---|---|
+| `admin.view_any_journey` | ✅ full contents | ❌ |
+| `admin.view_any_user` | ✅ | ❌ |
+| `admin.view_any_test_result` | ✅ | ❌ |
+| `admin.override_journey_state` | ✅ emergency only, audit-logged | ❌ |
+| `admin.view_chat` | TBD | ❌ |
+| `admin.manage_content` | ✅ | ❌ |
+| `admin.manage_users` | ✅ | ❌ |
+| `admin.view_platform_stats` | ✅ | ❌ |
+| `moderator.review_custom_erc` | ✅ | ✅ (with submitter profile + journey context) |
+| `moderator.manage_display_content` | ✅ | ✅ (shlokas, screen sections — detail TBD) |
+
+### Scoping Rules
+- VM journey access is relationship-scoped: assigned = can see. VM role alone grants nothing.
+- VA test results visible to: VA (own), VMs assigned to that VA's journeys, admin. Not moderators.
+- Chat: private between VA and VM. Admin access TBD.
+- `admin.override_journey_state` is an emergency escape hatch — all uses audit-logged.
 
 ## Open Questions (area-specific)
-- Full moderator permission set vs. admin — TBD
-- Can admin see chat content by default, or only on explicit override/audit action?
-- VA privacy controls — can a VA restrict what their VM sees (e.g. hide experience log entries)?
+- `admin.view_chat` — always-on vs. explicit logged audit action — TBD
+- VA privacy controls over VM — can VA hide specific experience log entries from their VM? — TBD
+- Moderator display content management — exact scope TBD (covered when app screen sections are specced)
 
 ## Flags
-- ⚠ ABAC requires full resource objects in permission checks — backend must not pass only IDs. Enforce in service layer conventions.
+- ⚠ ABAC requires full resource objects in permission checks — backend must not pass only IDs.
+- ⚠ `admin.override_journey_state` must be audit-logged without exception — treat as a hard invariant.
