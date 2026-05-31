@@ -2,6 +2,9 @@
 _Last updated: 2026-05-31_
 
 ## Active
+- ⚠ **Global VM scoping** — Permissions R4 — earlier matrix said VM sees "assigned only." Corrected: global VM sees all VA data. Journey-level-only VM sees assigned journeys only. Both can coexist for the same VA.
+
+
 - ⚠ **"No hierarchy display" vs. "verification mechanism"** — User Roles R1 — unresolved. Stat-based credibility must be surfaced without creating perceived tiers. Deferred.
 - ⚠ **Algorithm enhancement** — Flows R3 — v1 suggestion logic must be architected for future swap without rewrite.
 - ⚠ **VM sidenote acknowledgement nullification** — Flows R5 — ensure no ghost state in DB when VM revokes a sidenote the VA already acknowledged.

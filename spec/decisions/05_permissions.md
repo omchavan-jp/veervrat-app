@@ -26,7 +26,7 @@ VA and VM acting as participants. A user who is also admin holds these only for 
 | Permission | VA (own) | VM (assigned journey) |
 |---|---|---|
 | `journey.create` | ✅ | ❌ |
-| `journey.view` | ✅ own | ✅ assigned only |
+| `journey.view` | ✅ own | ✅ assigned only (journey VM) / ✅ all VA's journeys (global VM) |
 | `journey.pause` | ✅ own | ❌ |
 | `journey.complete` | ✅ own (submit) | ✅ assigned (approve) |
 | `erc.select` | ✅ own journey | ❌ |
@@ -60,8 +60,11 @@ Acting *on* data, not *as* participants.
 | `moderator.manage_display_content` | ✅ | ✅ (shlokas, screen sections — detail TBD) |
 
 ### Scoping Rules
-- VM journey access is relationship-scoped: assigned = can see. VM role alone grants nothing.
-- VA test results visible to: VA (own), VMs assigned to that VA's journeys, admin. Not moderators.
+- **Global VM**: sees all of a VA's journeys, test results, experience logs — full picture. When also assigned as journey VM for a specific journey, their role in that journey is to interact specifically around it, but their view scope remains global.
+- **Journey-level VM only** (not global VM): sees only the journey(s) they are explicitly assigned to. Nothing else.
+- A VA can have both simultaneously: one global VM (full view) and one or more journey-level VMs (scoped view per journey).
+- VM role alone (without assignment) grants nothing.
+- VA test results visible to: VA (own), global VM, journey VMs (for their assigned journey's relevant tests), admin. Not moderators.
 - Chat: private between VA and VM. Admin access TBD.
 - `admin.override_journey_state` is an emergency escape hatch — all uses audit-logged.
 

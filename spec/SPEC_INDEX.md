@@ -15,8 +15,8 @@ _Last updated: 2026-05-31_
 | Data Model | 🔄 In Progress | R2 | decisions/02_data-model.md |
 | Flows | 🔄 In Progress | R6 | decisions/03_flows.md |
 | Lifecycle States | 🔄 In Progress | R2 | decisions/04_lifecycle.md |
-| Permissions | 🔄 In Progress | R2 | decisions/05_permissions.md |
-| Edge Cases | ⬜ Not Started | — | — |
+| Permissions | 🔄 In Progress | R4 | decisions/05_permissions.md |
+| Edge Cases | 🔄 In Progress | R1 | decisions/06_edge-cases.md |
 | Integrations & Constraints | ⬜ Not Started | — | — |
 | Out of Scope | ⬜ Not Started | — | — |
 
