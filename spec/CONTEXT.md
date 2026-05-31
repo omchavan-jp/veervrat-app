@@ -73,6 +73,10 @@ _Avoid_: journal, diary, log entry
 The lifecycle state of an individual exposure, resolution, or challenge within a journey. States: `not_started`, `in_progress`, `submitted`, `approved`, `revisit`. VA submits; VM approves or returns to `revisit`. If no VM, VA self-approves.
 _Avoid_: progress state, completion flag
 
+**Permission**
+A named, atomic capability in the system. Format: `resource.action` (e.g. `journey.view`, `erc.suggest`). Code always checks permissions, never role names directly. Permissions are the source of truth for access decisions.
+_Avoid_: right, privilege, access level
+
 **VM Invitation**
 The act of a vratarthi inviting another user to become their vratmitra (global or journey-scoped). Requires explicit acceptance by the invitee. Relationship is `pending` until accepted, `active` once accepted.
 _Avoid_: VM request, mentor request

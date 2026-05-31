@@ -15,7 +15,7 @@ _Last updated: 2026-05-31_
 | Data Model | 🔄 In Progress | R2 | decisions/02_data-model.md |
 | Flows | 🔄 In Progress | R6 | decisions/03_flows.md |
 | Lifecycle States | 🔄 In Progress | R2 | decisions/04_lifecycle.md |
-| Permissions | ⬜ Not Started | — | — |
+| Permissions | 🔄 In Progress | R1 | decisions/05_permissions.md |
 | Edge Cases | ⬜ Not Started | — | — |
 | Integrations & Constraints | ⬜ Not Started | — | — |
 | Out of Scope | ⬜ Not Started | — | — |
@@ -29,6 +29,11 @@ _Last updated: 2026-05-31_
 ## Deferred Items
 - Vratmitra verification/credibility mechanism — must resolve before v1 ships — R1
 - Suggestion algorithm enhancement — major future initiative, not v1 — R3
+
+## ADRs
+- [0001](adr/0001-sentence-as-journey-anchor.md) — sentence is the atomic journey anchor
+- [0002](adr/0002-erc-directly-on-sentence.md) — ERC attaches directly to sentence
+- [0003](adr/0003-rbac-abac-hybrid.md) — RBAC + ABAC hybrid permission model
 
 ## ⚠ Active Flags
 - "No hierarchy display" vs. "credibility mechanism" — User Roles — unresolved

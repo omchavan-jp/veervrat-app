@@ -8,6 +8,7 @@ _Last updated: 2026-05-31_
 - ⚠ **Pending approval queue on mid-journey VM change** — Flows R5 — incoming VM must inherit and can action entities submitted-but-not-yet-approved by outgoing VM.
 - ⚠ **Duplicate custom ERC submissions** — Flows R5 — flagging mechanic for moderator awareness deferred.
 - ⚠ **Dormant state requires background scheduler** — Lifecycle R1 — carry to tech constraints.
+- ⚠ **ABAC requires full resource objects in permission checks** — Permissions R1 — backend must pass full resource objects, not IDs, into hasPermission. Must be enforced as a convention in service layer.
 - ⚠ **Journey ERC union filter on weakness attachment** — Lifecycle R1 — ERC shown = intersection of sentence ERC weakness tags and journey's attached weaknesses. Must re-evaluate dynamically when weakness added mid-journey, not a snapshot at start.
 
 ## Resolved
