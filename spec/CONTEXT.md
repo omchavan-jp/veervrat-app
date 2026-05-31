@@ -42,7 +42,7 @@ A habit or repeated practice within a journey. Drawn from the central pool or cr
 _Avoid_: habit, commitment, practice
 
 **Challenge**
-A culminating test within a journey. Proposed by the vratmitra (via chat or directly). Has a duration in days. Completion is logged by the vratarthi and approved by the vratmitra to close the journey.
+A culminating test within a journey. Proposed by the vratmitra (via chat or directly) or added as custom ERC. Multiple challenges per journey are allowed. Has a duration in days. Completion is submitted by the vratarthi and approved by the vratmitra (or self-approved if no VM).
 _Avoid_: final test, capstone, milestone
 
 **ERC**
@@ -60,3 +60,15 @@ _Avoid_: journey mentor, local mentor
 **Custom ERC**
 An exposure, resolution, or challenge created by a vratarthi or vratmitra specifically for one journey, not drawn from the central pool. Can be kept journey-scoped or submitted for review to join the global pool.
 _Avoid_: user-created content, ad-hoc item
+
+**VM Sidenote**
+A note attached by a vratmitra to a specific ERC entity when suggesting it to the vratarthi. Explains the VM's reasoning. Revocable — if the VM unsuggests the entity, the sidenote is removed and any VA acknowledgement is nullified.
+_Avoid_: comment, annotation, note
+
+**Experience Log**
+A free-form reflection or experience entry written by the vratarthi within a journey. Can be attached to one or many ERC entities (active or deactivated). Separate from completion status.
+_Avoid_: journal, diary, log entry
+
+**ERC Status**
+The lifecycle state of an individual exposure, resolution, or challenge within a journey. Exact states TBD. VA submits for closure; VM approves (or VA self-approves if no VM attached).
+_Avoid_: progress state, completion flag
