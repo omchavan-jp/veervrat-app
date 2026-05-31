@@ -39,10 +39,26 @@ _Last updated: 2026-05-31 | Round: R1_
 - Challenge(s) proposed, completed, approved.
 - VM (or VA self) approves journey closure → state moves to `completed`.
 
+### VM Relationship Lifecycle
+- VM invitation requires **explicit acceptance** by the invited user before the relationship becomes active.
+- Until accepted: relationship is in `pending` state. VA can cancel; invitee can decline.
+- Once accepted: relationship is `active`. No expiry — persists until VA removes VM or VM withdraws.
+- VM relationship has no other formal states — it is either pending, active, or gone.
+
+### VM Removal Mid-Journey
+- VA can remove a VM from a journey at any time.
+- On removal: pending approvals (items in `submitted` state) are **left pending** — not auto-approved, not auto-returned.
+- Incoming VM inherits the pending queue. VA can also revoke their own submissions and self-approve instead.
+
+### Completed Journeys
+- Completed journeys are permanently read-only. No reopening.
+- To continue working on the same sentence: VA starts a new journey.
+
 ## Open Questions (area-specific)
 - Exact value of `x` days for dormant trigger — system default TBD
 - Notification mechanic when new weakness attached mid-journey (push, in-app badge, chat message?)
 - What happens to a dormant journey's VM reminder cadence — does the system nudge VA or VM?
+- Invitation: does the VA see the pending state clearly, and can they send a reminder to the invitee?
 
 ## Flags
 - ⚠ Dormant state requires background scheduler — carry to integrations/tech constraints.

@@ -14,7 +14,7 @@ _Last updated: 2026-05-31_
 | User Roles | 🔄 In Progress | R1 | decisions/01_user-roles.md |
 | Data Model | 🔄 In Progress | R2 | decisions/02_data-model.md |
 | Flows | 🔄 In Progress | R6 | decisions/03_flows.md |
-| Lifecycle States | 🔄 In Progress | R1 | decisions/04_lifecycle.md |
+| Lifecycle States | 🔄 In Progress | R2 | decisions/04_lifecycle.md |
 | Permissions | ⬜ Not Started | — | — |
 | Edge Cases | ⬜ Not Started | — | — |
 | Integrations & Constraints | ⬜ Not Started | — | — |

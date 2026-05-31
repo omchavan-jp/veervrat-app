@@ -73,6 +73,10 @@ _Avoid_: journal, diary, log entry
 The lifecycle state of an individual exposure, resolution, or challenge within a journey. States: `not_started`, `in_progress`, `submitted`, `approved`, `revisit`. VA submits; VM approves or returns to `revisit`. If no VM, VA self-approves.
 _Avoid_: progress state, completion flag
 
+**VM Invitation**
+The act of a vratarthi inviting another user to become their vratmitra (global or journey-scoped). Requires explicit acceptance by the invitee. Relationship is `pending` until accepted, `active` once accepted.
+_Avoid_: VM request, mentor request
+
 **Dormant**
 A system-triggered journey state. Activates after `x` days of no VA views or updates. The journey is alive but sleeping — VA can resume. Distinct from `paused` (VA-initiated).
 _Avoid_: inactive, abandoned, stale
