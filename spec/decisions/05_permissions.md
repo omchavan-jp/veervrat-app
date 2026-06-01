@@ -57,7 +57,8 @@ Acting *on* data, not *as* participants.
 | `admin.manage_users` | ✅ | ❌ |
 | `admin.view_platform_stats` | ✅ | ❌ |
 | `moderator.review_custom_erc` | ✅ | ✅ (with submitter profile + journey context) |
-| `moderator.manage_display_content` | ✅ | ✅ (shlokas, screen sections — detail TBD) |
+| `moderator.manage_display_content` | ✅ | ✅ (shlokas, screen sections, sidebar curation) |
+| `admin.manage_taxonomy` | ✅ | ❌ (virtues, subvirtues, weaknesses — admin only) |
 
 ### Scoping Rules
 - **Global VM**: sees all of a VA's journeys, test results, experience logs — full picture. When also assigned as journey VM for a specific journey, their role in that journey is to interact specifically around it, but their view scope remains global.
