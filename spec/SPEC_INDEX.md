@@ -29,7 +29,7 @@ _Last updated: 2026-06-01_
 | VA Dashboard | ✅ Confirmed | R2 | decisions/15_dashboard.md |
 | Content Pages & Cultural Elements | ✅ Confirmed | R2 | decisions/16_content-pages.md |
 | Moderation & Display Content | ✅ Confirmed | R2 | decisions/17_moderation.md |
-| My Vratmitras & Chat | 🔄 In Progress | R1 | decisions/18_my-vratmitras-chat.md |
+| My Vratmitras & Chat | ✅ Confirmed | R2 | decisions/18_my-vratmitras-chat.md |
 | Pothi Redesign | ⬜ Not Started | — | — |
 | Virtue-First Reorientation | ⬜ Not Started | — | — |
 | VM Dashboard / VM View | ⬜ Not Started | — | — |

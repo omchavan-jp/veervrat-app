@@ -1,13 +1,19 @@
 # My Vratmitras & Chat
-_Last updated: 2026-06-02 | Round: R1_
+_Last updated: 2026-06-02 | Round: R2_
 
 ## Confirmed Decisions
 
 ### My Vratmitras Page (`/my-vratmitras`)
-- VA sees a list of all their VMs: global VM (if any) and all journey-level VMs.
-- Each VM entry shows: display name, avatar, online indicator, last active, scope (global / which journeys).
-- Selecting a VM opens their persistent chat thread.
-- Prominent link/CTA to the Guidance page from within My Vratmitras — clearly navigable.
+- **Two-panel layout:** VM list on the left, VM detail on the right.
+- **Left panel:** list of all VMs. Each entry shows: avatar, display name, online indicator, scope label (Global VM / Journey VM / both). Selecting a VM loads their detail on the right.
+- **Right panel (VM detail):** full view of the selected VM:
+  - Display name, avatar, online indicator, last active
+  - Scope: Global VM badge (if applicable)
+  - Journey VM for: list of journey names, each with an [Open] link to that journey
+  - Actions: [Open Chat], [Global VM Settings] (if global VM), [Remove as VM]
+- Chat is a deliberate action — not the default view. [Open Chat] button opens the persistent thread.
+- Prominent link/CTA to the Guidance page always visible from this page.
+- Notification settings: VA can toggle email notifications per VM (for chat) or globally for all chat — from settings or inline on this page.
 
 ### Chat
 - **One persistent thread per VA-VM pair.** Not per journey — one thread covers everything.
@@ -35,12 +41,14 @@ _Last updated: 2026-06-02 | Round: R1_
 ### What Guidance Is Not Called
 - Not "Guidance" if a better name emerges — the name is a placeholder. Alternatives: "Actions", "Pending", "My Queue". Final name TBD.
 
+- **Chat mute:** VA can mute a chat thread with a specific VM — stops notifications, can still read/send. Reversible from settings.
+- **Chat notifications:** in-app (bell) + email. VA can toggle email notifications per VM or globally for all chat — from settings or inline on the My Vratmitras page.
+- **VM removal:** done from the VM detail panel (right panel) — [Remove as VM] action. For journey-level VM, removes from that journey. For global VM, goes to Global VM Settings for the migration flow.
+
 ## Open Questions (area-specific)
-- Guidance page name — final copy TBD
+- Guidance page name — final copy TBD (alternatives: Actions, Pending, My Queue)
 - VM guidance view location — covered in VM Dashboard spec round
 - `@`/`#` trigger syntax per entity type — implementation detail TBD
-- Can VA mute or archive chat threads? TBD
-- Notification for new chat message — in-app + email (same as other notifications)?
 
 ## Flags
 - ⚠ In-chat referencing spans the entire data model — implementation must use a generic entity reference system, not hardcoded per-type handlers.
