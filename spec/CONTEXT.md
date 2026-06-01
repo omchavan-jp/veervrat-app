@@ -77,6 +77,14 @@ _Avoid_: progress state, completion flag
 A named, atomic capability in the system. Format: `resource.action` (e.g. `journey.view`, `erc.suggest`). Code always checks permissions, never role names directly. Permissions are the source of truth for access decisions.
 _Avoid_: right, privilege, access level
 
+**Display Name**
+A user's real name as shown throughout the app. Required at signup. Not unique.
+_Avoid_: name, full name
+
+**Username**
+A unique handle used for search and public profile URL (`/u/username`). Required at signup. Auto-suggested from display name, user can edit before confirming.
+_Avoid_: handle, user ID, screen name
+
 **Follow**
 A one-way relationship where one user subscribes to another VA's public activity. Does not grant access to private data. Guests cannot follow. What following enables (feed, notifications) is TBD.
 _Avoid_: friend, connect, subscribe

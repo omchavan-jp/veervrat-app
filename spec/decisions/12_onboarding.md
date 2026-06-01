@@ -1,14 +1,20 @@
 # Onboarding
-_Last updated: 2026-06-01 | Round: R1_
+_Last updated: 2026-06-01 | Round: R2_
 
 ## Confirmed Decisions
 
 ### Three Distinct Onboarding Layers
 
 #### 1. Account Setup (one-time, at signup)
-- Collected fields: name, email (auto-set from OAuth or entered during credential signup), gender (optional), date of birth (optional)
-- Password + confirm password for credential signup
-- No additional data collected here — kept minimal
+- Collected fields:
+  - **Display name** (required — real name, shown everywhere)
+  - **Username** (required — unique, used for search and public URL `/u/username`; auto-suggested from display name, user can edit before confirming)
+  - **Email** (auto-set from OAuth, or entered during credential signup)
+  - **Password + confirm password** (credential signup only)
+  - **Language preference** (required — explicit step, not auto-detected)
+  - **Gender** (optional)
+  - **Date of birth** (optional)
+- Skippable: No. Display name and username are required before proceeding. All optional fields can be skipped.
 
 #### 2. Framework Onboarding (one-time, post account setup)
 Introduces the Veervrat framework before the user reaches the dashboard. Two sections:
@@ -24,7 +30,7 @@ Ends with a single decision screen:
 
 Full test during onboarding — not minimised. The test report is the aha moment. Minimising it dilutes the personalisation and the reveal.
 
-Language preference is set during account setup or detectable from browser — surfaced here if not already set.
+Language preference set during account setup (explicit required step).
 
 #### 3. UI Walkthrough (contextual, per section, first visit only)
 - Triggered on first visit to each major section: dashboard, study flow, work flow, pothi, experience log, profile
@@ -58,10 +64,7 @@ Sign up (email/Google)
 - Eastern market comfort — framework onboarding is substantive, not a one-liner
 
 ## Open Questions (area-specific)
-- Framework onboarding — is it skippable on subsequent logins or always shown once and never again?
-- UI walkthrough — can users re-trigger it manually (e.g. from settings "restart tour")?
-- Empty state nudge on dashboard (for users who skipped the test) — exact copy and CTA TBD
-- Language preference: collected during account setup or auto-detected from browser with manual override?
+- Empty state nudge on dashboard (for users who skipped the test) — exact copy and CTA TBD (design/implementation detail)
 
 ## Flags
 - ⚠ Users who skip the test during onboarding land on an empty dashboard — empty state design must include a strong but non-pushy nudge to take their first test.

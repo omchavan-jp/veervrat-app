@@ -22,7 +22,7 @@ _Last updated: 2026-05-31_
 | Guest Access | ✅ Confirmed | R1 | decisions/09_guest-access.md |
 | Public Profile | 🔄 In Progress | R1 | decisions/10_public-profile.md |
 | Platform Stats | ✅ Confirmed | R1 | decisions/11_platform-stats.md |
-| Onboarding | 🔄 In Progress | R1 | decisions/12_onboarding.md |
+| Onboarding | ✅ Confirmed | R2 | decisions/12_onboarding.md |
 
 ## Open Questions (consolidated)
 - Moderator permissions vs. admin — User Roles — R1
