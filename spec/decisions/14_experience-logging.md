@@ -1,5 +1,5 @@
 # Global Experience Logging
-_Last updated: 2026-06-01 | Round: R1_
+_Last updated: 2026-06-01 | Round: R2_
 
 ## Confirmed Decisions
 
@@ -26,12 +26,16 @@ _Last updated: 2026-06-01 | Round: R1_
 - **Global experience log entries** — raw, personal reflections. No title required. Tagged to data model entities. Three visibility tiers.
 - **Community blogs** — structured content with title, author, one-liner description. Different content type, different creation flow. Specced separately.
 
+### Additional Confirmed Decisions
+- **Entity backlinks:** tagging an experience entry to an entity creates a visible backlink — the entry appears on that entity's page/detail view for users with permission to see it.
+- **Retroactive visibility:** if a mutual follow is broken, previously "Friends" entries become invisible to the unfollowed person immediately. Content still exists for the author.
+- **Character limit:** none for v1.
+- **Media attachments:** images supported (stored via MinIO). Rich entry format — text + inline images, similar to Substack-style composition.
+
 ## Open Questions (area-specific)
-- Can a VA tag to any combination of entities (confirm: weakness + sentence + journey simultaneously)?
-- Does tagging to an entity create a visible link — e.g. the experience shows up on the weakness page or sentence page?
-- Character limit on experience entries? TBD.
-- Can experience entries have media attachments (images)? TBD.
-- "Friends" tier — if a mutual follow is broken (one unfollows), do previously "Friends" entries become invisible to the unfollowed person retroactively?
+- Image upload limits per entry (file size, count) — TBD, aligns with chat media limits discussion.
+- Rich text formatting beyond images — bold, italic, headings, links? TBD implementation detail.
+- Does tagging to a journey entry appear in the journey's feed/log for the assigned VM to see?
 
 ## Flags
 - ⚠ "Friends" visibility tier depends on mutual follow — must be consistent with follow system spec. If follow is one-way, "friends" = mutual follows (both follow each other).
