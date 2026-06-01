@@ -23,7 +23,7 @@ _Last updated: 2026-05-31_
 | Public Profile | 🔄 In Progress | R1 | decisions/10_public-profile.md |
 | Platform Stats | ✅ Confirmed | R1 | decisions/11_platform-stats.md |
 | Onboarding | ✅ Confirmed | R2 | decisions/12_onboarding.md |
-| User Search & Invitations | 🔄 In Progress | R1 | decisions/13_user-search.md |
+| User Search & Invitations | ✅ Confirmed | R2 | decisions/13_user-search.md |
 
 ## Open Questions (consolidated)
 - Moderator permissions vs. admin — User Roles — R1

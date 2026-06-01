@@ -3,6 +3,11 @@ _Last updated: 2026-05-31 | Round: R1_
 
 ## Confirmed Decisions
 
+### Presence & Activity
+- **Last active** — day-level granularity ("Today", "1 day ago", etc.). VA can hide from profile (privacy setting). Default: visible.
+- **Currently active** (online indicator) — shown when VA is using the app. VA can toggle on/off from settings. Default: on.
+- When last active is hidden: field not shown (no "hidden" label).
+
 ### Profile Fields (fixed set, all public by default)
 Each field is individually togglable by the VA. Default state: public.
 
