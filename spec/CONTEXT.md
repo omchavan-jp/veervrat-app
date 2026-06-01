@@ -77,6 +77,10 @@ _Avoid_: progress state, completion flag
 A named, atomic capability in the system. Format: `resource.action` (e.g. `journey.view`, `erc.suggest`). Code always checks permissions, never role names directly. Permissions are the source of truth for access decisions.
 _Avoid_: right, privilege, access level
 
+**Invite Token**
+A unique code generated for every platform or VM invitation. Carries context (inviter, invitee, scope, type) through the signup flow. Enables attribution and pre-filled VM acceptance.
+_Avoid_: invite link, referral code
+
 **Display Name**
 A user's real name as shown throughout the app. Required at signup. Not unique.
 _Avoid_: name, full name
