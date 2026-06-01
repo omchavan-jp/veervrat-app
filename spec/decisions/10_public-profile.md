@@ -45,11 +45,13 @@ Regardless of VA's visibility settings, these are never shown on a public profil
 - VM assignments
 - Experience log entries marked "Only me" or "Friends"
 
+- **"Friends" visibility tier:** = mutual follows (both follow each other). Consistent with one-way follow system — friends are the subset where both parties follow each other.
+- **Username and display name:** separate fields. Display name = real name shown everywhere. Username = unique handle for search + public URL `/u/username`. Both set at account setup.
+- **Full profile privacy:** yes — VA can make entire profile private (hidden from guests and other authenticated users). Profile URL returns a "This profile is private" screen.
+- **Follow feed / activity stream:** TBD in community/social round (future spec).
+
 ## Open Questions (area-specific)
-- "Friends" visibility tier for experience logs — who counts as a friend? Followers? Mutual follows? TBD in global experience logging round.
-- Follow feed / activity stream — what does a follower see? TBD in community round.
-- Username vs. display name — are they the same or separate fields? (Affects public URL structure.)
-- Can a VA make their entire profile private (hidden from guests/other users)?
+- Follow feed / activity stream — what does a follower see? Deferred to community/social round.
 
 ## Flags
-- ⚠ Follow relationship is one-way but "Friends" visibility tier on experience logs implies a mutual or bidirectional concept — must reconcile when speccing global experience logging.
+- ⚠ Follow relationship is one-way; "Friends" = mutual follows — resolved and consistent.

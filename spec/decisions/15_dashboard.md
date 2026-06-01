@@ -41,7 +41,8 @@ Both derived and manual:
 - Drafts are always **Only me** until published.
 - On publish: VA sets visibility tier (Only me / Friends / Public).
 
+- **Weakness pins:** unlimited — no cap.
+- **Draft test expiry:** no expiry. VA can be periodically prompted to review old drafts (e.g. "You have a draft from 30 days ago — submit, continue, or discard?"). Prompt is gentle, not blocking.
+
 ## Open Questions (area-specific)
-- How many weakness pins are allowed? (Unlimited vs capped at e.g. 3-5 focus weaknesses)
-- Draft test expiry — does a saved draft expire after x days, or persist indefinitely?
 - Score preview on test submission — exact format TBD (implementation detail)

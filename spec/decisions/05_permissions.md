@@ -69,10 +69,11 @@ Acting *on* data, not *as* participants.
 - Chat: private between VA and VM. Admin access TBD.
 - `admin.override_journey_state` is an emergency escape hatch — all uses audit-logged.
 
+- **`admin.view_chat`:** admin cannot view any chat (v1). Chat is permanently private between VA and VM.
+- **Chat data for research:** out of scope for v1. Deferred to future version.
+
 ## Open Questions (area-specific)
-- `admin.view_chat` — always-on vs. explicit logged audit action — TBD
-- VA privacy controls over VM — **none**. Everything in a journey is visible to the assigned VM by default. No hiding mechanism.
-- Moderator display content management — exact scope TBD (covered when app screen sections are specced)
+_(none — area closed)_
 
 ## Flags
 - ⚠ ABAC requires full resource objects in permission checks — backend must not pass only IDs.

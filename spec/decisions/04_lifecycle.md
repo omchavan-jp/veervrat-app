@@ -54,11 +54,13 @@ _Last updated: 2026-05-31 | Round: R1_
 - Completed journeys are permanently read-only. No reopening.
 - To continue working on the same sentence: VA starts a new journey.
 
+- **Dormant trigger:** 30 days of no views or updates to the journey.
+- **New weakness attached — notification:** in-app notification to VA. Mechanic: in-app badge/bell notification (same system as other notifications).
+- **Dormant journey nudge:** system notifies both VA and VM when a journey goes dormant.
+- **Pending invitation visibility:** VA can see pending invitation state clearly from their Invitations section. VA can send a reminder to the invitee (one reminder, not unlimited).
+
 ## Open Questions (area-specific)
-- Exact value of `x` days for dormant trigger — system default TBD
-- Notification mechanic when new weakness attached mid-journey (push, in-app badge, chat message?)
-- What happens to a dormant journey's VM reminder cadence — does the system nudge VA or VM?
-- Invitation: does the VA see the pending state clearly, and can they send a reminder to the invitee?
+_(none — area closed)_
 
 ## Flags
 - ⚠ Dormant state requires background scheduler — carry to integrations/tech constraints.

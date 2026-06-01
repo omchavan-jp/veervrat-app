@@ -35,11 +35,12 @@ _Last updated: 2026-06-01 | Round: R1_
 - Not a separate tool.
 - All admin/moderator actions are audit-logged (already a hard rule in CLAUDE.md).
 
+- **Moderator pending review dashboard:** yes — moderators see a unified dashboard of all pending items (ERC proposals, reported blog comments, etc.).
+- **Blog comment reporting:** yes — any authenticated user can report a comment for moderator review.
+- **Shloka queue reordering:** yes — moderators can reorder the queue.
+
 ## Open Questions (area-specific)
-- Custom ERC review workflow detail — what information does the moderator see per submission? (submitter profile + journey context already confirmed in permissions spec; exact UI layout TBD)
-- Can moderators see a dashboard of all pending review items across ERC proposals, blog comment reports, etc.? (assumed yes — TBD)
-- Blog comment reporting — can users report a comment for moderator review? TBD.
-- Queue management — can moderators reorder the shloka queue? Assumed yes.
+- Custom ERC review UI layout — exact layout TBD (implementation detail; content confirmed: submitter profile + journey context)
 
 ## Flags
 - ⚠ Taxonomy is admin-only — ensure no API endpoint allows non-admin creation of virtue/subvirtue/weakness entities.

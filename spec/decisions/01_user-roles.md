@@ -12,10 +12,12 @@ _Last updated: 2026-05-31 | Round: R1_
 - **Journey-level VM** is an independent relationship from global VM. Changing global VM does not silently cascade to journeys — it always surfaces explicit migration choices.
 
 - **VM is never required** at any scope — global or journey-level. VA can operate fully without one at all stages including journey completion. VM is recommended, never enforced.
-- **VM philosophy note:** a single one-time in-app note explains why the role is called "vratmitra" and not "mentor/guide/coach." Displayed once at an appropriate moment (TBD — onboarding or first VM interaction).
+- **VM philosophy note:** shown during framework onboarding (the "What is Veervrat" section). Shown once and not repeated on subsequent logins. Accessible again from the "My Vratmitras" page and the "What is Veervrat" nav page.
+- **Moderator permissions:** fully covered in `decisions/17_moderation.md`. Moderator = curates content + reviews custom ERC proposals + manages display content. Cannot access taxonomy, journey state overrides, or user management.
+- **Vratmitra credibility:** count of journeys completed as VM. Shown as a neutral stat on VM's public profile ("Guided X journeys to completion"). No score, no ranking, no comparison to others. Satisfies "no visible hierarchy" — it's a fact, not a grade.
 
 ## Open Questions (area-specific)
-- What specific permissions does the moderator role hold vs. admin? — flagged R1
+_(none — area closed)_
 
 ## Flags
-- ⚠ "No hierarchy display" + "credibility/verification mechanism" must be reconciled in design — unresolved — deferred to near-future
+- ⚠ "No hierarchy display" + credibility stat — resolved. Stat is factual count, not a ranking. Display as neutral profile field.

@@ -27,10 +27,12 @@ _Last updated: 2026-05-31 | Round: R1_
 - An ERC item cannot be deleted from the global pool if it is actively selected in any live journey. Must be deactivated/deprecated first.
 - A weakness cannot be detached from a journey if it is the only weakness and there are active ERC items filtered by that weakness — removing it would orphan those items.
 
+- **Anonymisation (account deletion):** pseudonymous ID — personal identifiers (name, email, avatar) replaced with a pseudonymous token. Content (journey data, logs, ERC) retained under that token. Exact legal/privacy detail TBD when privacy policy is written.
+- **Pending VM invitations when VA deletes account:** all pending invitations auto-cancelled. Invitees notified that the invitation is no longer valid.
+- **In-progress custom ERC review when submitter deletes account:** review continues. Submission is anonymised (shown as "[Deleted user]" to moderator) but content remains for moderator to decide. Decision stands regardless of submitter's account status.
+
 ## Open Questions (area-specific)
-- What does "anonymised" mean exactly for account deletion — pseudonymous ID, or full content scrub? Detail TBD with legal/privacy requirements.
-- What happens to pending VM invitations when the inviting VA deletes their account?
-- What happens to an in-progress custom ERC review if the submitter deletes their account before the moderator decides?
+_(none — area closed)_
 
 ## Flags
 - ⚠ `approved` as terminal ERC state — ensure no accidental rollback path exists in the service layer.
