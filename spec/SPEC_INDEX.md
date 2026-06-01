@@ -32,6 +32,7 @@ _Last updated: 2026-06-01_
 | My Vratmitras & Chat | ⬜ Not Started | — | — |
 | Pothi Redesign | ⬜ Not Started | — | — |
 | Virtue-First Reorientation | ⬜ Not Started | — | — |
+| VM Dashboard / VM View | ⬜ Not Started | — | — |
 
 ## Open Questions (consolidated)
 - Follow feed / activity stream — what does a follower see? — Public Profile — deferred to community round
