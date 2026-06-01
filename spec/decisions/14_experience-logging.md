@@ -26,6 +26,12 @@ _Last updated: 2026-06-01 | Round: R2_
 - **Global experience log entries** — raw, personal reflections. No title required. Tagged to data model entities. Three visibility tiers.
 - **Community blogs** — structured content with title, author, one-liner description. Different content type, different creation flow. Specced separately.
 
+### Draft Model
+- Mid-entry exit → prompt: "Save as draft" or "Discard."
+- Drafts are always **Only me** (private) until published.
+- On publish: VA sets visibility tier (Only me / Friends / Public).
+- Drafts persist indefinitely until published or manually deleted.
+
 ### Additional Confirmed Decisions
 - **Entity backlinks:** tagging an experience entry to an entity creates a visible backlink — the entry appears on that entity's page/detail view for users with permission to see it.
 - **Retroactive visibility:** if a mutual follow is broken, previously "Friends" entries become invisible to the unfollowed person immediately. Content still exists for the author.

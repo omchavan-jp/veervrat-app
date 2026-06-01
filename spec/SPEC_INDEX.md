@@ -24,7 +24,8 @@ _Last updated: 2026-05-31_
 | Platform Stats | ✅ Confirmed | R1 | decisions/11_platform-stats.md |
 | Onboarding | ✅ Confirmed | R2 | decisions/12_onboarding.md |
 | User Search & Invitations | ✅ Confirmed | R2 | decisions/13_user-search.md |
-| Global Experience Logging | ✅ Confirmed | R2 | decisions/14_experience-logging.md |
+| Global Experience Logging | ✅ Confirmed | R3 | decisions/14_experience-logging.md |
+| VA Dashboard | 🔄 In Progress | R1 | decisions/15_dashboard.md |
 
 ## Open Questions (consolidated)
 - Moderator permissions vs. admin — User Roles — R1
