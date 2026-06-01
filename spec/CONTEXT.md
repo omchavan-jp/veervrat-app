@@ -77,6 +77,14 @@ _Avoid_: progress state, completion flag
 A named, atomic capability in the system. Format: `resource.action` (e.g. `journey.view`, `erc.suggest`). Code always checks permissions, never role names directly. Permissions are the source of truth for access decisions.
 _Avoid_: right, privilege, access level
 
+**Guidance Page**
+A top-level page aggregating all actionable items across all VMs and journeys for a VA — pending approvals, VM suggestions, new ERC available, journey closures awaiting VM. Functions as an inbox. Name is a placeholder (alternatives: Actions, Pending, My Queue).
+_Avoid_: inbox, notifications (notifications are separate), to-do
+
+**Entity Reference**
+An inline mention of any app entity (journey, ERC item, weakness, virtue, shloka, blog, etc.) within a chat message. Renders as a clickable card/chip. Triggered via `@` or `#` syntax (exact per-type syntax TBD).
+_Avoid_: mention, tag, link
+
 **Invite Token**
 A unique code generated for every platform or VM invitation. Carries context (inviter, invitee, scope, type) through the signup flow. Enables attribution and pre-filled VM acceptance.
 _Avoid_: invite link, referral code
