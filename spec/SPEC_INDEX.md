@@ -30,6 +30,8 @@ _Last updated: 2026-06-01_
 | Content Pages & Cultural Elements | ✅ Confirmed | R2 | decisions/16_content-pages.md |
 | Moderation & Display Content | ✅ Confirmed | R2 | decisions/17_moderation.md |
 | My Vratmitras & Chat | ⬜ Not Started | — | — |
+| Pothi Redesign | ⬜ Not Started | — | — |
+| Virtue-First Reorientation | ⬜ Not Started | — | — |
 
 ## Open Questions (consolidated)
 - Follow feed / activity stream — what does a follower see? — Public Profile — deferred to community round
@@ -38,8 +40,6 @@ _Last updated: 2026-06-01_
 
 ## Deferred Items
 - **Vratmitra credibility mechanism** — resolved: neutral count "Guided X journeys to completion" on VM profile
-- **Pothi redesign** — Pothi vs Shlokas page vs Resources are distinct; spec conflates them. Must redesign before implementation.
-- **Virtue-first reorientation** — current spec is weakness-centric. Veervrat = "sadgunachi upasana". Virtues must be primary lens. Affects ERC tagging, experience log tagging, shloka tagging, dashboard, flows. Do not implement weakness-primary tagging until resolved.
 - **Suggestion algorithm enhancement** — major future initiative, not v1
 - **Chat data for research** — deferred to future version
 - **Duplicate custom ERC detection** — deferred to future version
