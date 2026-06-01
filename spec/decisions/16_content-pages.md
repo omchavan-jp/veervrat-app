@@ -1,5 +1,5 @@
 # Content Pages & Cultural Elements
-_Last updated: 2026-06-01 | Round: R1_
+_Last updated: 2026-06-01 | Round: R2_
 
 ## Confirmed Decisions
 
@@ -48,11 +48,31 @@ _Last updated: 2026-06-01 | Round: R1_
 - Accessible to guests.
 - Content managed by admin/moderator (adding/editing shlokas, tagging).
 
+### Saka Calendar — Informational Treatment
+- Clicking the Saka date opens an **in-app modal** with a brief explanation of the Saka (Rashtriya Saur) calendar — what it is, why it's shown here.
+- Modal includes a "Learn more" link to a **dedicated in-app page** with fuller historical and cultural context.
+- No external redirects — keeps users within the app.
+- Content managed by admin.
+
+### Pothi — Shloka Tagging
+- A shloka can be tagged to any combination of:
+  - Formal data model entities: weakness, virtue, subvirtue, sentence, exposure, resolution, challenge
+  - Loose theme labels — free-form tags not linked to the formal data model (e.g. "discipline", "surrender", "self-effort")
+- Both tag types can coexist on the same shloka.
+- Tags link to relevant entity pages where applicable (formal tags). Loose theme tags are displayed as labels only.
+
+### Community Blogs — Comments
+- Authenticated users (VA, VM) can comment on community blogs. Guests cannot.
+- **Blog author** can delete or hide specific comments on their own blog.
+- **Moderators** can delete or hide any comment on any blog.
+- Hidden comments: hidden from public view but remain visible to the comment author (they see it marked as hidden, not deleted).
+- Deleted comments: permanently removed.
+
 ## Open Questions (area-specific)
-- Saka calendar: in-app modal vs external link for informational redirect — TBD (design decision)
-- Blog comments — can readers comment on community blogs? TBD.
-- Pothi shloka tagging to weaknesses — same tag system as ERC weakness tags, or a separate tagging layer?
 - Shloka of the day scheduling — how far in advance can admin schedule? TBD implementation detail.
+- Blog comment nesting — flat (top-level only) or threaded replies? TBD.
+- Loose theme tags on shlokas — is there a managed taxonomy (admin-defined labels) or truly free-form? TBD.
 
 ## Flags
 - ⚠ "What is Veervrat" page content mirrors framework onboarding content — must stay in sync. Single source of truth should be admin-managed content, pulled into both places.
+- ⚠ Shloka tagging spans both formal data model and loose labels — two distinct tag systems on one entity. Ensure UI clearly distinguishes them.

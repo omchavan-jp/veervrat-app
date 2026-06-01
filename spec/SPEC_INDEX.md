@@ -26,7 +26,7 @@ _Last updated: 2026-05-31_
 | User Search & Invitations | ✅ Confirmed | R2 | decisions/13_user-search.md |
 | Global Experience Logging | ✅ Confirmed | R3 | decisions/14_experience-logging.md |
 | VA Dashboard | 🔄 In Progress | R1 | decisions/15_dashboard.md |
-| Content Pages & Cultural Elements | 🔄 In Progress | R1 | decisions/16_content-pages.md |
+| Content Pages & Cultural Elements | ✅ Confirmed | R2 | decisions/16_content-pages.md |
 
 ## Open Questions (consolidated)
 - Moderator permissions vs. admin — User Roles — R1
