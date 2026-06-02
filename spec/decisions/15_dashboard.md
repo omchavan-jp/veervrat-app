@@ -4,15 +4,15 @@ _Last updated: 2026-06-01 | Round: R1_
 ## Confirmed Decisions
 
 ### Stats Bar (personal, always visible on dashboard)
-Shows hybrid activity + progress stats:
-- Weaknesses explored
-- Tests taken
+Shows hybrid activity + progress stats. **Virtue-first:** virtues/subvirtues being cultivated is the primary headline stat. Weakness stats are secondary.
+- **Virtues/subvirtues being cultivated** (derived from active journeys → sentence → subvirtue → virtue) — primary
 - Journeys active · Journeys completed
 - Exposures active · Resolutions active · Challenges active
 - Exposures completed · Resolutions completed · Challenges completed
+- Weaknesses explored · Tests taken — secondary (drill-down)
 
 ### Path Card 01 — Study Your Weakness
-Weakness-centric view:
+Label retained. Subtext or info link ("Why study weaknesses?") explains the virtue-first philosophy.
 - Weaknesses explored (browsed/tested at least once)
 - Weaknesses with at least one test taken
 - Weaknesses with an active journey

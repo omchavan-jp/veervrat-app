@@ -37,7 +37,7 @@ _Last updated: 2026-06-01_
 | My Vratmitras & Chat | ✅ Confirmed | R2 | decisions/18_my-vratmitras-chat.md |
 | Pothi Redesign | ✅ Confirmed | R1 | decisions/19_pothi-redesign.md |
 | Design Philosophy & UX | ✅ Confirmed | R1 | decisions/20_design-philosophy.md |
-| Virtue-First Reorientation | ⬜ Not Started | — | — |
+| Virtue-First Reorientation | ✅ Confirmed | R1 | decisions/21_virtue-first-reorientation.md |
 | VM Dashboard / VM View | ⬜ Not Started | — | — |
 
 ## Open Questions (consolidated)

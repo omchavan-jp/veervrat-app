@@ -5,7 +5,8 @@ _Last updated: 2026-05-31 | Round: R5_
 
 ### Flow 1 — Study Your Weakness
 - Entry: VA browses weaknesses → selects one → takes test (all sentences of linked subvirtues) → sees results.
-- Results screen: flagged sentences (Sometimes/Never) surfaced at top; all sentences shown below.
+- **"Why study weaknesses?" modal** accessible from entry — explains virtue-first philosophy and "sadgunachi upasana."
+- Results screen: **primary** — suggested sentences to work on (flagged Sometimes/Never) surfaced at top; all sentences shown below. **Secondary** — cumulative view of virtues/subvirtues to work on, derived from the flagged sentences' subvirtue mappings.
 - VA can start a journey from any sentence — no restriction based on score. Full freedom.
 
 ### Flow 2 — Work on Your Weakness (Dashboard)

@@ -14,6 +14,8 @@ _Last updated: 2026-05-31 | Round: R2_
 
 - **Journey weakness tags:** a journey has its own `journey_weakness` join table — records which weaknesses the journey was started from / has been attached to. Separate from ERC-level weakness tags.
 
+- **Virtue-first display priority:** virtue/subvirtue tags are shown first in all ERC and content displays. Weakness tags are retained in the DB and shown below. This is a display/framing change — no schema change. Virtue/subvirtue tag is not required on ERC items; when present, it surfaces first in the UI.
+
 ## Open Questions (area-specific)
 - One challenge per journey or many? — RESOLVED R5: multiple allowed
 
