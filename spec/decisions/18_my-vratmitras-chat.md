@@ -45,6 +45,12 @@ _Last updated: 2026-06-02 | Round: R2_
 - **Chat notifications:** in-app (bell) + email. VA can toggle email notifications per VM or globally for all chat — from settings or inline on the My Vratmitras page.
 - **VM removal:** done from the VM detail panel (right panel) — [Remove as VM] action. For journey-level VM, removes from that journey. For global VM, goes to Global VM Settings for the migration flow.
 
+### Chat Access from Journey Page
+- The Chat tab within a journey (Status Overview · Exposures · Resolutions · Challenges · **Chat**) opens the full persistent VA-VM thread.
+- A **sticky context banner** appears at the top: "You're viewing this chat in the context of [Journey Title]." Dismissible.
+- Clicking an entity reference (e.g. #exposure) from within this context navigates back to that item in the journey.
+- The thread is not filtered — full history is visible. The banner provides orientation, not restriction.
+
 ## Open Questions (area-specific)
 - Guidance page name — final copy TBD (alternatives: Actions, Pending, My Queue)
 - VM guidance view location — covered in VM Dashboard spec round
