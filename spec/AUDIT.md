@@ -1,5 +1,5 @@
 # Pre-Implementation Spec Audit
-_Date: 2026-06-02 | Status: Unresolved_
+_Date: 2026-06-02 | Status: ✅ All blocking items resolved — see open/questions.md for remaining minor TBDs_
 
 ---
 
