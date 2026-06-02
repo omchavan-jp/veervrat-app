@@ -32,6 +32,10 @@ _Last updated: 2026-06-01 | Round: R2_
 - On publish: VA sets visibility tier (Only me / Friends / Public).
 - Drafts persist indefinitely until published or manually deleted.
 
+### Post-Publish Visibility Change
+- VA can change the visibility tier of a published experience log entry at any time (e.g. Public → Only me, Friends → Public).
+- Changes take effect immediately. If downgraded (e.g. Public → Friends), the entry becomes invisible to those who no longer qualify — no notification sent to affected viewers.
+
 ### Additional Confirmed Decisions
 - **Entity backlinks:** tagging an experience entry to an entity creates a visible backlink — the entry appears on that entity's page/detail view for users with permission to see it.
 - **Retroactive visibility:** if a mutual follow is broken, previously "Friends" entries become invisible to the unfollowed person immediately. Content still exists for the author.

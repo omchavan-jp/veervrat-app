@@ -41,10 +41,31 @@ _Last updated: 2026-05-31 | Round: R5_
 - Log ≠ completion. Logging and completion status tracking are separate concerns.
 
 #### E/R/C Status Tracking
-- Each E/R/C entity has its own **status**: `not_started → in_progress → submitted → approved` or `submitted → revisit`.
-- VA submits an entity for completion/closure. **VM reviews and approves** the closure of any entity, including the entire journey.
-- If no VM is attached: VA self-approves. VM is recommended, never required.
-- VA cannot unilaterally mark their own entities complete when a VM is present — VM approval is the gate.
+- Each E/R/C entity has its own status: `not_started → in_progress → submitted → approved` or `submitted → revisit`.
+- `not_started → in_progress`: manual VA action — VA explicitly taps "Start" on an ERC item. Not automatic.
+- `in_progress → submitted`: VA submits the item for closure/completion.
+- `submitted → approved`: VM approves (or VA self-approves if no VM).
+- `submitted → revisit`: VM returns for rework. VA revises and resubmits.
+- VA cannot unilaterally approve when a VM is present — VM approval is the gate.
+- If no VM: VA self-approves directly from `submitted`.
+
+#### Journey Closure
+- VA clicks "Submit for completion" on the journey Status Overview.
+- Enabled once at least one challenge has been submitted or approved.
+- VM notified to review and approve. If no VM: VA self-approves.
+
+#### Loose Theme Tags
+- Free-form text labels on shlokas, resources, and ERC items. No managed taxonomy — no pre-defined tag table. Stored as text array.
+- Autocomplete shows previously used labels when typing — prevents fragmentation without enforcing taxonomy.
+- Anyone with edit access to the entity can pick from existing labels or add new ones.
+
+#### VM Suggestion Accept/Reject
+- Accepting = VA activates that ERC item (same as self-selection). VM sidenote remains on the item.
+- Rejecting = VA dismisses. VM sidenote removed. VM notified of rejection. ERC item remains in pool, can still be self-selected later.
+
+#### Multiple Weakness Contexts at Journey Start
+- Journey starts with only the weakness the VA navigated from (e.g. weakness A's test result).
+- If the same sentence was flagged in weakness B's test (also taken by VA), the journey interior shows a contextual prompt: "This sentence was also flagged in your [Weakness B] test — want to attach that weakness to this journey?" Non-blocking, dismissible.
 
 #### Mid-Journey VM Change
 - VM can be changed mid-journey. This is explicitly allowed.

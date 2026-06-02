@@ -39,6 +39,8 @@ _Last updated: 2026-06-01_
 | Design Philosophy & UX | ✅ Confirmed | R1 | decisions/20_design-philosophy.md |
 | Virtue-First Reorientation | ✅ Confirmed | R1 | decisions/21_virtue-first-reorientation.md |
 | VM Dashboard / VM View | ✅ Confirmed | R2 | decisions/22_vm-dashboard.md |
+| Test Scoring | ✅ Confirmed | R1 | decisions/23_test-scoring.md |
+| Resolution Tracking | ✅ Confirmed | R1 | decisions/24_resolution-tracking.md |
 
 ## Open Questions (consolidated)
 - Follow feed / activity stream — what does a follower see? — Public Profile — deferred to community round
