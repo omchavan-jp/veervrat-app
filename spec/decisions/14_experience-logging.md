@@ -44,10 +44,12 @@ _Last updated: 2026-06-01 | Round: R2_
 
 - **Sidebar curation:** moderators select featured public experience entries for the right sidebar carousel via the moderator display content management UI. The full browsable pool of public entries is available to moderators for selection. This is the moderation UI referenced in `decisions/17_moderation.md`.
 
+- **Media limits:** max 10MB per image, max 5 images per entry. Images only (JPG, PNG, GIF, WebP).
+- **Rich text formatting:** full editor — bold, italic, headings, links, inline images. Same editor as community blogs.
+- **VM visibility of tagged entries:** if a VA tags a global experience log entry to a journey, the VM assigned to that journey can see the entry.
+
 ## Open Questions (area-specific)
-- Image upload limits per entry (file size, count) — TBD, aligns with chat media limits discussion.
-- Rich text formatting beyond images — bold, italic, headings, links? TBD implementation detail.
-- Does tagging a global experience log entry to a journey make it visible to the assigned VM of that journey? (Assumed yes if VA's entry is tagged to a journey the VM is assigned to — but needs explicit confirmation.)
+_(none — area closed)_
 
 ## Flags
 - ⚠ "Friends" visibility tier depends on mutual follow — must be consistent with follow system spec. If follow is one-way, "friends" = mutual follows (both follow each other).

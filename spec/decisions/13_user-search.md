@@ -71,7 +71,7 @@ Two distinct invitation types, both tracked:
 - When last active is hidden: field is absent entirely from search result display — not shown as "—" or any placeholder.
 
 ## Open Questions (area-specific)
-- Search result ranking — exact match first, then fuzzy? TBD implementation detail.
+- Search result ranking — exact match first, then fuzzy (by score). Implementation detail.
 - Currently active indicator — shown to everyone (guests, other VAs) or only to authenticated users?
 
 ## Flags

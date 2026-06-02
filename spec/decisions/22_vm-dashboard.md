@@ -66,8 +66,8 @@ Separate from the VA Guidance page (`/guidance`). Two distinct pages with distin
 ---
 
 ## Open Questions (area-specific)
-- When a VM is on 50+ journeys across many VAs — does the My Vratarthis list need search/filter? (Assumed yes for scale — TBD implementation detail)
-- Can a VM step down from a journey-level assignment themselves, or only be removed by the VA? (Assumed VM can also withdraw — TBD)
+- My Vratarthis list search/filter: **yes** — search by VA name/username when list grows large. Implementation detail.
+- VM self-withdrawal: **yes** — VM can remove themselves. Confirmed in `decisions/04_lifecycle.md`.
 - Notification for new pending approval: in-app + email (same as all other notifications) — assumed yes
 
 ## Flags

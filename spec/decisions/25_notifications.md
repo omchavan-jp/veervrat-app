@@ -61,5 +61,5 @@ Each notification has:
 - Chat-specific email toggle is per-VM (see `decisions/18_my-vratmitras-chat.md`).
 
 ## Open Questions (area-specific)
-- Notification retention period — how long before old notifications are archived/purged? TBD (implementation detail, suggested: 90 days).
+- Notification retention: **90 days**. Notifications older than 90 days are soft-archived (not deleted, but hidden from panel by default).
 - Push notifications (web browser push) — out of scope for v1.

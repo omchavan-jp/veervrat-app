@@ -39,7 +39,7 @@ _Last updated: 2026-06-02 | Round: R2_
 - VM also has their own guidance view showing their pending approvals to action — location TBD (VM Dashboard spec round).
 
 ### What Guidance Is Not Called
-- Not "Guidance" if a better name emerges — the name is a placeholder. Alternatives: "Actions", "Pending", "My Queue". Final name TBD.
+- Page name: **Actions** (confirmed). Nav label: "Actions"
 
 - **Chat mute:** VA can mute a chat thread with a specific VM — stops notifications, can still read/send. Reversible from settings.
 - **Chat notifications:** in-app (bell) + email. VA can toggle email notifications per VM or globally for all chat — from settings or inline on the My Vratmitras page.
@@ -52,7 +52,7 @@ _Last updated: 2026-06-02 | Round: R2_
 - The thread is not filtered — full history is visible. The banner provides orientation, not restriction.
 
 ## Open Questions (area-specific)
-- Guidance page name — final copy TBD (alternatives: Actions, Pending, My Queue)
+- Guidance page name: **Actions** (confirmed)
 - VM guidance view: `/vratmitra/guidance` — confirmed in `decisions/22_vm-dashboard.md`
 - `@`/`#` trigger syntax per entity type — implementation detail TBD
 

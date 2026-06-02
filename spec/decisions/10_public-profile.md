@@ -49,10 +49,10 @@ Regardless of VA's visibility settings, these are never shown on a public profil
 - **Last active hidden behavior:** field is **absent entirely** from the profile — not shown as "—" or any placeholder. Consistent with "no hidden label" intent.
 - **Username and display name:** separate fields. Display name = real name shown everywhere. Username = unique handle for search + public URL `/u/username`. Both set at account setup.
 - **Full profile privacy:** yes — VA can make entire profile private (hidden from guests and other authenticated users). Profile URL returns a "This profile is private" screen.
-- **Follow feed / activity stream:** TBD in community/social round (future spec).
+- **Follow feed / activity stream:** deferred to future version — not in v1.
 
 ## Open Questions (area-specific)
-- Follow feed / activity stream — what does a follower see? Deferred to community/social round.
+- Follow feed / activity stream — deferred to future version.
 
 ## Flags
 - ⚠ Follow relationship is one-way; "Friends" = mutual follows — resolved and consistent.

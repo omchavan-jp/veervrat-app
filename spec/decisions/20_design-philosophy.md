@@ -70,7 +70,7 @@ Language affects every layer of the app. Known cases that need handling:
 
 ## Open Questions (area-specific)
 - Illustration/mascot for empty states — does Veervrat want a custom character, or use symbolic imagery (lotus, diya, etc.) consistent with the cultural identity? TBD in design phase.
-- Animation library for Next.js frontend — Framer Motion is the standard choice. Confirm before implementation.
+- Animation library: **Framer Motion** — confirmed for Next.js frontend.
 - Specific peak animation for test report reveal — format TBD in design phase.
 
 ## Flags

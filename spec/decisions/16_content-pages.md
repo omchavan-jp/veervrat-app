@@ -6,7 +6,7 @@ _Last updated: 2026-06-01 | Round: R2_
 ### Saka Calendar Display
 - Shows today's Saka (Rashtriya Saur / Indian National Calendar, solar) date alongside the Gregorian date on the dashboard. Minified display — not prominent, contextual.
 - Purely a display element in v1. No functional alignment with journeys or milestones.
-- Includes an informational link/redirect: either to an external resource (e.g. Wikipedia) or an in-app modal/page explaining what the Saka calendar is, its history, and significance. Exact treatment TBD (modal vs page vs external link).
+- Includes an informational link: clicking opens an in-app modal (brief explanation) with a "Learn more" link to a dedicated in-app page (full historical and cultural context). Confirmed in  Saka Calendar section below.
 - Consistent with the app's intentional lean into Indian cultural identity alongside shlokas, Devanagari, Pothi.
 
 ### Community Blogs
@@ -69,9 +69,9 @@ _Last updated: 2026-06-01 | Round: R2_
 - Deleted comments: permanently removed.
 
 ## Open Questions (area-specific)
-- Shloka of the day scheduling — how far in advance can admin schedule? TBD implementation detail.
-- Blog comment nesting — flat (top-level only) or threaded replies? TBD.
-- Loose theme tags on shlokas — is there a managed taxonomy (admin-defined labels) or truly free-form? TBD.
+- Shloka of the day scheduling — no hard limit on advance scheduling. Implementation detail.
+- Blog comment nesting — **flat** (top-level only) in v1. `parent_comment_id` exists in schema for future threading.
+- Loose theme tags on shlokas — **free-form with autocomplete** from previously used labels. Same approach as ERC loose tags.
 
 ## Flags
 - ⚠ "What is Veervrat" page content mirrors framework onboarding content — single source of truth is admin-managed content stored as a CMS entity, rendered in both the onboarding flow and the "What is Veervrat" nav page. Not duplicated in code.

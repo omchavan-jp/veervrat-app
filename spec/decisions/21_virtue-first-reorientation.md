@@ -79,9 +79,9 @@ The following existing spec files need minor updates to reflect virtue-first dis
 - `02_data-model.md` — note virtue/subvirtue as primary display tag
 
 ## Open Questions (area-specific)
-- Virtues & Weaknesses browser: modal vs dedicated page for virtue/weakness detail — TBD (likely page for depth of content)
-- Nav placement of Virtues & Weaknesses browser — where does it live in the sidebar nav?
-- "Why study weaknesses?" modal — separate from "What is Veervrat" content or part of it?
+- Virtues & Weaknesses browser: **dedicated page** for virtue/weakness detail (confirmed — depth of content requires full page, not modal)
+- Nav placement — TBD during implementation (sidebar nav, likely under Study path)
+- "Why study weaknesses?" modal — standalone modal, separate from "What is Veervrat" page. Accessible as a contextual explainer.
 
 ## Flags
 - ⚠ Virtue-first is a display/framing change, not a data model change. ERC weakness tags remain in the DB; they are not removed or demoted in schema — only in display priority.

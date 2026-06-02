@@ -32,6 +32,14 @@ _Last updated: 2026-05-31 | Round: R2_
 - `vm_sidenote` — id, vm_id FK user, entity_type (enum: exposure / resolution / challenge), entity_id (uuid), text, acknowledged_by_va_at (nullable), revoked_at (nullable), created_at, updated_at
 - Polymorphic: entity_type + entity_id references the journey-level ERC item (not the pool item).
 
+**Resolution (pool)** — existing entity gains two optional fields:
+- `frequency_per_week` (nullable integer) — suggested times per week
+- `frequency_label` (nullable text) — human-readable label (e.g. "Every evening")
+
+**Resolution journey instance** (the journey-level copy of a selected resolution):
+- Stores VA-customised values: `duration_weeks`, `frequency_per_week`, `frequency_label` (all editable, default to pool values)
+- `started_at` (timestamp), `submitted_at` (nullable), `approved_at` (nullable)
+
 **Resolution Check-in**
 - `resolution_checkin` — id, resolution_journey_id FK (journey-level resolution instance), va_id FK user, status (enum: done / partial / missed), note (nullable text), checked_in_at, created_at
 

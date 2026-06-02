@@ -60,3 +60,8 @@ _Last updated: 2026-05-31 | Round: R1_
 ## Flags
 - ⚠ `@nestjs/schedule` dormant job is not multi-instance safe. Must be revisited before horizontal scaling.
 - ⚠ Resend free tier (3k/month) — monitor usage, upgrade plan before limit is hit.
+
+### Media Limits (confirmed)
+- **Images in chat and experience logs:** max 10MB per image, max 5 images per message/entry.
+- **Allowed file types:** images only (JPG, PNG, GIF, WebP) for v1. No document/video uploads in chat or experience logs.
+- **Media retention:** stored indefinitely in MinIO (no auto-purge in v1).
