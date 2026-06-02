@@ -76,7 +76,7 @@ Acting *on* data, not *as* participants.
 | `admin.override_journey_state` | ✅ emergency only, audit-logged | ❌ |
 | `admin.view_chat` | ❌ (v1 — chat permanently private) | ❌ |
 | `admin.manage_content` | ✅ | ❌ |
-| `admin.manage_users` | ✅ | ❌ |
+| `admin.manage_users` | ✅ (role assignment, account suspension, forced anonymisation, email verification override) | ❌ |
 | `admin.view_platform_stats` | ✅ | ❌ |
 | `moderator.review_custom_erc` | ✅ | ✅ (submitter profile + journey title + sentence + subvirtue/virtue + weakness tags on journey. No journey contents, logs, or ERC status.) |
 | `moderator.manage_display_content` | ✅ | ✅ (shlokas, screen sections, sidebar curation) |

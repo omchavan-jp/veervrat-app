@@ -74,5 +74,5 @@ _Last updated: 2026-06-01 | Round: R2_
 - Loose theme tags on shlokas — is there a managed taxonomy (admin-defined labels) or truly free-form? TBD.
 
 ## Flags
-- ⚠ "What is Veervrat" page content mirrors framework onboarding content — must stay in sync. Single source of truth should be admin-managed content, pulled into both places.
-- ⚠ Shloka tagging spans both formal data model and loose labels — two distinct tag systems on one entity. Ensure UI clearly distinguishes them.
+- ⚠ "What is Veervrat" page content mirrors framework onboarding content — single source of truth is admin-managed content stored as a CMS entity, rendered in both the onboarding flow and the "What is Veervrat" nav page. Not duplicated in code.
+- ⚠ Shloka tagging spans both formal data model and loose labels — two distinct tag systems on one entity. Ensure UI clearly distinguishes them (formal tags shown as structured chips linked to entities; loose tags shown as plain text labels).

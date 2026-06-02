@@ -42,10 +42,12 @@ _Last updated: 2026-06-01 | Round: R2_
 - **Character limit:** none for v1.
 - **Media attachments:** images supported (stored via MinIO). Rich entry format — text + inline images, similar to Substack-style composition.
 
+- **Sidebar curation:** moderators select featured public experience entries for the right sidebar carousel via the moderator display content management UI. The full browsable pool of public entries is available to moderators for selection. This is the moderation UI referenced in `decisions/17_moderation.md`.
+
 ## Open Questions (area-specific)
 - Image upload limits per entry (file size, count) — TBD, aligns with chat media limits discussion.
 - Rich text formatting beyond images — bold, italic, headings, links? TBD implementation detail.
-- Does tagging to a journey entry appear in the journey's feed/log for the assigned VM to see?
+- Does tagging a global experience log entry to a journey make it visible to the assigned VM of that journey? (Assumed yes if VA's entry is tagged to a journey the VM is assigned to — but needs explicit confirmation.)
 
 ## Flags
 - ⚠ "Friends" visibility tier depends on mutual follow — must be consistent with follow system spec. If follow is one-way, "friends" = mutual follows (both follow each other).

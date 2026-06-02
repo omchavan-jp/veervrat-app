@@ -50,6 +50,8 @@ Both derived and manual:
 
 - **Weakness pins:** unlimited — no cap.
 - **Draft test expiry:** no expiry. VA can be periodically prompted to review old drafts (e.g. "You have a draft from 30 days ago — submit, continue, or discard?"). Prompt is gentle, not blocking.
+- **Draft test resume:** drafts are accessible from the weakness detail page (the weakness the draft belongs to) — a "Resume draft" button appears instead of "Take test." VA resumes from their last answered sentence. If sentences have been added to the weakness since the draft was saved, new sentences appear at the end of the test (pre-existing answers preserved).
+- **Draft test location:** the Path 01 stats ("Tests saved as drafts" count) links to a list of all drafts, each with weakness name and last-edited date.
 
 ## Open Questions (area-specific)
 - Score preview on test submission — exact format TBD (implementation detail)
