@@ -30,7 +30,8 @@ _Last updated: 2026-06-01_
 | Content Pages & Cultural Elements | ✅ Confirmed | R2 | decisions/16_content-pages.md |
 | Moderation & Display Content | ✅ Confirmed | R2 | decisions/17_moderation.md |
 | My Vratmitras & Chat | ✅ Confirmed | R2 | decisions/18_my-vratmitras-chat.md |
-| Pothi Redesign | ⬜ Not Started | — | — |
+| Pothi Redesign | ✅ Confirmed | R1 | decisions/19_pothi-redesign.md |
+| Design Philosophy & UX | ✅ Confirmed | R1 | decisions/20_design-philosophy.md |
 | Virtue-First Reorientation | ⬜ Not Started | — | — |
 | VM Dashboard / VM View | ⬜ Not Started | — | — |
 
