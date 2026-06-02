@@ -6,8 +6,13 @@ _Last updated: 2026-06-01_
 
 ## ADRs
 - [0001](adr/0001-sentence-as-journey-anchor.md) — sentence is the atomic journey anchor
-- [0002](adr/0002-erc-directly-on-sentence.md) — ERC attaches directly to sentence
+- [0002](adr/0002-erc-directly-on-sentence.md) — ERC attaches directly to sentence; no plan entity
 - [0003](adr/0003-rbac-abac-hybrid.md) — RBAC + ABAC hybrid permission model
+- [0004](adr/0004-persistent-chat-per-va-vm-pair.md) — one persistent chat thread per VA-VM pair, not per journey
+- [0005](adr/0005-global-vm-sees-all-va-data.md) — global VM sees all VA data; journey VM scoped to assigned journeys
+- [0006](adr/0006-draft-model-for-tests-and-experience-logs.md) — draft model for tests and experience log entries
+- [0007](adr/0007-pothi-shlokas-resources-as-separate-entities.md) — Pothi / Shlokas / Resources are three distinct entities
+- [0008](adr/0008-journey-weakness-as-separate-join-table.md) — journey weakness join table separate from ERC-level weakness tags
 
 ## Status
 | Area | Status | Last Round | File |
