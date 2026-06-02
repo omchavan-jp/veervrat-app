@@ -53,7 +53,7 @@ _Last updated: 2026-06-02 | Round: R2_
 
 ## Open Questions (area-specific)
 - Guidance page name — final copy TBD (alternatives: Actions, Pending, My Queue)
-- VM guidance view location — covered in VM Dashboard spec round
+- VM guidance view: `/vratmitra/guidance` — confirmed in `decisions/22_vm-dashboard.md`
 - `@`/`#` trigger syntax per entity type — implementation detail TBD
 
 ## Flags

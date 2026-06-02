@@ -46,6 +46,7 @@ Regardless of VA's visibility settings, these are never shown on a public profil
 - Experience log entries marked "Only me" or "Friends"
 
 - **"Friends" visibility tier:** = mutual follows (both follow each other). Consistent with one-way follow system — friends are the subset where both parties follow each other.
+- **Last active hidden behavior:** field is **absent entirely** from the profile — not shown as "—" or any placeholder. Consistent with "no hidden label" intent.
 - **Username and display name:** separate fields. Display name = real name shown everywhere. Username = unique handle for search + public URL `/u/username`. Both set at account setup.
 - **Full profile privacy:** yes — VA can make entire profile private (hidden from guests and other authenticated users). Profile URL returns a "This profile is private" screen.
 - **Follow feed / activity stream:** TBD in community/social round (future spec).

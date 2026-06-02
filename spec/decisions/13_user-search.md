@@ -68,7 +68,7 @@ Two distinct invitation types, both tracked:
 - **Last active** is shown on public profiles and in search results: "Today", "1 day ago", "3 days ago", etc. (day-level granularity, not exact time).
 - **Currently active** (online indicator) — shown when user is actively using the app. VA can toggle this on/off from settings. Default: on.
 - VA can hide last active from their public profile (privacy setting, like WhatsApp last seen). Default: visible.
-- When last active is hidden: shown as "—" or hidden entirely (not "hidden" label).
+- When last active is hidden: field is absent entirely from search result display — not shown as "—" or any placeholder.
 
 ## Open Questions (area-specific)
 - Search result ranking — exact match first, then fuzzy? TBD implementation detail.

@@ -33,10 +33,14 @@ _Last updated: 2026-05-31 | Round: R1_
 ### Role-Gated Content (all previously specced, confirmed exhaustive)
 No non-obvious role-gating beyond what is already in `decisions/05_permissions.md`. All gating is derived from the VA/VM/admin permission model.
 
+- **Public experience log entries marked "Public":** visible to guests. Confirmed in `decisions/14_experience-logging.md`.
+- **Public VA profile:** fields confirmed in `decisions/10_public-profile.md`. All toggled-on fields visible to guests.
+
 ## Open Questions (area-specific)
-- Public VA profile — what fields/stats are visible to guests? (specced next round)
-- Experience log entries marked "Public" — visible to guests? (specced in global experience logging round)
-- SEO / crawlability — should public content (Pothi, blogs, weakness list) be indexable by search engines? TBD
+- SEO / crawlability — public content indexable by search engines? TBD (see below)
+
+## Confirmed Additional
+- **SEO / crawlability:** public-facing pages (Pothi, Shlokas, blogs, weakness list, public profiles, What is Veervrat) are server-side rendered and should be indexable. Implementation requires: `<meta>` tags per page, `robots.txt` allowing crawl of public routes, `sitemap.xml` for public content. Specific meta tag content per page type is an implementation detail.
 
 ## Flags
 - ⚠ Soft prompt must not lose the user's current context (scroll position, selected weakness, etc.) when dismissed — UX requirement for implementation.

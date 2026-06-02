@@ -40,7 +40,7 @@ _Last updated: 2026-05-31 | Round: R5_
 - Log ≠ completion. Logging and completion status tracking are separate concerns.
 
 #### E/R/C Status Tracking
-- Each E/R/C entity has its own **status** (exact states TBD — examples: pending, in progress, completed, closed).
+- Each E/R/C entity has its own **status**: `not_started → in_progress → submitted → approved` or `submitted → revisit`.
 - VA submits an entity for completion/closure. **VM reviews and approves** the closure of any entity, including the entire journey.
 - If no VM is attached: VA self-approves. VM is recommended, never required.
 - VA cannot unilaterally mark their own entities complete when a VM is present — VM approval is the gate.
@@ -55,7 +55,7 @@ _Last updated: 2026-05-31 | Round: R5_
 - VA or VM can create custom E/R/C within a journey.
 - Two visibility options: **journey-scoped** (default) or **submitted for review** to moderators/admin for global dataset inclusion.
 - On review: approved → added to global dataset; rejected → remains journey-scoped. VA and VM notified either way.
-- Duplicate submissions from VA and VM independently: flagged for moderator awareness. Exact deduplication mechanic TBD.
+- Duplicate submissions from VA and VM independently: flagged for moderator awareness (shown side-by-side with "possible duplicate" indicator). Exact automated deduplication detection deferred to future version.
 
 #### Journey Completion
 - VA completes E/R/C items (VM approves closures, or self-approve if no VM).
@@ -65,7 +65,7 @@ _Last updated: 2026-05-31 | Round: R5_
 
 ### Chat
 - One-on-one between VA and their journey VM. Not a group chat.
-- Not visible to admin/moderator by default. TBD: sharing with admin for research/algorithm purposes (potentially anonymised).
+- Not visible to admin or moderator. Admin chat access is not permitted in v1. Chat data sharing for research/algorithm purposes is deferred to a future version.
 
 #### Journey Interior Navigation
 - Tab/section structure: **Status Overview · Exposures · Resolutions · Challenges · Chat**.

@@ -52,7 +52,7 @@ Acting *on* data, not *as* participants.
 | `admin.view_any_user` | ✅ | ❌ |
 | `admin.view_any_test_result` | ✅ | ❌ |
 | `admin.override_journey_state` | ✅ emergency only, audit-logged | ❌ |
-| `admin.view_chat` | TBD | ❌ |
+| `admin.view_chat` | ❌ (v1 — chat permanently private) | ❌ |
 | `admin.manage_content` | ✅ | ❌ |
 | `admin.manage_users` | ✅ | ❌ |
 | `admin.view_platform_stats` | ✅ | ❌ |
@@ -66,7 +66,7 @@ Acting *on* data, not *as* participants.
 - A VA can have both simultaneously: one global VM (full view) and one or more journey-level VMs (scoped view per journey).
 - VM role alone (without assignment) grants nothing.
 - VA test results visible to: VA (own), global VM, journey VMs (for their assigned journey's relevant tests), admin. Not moderators.
-- Chat: private between VA and VM. Admin access TBD.
+- Chat: permanently private between VA and VM. Admin cannot view chat (v1).
 - `admin.override_journey_state` is an emergency escape hatch — all uses audit-logged.
 
 - **`admin.view_chat`:** admin cannot view any chat (v1). Chat is permanently private between VA and VM.

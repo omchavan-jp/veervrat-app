@@ -42,7 +42,7 @@ These features are visible in prototypes or have been confirmed as intended — 
 - **Saka calendar display** — Rashtriya Saur calendar date alongside Gregorian on dashboard.
 
 ### User Flows
-- **Onboarding flow** — first-run experience. Profile creation (name, email verification, mobile, WhatsApp toggle), "Our stance" card (autonomy emphasis).
+- **Onboarding flow** — first-run experience. Profile creation (name, username, email, language preference, gender optional, DoB optional). No mobile or WhatsApp fields (dropped). "Our stance" card (autonomy emphasis). Full spec in `decisions/12_onboarding.md`.
 - **User search** — finding users by name/username for VM invitation.
 - **VA public profile** — what a guest or another user sees on a VA's public page.
 
