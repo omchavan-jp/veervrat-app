@@ -41,6 +41,8 @@ _Last updated: 2026-06-01_
 | VM Dashboard / VM View | ✅ Confirmed | R2 | decisions/22_vm-dashboard.md |
 | Test Scoring | ✅ Confirmed | R1 | decisions/23_test-scoring.md |
 | Resolution Tracking | ✅ Confirmed | R1 | decisions/24_resolution-tracking.md |
+| Notification System | ✅ Confirmed | R1 | decisions/25_notifications.md |
+| Account Settings | ✅ Confirmed | R1 | decisions/26_account-settings.md |
 
 ## Open Questions (consolidated)
 - Follow feed / activity stream — what does a follower see? — Public Profile — deferred to community round

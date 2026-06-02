@@ -40,8 +40,30 @@ VA and VM acting as participants. A user who is also admin holds these only for 
 | `chat.send` | ✅ own | ✅ assigned journey |
 | `experience_log.create` | ✅ own journey | ❌ |
 | `experience_log.view` | ✅ own | ✅ assigned journey |
+| `journey.resume` | ✅ own (paused/dormant) | ❌ |
+| `erc.deactivate` | ✅ own journey | ❌ |
+| `erc.remove` | ✅ own journey (permanent) | ❌ |
+| `weakness.attach` | ✅ own journey | ❌ (VM can suggest, not attach) |
+| `challenge.configure_threshold` | ✅ own journey (VM notified) | ✅ assigned journey (can modify VA's setting) |
+| `experience_log.edit` | ✅ own entries | ❌ |
+| `experience_log.delete` | ✅ own entries | ❌ |
+| `custom_erc.edit` | ✅ own (pre-submission) | ✅ own (pre-submission) |
+| `custom_erc.delete` | ✅ own (pre-submission) | ✅ own (pre-submission) |
+| `blog.create` | ✅ | ✅ |
+| `blog.edit` | ✅ own | ✅ own |
+| `blog.delete` | ✅ own | ✅ own |
+| `comment.create` | ✅ | ✅ |
+| `comment.delete` | ✅ own | ✅ own |
+| `comment.hide` | ✅ own blog's comments | ✅ own blog's comments |
+| `comment.report` | ✅ | ✅ |
+| `follow.create` | ✅ | ✅ |
+| `follow.remove` | ✅ own follows | ✅ own follows |
 | `vm_invitation.send` | ✅ | ❌ |
 | `vm_invitation.accept` | ❌ | ✅ (the invitee) |
+| `vm_invitation.cancel` | ✅ (own pending invites) | ❌ |
+| `vm_invitation.decline` | ❌ | ✅ (as invitee) |
+| `vm_relationship.withdraw` | ❌ | ✅ (own assignments) |
+| `global_vm.view_va_guidance` | ❌ | ✅ (assigned VA only, global VM only) |
 
 #### Layer 2 — Platform permissions (admin/moderator actions)
 Acting *on* data, not *as* participants.
@@ -59,6 +81,10 @@ Acting *on* data, not *as* participants.
 | `moderator.review_custom_erc` | ✅ | ✅ (submitter profile + journey title + sentence + subvirtue/virtue + weakness tags on journey. No journey contents, logs, or ERC status.) |
 | `moderator.manage_display_content` | ✅ | ✅ (shlokas, screen sections, sidebar curation) |
 | `admin.manage_taxonomy` | ✅ | ❌ (virtues, subvirtues, weaknesses — admin only) |
+| `admin.manage_pothi` | ✅ | ❌ (Pothi sections — admin only) |
+| `admin.manage_shlokas` | ✅ | ❌ (shlokas CRUD — admin only) |
+| `admin.manage_resources` | ✅ | ❌ (resources CRUD — admin only) |
+| `comment.moderate` | ✅ | ✅ (hide or delete any comment) |
 
 ### Scoping Rules
 - **Global VM**: sees all of a VA's journeys, test results, experience logs — full picture. When also assigned as journey VM for a specific journey, their role in that journey is to interact specifically around it, but their view scope remains global.

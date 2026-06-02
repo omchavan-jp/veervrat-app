@@ -48,10 +48,11 @@ Separate from the VA Guidance page (`/guidance`). Two distinct pages with distin
 
 ---
 
-## VM Credibility Stat
-- "Guided X journeys to completion" — shown on the VM's public profile.
-- Derived from: journeys where this user was the assigned VM at the time of journey completion and the VA approved/self-approved the closure.
-- Not shown in the VM dashboard itself — it's a public profile stat.
+## VM Public Profile
+- **VM's own public profile** (as seen by others): displays "Guided X journeys to completion" stat. No other VM-specific fields beyond what is shown on any user's profile.
+- VM credibility stat derived from: journeys where this user was the assigned VM at time of completion and the VA approved closure.
+- **VM's profile privacy settings** follow the same rules as VA profiles (`decisions/10_public-profile.md`) — VM can toggle field visibility, make profile private, etc.
+- The VM dashboard itself does not show the credibility stat — it's a public-facing profile field only.
 
 ---
 
