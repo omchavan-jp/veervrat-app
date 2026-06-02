@@ -22,6 +22,13 @@ Combined journey + ERC view:
 - Journeys active · Journeys completed
 - Exposures active · Resolutions active · Challenges completed
 
+### Sentence Suggestions (Flow 2 dashboard)
+- Below the two path cards: a **sentence suggestion list** — sentences the VA should consider starting a journey on.
+- v1 algorithm: lowest-scored sentences across all weaknesses, from latest test results (sentences scored 1 or 2 — Never/Sometimes).
+- Each suggestion shows: sentence text, subvirtue + virtue, score from last test, weakness it was flagged in.
+- Journey can be started directly from any suggestion in this list.
+- If VA has no test results yet: empty state with nudge to take their first test.
+
 ### Weakness Prioritisation
 Both derived and manual:
 - **Derived "explored"** — any weakness where at least one test has been taken counts as explored.

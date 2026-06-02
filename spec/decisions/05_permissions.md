@@ -13,7 +13,7 @@ _Last updated: 2026-05-31 | Round: R1_
 
 ### Roles (grouping labels only)
 - **admin**: platform management layer. Can view any data, override journey state in emergencies.
-- **moderator**: reviews submitted custom ERC (with full submitter context); manages display content on app screens (shlokas etc — detail TBD). No journey state access.
+- **moderator**: reviews submitted custom ERC (sees: ERC content, submitter profile, journey title, sentence, subvirtue/virtue, weakness tags — not journey contents); can edit the ERC proposal (wording, Marathi translation, tags); manages display content. No journey state or contents access.
 - **vratarthi (VA)**: owns their journeys, tests, experience logs. Scoped access only.
 - **vratmitra (VM)**: scoped access only — sees journeys they are explicitly assigned to, nothing else.
 - A user can hold multiple roles simultaneously. Both layers evaluate independently via `hasPermission`.
@@ -56,7 +56,7 @@ Acting *on* data, not *as* participants.
 | `admin.manage_content` | ✅ | ❌ |
 | `admin.manage_users` | ✅ | ❌ |
 | `admin.view_platform_stats` | ✅ | ❌ |
-| `moderator.review_custom_erc` | ✅ | ✅ (with submitter profile + journey context) |
+| `moderator.review_custom_erc` | ✅ | ✅ (submitter profile + journey title + sentence + subvirtue/virtue + weakness tags on journey. No journey contents, logs, or ERC status.) |
 | `moderator.manage_display_content` | ✅ | ✅ (shlokas, screen sections, sidebar curation) |
 | `admin.manage_taxonomy` | ✅ | ❌ (virtues, subvirtues, weaknesses — admin only) |
 

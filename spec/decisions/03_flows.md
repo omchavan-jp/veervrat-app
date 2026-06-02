@@ -23,8 +23,9 @@ _Last updated: 2026-05-31 | Round: R5_
 - Navigates into: exposures, resolutions, challenge, chat.
 
 #### E/R/C Selection & Lifecycle
-- **Pool items** (from global ERC dataset): selected once at journey start. After selection, items can be **deactivated/paused** and **reactivated**. UI language: "pause/deactivate", not "delete".
-- **Custom E/R/C**: addable by VA or VM at any point during the journey — not just at start.
+- **Pool items** (from global ERC dataset): selected at journey start. After selection, items can be **deactivated/paused** and **reactivated**. UI language: "pause/deactivate", not "delete".
+- **Mid-journey pool addition:** when a new weakness is attached mid-journey, newly available pool ERC items (those tagged to the new weakness) become selectable. VA is notified and CAN select these items — it is a second selection event, not just informational.
+- **Custom E/R/C**: addable by VA or VM at any point during the journey.
 - **Multiple challenges per journey are allowed.**
 - Both pool items and custom items can coexist in the same journey.
 

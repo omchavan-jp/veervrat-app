@@ -39,8 +39,24 @@ _Last updated: 2026-06-01 | Round: R1_
 - **Blog comment reporting:** yes — any authenticated user can report a comment for moderator review.
 - **Shloka queue reordering:** yes — moderators can reorder the queue.
 
+### Custom ERC Review — Moderator Capabilities
+On reviewing a custom ERC submission, moderator sees:
+- The ERC content (title, description, tier for exposures, duration for resolutions/challenges)
+- Submitter display name + profile
+- Journey title + sentence text + subvirtue + virtue
+- Weakness tags attached to the journey
+
+Moderator CAN also **edit the submission** before approving:
+- Tweak wording / restructure sentences
+- Add or update Marathi translation
+- Add, modify, or remove tags (formal: virtue/subvirtue/weakness/sentence; loose theme labels)
+
+Moderator CANNOT see:
+- Journey contents (experience logs, ERC status, ERC selections beyond the submitted item)
+- Chat threads
+
 ## Open Questions (area-specific)
-- Custom ERC review UI layout — exact layout TBD (implementation detail; content confirmed: submitter profile + journey context)
+_(none — area closed)_
 
 ## Flags
 - ⚠ Taxonomy is admin-only — ensure no API endpoint allows non-admin creation of virtue/subvirtue/weakness entities.

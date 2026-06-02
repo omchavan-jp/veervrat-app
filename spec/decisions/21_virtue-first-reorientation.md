@@ -39,21 +39,32 @@ This does not change the data model structure — it changes the primary framing
 A dedicated browsable reference page — accessible from nav.
 
 **Virtues section:**
-- Browse all virtues. Each virtue opens a detail view (modal or page):
-  - Virtue name (EN + Devanagari)
-  - Description of this virtue and what it means in the Veervrat context
-  - Subvirtues under this virtue (list, each openable)
-  - Sentences under each subvirtue (linked to journeys if active)
-  - "This subvirtue is useful to tackle the following weaknesses" — list of linked weaknesses
+- Browse all virtues.
+- Clicking a virtue → **Virtue detail page/modal:** virtue name (EN + Devanagari), description, list of subvirtues (each clickable).
+- Clicking a subvirtue → **Subvirtue detail page/modal:**
+  - Subvirtue name (EN + Devanagari), description
+  - Parent virtue shown
+  - Weaknesses this subvirtue helps tackle — displayed as clickable buttons (each navigates to the weakness detail)
+  - Sentences of this subvirtue — browseable list (each clickable)
+- Clicking a sentence → **Sentence info page/modal (view only):**
+  - Sentence text (EN + Marathi)
+  - Subvirtue and virtue it belongs to
+  - Active journey indicator if VA has an active journey for this sentence
+  - **No "Start journey" CTA here** — sentence is informational only from this entry point
+  - CTAs available:
+    - "Take a test" — goes to weakness selection (choose from weaknesses that use this sentence's subvirtue), then takes the test, then result screen where journey can be started normally
+    - "Choose a weakness to explore" — shows which weaknesses include this subvirtue, VA selects one → takes that weakness's test → result screen
 
 **Weaknesses section:**
 - Browse all weaknesses. Each weakness opens a detail view:
   - Weakness name (EN + Devanagari)
   - Description and what this weakness looks like behaviorally
-  - "Cultivating the following virtues/subvirtues can help you tackle this weakness" — list of linked subvirtues with their parent virtue
+  - "Cultivating the following virtues/subvirtues can help you tackle this weakness" — list of linked subvirtues (each clickable, navigates to subvirtue detail)
   - CTA: "Take the test for this weakness"
 
-**Access:** Accessible to guests (browse only). VAs see their journey/test status overlaid (e.g. sentence shows active journey indicator).
+**Journey start rule:** Journeys can only be started from the test result screen or from the Flow 2 sentence suggestion list. The Virtues browser is informational — all paths from it route through a test before a journey can be started.
+
+**Access:** Accessible to guests (browse only — no test or journey CTAs). VAs see their journey/test status overlaid (e.g. sentence shows active journey indicator).
 
 **"Why study weaknesses?" Modal**
 - Accessible from: Study path card, the weakness browser, the test entry screen.
