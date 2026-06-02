@@ -12,7 +12,7 @@ _Last updated: 2026-06-02 | Round: R2_
   - Journey VM for: list of journey names, each with an [Open] link to that journey
   - Actions: [View Profile], [Open Chat], [Global VM Settings] (if global VM), [Remove as VM]
 - Chat is a deliberate action — not the default view. [Open Chat] button opens the persistent thread.
-- Prominent link/CTA to the Guidance page always visible from this page.
+- Prominent link/CTA to the VA Guidance page (`/guidance`) always visible from this page.
 - Notification settings: VA can toggle email notifications per VM (for chat) or globally for all chat — from settings or inline on this page.
 
 ### Chat

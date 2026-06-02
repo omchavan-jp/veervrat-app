@@ -38,7 +38,7 @@ _Last updated: 2026-06-01_
 | Pothi Redesign | ✅ Confirmed | R1 | decisions/19_pothi-redesign.md |
 | Design Philosophy & UX | ✅ Confirmed | R1 | decisions/20_design-philosophy.md |
 | Virtue-First Reorientation | ✅ Confirmed | R1 | decisions/21_virtue-first-reorientation.md |
-| VM Dashboard / VM View | 🔄 In Progress | R1 | decisions/22_vm-dashboard.md |
+| VM Dashboard / VM View | ✅ Confirmed | R2 | decisions/22_vm-dashboard.md |
 
 ## Open Questions (consolidated)
 - Follow feed / activity stream — what does a follower see? — Public Profile — deferred to community round

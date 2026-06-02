@@ -25,20 +25,21 @@ Mirror of My Vratmitras, from the VM's perspective.
   - Actions: [View Profile], [Open Chat], [Remove myself as VM] (for journey-level; global VM removal goes through settings)
   - Link to this VA's relevant Guidance items (pending approvals for this VA)
 
-### 2. Guidance Page (`/guidance`) — role-aware, shared with VA
-Single unified page that shows actionable items for whoever is viewing, based on their roles.
+### 2. VM Guidance Page (`/vratmitra/guidance`) — VM-only, separate from VA guidance
 
-**When viewed by a user who is a VM:**
-- **VM section (shown first if there are pending items):**
-  - ERC closure requests submitted by VAs awaiting this VM's approval
-  - Journey completion requests awaiting this VM's approval
-  - Custom ERC suggestions they made that have been actioned (accepted/rejected by VA) — status update
-- **VA section (shown below):**
-  - Their own pending items as a VA (ERC submitted for approval, new ERC available, etc.)
+Separate from the VA Guidance page (`/guidance`). Two distinct pages with distinct cognitive purposes:
+- `/guidance` — "what do I need to do on my own journey?" (VA-facing)
+- `/vratmitra/guidance` — "what does my mentee need from me?" (VM-facing)
 
-If the user is only a VM (no VA journeys of their own), only the VM section is shown. If only a VA, only the VA section. Both if both.
+**VM Guidance page items:**
+- ERC closure requests submitted by VAs awaiting this VM's approval — grouped by VA
+- Journey completion requests awaiting this VM's approval
+- Custom ERC suggestions this VM made — status updates (accepted/rejected by VA)
+- Sorted by: urgency (journey completion first), then by VA, then by submission date
 
-**Navigation:** clearly navigable from My Vratarthis page (prominent link/CTA).
+**Navigation:** clearly navigable from My Vratarthis page (prominent link/CTA). Also a top-level nav item (visible only to users with active VM assignments).
+
+**Nav badge:** each nav item shows its own count independently — `/guidance` shows VA pending count, `/vratmitra/guidance` shows VM pending count. No combined badge.
 
 ### 3. Chat (accessed from My Vratarthis)
 - VM opens chat with a VA from the My Vratarthis right panel → [Open Chat].
@@ -55,9 +56,11 @@ If the user is only a VM (no VA journeys of their own), only the VM section is s
 ---
 
 ## Nav Integration
-- Sidebar nav shows VM sections only when user has active VM assignments.
-- VM nav items: **My Vratarthis** · **Guidance** (shared, role-aware).
-- Same Guidance nav item serves both VA and VM — badge count reflects total pending items across both roles.
+- Sidebar nav shows VM nav items only when user has active VM assignments. Hidden entirely otherwise.
+- VM nav items: **My Vratarthis** · **VM Guidance** (`/vratmitra/guidance`)
+- VA nav item: **Guidance** (`/guidance`) — separate, always visible to all authenticated users
+- Each nav item shows its own independent pending count badge. No combined count.
+- Badge counts re-evaluated on VM assignment changes (acceptance, removal) via TanStack Query invalidation.
 
 ---
 
@@ -67,5 +70,6 @@ If the user is only a VM (no VA journeys of their own), only the VM section is s
 - Notification for new pending approval: in-app + email (same as all other notifications) — assumed yes
 
 ## Flags
-- ⚠ Guidance page is role-aware — must correctly scope VM approval queue to only the journeys this VM is assigned to. Permission check: `vm.approve_closure` scoped to assigned journey only.
-- ⚠ Nav VM items visibility — must re-evaluate on VM assignment changes (acceptance, removal) without requiring page reload. Use TanStack Query invalidation on VM relationship events.
+- ⚠ VM Guidance page must scope approval queue strictly to journeys this VM is assigned to. Permission check: `vm.approve_closure` scoped per assigned journey — not all VAs.
+- ⚠ Nav VM items visibility must re-evaluate on VM assignment changes without page reload. Use TanStack Query invalidation on VM relationship events.
+- ⚠ `/vratmitra/guidance` and `/guidance` are two separate pages with separate data fetches — do not merge into one route with conditional rendering.
