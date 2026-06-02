@@ -1,7 +1,7 @@
 # Veervrat App — Agent Context
 
 ## What this app is
-A platform for self-reliance and personal growth built around the Veervrat framework. Users (vratarthi) explore their weaknesses via assessments and embark on journeys to work on specific aspects. Mentors (vratmitra) guide users. Moderators and admins maintain the platform.
+A platform for self-reliance and personal growth built around the Veervrat framework. Users (vratarthi) explore their weaknesses via assessments and embark on journeys to work on specific aspects, with the goal of cultivating virtues ("sadgunachi upasana"). Vratmitras (mentors) guide users. Moderators and admins maintain the platform.
 
 ## Tech stack
 - **Frontend**: Next.js (App Router) + TypeScript + Tailwind CSS + shadcn/ui
@@ -19,7 +19,7 @@ veervrat-app/
 │   │   ├── app/                # App Router — route groups by role
 │   │   │   ├── (public)/       # login, register, forgot-password
 │   │   │   ├── (app)/          # user dashboard, journeys, assessments
-│   │   │   ├── (mentor)/       # mentor dashboard, mentees
+│   │   │   ├── (vratmitra)/    # vratmitra view — my vratarthis, pending approvals
 │   │   │   ├── (moderation)/   # moderation dashboard, reports
 │   │   │   └── (admin)/        # admin dashboard, users, platform
 │   │   ├── components/         # ui/ (shadcn), layout/, shared/
