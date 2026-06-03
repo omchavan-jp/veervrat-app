@@ -1,4 +1,4 @@
-import { IsOptional, IsString, MaxLength, MinLength, Matches, IsIn } from 'class-validator';
+import { IsOptional, IsString, MaxLength, MinLength, Matches, IsIn, IsDateString } from 'class-validator';
 
 export class CompleteOnboardingDto {
   @IsOptional()
@@ -17,4 +17,13 @@ export class CompleteOnboardingDto {
   @IsOptional()
   @IsIn(['EN', 'MR'])
   language?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  gender?: string;
+
+  @IsOptional()
+  @IsDateString({ strict: true })
+  dob?: string;
 }

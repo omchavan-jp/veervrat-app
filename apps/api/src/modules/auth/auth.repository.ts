@@ -9,6 +9,8 @@ const userSelect = {
   displayName: true,
   username: true,
   language: true,
+  gender: true,
+  dob: true,
   emailVerifiedAt: true,
   onboardingCompletedAt: true,
   deletedAt: true,
@@ -177,7 +179,7 @@ export class AuthRepository {
 
   async markOnboardingComplete(
     userId: string,
-    fields?: { displayName?: string; username?: string; language?: 'EN' | 'MR' },
+    fields?: { displayName?: string; username?: string; language?: 'EN' | 'MR'; gender?: string; dob?: Date },
   ) {
     return this.prisma.user.update({
       where: { id: userId },
@@ -186,6 +188,8 @@ export class AuthRepository {
         ...(fields?.displayName ? { displayName: fields.displayName } : {}),
         ...(fields?.username ? { username: fields.username } : {}),
         ...(fields?.language ? { language: fields.language } : {}),
+        ...(fields?.gender ? { gender: fields.gender } : {}),
+        ...(fields?.dob ? { dob: fields.dob } : {}),
       },
       select: userSelect,
     });

@@ -150,7 +150,7 @@ export class AuthController {
     @Body() dto: CompleteOnboardingDto,
     @CurrentUser() user: SessionUser,
   ) {
-    return this.authService.completeOnboarding(user.id, dto.displayName, dto.username, dto.language);
+    return this.authService.completeOnboarding(user.id, dto.displayName, dto.username, dto.language, dto.gender, dto.dob);
   }
 
   @Get('check-username')

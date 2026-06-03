@@ -293,6 +293,8 @@ export class AuthService {
     displayName?: string,
     username?: string,
     language?: string,
+    gender?: string,
+    dob?: string,
   ): Promise<SessionUser> {
     if (username) {
       const existing = await this.authRepository.findUserByUsername(username);
@@ -304,6 +306,8 @@ export class AuthService {
       displayName,
       username,
       language: language as 'EN' | 'MR' | undefined,
+      gender,
+      dob: dob ? new Date(dob) : undefined,
     });
     return this.toSessionUser(user);
   }
@@ -399,6 +403,8 @@ export class AuthService {
     displayName: string;
     username: string;
     language: string;
+    gender?: string | null;
+    dob?: Date | null;
     roles: { role: Role }[];
     emailVerifiedAt: Date | null;
     onboardingCompletedAt: Date | null;
@@ -409,6 +415,8 @@ export class AuthService {
       displayName: user.displayName,
       username: user.username,
       language: user.language,
+      gender: user.gender ?? null,
+      dob: user.dob ?? null,
       roles: user.roles.map((r) => r.role),
       emailVerifiedAt: user.emailVerifiedAt,
       onboardingCompletedAt: user.onboardingCompletedAt,

@@ -2,6 +2,8 @@ import { describe, it, expect, vi } from 'vitest';
 import { AuthService } from './auth.service';
 import { DuplicateEntityException } from '../../common/exceptions/app.exceptions';
 
+const dob = new Date('1995-06-15');
+
 function makeRepo(overrides: Partial<{
   findUserByUsername: (username: string) => Promise<{ id: string } | null>;
   markOnboardingComplete: () => Promise<unknown>;
@@ -14,9 +16,12 @@ function makeRepo(overrides: Partial<{
       displayName: 'Test User',
       username: 'test_user',
       language: 'EN',
+      gender: null,
+      dob: null,
       roles: [{ role: 'VRATARTHI' }],
       emailVerifiedAt: new Date(),
       onboardingCompletedAt: new Date(),
+      deletedAt: null,
     }),
     ...overrides,
   };
@@ -31,16 +36,33 @@ function makeService(repo: ReturnType<typeof makeRepo>) {
 }
 
 describe('AuthService — completeOnboarding', () => {
-  it('persists displayName, username, and language', async () => {
+  it('persists displayName, username, language, gender, and dob', async () => {
     const repo = makeRepo();
     const service = makeService(repo);
 
-    await service.completeOnboarding('user-1', 'New Name', 'new_username', 'MR');
+    await service.completeOnboarding('user-1', 'New Name', 'new_username', 'MR', 'Male', '1995-06-15');
 
     expect(repo.markOnboardingComplete).toHaveBeenCalledWith('user-1', {
       displayName: 'New Name',
       username: 'new_username',
       language: 'MR',
+      gender: 'Male',
+      dob,
+    });
+  });
+
+  it('works with only required fields — gender and dob remain undefined', async () => {
+    const repo = makeRepo();
+    const service = makeService(repo);
+
+    await service.completeOnboarding('user-1', 'New Name', 'new_username', 'EN');
+
+    expect(repo.markOnboardingComplete).toHaveBeenCalledWith('user-1', {
+      displayName: 'New Name',
+      username: 'new_username',
+      language: 'EN',
+      gender: undefined,
+      dob: undefined,
     });
   });
 
@@ -54,6 +76,8 @@ describe('AuthService — completeOnboarding', () => {
       displayName: undefined,
       username: undefined,
       language: 'EN',
+      gender: undefined,
+      dob: undefined,
     });
   });
 
@@ -79,3 +103,8 @@ describe('AuthService — completeOnboarding', () => {
     ).resolves.not.toThrow();
   });
 });
+
+// Auth matrix — permission row: POST /auth/complete-onboarding
+// Positive: authenticated user with all fields — covered by unit tests above
+// Negative: unauthenticated → 401 — covered by integration test in src/test/auth.integration.spec.ts
+//           "NEGATIVE — returns 401 when no session cookie is present"

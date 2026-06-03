@@ -79,7 +79,7 @@ export function useCompleteOnboarding() {
     mutationFn: authApi.completeOnboarding,
     onSuccess: (user: User) => {
       queryClient.setQueryData(queryKeys.auth.me, user);
-      router.push('/dashboard');
+      router.push('/onboarding/framework');
     },
   });
 }

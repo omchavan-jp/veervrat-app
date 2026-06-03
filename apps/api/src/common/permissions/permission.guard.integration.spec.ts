@@ -85,6 +85,8 @@ function makeUserHeader(roles: Role[], id = 'user-1'): string {
     displayName: 'Test',
     username: 'test',
     language: 'EN',
+    gender: null,
+    dob: null,
     roles,
     emailVerifiedAt: new Date().toISOString() as unknown as Date,
     onboardingCompletedAt: new Date().toISOString() as unknown as Date,

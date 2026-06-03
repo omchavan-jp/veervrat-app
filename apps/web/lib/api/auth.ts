@@ -6,6 +6,8 @@ export type User = {
   displayName: string;
   username: string;
   language: string;
+  gender: string | null;
+  dob: string | null;
   roles: string[];
   emailVerifiedAt: string | null;
   onboardingCompletedAt: string | null;
@@ -34,7 +36,7 @@ export const authApi = {
   resetPassword: (data: { token: string; newPassword: string }) =>
     api.post<Wrapped<{ message: string }>>('/auth/reset-password', data).then((r) => r.data),
 
-  completeOnboarding: (data: { displayName?: string; username?: string; language?: string }) =>
+  completeOnboarding: (data: { displayName?: string; username?: string; language?: string; gender?: string; dob?: string }) =>
     api.post<Wrapped<User>>('/auth/complete-onboarding', data).then((r) => r.data),
 
   checkUsername: (username: string) =>

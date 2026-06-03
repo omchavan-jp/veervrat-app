@@ -123,5 +123,63 @@
       "rateLimitExceeded": "Too many attempts. Please wait a moment and try again.",
       "accountLocked": "Too many failed login attempts. Please try again later."
     }
+  },
+  "onboarding": {
+    "accountSetup": {
+      "title": "Set up your account",
+      "subtitle": "A few details before you begin.",
+      "displayName": "Display name",
+      "displayNamePlaceholder": "Your full name",
+      "username": "Username",
+      "usernamePlaceholder": "your_handle",
+      "usernameHint": "Lowercase letters, numbers, and underscores only.",
+      "usernameChecking": "Checking...",
+      "usernameAvailable": "Username available",
+      "usernameTaken": "Username already taken",
+      "languageLabel": "Language preference",
+      "en": "English",
+      "mr": "Marathi (मराठी)",
+      "gender": "Gender",
+      "genderPlaceholder": "Optional",
+      "dob": "Date of birth",
+      "dobPlaceholder": "YYYY-MM-DD (optional)",
+      "submit": "Continue",
+      "submitting": "Saving...",
+      "errors": {
+        "displayNameRequired": "Display name is required.",
+        "usernameRequired": "Username is required.",
+        "usernameFormat": "Username may only contain lowercase letters, numbers, and underscores.",
+        "usernameMin": "Username must be at least 3 characters.",
+        "usernameMax": "Username must be at most 30 characters.",
+        "usernameTaken": "Username already taken. Please choose another.",
+        "languageRequired": "Please select a language.",
+        "dobInvalid": "Please enter a valid date in YYYY-MM-DD format."
+      }
+    },
+    "framework": {
+      "section1Title": "What is Veervrat",
+      "section1Eyebrow": "The framework",
+      "section1Philosophy": "Veervrat is a structured practice of self-reliance. It begins with honest self-examination — not to judge, but to understand. When we know what holds us back, we can work on it deliberately.",
+      "section1StanceTitle": "Our stance",
+      "section1StanceBody": "We believe in your autonomy. No advice, no prescriptions. Veervrat gives you the structure; what you do with it is entirely your own.",
+      "section1VmTitle": "Why vratmitra, not mentor",
+      "section1VmBody": "A vratmitra accompanies you on the practice. They reflect, question, and encourage — but they do not direct. The practice is yours.",
+      "section2Title": "The Process",
+      "section2Eyebrow": "Four stages",
+      "stage1Title": "Recognition",
+      "stage1Body": "Name what holds you back. Take the test, see the sentences, understand the pattern.",
+      "stage2Title": "Study",
+      "stage2Body": "Explore each weakness through sentences and their linked virtues. Understand the root.",
+      "stage3Title": "Practice",
+      "stage3Body": "Choose an exposure, resolution, or challenge. Work on it daily. Log check-ins.",
+      "stage4Title": "Integration",
+      "stage4Body": "Complete the journey. Reflect. The weakness becomes a starting point, not an endpoint.",
+      "ctaTitle": "Ready to take your first test?",
+      "ctaBody": "The test shows you which sentences resonate — and which virtues they point toward.",
+      "ctaTakeTest": "Take a test now",
+      "ctaExplore": "Explore the app first",
+      "next": "Next",
+      "back": "Back"
+    }
   }
 }

@@ -107,7 +107,7 @@ describe('Auth — integration', () => {
         .post('/api/v1/auth/complete-onboarding')
         .set('Cookie', `veervrat_session=${token}; csrf-token=${csrfToken}`)
         .set('X-CSRF-Token', csrfToken)
-        .send({ displayName: 'Updated Name', username: 'updated_unique', language: 'MR' });
+        .send({ displayName: 'Updated Name', username: 'updated_unique', language: 'MR', gender: 'Male', dob: '1995-06-15' });
 
       expect(res.status).toBe(200);
 
@@ -116,7 +116,22 @@ describe('Auth — integration', () => {
       expect(updated?.displayName).toBe('Updated Name');
       expect(updated?.username).toBe('updated_unique');
       expect(updated?.language).toBe('MR');
+      expect(updated?.gender).toBe('Male');
+      expect(updated?.dob).not.toBeNull();
       expect(updated?.onboardingCompletedAt).not.toBeNull();
+    });
+
+    it('NEGATIVE — returns 4xx when no session cookie is present', async () => {
+      // CSRF guard fires before session guard (403), or session guard fires (401).
+      // Either way the request is rejected — the important invariant is it is not 200.
+      const csrfToken = 'csrf-onboard-noauth';
+      const res = await getRequest()
+        .post('/api/v1/auth/complete-onboarding')
+        .set('Cookie', `csrf-token=${csrfToken}`)
+        .set('X-CSRF-Token', csrfToken)
+        .send({ displayName: 'Hacker', username: 'hacker', language: 'EN' });
+
+      expect(res.status).toBe(401);
     });
 
     it('returns 409 when username is already taken', async () => {

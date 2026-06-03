@@ -7,6 +7,8 @@ export type SessionUser = {
   username: string;
   roles: Role[];
   language: string;
+  gender: string | null;
+  dob: Date | null;
   emailVerifiedAt: Date | null;
   onboardingCompletedAt: Date | null;
 };

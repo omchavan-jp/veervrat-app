@@ -26,6 +26,7 @@ export default defineConfig({
           setupFiles: ['src/test/setup.ts'],
           pool: 'forks',
           singleFork: true,
+          fileParallelism: false,  // integration specs share one DB — prevent concurrent TRUNCATE races
           hookTimeout: 30_000, // NestJS bootstrap can take 10–20s on cold CI
         },
       },
