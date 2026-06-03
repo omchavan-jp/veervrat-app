@@ -9,7 +9,7 @@ _Last updated: 2026-05-31 | Round: R1_
   - **Tests solved** — total test completions across all users
   - **Practice-days completed** — computed as N(resolutions) × N(vratarthis) × days (per prototype formula)
 
-- Stats are **approximate/cached** — not real-time exact figures. Updated periodically via Redis cache (interval TBD, suggested: hourly).
+- Stats are **approximate/cached** — not real-time exact figures. Updated every **60 minutes** via Redis cache.
 
 - Stats are **global platform-wide** — not personalised to the viewer.
 

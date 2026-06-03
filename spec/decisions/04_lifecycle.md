@@ -10,7 +10,7 @@ _Last updated: 2026-05-31 | Round: R1_
 ### Journey States
 - States: `not_started → active → completed`
 - **`paused`**: VA manually marks journey as paused. Can be resumed.
-- **`dormant`**: system-triggered after `x` days of no views or updates. Default value of `x` is a system-level default (exact value TBD). VA can resume from dormant.
+- **`dormant`**: system-triggered after **30 days** of no views or updates. VA can resume from dormant.
 - ⚠ Dormant state requires a background job (cron/scheduler) — infrastructure implication to carry into tech constraints.
 - A journey can sit active indefinitely until completed or manually paused.
 - No "abandoned" or negative terminal state — a journey is either active, paused, dormant, or completed.
