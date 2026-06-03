@@ -44,3 +44,4 @@ yarn-error.log*
 # misc
 *.pem
 *.tsbuildinfo
+e2e/results/

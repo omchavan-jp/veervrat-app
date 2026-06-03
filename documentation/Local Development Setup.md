@@ -123,3 +123,33 @@ pnpm --filter api start:dev   # backend only
 **Prisma client errors after schema change**: run `npx prisma generate` from `apps/api/`.
 
 **Docker not running**: make sure Docker Desktop (or equivalent) is running before `docker compose up`.
+
+## Running Tests
+
+### First-time setup
+```bash
+# Install Playwright browser (required once)
+npx playwright install chromium
+
+# Start test database
+docker compose up -d postgres-test
+
+# Apply migrations to test DB
+cd apps/api && DATABASE_URL="postgresql://veervrat:veervrat_local@localhost:5434/veervrat_test?schema=public" npx prisma migrate deploy
+```
+
+### Commands
+
+| Command | What it runs |
+|---|---|
+| `pnpm --filter api test` | All API tests (unit + integration) |
+| `pnpm --filter api test:unit` | Unit tests only (fast, no DB) |
+| `pnpm --filter api test:integration` | Integration tests against test DB |
+| `pnpm --filter web test` | Frontend component tests |
+| `pnpm test` | All tests across both apps (via Turborepo) |
+| `pnpm test:e2e` | E2E tests (requires both servers running) |
+
+### Test database
+- Dev DB: `localhost:5433` (database: `veervrat`)
+- Test DB: `localhost:5434` (database: `veervrat_test`)
+- Test DB connection string is in `apps/api/.env.test` — never modify this to point at the dev DB.
