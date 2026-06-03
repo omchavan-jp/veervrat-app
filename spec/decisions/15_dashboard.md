@@ -1,0 +1,57 @@
+# VA Dashboard Stats & Path Cards
+_Last updated: 2026-06-01 | Round: R1_
+
+## Confirmed Decisions
+
+### Stats Bar (personal, always visible on dashboard)
+Shows hybrid activity + progress stats. **Virtue-first:** virtues/subvirtues being cultivated is the primary headline stat. Weakness stats are secondary.
+- **Virtues/subvirtues being cultivated** (derived from active journeys → sentence → subvirtue → virtue) — primary
+- Journeys active · Journeys completed
+- Exposures active · Resolutions active · Challenges active
+- Exposures completed · Resolutions completed · Challenges completed
+- Weaknesses explored · Tests taken — secondary (drill-down)
+
+### Path Card 01 — Study Your Weakness
+Label retained. Subtext or info link ("Why study weaknesses?") explains the virtue-first philosophy.
+- Weaknesses explored (browsed/tested at least once)
+- Weaknesses with at least one test taken
+- Weaknesses with an active journey
+
+### Path Card 02 — Work on Your Weakness
+Combined journey + ERC view:
+- Journeys active · Journeys completed
+- Exposures active · Resolutions active · Challenges completed
+
+### Sentence Suggestions (Flow 2 dashboard)
+- Below the two path cards: a **sentence suggestion list** — sentences the VA should consider starting a journey on.
+- v1 algorithm: lowest-scored sentences across all weaknesses, from latest test results (sentences scored 1 or 2 — Never/Sometimes).
+- Each suggestion shows: sentence text, subvirtue + virtue, score from last test, weakness it was flagged in.
+- Journey can be started directly from any suggestion in this list.
+- If VA has no test results yet: empty state with nudge to take their first test.
+
+### Weakness Prioritisation
+Both derived and manual:
+- **Derived "explored"** — any weakness where at least one test has been taken counts as explored.
+- **Manual pin** — VA can optionally mark specific weaknesses as focus/priority. These appear prominently in the Study path.
+
+### Test State Model (draft model)
+- A test can be: **not started**, **draft** (started, partially answered, saved), or **completed**.
+- Mid-test exit → prompt: "Save as draft" or "Discard."
+- Draft = partial answers saved, resumable from where left off.
+- Submit → score preview shown → VA confirms submission or returns to test.
+- "Tests in progress" is replaced by "Tests saved as drafts" in all stats and UI labels.
+- Drafts are private — not visible to VM or anyone else.
+
+### Experience Log Draft Model
+- Same draft model applied to global experience log entries.
+- Mid-entry exit → "Save as draft" or "Discard."
+- Drafts are always **Only me** until published.
+- On publish: VA sets visibility tier (Only me / Friends / Public).
+
+- **Weakness pins:** unlimited — no cap.
+- **Draft test expiry:** no expiry. VA can be periodically prompted to review old drafts (e.g. "You have a draft from 30 days ago — submit, continue, or discard?"). Prompt is gentle, not blocking.
+- **Draft test resume:** drafts are accessible from the weakness detail page (the weakness the draft belongs to) — a "Resume draft" button appears instead of "Take test." VA resumes from their last answered sentence. If sentences have been added to the weakness since the draft was saved, new sentences appear at the end of the test (pre-existing answers preserved).
+- **Draft test location:** the Path 01 stats ("Tests saved as drafts" count) links to a list of all drafts, each with weakness name and last-edited date.
+
+## Open Questions (area-specific)
+- Score preview on test submission — exact format TBD (implementation detail)

@@ -17,6 +17,7 @@ import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
+import { CompleteOnboardingDto } from './dto/complete-onboarding.dto';
 import { SessionGuard } from './guards/session.guard';
 import { GoogleOAuthGuard } from './guards/google-oauth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
@@ -135,6 +136,16 @@ export class AuthController {
           : 'AUTH_ERROR';
       res.redirect(`${this.frontendUrl}/login?error=${errorCode}`);
     }
+  }
+
+  @Post('complete-onboarding')
+  @UseGuards(SessionGuard)
+  @HttpCode(HttpStatus.OK)
+  async completeOnboarding(
+    @Body() dto: CompleteOnboardingDto,
+    @CurrentUser() user: SessionUser,
+  ) {
+    return this.authService.completeOnboarding(user.id, dto.name);
   }
 
   @Get('me')

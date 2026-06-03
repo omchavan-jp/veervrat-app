@@ -98,7 +98,19 @@ If last authentication was not recent, prompt for password or OAuth re-auth befo
 - this allows collecting any required profile data not provided by the OAuth provider
 
 ## 15. CSRF protection
-- since auth uses cookie-based sessions, **CSRF protection is required** on all state-changing endpoints
-- use a synchronizer token pattern or double-submit cookie approach
-- `SameSite=Lax` on session cookies as a baseline defense
-- session cookies must also be `HttpOnly` and `Secure`
+- since auth uses cookie-based sessions, **CSRF protection is required** on all state-changing endpoints (POST, PATCH, DELETE)
+- **Strategy: double-submit cookie**
+  - on session creation, NestJS generates a random CSRF token and sets it as a non-HttpOnly cookie (`csrf-token`, `SameSite=Lax`, `Secure`)
+  - frontend reads this cookie via JS and sends it as `X-CSRF-Token` header on all state-changing requests
+  - NestJS guard validates that the header value matches the cookie value
+  - token is regenerated on session rotation (login, password change)
+- `SameSite=Lax` on session cookie as additional baseline defense
+- session cookies must be `HttpOnly` and `Secure`
+- WebSocket: CSRF not applicable — socket auth validates the session cookie on handshake, and sockets are not subject to cross-origin form submission attacks
+
+## 16. Rate limiting and brute force protection
+- **Library:** `@nestjs/throttler` — applied globally with per-route overrides
+- **Route-specific limits:** see `Platform-Engineering-Standard.md` numeric constants table for exact values per route
+- **Account lockout:** after 10 failed login attempts for the same email within 1 hour, the account is temporarily locked for 15 minutes. The user is informed ("Too many attempts, try again in 15 minutes"). Lockout state stored in Redis.
+- **Password policy (v1):** minimum 8 characters, at least one letter and one digit. No dictionary check. Strength meter shown in UI (weak/ok/strong) but does not block submission.
+- **Abuse monitoring:** all auth failures (login, password reset, OAuth errors) are logged with IP, user-agent, and email. Spike detection (>50 auth failures/min globally) triggers a GlitchTip alert. No automated IP banning in v1 — manual review.

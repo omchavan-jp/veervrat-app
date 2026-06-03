@@ -1,0 +1,70 @@
+# Spec Index
+_Last updated: 2026-06-01_
+
+## Domain Glossary
+`spec/CONTEXT.md` — canonical terms: vratarthi, vratmitra, weakness, virtue, subvirtue, sentence, test, journey, exposure, resolution, challenge, ERC, global vratmitra, journey vratmitra, custom ERC, VM sidenote, experience log, ERC status, dormant, paused, pool-sourced ERC, challenge suggestion threshold, VM invitation, invite token, display name, username, follow, permission
+
+## ADRs
+- [0001](adr/0001-sentence-as-journey-anchor.md) — sentence is the atomic journey anchor
+- [0002](adr/0002-erc-directly-on-sentence.md) — ERC attaches directly to sentence; no plan entity
+- [0003](adr/0003-rbac-abac-hybrid.md) — RBAC + ABAC hybrid permission model
+- [0004](adr/0004-persistent-chat-per-va-vm-pair.md) — one persistent chat thread per VA-VM pair, not per journey
+- [0005](adr/0005-global-vm-sees-all-va-data.md) — global VM sees all VA data; journey VM scoped to assigned journeys
+- [0006](adr/0006-draft-model-for-tests-and-experience-logs.md) — draft model for tests and experience log entries
+- [0007](adr/0007-pothi-shlokas-resources-as-separate-entities.md) — Pothi / Shlokas / Resources are three distinct entities
+- [0008](adr/0008-journey-weakness-as-separate-join-table.md) — journey weakness join table separate from ERC-level weakness tags
+
+## Status
+| Area | Status | Last Round | File |
+|------|--------|------------|------|
+| User Roles | ✅ Confirmed | R2 | decisions/01_user-roles.md |
+| Data Model | ✅ Confirmed | R2 | decisions/02_data-model.md |
+| Flows | ✅ Confirmed | R6 | decisions/03_flows.md |
+| Lifecycle States | ✅ Confirmed | R3 | decisions/04_lifecycle.md |
+| Permissions | ✅ Confirmed | R5 | decisions/05_permissions.md |
+| Edge Cases | ✅ Confirmed | R2 | decisions/06_edge-cases.md |
+| Integrations & Constraints | ✅ Confirmed | R2 | decisions/07_integrations.md |
+| Out of Scope | ✅ Confirmed | R1 | decisions/08_out-of-scope.md |
+| Guest Access | ✅ Confirmed | R1 | decisions/09_guest-access.md |
+| Public Profile | ✅ Confirmed | R2 | decisions/10_public-profile.md |
+| Platform Stats | ✅ Confirmed | R1 | decisions/11_platform-stats.md |
+| Onboarding | ✅ Confirmed | R2 | decisions/12_onboarding.md |
+| User Search & Invitations | ✅ Confirmed | R2 | decisions/13_user-search.md |
+| Global Experience Logging | ✅ Confirmed | R3 | decisions/14_experience-logging.md |
+| VA Dashboard | ✅ Confirmed | R2 | decisions/15_dashboard.md |
+| Content Pages & Cultural Elements | ✅ Confirmed | R2 | decisions/16_content-pages.md |
+| Moderation & Display Content | ✅ Confirmed | R2 | decisions/17_moderation.md |
+| My Vratmitras & Chat | ✅ Confirmed | R2 | decisions/18_my-vratmitras-chat.md |
+| Pothi Redesign | ✅ Confirmed | R1 | decisions/19_pothi-redesign.md |
+| Design Philosophy & UX | ✅ Confirmed | R1 | decisions/20_design-philosophy.md |
+| Virtue-First Reorientation | ✅ Confirmed | R1 | decisions/21_virtue-first-reorientation.md |
+| VM Dashboard / VM View | ✅ Confirmed | R2 | decisions/22_vm-dashboard.md |
+| Test Scoring | ✅ Confirmed | R1 | decisions/23_test-scoring.md |
+| Resolution Tracking | ✅ Confirmed | R1 | decisions/24_resolution-tracking.md |
+| Notification System | ✅ Confirmed | R1 | decisions/25_notifications.md |
+| Account Settings | ✅ Confirmed | R1 | decisions/26_account-settings.md |
+
+## Open Questions (consolidated)
+- Follow feed / activity stream — what does a follower see? — Public Profile — deferred to community round
+- Score preview format on test submission — Dashboard — implementation detail TBD
+- Custom ERC review UI layout — Moderation — implementation detail TBD
+
+## Deferred Items
+- **Vratmitra credibility mechanism** — resolved: neutral count "Guided X journeys to completion" on VM profile
+- **Suggestion algorithm enhancement** — major future initiative, not v1
+- **Chat data for research** — deferred to future version
+- **Duplicate custom ERC detection** — deferred to future version
+- **Follow feed / activity stream** — deferred to community/social spec round
+
+## ⚠ Active Flags (implementation reminders)
+- v1 suggestion logic must be architected for future swap — Flows
+- VM sidenote acknowledgement nullification on revocation — Flows
+- Pending approval queue on mid-journey VM change — Flows
+- Dormant state requires background scheduler — Lifecycle/Integrations
+- Journey ERC union filter must re-evaluate dynamically — Lifecycle
+- ABAC requires full resource objects in permission checks — Permissions
+- `admin.override_journey_state` must be audit-logged — Permissions
+- `approved` ERC state is terminal — no rollback path — Edge Cases
+- Global pool ERC deletion guard — check active journey usage first — Edge Cases
+- Taxonomy is admin-only — no API endpoint for non-admin taxonomy creation — Moderation
+- Virtue-first reorientation pending — do not implement weakness-primary tagging until resolved

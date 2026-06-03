@@ -10,9 +10,14 @@ This is the master reference for all technology and architecture decisions. Read
 | Backend | NestJS + TypeScript | Scaffolded |
 | Database | PostgreSQL | Scaffolded (docker-compose) |
 | ORM | Prisma | Scaffolded |
-| Search | Meilisearch | Decided, not set up |
-| File storage | S3-compatible (provider TBD) | Decided, not set up |
-| Auth | Custom in NestJS (cookie sessions, OAuth + credentials) | Built (backend) — see `openspec/specs/auth/spec.md` |
+| Search | Meilisearch | Decided, not set up — see Platform-Engineering-Standard.md |
+| File storage | MinIO (S3-compatible) | Provider confirmed: MinIO. Not set up. |
+| Rich text editor | Tiptap + JSON AST storage | Decided — see Platform-Engineering-Standard.md |
+| i18n | next-intl | Decided — no URL routing, user preference — see Platform-Engineering-Standard.md |
+| WebSocket | NestJS Gateway + Socket.IO | Decided — see Platform-Engineering-Standard.md |
+| Animation | Framer Motion | Decided |
+| Background jobs | @nestjs/schedule (v1), BullMQ path (v2) | Decided |
+| Auth | Custom in NestJS (cookie sessions, OAuth + credentials) | Built (backend + frontend) — see `openspec/specs/auth/spec.md` |
 | Email | Resend (prod) + console logging (dev) | Decided, not built |
 | Monorepo | pnpm workspaces + Turborepo | Scaffolded |
 | UI | Tailwind CSS + shadcn/ui | Scaffolded |
@@ -94,15 +99,16 @@ These are acknowledged but not yet decided in detail:
 
 | Area | What's pending |
 |---|---|
-| Background jobs | Framework choice (BullMQ vs Trigger.dev), what tasks are async |
-| Realtime | Transport (WebSockets/SSE), what needs realtime |
-| Notifications | In-app model, email notifications, delivery architecture |
-| Testing | Test framework setup, coverage expectations, critical path tests |
-| Observability | Error tracking tool, structured logging format, alerting |
-| Security baseline | Rate limiting implementation, upload validation rules, secret rotation |
-| CI/CD | Pipeline setup, required checks, preview environments |
-| Deployment | Hosting provider, CDN, scaling strategy |
-| AI/recommendations | Rule-based vs LLM, where AI logic lives, privacy constraints |
+| ~~Background jobs~~ | ✅ Decided — @nestjs/schedule v1, BullMQ v2. See Platform-Engineering-Standard.md |
+| ~~Realtime~~ | ✅ Decided — NestJS Gateway + Socket.IO. See Platform-Engineering-Standard.md |
+| ~~Notifications~~ | ✅ Decided — in-app bell + email (Resend). See spec/decisions/25_notifications.md |
+| ~~Testing~~ | ✅ Decided — Vitest + supertest + Playwright. See Testing-Strategy.md |
+| ~~Observability~~ | ✅ Decided — GlitchTip + Pino + structured JSON. See Observability-Standard.md |
+| ~~Security baseline~~ | ✅ CSRF (double-submit cookie), rate limiting, upload rules, brute force. See Platform-Engineering-Standard.md + Auth Architecture v1 (§15-16) |
+| CI/CD | Pipeline setup, required checks, preview environments — Phase deployment |
+| Deployment | Hosting provider, CDN (Cloudflare ✅), scaling strategy — Phase deployment |
+| ~~AI/recommendations~~ | ✅ Deferred to v2 explicitly. See spec/decisions/08_out-of-scope.md |
+| Visual design system | Color tokens, typography, dark mode — Phase 7 |
 
 ## Convention docs
 
