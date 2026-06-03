@@ -59,10 +59,14 @@ veervrat-app/
 - `documentation/Local Development Setup.md` — how to set up and run the local dev environment
 
 ### Convention docs (how code should be written)
-- `documentation/Auth Architecture Decision - v1.md` — auth ownership, session model, identity, OAuth, account linking, CSRF
+- `documentation/Auth Architecture Decision - v1.md` — auth ownership, session model, identity, OAuth, account linking, CSRF, rate limiting, brute force
 - `documentation/Backend Conventions - v1.md` — layering (Controller → Service → Repository → Prisma), module structure, naming, validation, error handling, pagination, DB conventions, transactions, logging
 - `documentation/API Conventions - v1.md` — REST routes, HTTP methods, response/error shapes, filtering, sorting, idempotency, rate limiting
 - `documentation/Frontend Conventions - v1.md` — routing, server/client components, data fetching (TanStack Query), forms (React Hook Form + Zod), styling (Tailwind only), API client, component conventions
+- `documentation/Platform-Engineering-Standard.md` — **approved library catalog**, rich text (Tiptap/JSON AST), i18n (next-intl), WebSocket contract, search architecture, security baseline, numeric constants
+- `documentation/Audit-Schema.md` — audit event entity, mandatory events by role, retention, implementation pattern
+- `documentation/Testing-Strategy.md` — Vitest + supertest + Playwright, what to test, auth matrix tests, E2E flows
+- `documentation/Observability-Standard.md` — GlitchTip + Pino, structured log schema, key metrics, alerting, privacy filtering
 
 ## Hard rules — follow exactly
 

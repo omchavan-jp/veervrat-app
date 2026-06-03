@@ -102,9 +102,9 @@ These are acknowledged but not yet decided in detail:
 | ~~Background jobs~~ | ✅ Decided — @nestjs/schedule v1, BullMQ v2. See Platform-Engineering-Standard.md |
 | ~~Realtime~~ | ✅ Decided — NestJS Gateway + Socket.IO. See Platform-Engineering-Standard.md |
 | ~~Notifications~~ | ✅ Decided — in-app bell + email (Resend). See spec/decisions/25_notifications.md |
-| Testing | Test framework setup, coverage expectations, critical path tests — Phase 5 |
-| Observability | Error tracking: GlitchTip ✅. Structured logging format, alerting — Phase 6 |
-| Security baseline | CSRF, rate limiting, upload rules ✅ decided in Platform-Engineering-Standard. Secret rotation — TBD |
+| ~~Testing~~ | ✅ Decided — Vitest + supertest + Playwright. See Testing-Strategy.md |
+| ~~Observability~~ | ✅ Decided — GlitchTip + Pino + structured JSON. See Observability-Standard.md |
+| ~~Security baseline~~ | ✅ CSRF (double-submit cookie), rate limiting, upload rules, brute force. See Platform-Engineering-Standard.md + Auth Architecture v1 (§15-16) |
 | CI/CD | Pipeline setup, required checks, preview environments — Phase deployment |
 | Deployment | Hosting provider, CDN (Cloudflare ✅), scaling strategy — Phase deployment |
 | ~~AI/recommendations~~ | ✅ Deferred to v2 explicitly. See spec/decisions/08_out-of-scope.md |
