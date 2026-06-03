@@ -44,10 +44,10 @@ These features are visible in prototypes or have been confirmed as intended — 
 ### User Flows
 - **Onboarding flow** — first-run experience. Profile creation (name, username, email, language preference, gender optional, DoB optional). No mobile or WhatsApp fields (dropped). "Our stance" card (autonomy emphasis). Full spec in `decisions/12_onboarding.md`.
 - **User search** — finding users by name/username for VM invitation.
-- **VA public profile** — what a guest or another user sees on a VA's public page.
+- **VA public profile** — fully specced in `decisions/10_public-profile.md`.
 
 ### Deferred Decisions
 - **Vratmitra credibility/verification mechanism** — must resolve before v1 ships
-- **`admin.view_chat`** — admin access to VA-VM chat (TBD)
+- **`admin.view_chat`** — resolved: admin cannot view chat in v1. See `decisions/05_permissions.md`.
 - **Chat media limits** — file size, types, retention policy (TBD)
 - **Deployment details** — staging setup, managed vs. self-hosted infra choices

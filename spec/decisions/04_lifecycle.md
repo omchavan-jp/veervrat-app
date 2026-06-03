@@ -4,7 +4,7 @@ _Last updated: 2026-05-31 | Round: R1_
 ## Confirmed Decisions
 
 ### Test Lifecycle
-- A test is a point-in-time event: taken → result stored. No draft, no in-progress, no expiry.
+- A test supports a **draft model**: not_started → draft (partial, resumable) → completed. Full spec in `decisions/15_dashboard.md`. All attempts are retained; only the latest completed result drives suggestions.
 - All attempts retained. Latest result drives ERC suggestions.
 
 ### Journey States
