@@ -8,7 +8,9 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { ConfigService } from '@nestjs/config';
 import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
@@ -42,8 +44,9 @@ export class AuthController {
   }
 
   @Post('register')
+  @Throttle({ default: { ttl: 3600000, limit: 5 } })
   async register(@Body() dto: RegisterDto) {
-    const result = await this.authService.register(dto.email, dto.password, dto.displayName, dto.username);
+    const result = await this.authService.register(dto.email, dto.password, dto.displayName, dto.username, dto.language);
     return {
       ...result.user,
       message: 'Registration successful. Please check your email to verify your account.',
@@ -52,6 +55,7 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { ttl: 900000, limit: 10 } })
   async login(
     @Body() dto: LoginDto,
     @Req() req: Request,
@@ -81,6 +85,7 @@ export class AuthController {
 
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { ttl: 3600000, limit: 5 } })
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     await this.authService.forgotPassword(dto.email);
     return {
@@ -145,7 +150,16 @@ export class AuthController {
     @Body() dto: CompleteOnboardingDto,
     @CurrentUser() user: SessionUser,
   ) {
-    return this.authService.completeOnboarding(user.id, dto.displayName);
+    return this.authService.completeOnboarding(user.id, dto.displayName, dto.username, dto.language);
+  }
+
+  @Get('check-username')
+  async checkUsername(@Query('username') username: string) {
+    if (!username) {
+      return { available: false };
+    }
+    const available = await this.authService.checkUsernameAvailability(username);
+    return { available };
   }
 
   @Get('me')

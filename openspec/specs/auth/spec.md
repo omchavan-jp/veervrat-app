@@ -35,15 +35,16 @@ User (1) ──→ (many) VerificationToken  # email verify + password reset
 
 | Route | Method | Auth | Purpose |
 |---|---|---|---|
-| `/auth/register` | POST | No | Create user + email AuthAccount |
-| `/auth/login` | POST | No | Validate credentials, create session |
+| `/auth/register` | POST | No | Create user + email AuthAccount (accepts displayName, username, email, password, language) |
+| `/auth/login` | POST | No | Validate credentials, create session; checks account lockout first |
 | `/auth/logout` | POST | Yes | Delete session, clear cookie |
 | `/auth/verify-email` | POST | No | Confirm email ownership |
 | `/auth/forgot-password` | POST | No | Send reset token (always 200) |
 | `/auth/reset-password` | POST | No | Change password via token |
 | `/auth/google` | GET | No | Redirect to Google OAuth |
 | `/auth/google/callback` | GET | No | Handle Google callback, redirect to frontend |
-| `/auth/complete-onboarding` | POST | Yes | Set onboardingCompletedAt, optionally update name |
+| `/auth/complete-onboarding` | POST | Yes | Set onboardingCompletedAt; accept optional username, displayName, language |
+| `/auth/check-username` | GET | No | Returns `{ available: boolean }` for a given username |
 | `/auth/me` | GET | Yes | Return current user |
 
 All under `/api/v1/` prefix.
@@ -57,6 +58,9 @@ All under `/api/v1/` prefix.
 5. Password reset invalidates all sessions
 6. Session validation checks: token exists, not expired, user not soft-deleted
 7. Rolling expiry: each authenticated request extends session TTL
+8. Account lockout: 10 failed logins within 1 hour → 15-minute Redis lock (see `account-lockout` spec)
+9. `completeOnboarding` accepts optional username (uniqueness validated), displayName, language — all individually optional
+10. `check-username` format validation: `/^[a-z0-9_]{3,30}$/` — invalid format returns `available: false`
 
 ## Database Schema
 
@@ -66,7 +70,7 @@ All under `/api/v1/` prefix.
 - `VerificationType`: EMAIL_VERIFICATION, PASSWORD_RESET
 
 ### Tables
-- `users` — id, email, name, email_verified_at, onboarding_completed_at, role, deleted_at, created_at, updated_at
+- `users` — id, email, display_name, username, language, email_verified_at, onboarding_completed_at, role, deleted_at, created_at, updated_at
 - `auth_accounts` — id, user_id, provider, provider_account_id, password_hash, created_at, updated_at; unique(provider, provider_account_id)
 - `sessions` — id, user_id, token (unique), expires_at, last_active_at, ip_address, user_agent, created_at
 - `verification_tokens` — id, user_id, token (unique), type, expires_at, used_at, created_at
@@ -79,18 +83,28 @@ src/modules/auth/
 ├── auth.controller.ts
 ├── auth.service.ts
 ├── auth.repository.ts
-├── dto/ (register, login, forgot-password, reset-password, verify-email)
+├── dto/ (register, login, forgot-password, reset-password, verify-email, complete-onboarding)
 ├── guards/ (session.guard, google-oauth.guard)
 ├── strategies/ (google.strategy)
 ├── decorators/ (current-user.decorator)
 └── types/ (auth.types)
+
+src/common/
+├── guards/csrf.guard.ts
+├── middleware/csrf.middleware.ts
+└── redis/ (redis.module, redis.provider — REDIS_CLIENT token)
+
+src/modules/email/
+├── email.module.ts
+├── email.service.ts
+└── templates/ (VerifyEmailEmail, PasswordResetEmail)
 ```
 
 Follows Controller → Service → Repository → Prisma layering. Prisma only in repository.
 
 ## Frontend Pages
 
-All pages use React Hook Form + Zod v4 for validation, TanStack Query for server state, and shadcn/ui (base-nova) for components.
+All pages use React Hook Form + Zod for validation, TanStack Query for server state, shadcn/ui components, and `next-intl` (`useTranslations('auth')`) for all strings — zero hardcoded text in JSX.
 
 ### Route Groups
 
@@ -104,33 +118,36 @@ All pages use React Hook Form + Zod v4 for validation, TanStack Query for server
 | Route | Group | Purpose |
 |---|---|---|
 | `/login` | public | Email/password login, Google OAuth button, handles `?error=OAUTH_ACCOUNT_CONFLICT` |
-| `/register` | public | Registration form (name optional), shows "check email" on success |
+| `/signup` | public | Registration: displayName, username (live uniqueness check), email, password+strength, language radio |
 | `/forgot-password` | public | Email input, always shows "check email" on success |
 | `/reset-password?token=` | public | New password + confirm, reads token from URL |
 | `/verify-email?token=` | public | Auto-verifies on mount, shows result |
 | `/dashboard` | app | Placeholder with user info |
-| `/onboarding` | app | Name input (pre-filled from OAuth), calls complete-onboarding |
+| `/onboarding` | app | displayName, username, language input; calls complete-onboarding |
 
 ### Infrastructure
 
-- `lib/api/auth.ts` — typed API functions with `{ data }` envelope unwrapping
-- `lib/validations/auth.ts` — Zod v4 schemas for all forms
-- `hooks/use-auth.ts` — `useAuth`, `useLogin`, `useRegister`, `useLogout`, `useVerifyEmail`, `useForgotPassword`, `useResetPassword`, `useCompleteOnboarding`
-- `components/layout/header.tsx` — app header with logout button
+- `lib/api/auth.ts` — typed API functions with `{ data }` envelope unwrapping; includes `checkUsername`
+- `lib/validations/auth.ts` — Zod schemas for all forms; `signupSchema` includes displayName, username, language
+- `hooks/use-auth.ts` — `useAuth`, `useLogin`, `useSignup`, `useLogout`, `useVerifyEmail`, `useForgotPassword`, `useResetPassword`, `useCompleteOnboarding`
+- `messages/en.json` + `messages/mr.json` — `auth` namespace with all page strings
+- `i18n/request.ts` — next-intl server config
+- `app/(public)/layout.tsx` — server layout wrapping `NextIntlClientProvider`
 
 ## Not Yet Implemented
 
-- CSRF token protection (SameSite=Lax baseline only)
 - Account linking/unlinking
 - Re-authentication for sensitive actions
 - Email change flow
-- Rate limiting on auth endpoints
 - Audit logging of auth events
 - Admin force-logout
-- Email service (console.log placeholder — Resend integration pending)
 
 ## References
 
 - `documentation/Auth Architecture Decision - v1.md` — full architecture rationale
 - `documentation/Backend Conventions - v1.md` — layering and module patterns
 - `documentation/API Conventions - v1.md` — endpoint design conventions
+- `openspec/specs/csrf-protection/spec.md` — CSRF double-submit cookie spec
+- `openspec/specs/rate-limiting/spec.md` — throttler limits per route
+- `openspec/specs/account-lockout/spec.md` — Redis-backed lockout spec
+- `openspec/specs/email-module/spec.md` — EmailService and templates spec

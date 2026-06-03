@@ -1,8 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Inject, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomBytes } from 'crypto';
 import * as bcrypt from 'bcrypt';
 import { AuthProvider, Role, VerificationType } from '@prisma/client';
+import type Redis from 'ioredis';
 import { AuthRepository } from './auth.repository';
 import {
   DuplicateEntityException,
@@ -12,13 +13,23 @@ import {
   TokenInvalidException,
   OAuthAccountConflictException,
   EntityNotFoundException,
+  AccountLockedException,
 } from '../../common/exceptions/app.exceptions';
+import { REDIS_CLIENT } from '../../common/redis/redis.provider';
 import { SessionUser, AuthResult, GoogleProfile, CreateSessionParams } from './types/auth.types';
+import { EmailService } from '../email/email.service';
+import { VerifyEmailEmail, getSubject as getVerifySubject } from '../email/templates/VerifyEmailEmail';
+import { PasswordResetEmail, getSubject as getResetSubject } from '../email/templates/PasswordResetEmail';
+import { createElement } from 'react';
 
 const BCRYPT_ROUNDS = 12;
 const TOKEN_BYTES = 32;
 const VERIFICATION_TOKEN_EXPIRY_HOURS = 24;
 const PASSWORD_RESET_TOKEN_EXPIRY_HOURS = 1;
+const LOCKOUT_MAX_FAILURES = 10;
+const LOCKOUT_WINDOW_SECONDS = 3600;
+const USERNAME_REGEX = /^[a-z0-9_]{3,30}$/;
+const LOCKOUT_DURATION_SECONDS = 900;
 
 @Injectable()
 export class AuthService {
@@ -28,6 +39,8 @@ export class AuthService {
   constructor(
     private readonly authRepository: AuthRepository,
     private readonly configService: ConfigService,
+    private readonly emailService: EmailService,
+    @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {
     this.sessionTtlDays = this.configService.get<number>('SESSION_TTL_DAYS', 30);
   }
@@ -37,6 +50,7 @@ export class AuthService {
     password: string,
     displayName: string,
     username: string,
+    language?: string,
   ): Promise<{ user: SessionUser }> {
     const existingUser = await this.authRepository.findUserByEmail(email);
     if (existingUser) {
@@ -50,6 +64,7 @@ export class AuthService {
       displayName,
       username,
       passwordHash,
+      language: language as 'EN' | 'MR' | undefined,
     });
 
     const verificationToken = this.generateToken();
@@ -60,7 +75,12 @@ export class AuthService {
       expiresAt: this.hoursFromNow(VERIFICATION_TOKEN_EXPIRY_HOURS),
     });
 
-    this.logger.log(`[EMAIL VERIFICATION] User: ${user.email}, Token: ${verificationToken}`);
+    const verifyUrl = `${this.configService.get<string>('FRONTEND_URL', 'http://localhost:3000')}/verify-email?token=${verificationToken}`;
+    const lang = (language as 'EN' | 'MR' | undefined) ?? 'EN';
+    const { html: verifyHtml, text: verifyText } = await this.emailService.renderTemplate(
+      createElement(VerifyEmailEmail, { displayName, verifyUrl, language: lang }),
+    );
+    await this.emailService.sendTransactional(email, getVerifySubject(lang), verifyHtml, verifyText);
 
     return { user: this.toSessionUser(user) };
   }
@@ -71,24 +91,34 @@ export class AuthService {
     ipAddress: string | null,
     userAgent: string | null,
   ): Promise<AuthResult> {
+    const lockout = await this.checkLockout(email);
+    if (lockout.locked) {
+      throw new AccountLockedException(lockout.secondsRemaining);
+    }
+
     const user = await this.authRepository.findUserByEmail(email);
     if (!user) {
+      await this.recordFailedLogin(email);
       throw new InvalidCredentialsException();
     }
 
     const emailAccount = await this.authRepository.findEmailAccountByUserId(user.id);
     if (!emailAccount?.passwordHash) {
+      await this.recordFailedLogin(email);
       throw new InvalidCredentialsException();
     }
 
     const passwordValid = await bcrypt.compare(password, emailAccount.passwordHash);
     if (!passwordValid) {
+      await this.recordFailedLogin(email);
       throw new InvalidCredentialsException();
     }
 
     if (!user.emailVerifiedAt) {
       throw new EmailNotVerifiedException();
     }
+
+    await this.clearLockout(email);
 
     const sessionToken = await this.createSession({
       userId: user.id,
@@ -199,7 +229,12 @@ export class AuthService {
       expiresAt: this.hoursFromNow(PASSWORD_RESET_TOKEN_EXPIRY_HOURS),
     });
 
-    this.logger.log(`[PASSWORD RESET] User: ${user.email}, Token: ${resetToken}`);
+    const resetUrl = `${this.configService.get<string>('FRONTEND_URL', 'http://localhost:3000')}/reset-password?token=${resetToken}`;
+    const lang = (user.language as 'EN' | 'MR') ?? 'EN';
+    const { html: resetHtml, text: resetText } = await this.emailService.renderTemplate(
+      createElement(PasswordResetEmail, { displayName: user.displayName, resetUrl, language: lang }),
+    );
+    await this.emailService.sendTransactional(email, getResetSubject(lang), resetHtml, resetText);
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
@@ -253,9 +288,32 @@ export class AuthService {
     return this.toSessionUser(session.user);
   }
 
-  async completeOnboarding(userId: string, displayName?: string): Promise<SessionUser> {
-    const user = await this.authRepository.markOnboardingComplete(userId, displayName);
+  async completeOnboarding(
+    userId: string,
+    displayName?: string,
+    username?: string,
+    language?: string,
+  ): Promise<SessionUser> {
+    if (username) {
+      const existing = await this.authRepository.findUserByUsername(username);
+      if (existing && existing.id !== userId) {
+        throw new DuplicateEntityException('User', 'username');
+      }
+    }
+    const user = await this.authRepository.markOnboardingComplete(userId, {
+      displayName,
+      username,
+      language: language as 'EN' | 'MR' | undefined,
+    });
     return this.toSessionUser(user);
+  }
+
+  async checkUsernameAvailability(username: string): Promise<boolean> {
+    if (!USERNAME_REGEX.test(username)) {
+      return false;
+    }
+    const existing = await this.authRepository.findUserByUsername(username);
+    return !existing;
   }
 
   async getCurrentUser(userId: string): Promise<SessionUser> {
@@ -265,6 +323,56 @@ export class AuthService {
     }
     return this.toSessionUser(user);
   }
+
+  // ─── Account lockout ────────────────────────────────────────────────────────
+
+  async checkLockout(email: string): Promise<{ locked: boolean; secondsRemaining: number }> {
+    try {
+      const key = `lockout:${email}`;
+      const lockedUntil = await this.redis.hget(key, 'locked_until');
+      if (!lockedUntil) return { locked: false, secondsRemaining: 0 };
+
+      const lockedUntilMs = parseInt(lockedUntil, 10);
+      if (isNaN(lockedUntilMs)) {
+        this.logger.warn({ msg: 'Corrupt lockout value in Redis, failing open', email });
+        return { locked: false, secondsRemaining: 0 };
+      }
+      const nowMs = Date.now();
+      if (nowMs < lockedUntilMs) {
+        const secondsRemaining = Math.ceil((lockedUntilMs - nowMs) / 1000);
+        return { locked: true, secondsRemaining };
+      }
+      return { locked: false, secondsRemaining: 0 };
+    } catch (err) {
+      this.logger.warn({ msg: 'Redis error on lockout check, failing open', error: (err as Error).message });
+      return { locked: false, secondsRemaining: 0 };
+    }
+  }
+
+  async recordFailedLogin(email: string): Promise<void> {
+    try {
+      const key = `lockout:${email}`;
+      const failures = await this.redis.hincrby(key, 'failures', 1);
+      await this.redis.expire(key, LOCKOUT_WINDOW_SECONDS);
+      if (failures >= LOCKOUT_MAX_FAILURES) {
+        const lockedUntilMs = Date.now() + LOCKOUT_DURATION_SECONDS * 1000;
+        await this.redis.hset(key, 'locked_until', lockedUntilMs.toString());
+        await this.redis.expire(key, LOCKOUT_DURATION_SECONDS);
+      }
+    } catch (err) {
+      this.logger.warn({ msg: 'Redis error recording failed login', error: (err as Error).message });
+    }
+  }
+
+  async clearLockout(email: string): Promise<void> {
+    try {
+      await this.redis.del(`lockout:${email}`);
+    } catch (err) {
+      this.logger.warn({ msg: 'Redis error clearing lockout', error: (err as Error).message });
+    }
+  }
+
+  // ─── Private helpers ────────────────────────────────────────────────────────
 
   private async createSession(params: CreateSessionParams): Promise<string> {
     const token = this.generateToken();

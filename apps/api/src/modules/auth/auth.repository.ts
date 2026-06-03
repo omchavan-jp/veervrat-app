@@ -33,17 +33,26 @@ export class AuthRepository {
     });
   }
 
+  async findUserByUsername(username: string) {
+    return this.prisma.user.findFirst({
+      where: { username: username.toLowerCase(), deletedAt: null },
+      select: { id: true },
+    });
+  }
+
   async createUserWithEmailAccount(params: {
     email: string;
     displayName: string;
     username: string;
     passwordHash: string;
+    language?: 'EN' | 'MR';
   }) {
     return this.prisma.user.create({
       data: {
         email: params.email,
         displayName: params.displayName,
         username: params.username,
+        language: params.language ?? 'EN',
         authAccounts: {
           create: {
             provider: AuthProvider.EMAIL,
@@ -166,12 +175,17 @@ export class AuthRepository {
     });
   }
 
-  async markOnboardingComplete(userId: string, displayName?: string) {
+  async markOnboardingComplete(
+    userId: string,
+    fields?: { displayName?: string; username?: string; language?: 'EN' | 'MR' },
+  ) {
     return this.prisma.user.update({
       where: { id: userId },
       data: {
         onboardingCompletedAt: new Date(),
-        ...(displayName ? { displayName } : {}),
+        ...(fields?.displayName ? { displayName: fields.displayName } : {}),
+        ...(fields?.username ? { username: fields.username } : {}),
+        ...(fields?.language ? { language: fields.language } : {}),
       },
       select: userSelect,
     });

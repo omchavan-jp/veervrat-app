@@ -4,6 +4,8 @@ import {
   ConflictException,
   UnprocessableEntityException,
   UnauthorizedException,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 
 export class EntityNotFoundException extends NotFoundException {
@@ -83,5 +85,18 @@ export class OAuthAccountConflictException extends ConflictException {
       message:
         'An account with this email already exists using a different login method. Please log in with your original method.',
     });
+  }
+}
+
+export class AccountLockedException extends HttpException {
+  constructor(secondsRemaining: number) {
+    super(
+      {
+        error: 'ACCOUNT_LOCKED',
+        message: `Too many failed login attempts. Try again in ${secondsRemaining} seconds.`,
+        details: { secondsRemaining },
+      },
+      HttpStatus.TOO_MANY_REQUESTS,
+    );
   }
 }

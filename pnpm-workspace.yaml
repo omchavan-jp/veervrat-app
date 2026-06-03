@@ -9,3 +9,5 @@ allowBuilds:
   "@prisma/engines": true
   prisma: true
   bcrypt: true
+  '@parcel/watcher': true
+  '@swc/core': true

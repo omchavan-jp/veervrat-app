@@ -33,7 +33,7 @@ export function useLogin() {
   });
 }
 
-export function useRegister() {
+export function useSignup() {
   return useMutation({
     mutationFn: authApi.register,
   });

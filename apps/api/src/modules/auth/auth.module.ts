@@ -4,9 +4,10 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { AuthRepository } from './auth.repository';
 import { GoogleStrategy } from './strategies/google.strategy';
+import { EmailModule } from '../email/email.module';
 
 @Module({
-  imports: [PassportModule],
+  imports: [PassportModule, EmailModule],
   controllers: [AuthController],
   providers: [AuthService, AuthRepository, GoogleStrategy],
   exports: [AuthService],

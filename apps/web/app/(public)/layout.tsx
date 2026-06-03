@@ -1,30 +1,13 @@
-'use client';
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
+import { PublicLayoutClient } from './layout-client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/use-auth';
+export default async function PublicLayout({ children }: { children: React.ReactNode }) {
+  const messages = await getMessages();
 
-export default function PublicLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      router.replace('/dashboard');
-    }
-  }, [isAuthenticated, isLoading, router]);
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-dvh items-center justify-center bg-bg">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent border-t-transparent" />
-      </div>
-    );
-  }
-
-  if (isAuthenticated) {
-    return null;
-  }
-
-  return <>{children}</>;
+  return (
+    <NextIntlClientProvider messages={messages}>
+      <PublicLayoutClient>{children}</PublicLayoutClient>
+    </NextIntlClientProvider>
+  );
 }
