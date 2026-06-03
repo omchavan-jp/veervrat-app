@@ -35,9 +35,10 @@ services:
       - meilisearch_data:/meili_data
 
   # MinIO community Docker image was discontinued Oct 2025, repo archived Apr 2026.
-  # Using Chainguard's free, maintained, vulnerability-scanned image instead.
+  # Using Bitnami's maintained build (Docker Hub, no registry firewall issues).
+  # Note: Bitnami image uses MINIO_ROOT_USER/PASSWORD env vars but different entrypoint.
   minio:
-    image: cgr.dev/chainguard/minio:latest
+    image: bitnami/minio:latest
     container_name: veervrat-minio
     restart: unless-stopped
     ports:
@@ -46,7 +47,6 @@ services:
     environment:
       MINIO_ROOT_USER: veervrat
       MINIO_ROOT_PASSWORD: veervrat_local
-    command: server /data --console-address ":9001"
     volumes:
       - minio_data:/data
 
