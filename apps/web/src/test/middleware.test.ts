@@ -34,7 +34,7 @@ vi.mock('next/server', () => {
   return { NextRequest: MockNextRequest, NextResponse };
 });
 
-import { middleware } from '../../middleware';
+import { proxy as middleware } from '../../proxy';
 
 describe('middleware locale resolution', () => {
   beforeEach(() => {

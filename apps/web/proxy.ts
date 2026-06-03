@@ -37,7 +37,7 @@ async function resolveLocale(request: NextRequest): Promise<Locale> {
   }
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const locale = await resolveLocale(request);
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('X-Next-Locale', locale);
