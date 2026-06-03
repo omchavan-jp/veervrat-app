@@ -25,6 +25,8 @@ This document is the canonical reference for all library, tooling, and architect
 | Search | Meilisearch | `meilisearch` | Already decided. See Search Architecture doc. |
 | Validation (backend) | class-validator + class-transformer | `class-validator`, `class-transformer` | Already in stack. All DTOs use this. |
 | Validation (frontend) | Zod | `zod` | Already in stack. All forms use React Hook Form + Zod. |
+| Structured logging (backend) | nestjs-pino + pino-http | `nestjs-pino`, `pino-http`, `pino-pretty` (dev) | NestJS LoggerService adapter for Pino. pino-http attaches request context. pino-pretty for human-readable dev output. |
+| Config validation | Joi | `joi` | Validates required env vars at startup via ConfigModule validationSchema. Fail-fast on missing config. |
 
 ---
 

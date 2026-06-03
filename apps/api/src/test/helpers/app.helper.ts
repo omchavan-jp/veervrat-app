@@ -1,8 +1,9 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import * as request from 'supertest';
+import request from 'supertest';
 import { AppModule } from '../../app.module';
 import { PrismaService } from '../../prisma/prisma.service';
+import { configureApp } from '../../bootstrap';
 
 let app: INestApplication | null = null;
 let prisma: PrismaService | null = null;
@@ -20,7 +21,7 @@ export async function createTestApp(): Promise<INestApplication> {
   }).compile();
 
   app = moduleFixture.createNestApplication();
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  configureApp(app);
   await app.init();
 
   prisma = app.get(PrismaService);
