@@ -7,6 +7,8 @@ Two tiers:
 
 Spec refs use shorthand: `spec/05` = `spec/decisions/05_permissions.md`, `doc/auth` = `documentation/Auth Architecture Decision - v1.md`, etc.
 
+**Before starting any item:** read every document listed under **Read first:** and inspect the current state of the source files the change will touch. Follow the mandatory research phase in `CLAUDE.md` Implementation SOP — this must happen before invoking `/opsx:propose`.
+
 ---
 
 ## TIER 1 — Infrastructure & Identity (do these before any feature)
@@ -19,7 +21,7 @@ Branch: `chore/test-setup`
 ```
 
 **Implement:** `vitest.config.ts` (api + web), test DB in docker-compose, supertest helper, first passing smoke test.
-**Refer:** `doc/Testing-Strategy`, `doc/Platform-Engineering-Standard`, `doc/Backend Conventions`
+**Read first:** `doc/Testing-Strategy`, `doc/Platform-Engineering-Standard`, `doc/Backend Conventions`
 
 ---
 
@@ -31,7 +33,7 @@ Branch: `feat/api-foundation`
 ```
 
 **Implement:** `AppModule`, `PrismaModule`, global filter, interceptor, correlation middleware, Pino logger, health endpoint.
-**Refer:** `doc/Backend Conventions`, `doc/API Conventions`, `doc/Observability-Standard`, `doc/Platform-Engineering-Standard`
+**Read first:** `doc/Backend Conventions`, `doc/API Conventions`, `doc/Observability-Standard`, `doc/Platform-Engineering-Standard`
 
 ---
 
@@ -43,7 +45,7 @@ Branch: `feat/permission-system`
 ```
 
 **Implement:** `common/permissions/has-permission.ts`, `PermissionGuard`, `@RequirePermission()` decorator, auth matrix test suite.
-**Refer:** `spec/05`, `spec/adr/0003`, `spec/01`, `doc/Backend Conventions`, `doc/Testing-Strategy`
+**Read first:** `spec/05`, `spec/adr/0003`, `spec/01`, `doc/Backend Conventions`, `doc/Testing-Strategy`
 
 ---
 
@@ -55,7 +57,7 @@ Branch: `feat/auth-complete`
 ```
 
 **Implement:** CSRF middleware + guard, throttler config, Redis lockout, EmailModule (Resend + console), updated onboarding DTO, all frontend auth pages rebuilt.
-**Refer:** `doc/auth`, `doc/Email-Strategy`, `doc/Platform-Engineering-Standard` (numeric constants), `spec/12` (onboarding), `spec/26` (account settings), `spec/27` (auth screens), `doc/Frontend Conventions`, `doc/Testing-Strategy`
+**Read first:** `doc/auth`, `doc/Email-Strategy`, `doc/Platform-Engineering-Standard` (numeric constants), `spec/12` (onboarding), `spec/26` (account settings), `spec/27` (auth screens), `doc/Frontend Conventions`, `doc/Testing-Strategy`
 
 ---
 
@@ -67,7 +69,7 @@ Branch: `feat/i18n-setup`
 ```
 
 **Implement:** `middleware.ts`, `i18n.ts`, `messages/en.json`, `messages/mr.json` (auth strings), `NextIntlClientProvider` in root layout, language toggle component.
-**Refer:** `doc/Platform-Engineering-Standard` (i18n section), `doc/Frontend Conventions`, `spec/12` (onboarding language step), `spec/26` (settings language section)
+**Read first:** `doc/Platform-Engineering-Standard` (i18n section), `doc/Frontend Conventions`, `spec/12` (onboarding language step), `spec/26` (settings language section)
 
 ---
 
@@ -79,7 +81,7 @@ Branch: `feat/design-system`
 ```
 
 **Implement:** CSS tokens (light + dark), `next-themes` dark mode, font setup, shadcn component state updates, Framer Motion install.
-**Refer:** `doc/Design-System`, `doc/Platform-Engineering-Standard`, `doc/Frontend Conventions`, `spec/20` (design philosophy)
+**Read first:** `doc/Design-System`, `doc/Platform-Engineering-Standard`, `doc/Frontend Conventions`, `spec/20` (design philosophy)
 
 ---
 
@@ -93,7 +95,7 @@ Branch: `feat/user-module`
 ```
 
 **Implement:** `UsersModule`, `UsersController`, `UsersService`, `UsersRepository`, public profile DTO, privacy field filtering.
-**Refer:** `spec/10`, `spec/05`, `spec/26`, `spec/27` (profile screens), `doc/Backend Conventions`, `doc/API Conventions`
+**Read first:** `spec/10`, `spec/05`, `spec/26`, `spec/27` (profile screens), `doc/Backend Conventions`, `doc/API Conventions`
 
 ---
 
@@ -105,7 +107,7 @@ Branch: `chore/content-seed`
 ```
 
 **Implement:** `seed.ts`, run it, verify row counts in DB.
-**Refer:** `spec/02` (data model), `data/cms/seed.py`, `data/cms/seed_erc.py`, `data/cms/data/*.csv`
+**Read first:** `spec/02` (data model), `data/cms/seed.py`, `data/cms/seed_erc.py`, `data/cms/data/*.csv`
 
 ---
 
@@ -117,7 +119,7 @@ Branch: `feat/onboarding`
 ```
 
 **Implement:** Updated onboarding DTO + endpoint, onboarding pages (3 screens), completion guard on dashboard route.
-**Refer:** `spec/12`, `spec/27` (onboarding screens), `doc/auth`, `doc/Frontend Conventions`
+**Read first:** `spec/12`, `spec/27` (onboarding screens), `doc/auth`, `doc/Frontend Conventions`
 
 ---
 
@@ -131,7 +133,7 @@ Branch: `feat/study-flow`
 ```
 
 **Implement:** `WeaknessesModule`, `TestsModule`, weakness list/detail endpoints, test CRUD, report endpoint, all test flow frontend screens.
-**Refer:** `spec/03`, `spec/23`, `spec/15` (dashboard stats), `spec/21` (virtue-first report framing), `spec/27` (test screens 1a/1b/1c), `doc/Backend Conventions`, `doc/API Conventions`, `doc/Testing-Strategy`
+**Read first:** `spec/03`, `spec/23`, `spec/15` (dashboard stats), `spec/21` (virtue-first report framing), `spec/27` (test screens 1a/1b/1c), `doc/Backend Conventions`, `doc/API Conventions`, `doc/Testing-Strategy`
 
 ---
 
@@ -143,7 +145,7 @@ Branch: `feat/journey-core`
 ```
 
 **Implement:** `JourneysModule`, journey CRUD, state machine (not_started→active→paused→dormant→completed), Status Overview frontend tab.
-**Refer:** `spec/03`, `spec/04`, `spec/05`, `spec/27` (journey screens 2), `doc/Backend Conventions`, `doc/Testing-Strategy`
+**Read first:** `spec/03`, `spec/04`, `spec/05`, `spec/27` (journey screens 2), `doc/Backend Conventions`, `doc/Testing-Strategy`
 
 ---
 
@@ -155,7 +157,7 @@ Branch: `feat/erc-selection`
 ```
 
 **Implement:** Journey ERC endpoints (select, status update, deactivate/reactivate), ERC union filter query, frontend E/R/C tabs.
-**Refer:** `spec/02`, `spec/03`, `spec/04`, `spec/05`, `spec/adr/0008`, `spec/27` (screen 3), `doc/Backend Conventions`, `doc/Testing-Strategy`
+**Read first:** `spec/02`, `spec/03`, `spec/04`, `spec/05`, `spec/adr/0008`, `spec/27` (screen 3), `doc/Backend Conventions`, `doc/Testing-Strategy`
 
 ---
 
@@ -167,7 +169,7 @@ Branch: `feat/resolution-checkins`
 ```
 
 **Implement:** `ResolutionCheckinsController/Service/Repository`, streak calculation, frontend check-in UI.
-**Refer:** `spec/24`, `spec/27` (screen 3 resolutions), `doc/Backend Conventions`
+**Read first:** `spec/24`, `spec/27` (screen 3 resolutions), `doc/Backend Conventions`
 
 ---
 
@@ -179,7 +181,7 @@ Branch: `feat/vm-relationships`
 ```
 
 **Implement:** `InvitationsModule`, `VmRelationshipsModule`, invite token generation, email sending, accept/decline/cancel flows, VM migration payload for global VM swap.
-**Refer:** `spec/04`, `spec/05`, `spec/13`, `spec/01`, `doc/Email-Strategy`, `doc/Backend Conventions`, `doc/Testing-Strategy`
+**Read first:** `spec/04`, `spec/05`, `spec/13`, `spec/01`, `doc/Email-Strategy`, `doc/Backend Conventions`, `doc/Testing-Strategy`
 
 ---
 
@@ -191,7 +193,7 @@ Branch: `feat/erc-approval`
 ```
 
 **Implement:** ERC approval/revisit endpoints, journey completion approval, self-approve paths, notification triggers.
-**Refer:** `spec/04`, `spec/05`, `spec/adr/0006`, `spec/25` (notification events), `doc/Backend Conventions`, `doc/Testing-Strategy`
+**Read first:** `spec/04`, `spec/05`, `spec/adr/0006`, `spec/25` (notification events), `doc/Backend Conventions`, `doc/Testing-Strategy`
 
 ---
 
@@ -203,7 +205,7 @@ Branch: `feat/vm-suggestions`
 ```
 
 **Implement:** Suggestion/un-suggest endpoints, VmSidenote create/revoke, acknowledge endpoint, frontend sidenote UI.
-**Refer:** `spec/03`, `spec/05`, `doc/Backend Conventions`
+**Read first:** `spec/03`, `spec/05`, `doc/Backend Conventions`
 
 ---
 
@@ -215,7 +217,7 @@ Branch: `feat/custom-erc`
 ```
 
 **Implement:** Custom ERC create/edit endpoints, submit-for-review endpoint, moderator review queue model.
-**Refer:** `spec/03`, `spec/05`, `spec/17` (moderation), `doc/Backend Conventions`
+**Read first:** `spec/03`, `spec/05`, `spec/17` (moderation), `doc/Backend Conventions`
 
 ---
 
@@ -227,7 +229,7 @@ Branch: `feat/notifications`
 ```
 
 **Implement:** `NotificationsModule`, create/list/mark-read endpoints, archive cron job, bell icon + panel frontend, wire all event triggers.
-**Refer:** `spec/25`, `spec/04`, `spec/27` (notification panel implied in screen specs), `doc/Backend Conventions`, `doc/Observability-Standard`
+**Read first:** `spec/25`, `spec/04`, `spec/27` (notification panel implied in screen specs), `doc/Backend Conventions`, `doc/Observability-Standard`
 
 ---
 
@@ -241,7 +243,7 @@ Branch: `feat/va-dashboard`
 ```
 
 **Implement:** Dashboard stats endpoint, suggestion algorithm (lowest-score v1), dashboard page with all sections.
-**Refer:** `spec/15`, `spec/21`, `spec/11` (platform stats), `spec/27` (dashboard screen), `doc/Backend Conventions`
+**Read first:** `spec/15`, `spec/21`, `spec/11` (platform stats), `spec/27` (dashboard screen), `doc/Backend Conventions`
 
 ---
 
@@ -253,7 +255,7 @@ Branch: `feat/my-vratmitras-chat`
 ```
 
 **Implement:** VM list endpoint, NestJS WebSocket Gateway, chat message persistence, image upload to MinIO, My Vratmitras frontend, chat thread frontend.
-**Refer:** `spec/18`, `spec/adr/0004`, `spec/05`, `spec/27` (screens 6 + chat), `doc/Platform-Engineering-Standard` (WebSocket + upload sections), `doc/Backend Conventions`
+**Read first:** `spec/18`, `spec/adr/0004`, `spec/05`, `spec/27` (screens 6 + chat), `doc/Platform-Engineering-Standard` (WebSocket + upload sections), `doc/Backend Conventions`
 
 ---
 
@@ -265,7 +267,7 @@ Branch: `feat/actions-guidance`
 ```
 
 **Implement:** Actions and VM-actions aggregation endpoints, both frontend pages.
-**Refer:** `spec/22`, `spec/27` (screens 4 + 5), `spec/05`, `doc/Backend Conventions`
+**Read first:** `spec/22`, `spec/27` (screens 4 + 5), `spec/05`, `doc/Backend Conventions`
 
 ---
 
@@ -277,7 +279,7 @@ Branch: `feat/experience-logging`
 ```
 
 **Implement:** `ExperienceLogsModule`, CRUD endpoints, rich text sanitization, image upload, Tiptap editor frontend, draft model.
-**Refer:** `spec/14`, `spec/05`, `spec/27` (experience log screens), `doc/Platform-Engineering-Standard` (rich text + upload), `doc/Backend Conventions`
+**Read first:** `spec/14`, `spec/05`, `spec/27` (experience log screens), `doc/Platform-Engineering-Standard` (rich text + upload), `doc/Backend Conventions`
 
 ---
 
@@ -289,7 +291,7 @@ Branch: `feat/public-profile`
 ```
 
 **Implement:** Public profile endpoint, follow/unfollow, credibility stat, public experience entries, profile page frontend.
-**Refer:** `spec/10`, `spec/13`, `spec/05`, `spec/27` (profile screens), `doc/Backend Conventions`
+**Read first:** `spec/10`, `spec/13`, `spec/05`, `spec/27` (profile screens), `doc/Backend Conventions`
 
 ---
 
@@ -301,7 +303,7 @@ Branch: `feat/user-search`
 ```
 
 **Implement:** Search endpoint, Meilisearch user index + sync, invitation UI flow.
-**Refer:** `spec/13`, `spec/07` (Meilisearch), `doc/Platform-Engineering-Standard` (search architecture), `doc/Backend Conventions`
+**Read first:** `spec/13`, `spec/07` (Meilisearch), `doc/Platform-Engineering-Standard` (search architecture), `doc/Backend Conventions`
 
 ---
 
@@ -313,7 +315,7 @@ Branch: `feat/blogs`
 ```
 
 **Implement:** `BlogsModule`, CRUD + comments endpoints, rich text sanitization, blog list/detail/editor frontend.
-**Refer:** `spec/16`, `spec/05`, `spec/27` (blog screens), `doc/Platform-Engineering-Standard` (rich text), `doc/Backend Conventions`
+**Read first:** `spec/16`, `spec/05`, `spec/27` (blog screens), `doc/Platform-Engineering-Standard` (rich text), `doc/Backend Conventions`
 
 ---
 
@@ -327,7 +329,7 @@ Branch: `feat/virtues-browser`
 ```
 
 **Implement:** Virtue/subvirtue detail endpoints, browser + detail pages frontend, sentence info modal.
-**Refer:** `spec/21`, `spec/09` (guest access), `spec/27` (virtues browser screens), `doc/Backend Conventions`
+**Read first:** `spec/21`, `spec/09` (guest access), `spec/27` (virtues browser screens), `doc/Backend Conventions`
 
 ---
 
@@ -341,7 +343,7 @@ git checkout -b feat/audit-logging dev
 # Fire-and-forget writes to audit_events table. No OpenSpec needed — pattern is straightforward.
 ```
 
-**Refer:** `doc/Audit-Schema`, `doc/Backend Conventions`
+**Read first:** `doc/Audit-Schema`, `doc/Backend Conventions`
 
 ---
 
@@ -353,7 +355,7 @@ Branch: `feat/moderation-erc`
 ```
 
 **Implement:** Moderation ERC endpoints, approval pipeline, rejection with reason, audit logging, notification triggers, frontend review panel.
-**Refer:** `spec/17`, `spec/05`, `doc/Audit-Schema`, `spec/25` (notification events), `spec/27` (moderation screens), `doc/Backend Conventions`
+**Read first:** `spec/17`, `spec/05`, `doc/Audit-Schema`, `spec/25` (notification events), `spec/27` (moderation screens), `doc/Backend Conventions`
 
 ---
 
@@ -365,7 +367,7 @@ Branch: `feat/content-pages`
 ```
 
 **Implement:** Pothi/Shlokas/Resources endpoints, Meilisearch shlokas index, shloka-of-the-day logic, all content frontend pages.
-**Refer:** `spec/19`, `spec/adr/0007`, `spec/16`, `spec/09` (guest), `spec/07` (search), `spec/27` (content screens), `doc/Backend Conventions`
+**Read first:** `spec/19`, `spec/adr/0007`, `spec/16`, `spec/09` (guest), `spec/07` (search), `spec/27` (content screens), `doc/Backend Conventions`
 
 ---
 
@@ -377,7 +379,7 @@ Branch: `feat/admin-content`
 ```
 
 **Implement:** All admin CRUD endpoints for content entities, shloka scheduling + queue, admin frontend panels.
-**Refer:** `spec/17`, `spec/19`, `spec/05`, `doc/Audit-Schema`, `spec/27` (admin screens), `doc/Backend Conventions`
+**Read first:** `spec/17`, `spec/19`, `spec/05`, `doc/Audit-Schema`, `spec/27` (admin screens), `doc/Backend Conventions`
 
 ---
 
@@ -389,7 +391,7 @@ Branch: `feat/admin-users`
 ```
 
 **Implement:** Admin user endpoints, role management, suspension, force logout, anonymisation flow, journey state override, frontend admin user views.
-**Refer:** `spec/05`, `spec/06` (edge cases — anonymisation), `spec/01`, `doc/Audit-Schema`, `spec/27` (admin screens), `doc/Backend Conventions`
+**Read first:** `spec/05`, `spec/06` (edge cases — anonymisation), `spec/01`, `doc/Audit-Schema`, `spec/27` (admin screens), `doc/Backend Conventions`
 
 ---
 
@@ -403,7 +405,7 @@ Branch: `feat/account-settings`
 ```
 
 **Implement:** Settings endpoints, password change, email change flow, account deletion, all settings page sections.
-**Refer:** `spec/26`, `spec/05`, `spec/06` (edge cases), `doc/auth`, `spec/27` (settings screens), `doc/Backend Conventions`
+**Read first:** `spec/26`, `spec/05`, `spec/06` (edge cases), `doc/auth`, `spec/27` (settings screens), `doc/Backend Conventions`
 
 ---
 
@@ -418,7 +420,7 @@ git checkout -b feat/platform-stats dev
 # Direct — straightforward endpoint + Redis cache, no OpenSpec needed.
 ```
 
-**Refer:** `spec/11`, `doc/Platform-Engineering-Standard` (numeric constants), `doc/Backend Conventions`
+**Read first:** `spec/11`, `doc/Platform-Engineering-Standard` (numeric constants), `doc/Backend Conventions`
 
 ---
 
@@ -434,7 +436,7 @@ git checkout -b feat/dormant-detection dev
 # Direct — single cron job file, no OpenSpec needed.
 ```
 
-**Refer:** `spec/04` (lifecycle — dormant trigger = 30 days), `spec/25` (JOURNEY_DORMANT notification), `doc/Platform-Engineering-Standard` (scheduler)
+**Read first:** `spec/04` (lifecycle — dormant trigger = 30 days), `spec/25` (JOURNEY_DORMANT notification), `doc/Platform-Engineering-Standard` (scheduler)
 
 ---
 
@@ -446,7 +448,7 @@ Branch: `feat/e2e-tests`
 ```
 
 **Implement:** Playwright config, test fixtures, all 10 E2E flows.
-**Refer:** `doc/Testing-Strategy`, `spec/27` (all relevant screens), `doc/Platform-Engineering-Standard`
+**Read first:** `doc/Testing-Strategy`, `spec/27` (all relevant screens), `doc/Platform-Engineering-Standard`
 
 ---
 

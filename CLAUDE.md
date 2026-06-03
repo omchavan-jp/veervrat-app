@@ -150,8 +150,15 @@ veervrat-app/
 - **Bug fix under ~20 lines**: fix directly, no spec needed
 - **Systemic/cross-cutting change**: use OpenSpec for traceability
 
+### Before every /opsx:propose — mandatory research phase
+Do all of this before invoking the skill:
+1. Read every document listed under **Refer:** for the item
+2. Read the current state of every source file the change will touch
+3. Check for new dependencies — if any, update `documentation/Platform-Engineering-Standard.md` approved library catalog first (hard rule from above)
+4. Check `CLAUDE.md` hard rules for the affected layers (backend/frontend/API/database) — flag any conflict before proposing
+
 ### Flow for every feature
-1. `/opsx:propose` → write implementation spec (references relevant `spec/decisions/` files) → you review and approve
+1. Research phase (see above) → `/opsx:propose` → write implementation spec (references relevant `spec/decisions/` files) → you review and approve
 2. `/opsx:apply` → implement + write tests alongside code (never after) → run tests until they pass
 3. `/code-review` → review findings → fix issues
 4. `/opsx:archive` → only after tests pass and review is clean
