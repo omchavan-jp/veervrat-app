@@ -15,6 +15,11 @@
     "start": {
       "cache": false,
       "persistent": true
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "inputs": ["src/**", "vitest.config.ts", ".env.test"],
+      "outputs": ["coverage/**"]
     }
   }
 }
