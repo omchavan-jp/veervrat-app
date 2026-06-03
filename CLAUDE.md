@@ -164,13 +164,14 @@ veervrat-app/
 ## Git conventions
 
 ### Branching
-- `main` — stable, all specs and pre-implementation setup merged here before feature work begins
-- `feat/<name>` — new features, branched from main
-- `fix/<name>` — bug fixes
+- `dev` — **working integration branch**. All feature branches merge here. Never commit directly to dev — PR always.
+- `main` — production-stable only. Merges from dev after release validation.
+- `feat/<name>` — new features, branched from dev
+- `fix/<name>` — bug fixes, branched from dev
 - `refactor/<name>` — refactoring without behaviour change
 - `chore/<name>` — tooling, config, deps
-- `spec/<name>` — spec and documentation work (e.g. `spec/discovery` — this is the current spec branch)
-- **No direct commits to main** — PR always
+- `spec/<name>` — spec and documentation work (e.g. `spec/discovery` — now merged into dev)
+- **No direct commits to dev or main** — PR always
 
 ### Commit messages (conventional commits)
 - `feat: add journey status overview endpoint`
@@ -183,14 +184,14 @@ veervrat-app/
 - Migrations get their own commit: `db: add journey_weakness join table`
 
 ### Merging philosophy
-- Squash merge feature branches into main (clean history)
-- Never merge main into a feature branch mid-work — rebase instead
-- `spec/discovery` → PR → squash merge to main before implementation begins
+- Squash merge feature branches into dev (clean history)
+- Never merge dev into a feature branch mid-work — rebase instead
+- dev → main only for production releases
 
 ### Before starting implementation
-- `spec/discovery` must be merged to `main` first
-- Create `chore/pre-impl-setup` branch for infrastructure setup (docker-compose, env, schema)
-- Feature branches created from `main` after setup is merged
+- `spec/discovery` is merged to `dev` ✅
+- Create `chore/pre-impl-setup` branch off `dev` for infrastructure setup (docker-compose, env, schema)
+- Feature branches created from `dev` after setup is merged
 
 ## Session discipline
 - One task per session — don't try to do everything
