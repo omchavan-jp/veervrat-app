@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomBytes } from 'crypto';
 import * as bcrypt from 'bcrypt';
-import { AuthProvider, VerificationType } from '@prisma/client';
+import { AuthProvider, Role, VerificationType } from '@prisma/client';
 import { AuthRepository } from './auth.repository';
 import {
   DuplicateEntityException,
@@ -35,7 +35,8 @@ export class AuthService {
   async register(
     email: string,
     password: string,
-    name: string | null,
+    displayName: string,
+    username: string,
   ): Promise<{ user: SessionUser }> {
     const existingUser = await this.authRepository.findUserByEmail(email);
     if (existingUser) {
@@ -46,7 +47,8 @@ export class AuthService {
 
     const user = await this.authRepository.createUserWithEmailAccount({
       email,
-      name,
+      displayName,
+      username,
       passwordHash,
     });
 
@@ -126,9 +128,14 @@ export class AuthService {
       throw new OAuthAccountConflictException();
     }
 
+    // For OAuth users, generate a username from email until they complete onboarding
+    const baseUsername = profile.email.split('@')[0].replace(/[^a-z0-9_]/gi, '').toLowerCase();
+    const username = `${baseUsername}_${Math.random().toString(36).slice(2, 7)}`;
+
     const user = await this.authRepository.createUserWithOAuthAccount({
       email: profile.email,
-      name: profile.name,
+      displayName: profile.name ?? profile.email.split('@')[0],
+      username,
       provider: AuthProvider.GOOGLE,
       providerAccountId: profile.googleId,
       emailVerifiedAt: new Date(),
@@ -246,8 +253,8 @@ export class AuthService {
     return this.toSessionUser(session.user);
   }
 
-  async completeOnboarding(userId: string, name?: string): Promise<SessionUser> {
-    const user = await this.authRepository.markOnboardingComplete(userId, name);
+  async completeOnboarding(userId: string, displayName?: string): Promise<SessionUser> {
+    const user = await this.authRepository.markOnboardingComplete(userId, displayName);
     return this.toSessionUser(user);
   }
 
@@ -281,16 +288,20 @@ export class AuthService {
   private toSessionUser(user: {
     id: string;
     email: string;
-    name: string | null;
-    role: string;
+    displayName: string;
+    username: string;
+    language: string;
+    roles: { role: Role }[];
     emailVerifiedAt: Date | null;
     onboardingCompletedAt: Date | null;
   }): SessionUser {
     return {
       id: user.id,
       email: user.email,
-      name: user.name,
-      role: user.role as SessionUser['role'],
+      displayName: user.displayName,
+      username: user.username,
+      language: user.language,
+      roles: user.roles.map((r) => r.role),
       emailVerifiedAt: user.emailVerifiedAt,
       onboardingCompletedAt: user.onboardingCompletedAt,
     };

@@ -1,6 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { AuthProvider, VerificationType } from '@prisma/client';
+import { AuthProvider, Role, VerificationType } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+
+// Shared select shape that returns all fields needed for SessionUser
+const userSelect = {
+  id: true,
+  email: true,
+  displayName: true,
+  username: true,
+  language: true,
+  emailVerifiedAt: true,
+  onboardingCompletedAt: true,
+  deletedAt: true,
+  roles: { select: { role: true } },
+} as const;
 
 @Injectable()
 export class AuthRepository {
@@ -9,24 +22,28 @@ export class AuthRepository {
   async findUserByEmail(email: string) {
     return this.prisma.user.findUnique({
       where: { email, deletedAt: null },
+      select: userSelect,
     });
   }
 
   async findUserById(id: string) {
     return this.prisma.user.findUnique({
       where: { id, deletedAt: null },
+      select: userSelect,
     });
   }
 
   async createUserWithEmailAccount(params: {
     email: string;
-    name: string | null;
+    displayName: string;
+    username: string;
     passwordHash: string;
   }) {
     return this.prisma.user.create({
       data: {
         email: params.email,
-        name: params.name,
+        displayName: params.displayName,
+        username: params.username,
         authAccounts: {
           create: {
             provider: AuthProvider.EMAIL,
@@ -34,13 +51,16 @@ export class AuthRepository {
             passwordHash: params.passwordHash,
           },
         },
+        roles: { create: { role: Role.VRATARTHI } },
       },
+      select: userSelect,
     });
   }
 
   async createUserWithOAuthAccount(params: {
     email: string;
-    name: string | null;
+    displayName: string;
+    username: string;
     provider: AuthProvider;
     providerAccountId: string;
     emailVerifiedAt: Date;
@@ -48,7 +68,8 @@ export class AuthRepository {
     return this.prisma.user.create({
       data: {
         email: params.email,
-        name: params.name,
+        displayName: params.displayName,
+        username: params.username,
         emailVerifiedAt: params.emailVerifiedAt,
         authAccounts: {
           create: {
@@ -56,7 +77,9 @@ export class AuthRepository {
             providerAccountId: params.providerAccountId,
           },
         },
+        roles: { create: { role: Role.VRATARTHI } },
       },
+      select: userSelect,
     });
   }
 
@@ -64,15 +87,14 @@ export class AuthRepository {
     return this.prisma.user.update({
       where: { id: userId },
       data: { emailVerifiedAt: new Date() },
+      select: userSelect,
     });
   }
 
   async findAuthAccount(provider: AuthProvider, providerAccountId: string) {
     return this.prisma.authAccount.findUnique({
-      where: {
-        provider_providerAccountId: { provider, providerAccountId },
-      },
-      include: { user: true },
+      where: { provider_providerAccountId: { provider, providerAccountId } },
+      include: { user: { select: userSelect } },
     });
   }
 
@@ -102,7 +124,7 @@ export class AuthRepository {
   async findSessionByToken(token: string) {
     return this.prisma.session.findUnique({
       where: { token },
-      include: { user: true },
+      include: { user: { select: userSelect } },
     });
   }
 
@@ -133,7 +155,7 @@ export class AuthRepository {
   async findVerificationToken(token: string, type: VerificationType) {
     return this.prisma.verificationToken.findFirst({
       where: { token, type, usedAt: null },
-      include: { user: true },
+      include: { user: { select: userSelect } },
     });
   }
 
@@ -144,13 +166,14 @@ export class AuthRepository {
     });
   }
 
-  async markOnboardingComplete(userId: string, name?: string) {
+  async markOnboardingComplete(userId: string, displayName?: string) {
     return this.prisma.user.update({
       where: { id: userId },
       data: {
         onboardingCompletedAt: new Date(),
-        ...(name ? { name } : {}),
+        ...(displayName ? { displayName } : {}),
       },
+      select: userSelect,
     });
   }
 
