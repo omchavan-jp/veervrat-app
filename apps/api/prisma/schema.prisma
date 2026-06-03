@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // ═══════════════════════════════════════════════════
@@ -355,8 +354,11 @@ model Weakness {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  subvirtues WeaknessSubvirtue[]
-  journeyWeaknesses JourneyWeakness[]
+  subvirtues         WeaknessSubvirtue[]
+  journeyWeaknesses  JourneyWeakness[]
+  exposureWeaknesses ExposureWeakness[]
+  resolutionWeaknesses ResolutionWeakness[]
+  challengeWeaknesses  ChallengeWeakness[]
 
   @@map("weaknesses")
 }
