@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  /* Colors — light mode */
   --bg: #FAF7F2;
   --fg: #1C1A17;
   --accent: #C0512F;
@@ -10,9 +11,44 @@
   --surface: #FFFFFF;
   --border: rgba(47, 91, 79, 0.12);
   --border-strong: rgba(28, 26, 23, 0.16);
+  --success: #3D8B37;
+  --warning: #C4841D;
+  --danger: #C0512F;
+
+  /* Shadows — light mode (internal vars, consumed by @theme inline via distinct names) */
+  --_shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --_shadow-modal: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --_shadow-toast: 0 4px 16px rgba(0, 0, 0, 0.10);
+
+  /* Animation timing — consumed directly via var(), not as Tailwind utilities */
+  --anim-micro: 150ms;
+  --anim-transition: 250ms;
+  --anim-page: 400ms;
+}
+
+.dark {
+  /* Colors — dark mode */
+  --bg: #1A1816;
+  --fg: #F5F0EA;
+  --accent: #D4694A;
+  --accent-hover: #B85A3C;
+  --accent-2: #4A8A7A;
+  --muted: #7A7570;
+  --surface: #242220;
+  --border: rgba(200, 190, 180, 0.12);
+  --border-strong: rgba(200, 190, 180, 0.20);
+  --success: #4CA644;
+  --warning: #D4943A;
+  --danger: #D4694A;
+
+  /* Shadows — dark mode */
+  --_shadow-card: 0 1px 3px rgba(0, 0, 0, 0.20);
+  --_shadow-modal: 0 8px 32px rgba(0, 0, 0, 0.30);
+  --_shadow-toast: 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 
 @theme inline {
+  /* Colors */
   --color-bg: var(--bg);
   --color-fg: var(--fg);
   --color-accent: var(--accent);
@@ -22,10 +58,26 @@
   --color-surface: var(--surface);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+
+  /* Fonts */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-display: var(--font-newsreader);
   --font-deva: var(--font-tiro-devanagari);
+
+  /* Border radius — defined directly (mode-independent, no cascade override needed) */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+
+  /* Shadows — reference distinct internal vars to avoid self-referencing cycle */
+  --shadow-card: var(--_shadow-card);
+  --shadow-modal: var(--_shadow-modal);
+  --shadow-toast: var(--_shadow-toast);
 }
 
 body {

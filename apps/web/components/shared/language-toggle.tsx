@@ -26,7 +26,7 @@ export function LanguageToggle() {
     <div className="flex items-center gap-1 rounded-lg border border-border p-0.5 text-xs font-mono">
       <button
         onClick={() => handleToggle('en')}
-        className={`rounded-md px-2.5 py-1 transition-colors ${
+        className={`rounded-md px-2.5 py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-2 ${
           locale === 'en' ? 'bg-accent text-bg' : 'text-muted hover:text-fg'
         }`}
         aria-pressed={locale === 'en'}
@@ -35,7 +35,7 @@ export function LanguageToggle() {
       </button>
       <button
         onClick={() => handleToggle('mr')}
-        className={`rounded-md px-2.5 py-1 transition-colors ${
+        className={`rounded-md px-2.5 py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-2 ${
           locale === 'mr' ? 'bg-accent text-bg' : 'text-muted hover:text-fg'
         }`}
         aria-pressed={locale === 'mr'}

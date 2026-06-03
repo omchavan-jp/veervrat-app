@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/auth/logo';
 import { useLogout } from '@/hooks/use-auth';
+import { LanguageToggle } from '@/components/shared/language-toggle';
+import { ThemeToggle } from '@/components/shared/theme-toggle';
 import type { User } from '@/lib/api/auth';
 
 export function Header({ user }: { user: User }) {
@@ -16,6 +18,8 @@ export function Header({ user }: { user: User }) {
           <Logo />
         </Link>
         <div className="flex items-center gap-4">
+          <ThemeToggle />
+          <LanguageToggle />
           <span className="text-sm text-muted">
             {user.displayName ?? user.email}
           </span>

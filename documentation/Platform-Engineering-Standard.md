@@ -13,6 +13,7 @@ This document is the canonical reference for all library, tooling, and architect
 | Rich text sanitization | sanitize-html | `sanitize-html` | Server-side, node-allowlist based. Runs on all user-generated rich text before DB write. |
 | i18n | next-intl | `next-intl` | App Router native, server-component-first, ICU message format, no URL-based locale routing |
 | Animation | Framer Motion | `framer-motion` | Standard for App Router, declarative, composable with Tailwind |
+| Dark mode | next-themes | `next-themes` | App Router compatible, class-based theme toggle, system preference default, localStorage persistence |
 | Icons | lucide-react | `lucide-react` | Already in stack. Lined = default, filled = active. No mixing styles. |
 | WebSocket (client) | Socket.IO client | `socket.io-client` | Pairs with NestJS Gateway, handles reconnect natively |
 | WebSocket (server) | NestJS Gateway | `@nestjs/websockets`, `socket.io` | Native NestJS, cookie auth on handshake |
