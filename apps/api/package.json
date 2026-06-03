@@ -17,7 +17,8 @@
     "test:unit": "vitest run --project unit",
     "test:integration": "vitest run --project integration",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "seed": "ts-node --transpile-only src/database/seed.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
