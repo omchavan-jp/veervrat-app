@@ -7,16 +7,22 @@ Two tiers:
 
 Spec refs use shorthand: `spec/05` = `spec/decisions/05_permissions.md`, `doc/auth` = `documentation/Auth Architecture Decision - v1.md`, etc.
 
-**Before starting any item:** read every document listed under **Read first:** and inspect the current state of the source files the change will touch. Follow the mandatory research phase in `CLAUDE.md` Implementation SOP — this must happen before invoking `/opsx:propose`.
+**How to use this document in a new session:**
+1. Copy the item's **Session prompt** block below — paste it as your first message
+2. The session prompt already contains the research directive — do not skip it
+3. After implement: `/code-review` → fix → commit → squash merge to dev → `/opsx:archive`
 
 ---
 
 ## TIER 1 — Infrastructure & Identity (do these before any feature)
 
-### 1. Testing infrastructure setup [FULL]
-Branch: `chore/test-setup`
+### 1. Testing infrastructure setup [FULL] ✅ DONE
+Branch: `chore/test-setup` (merged to dev)
 
 ```
+**RESEARCH PHASE — do this before anything else:**
+Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
+
 /opsx:propose "Set up Vitest for NestJS backend (unit + integration), Vitest + React Testing Library for Next.js frontend, and Playwright for E2E. Follow documentation/Testing-Strategy.md exactly. Configure: vitest.config.ts for both apps, test DB setup (separate veervrat_test DB via docker-compose), supertest integration, first smoke test verifying the DB connection works."
 ```
 
@@ -25,10 +31,13 @@ Branch: `chore/test-setup`
 
 ---
 
-### 2. NestJS app foundation [FULL]
-Branch: `feat/api-foundation`
+### 2. NestJS app foundation [FULL] ✅ DONE
+Branch: `feat/api-foundation` (merged to dev)
 
 ```
+**RESEARCH PHASE — do this before anything else:**
+Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
+
 /opsx:propose "Set up NestJS app foundation: global exception filter, response interceptor (wrapping all responses in { data }), correlation ID middleware, Pino structured logging, ConfigModule with validation, PrismaModule (global), health check endpoint at GET /api/health. Follow documentation/Backend Conventions - v1.md, documentation/Observability-Standard.md, documentation/API Conventions - v1.md."
 ```
 
@@ -41,6 +50,9 @@ Branch: `feat/api-foundation`
 Branch: `feat/permission-system`
 
 ```
+**RESEARCH PHASE — do this before anything else:**
+Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
+
 /opsx:propose "Implement the hasPermission(user, resource, action, context) function and PermissionGuard for NestJS. This is the ABAC+RBAC hybrid described in spec/decisions/05_permissions.md and spec/adr/0003-rbac-abac-hybrid.md. The function must: accept full resource objects (not IDs), check both role-level (Layer 1/Layer 2) and relationship-scoped permissions (e.g. is this VM assigned to this journey?). Write auth matrix tests: one positive + one negative test per permission row in spec/decisions/05_permissions.md."
 ```
 
@@ -53,6 +65,9 @@ Branch: `feat/permission-system`
 Branch: `feat/auth-complete`
 
 ```
+**RESEARCH PHASE — do this before anything else:**
+Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
+
 /opsx:propose "Complete the auth module. Backend: (1) CSRF double-submit cookie middleware — on session creation, set non-HttpOnly csrf-token cookie; NestJS guard validates X-CSRF-Token header matches cookie on all state-changing routes. (2) Rate limiting via @nestjs/throttler per the limits in documentation/Platform-Engineering-Standard.md numeric constants table. (3) Account lockout — 10 failed login attempts within 1 hour locks account for 15 minutes, stored in Redis. (4) Fix completeOnboarding endpoint to accept username + displayName + language. (5) Wire Resend email sending — EmailModule with console fallback for dev. Frontend: delete all existing auth pages and reimplement login, signup, forgot-password, reset-password, verify-email per spec/decisions/27_screen-specs.md auth section. All pages use next-intl for strings. Signup collects displayName, username (live uniqueness check), email, password, language. Follow documentation/Auth Architecture Decision - v1.md sections 15-16."
 ```
 
@@ -65,6 +80,9 @@ Branch: `feat/auth-complete`
 Branch: `feat/i18n-setup`
 
 ```
+**RESEARCH PHASE — do this before anything else:**
+Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
+
 /opsx:propose "Set up next-intl for the Next.js frontend. Follow documentation/Platform-Engineering-Standard.md i18n section. Requirements: middleware.ts for locale detection from user session, getRequestConfig loading messages from apps/web/messages/{locale}.json, no URL-based routing, language applied at layout level via NextIntlClientProvider. Create en.json and mr.json with all auth screen strings as the first set of message keys. Add a language toggle component. Refer to spec/decisions/26_account-settings.md for language setting location."
 ```
 
@@ -77,6 +95,9 @@ Branch: `feat/i18n-setup`
 Branch: `feat/design-system`
 
 ```
+**RESEARCH PHASE — do this before anything else:**
+Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
+
 /opsx:propose "Implement the design system from documentation/Design-System.md. Tasks: (1) Update apps/web/app/globals.css with all CSS custom properties — light mode and dark mode tokens (color, radius, shadow, animation timing). (2) Implement dark mode toggle using next-themes, persisted in localStorage + user preference DB field. (3) Audit existing shadcn/ui components (button, input, card, label, alert, separator) against the component states spec in documentation/Design-System.md — add missing states (error, loading, disabled). (4) Add Geist Sans, Geist Mono, Newsreader, Tiro Devanagari fonts via next/font in apps/web/app/fonts.ts. (5) Add Framer Motion to the project."
 ```
 
@@ -91,6 +112,9 @@ Branch: `feat/design-system`
 Branch: `feat/user-module`
 
 ```
+**RESEARCH PHASE — do this before anything else:**
+Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
+
 /opsx:propose "Implement the User module (NestJS). This is distinct from auth — auth handles identity, user module handles profile data. Routes needed: GET /api/v1/users/:username (public profile — respects privacy settings from spec/decisions/10_public-profile.md), PATCH /api/v1/users/me (update own profile fields), GET /api/v1/users/me (current user full profile). Username uniqueness check endpoint: GET /api/v1/users/check-username?username=X. Follow spec/decisions/10_public-profile.md for what fields are public vs private. Follow spec/decisions/05_permissions.md Layer 1 for scoping."
 ```
 
@@ -103,6 +127,9 @@ Branch: `feat/user-module`
 Branch: `chore/content-seed`
 
 ```
+**RESEARCH PHASE — do this before anything else:**
+Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
+
 /opsx:propose "Create a database seeder that imports the Veervrat content from the CMS CSV files in data/cms/data/. Seed: virtues, subvirtues, weaknesses, weakness_subvirtue links (with priority), sentences, exposures, resolutions, challenges, exposure/resolution/challenge weakness tags, sentence_erc_meta (source_file, notes). The seeder should be idempotent (safe to run multiple times) and live at apps/api/src/database/seed.ts. Reference data/cms/seed.py and data/cms/seed_erc.py for the CSV structure and seeding logic."
 ```
 
@@ -115,6 +142,9 @@ Branch: `chore/content-seed`
 Branch: `feat/onboarding`
 
 ```
+**RESEARCH PHASE — do this before anything else:**
+Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
+
 /opsx:propose "Implement the full 3-layer onboarding flow from spec/decisions/12_onboarding.md. Backend: update POST /auth/complete-onboarding to accept { displayName, username, language, gender?, dob? } — validate username uniqueness, update user record. Frontend: (1) Account setup page — collect displayName, username (live check), language preference, optional gender/dob. (2) Framework onboarding — two-section page: What is Veervrat + Process Chart (admin-managed content, hardcode placeholder for now). (3) Final CTA: take test now or explore app. Gate the dashboard behind onboarding completion. Refer to spec/decisions/27_screen-specs.md onboarding screens."
 ```
 
@@ -129,6 +159,9 @@ Branch: `feat/onboarding`
 Branch: `feat/study-flow`
 
 ```
+**RESEARCH PHASE — do this before anything else:**
+Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
+
 /opsx:propose "Implement the Study flow (Flow 1 from spec/decisions/03_flows.md). Backend routes: GET /api/v1/weaknesses (list all with cluster grouping), GET /api/v1/weaknesses/:id (detail with subvirtues), POST /api/v1/tests (create draft test attempt for a weakness), PATCH /api/v1/tests/:id/answers (save answers — supports partial, draft model), POST /api/v1/tests/:id/submit (submit test, marks as completed), GET /api/v1/tests/:id/report (test report with scored sentences). Frontend: weakness browser, weakness detail, test question screen (one-at-a-time default + view-all toggle per spec/decisions/27_screen-specs.md), submission preview, report reveal (peak moment — animate progressively). Test scoring: Always=4, Often=3, Sometimes=2, Never=1 per spec/decisions/23_test-scoring.md."
 ```
 
@@ -141,6 +174,9 @@ Branch: `feat/study-flow`
 Branch: `feat/journey-core`
 
 ```
+**RESEARCH PHASE — do this before anything else:**
+Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
+
 /opsx:propose "Implement Journey core. Backend: POST /api/v1/journeys (create journey from sentence, attach weakness context, enforce one-per-sentence constraint from spec/decisions/04_lifecycle.md), GET /api/v1/journeys/:id (journey detail with status summary), PATCH /api/v1/journeys/:id/state (pause/resume/submit-for-completion), GET /api/v1/journeys (list own journeys). Permission checks per spec/decisions/05_permissions.md Layer 1 — journey.create, journey.view, journey.pause, journey.complete. Frontend: journey Status Overview tab, journey header (title, sentence, subvirtue→virtue, weakness tags, state indicator). Follow spec/decisions/27_screen-specs.md journey screens."
 ```
 
@@ -153,6 +189,9 @@ Branch: `feat/journey-core`
 Branch: `feat/erc-selection`
 
 ```
+**RESEARCH PHASE — do this before anything else:**
+Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
+
 /opsx:propose "Implement ERC selection within journeys. Backend: POST /api/v1/journeys/:id/exposures (select pool exposure for journey), PATCH /api/v1/journeys/:id/exposures/:eid/status (update ERC status — not_started→in_progress→submitted, revisit transitions), POST /api/v1/journeys/:id/exposures/:eid/deactivate, POST /api/v1/journeys/:id/exposures/:eid/reactivate. Same pattern for resolutions and challenges. ERC pool shown = union filter (journey weaknesses ∩ ERC weakness tags) per spec/decisions/02_data-model.md and spec/adr/0008. Frontend: Exposures, Resolutions, Challenges tabs per spec/decisions/27_screen-specs.md screen 3."
 ```
 
@@ -165,6 +204,9 @@ Branch: `feat/erc-selection`
 Branch: `feat/resolution-checkins`
 
 ```
+**RESEARCH PHASE — do this before anything else:**
+Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
+
 /opsx:propose "Implement resolution check-in logging. Backend: POST /api/v1/journeys/:id/resolutions/:rid/checkins (log a check-in: done/partial/missed + optional note), GET /api/v1/journeys/:id/resolutions/:rid/checkins (list check-ins with streak calculation). Follow spec/decisions/24_resolution-tracking.md — streak = consecutive done check-in submissions, calendar gaps don't break it. Frontend: Log check-in inline form on resolution card, check-in history expandable list, streak count display."
 ```
 
@@ -177,6 +219,9 @@ Branch: `feat/resolution-checkins`
 Branch: `feat/vm-relationships`
 
 ```
+**RESEARCH PHASE — do this before anything else:**
+Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
+
 /opsx:propose "Implement the VM relationship system. Backend: POST /api/v1/invitations (send VM or platform invitation — creates invite token, sends email via EmailModule), POST /api/v1/invitations/:token/accept, POST /api/v1/invitations/:token/decline, DELETE /api/v1/invitations/:id (cancel). VmRelationship CRUD: assign global VM, remove global VM (triggers migration payload — decide what to cascade), assign journey VM, remove journey VM. Permission checks: vm_invitation.send, vm_invitation.accept, vm_invitation.cancel, vm_invitation.decline. Follow spec/decisions/13_user-search.md invitation spec and spec/decisions/04_lifecycle.md VM relationship lifecycle."
 ```
 
@@ -189,6 +234,9 @@ Branch: `feat/vm-relationships`
 Branch: `feat/erc-approval`
 
 ```
+**RESEARCH PHASE — do this before anything else:**
+Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
+
 /opsx:propose "Implement VM approval flow for ERC items and journey completion. Backend: POST /api/v1/journeys/:id/exposures/:eid/approve, POST /api/v1/journeys/:id/exposures/:eid/revisit (VM returns for rework). Same for resolutions and challenges. POST /api/v1/journeys/:id/complete/approve (VM approves journey completion). Self-approve paths when no VM assigned. Permission checks per spec/decisions/05_permissions.md: erc.approve_closure scoped to assigned journey VM only. Trigger notification events on each approval/revisit. Follow spec/decisions/04_lifecycle.md ERC state machine and spec/adr/0006."
 ```
 
@@ -201,6 +249,9 @@ Branch: `feat/erc-approval`
 Branch: `feat/vm-suggestions`
 
 ```
+**RESEARCH PHASE — do this before anything else:**
+Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
+
 /opsx:propose "Implement VM ERC suggestions and sidenotes. Backend: POST /api/v1/journeys/:id/exposures/:eid/suggest (VM suggests pool ERC to VA, creates VmSidenote), DELETE /api/v1/journeys/:id/exposures/:eid/suggest (VM unuggests — revokes sidenote, nullifies VA acknowledgement per spec/decisions/03_flows.md sidenote revocation rule). POST /api/v1/journeys/:id/exposures/:eid/sidenote/acknowledge (VA acknowledges sidenote). Permission: erc.suggest — VM assigned to journey only. Frontend: VM suggestion highlight on ERC pool card, sidenote display + acknowledge/dismiss on active ERC card."
 ```
 
@@ -213,6 +264,9 @@ Branch: `feat/vm-suggestions`
 Branch: `feat/custom-erc`
 
 ```
+**RESEARCH PHASE — do this before anything else:**
+Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
+
 /opsx:propose "Implement custom ERC creation within journeys. Backend: POST /api/v1/journeys/:id/exposures/custom (VA or VM creates custom exposure for journey), same for resolutions and challenges. PATCH /api/v1/journeys/:id/exposures/:eid (edit custom ERC pre-submission). POST /api/v1/journeys/:id/exposures/:eid/submit-for-review (submit custom ERC to moderator queue — creates a review record). Custom ERC follows same status lifecycle as pool ERC. Permission: custom_erc.create, custom_erc.edit, custom_erc.submit_for_review per spec/decisions/05_permissions.md."
 ```
 
@@ -225,6 +279,9 @@ Branch: `feat/custom-erc`
 Branch: `feat/notifications`
 
 ```
+**RESEARCH PHASE — do this before anything else:**
+Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
+
 /opsx:propose "Implement the notification system from spec/decisions/25_notifications.md. Backend: NotificationsModule with NotificationService.create(recipient, eventType, resourceType, resourceId, actorId). GET /api/v1/notifications (paginated, cursor-based), PATCH /api/v1/notifications/:id/read, POST /api/v1/notifications/read-all. 90-day soft-archive background job (@nestjs/schedule). All notification events from spec/decisions/25_notifications.md table must trigger NotificationService.create — wire into auth, invitations, ERC approval, journey completion, VM suggestions. Frontend: bell icon with unread count badge, notification panel, mark read."
 ```
 
@@ -239,6 +296,9 @@ Branch: `feat/notifications`
 Branch: `feat/va-dashboard`
 
 ```
+**RESEARCH PHASE — do this before anything else:**
+Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
+
 /opsx:propose "Implement the VA dashboard. Backend: GET /api/v1/dashboard/stats (personal stats: virtues/subvirtues being cultivated derived from active journey sentences, journeys active/completed, ERC counts, weaknesses explored/tests taken), GET /api/v1/dashboard/suggestions (lowest-scored sentences from latest test per weakness, v1 algorithm). Frontend: stats bar (virtue-first primary per spec/decisions/21_virtue-first-reorientation.md), Path card 01 (Study), Path card 02 (Work), sentence suggestions section with journey start CTA, right sidebar (shloka of the day placeholder, platform stats). Follow spec/decisions/15_dashboard.md."
 ```
 
@@ -251,6 +311,9 @@ Branch: `feat/va-dashboard`
 Branch: `feat/my-vratmitras-chat`
 
 ```
+**RESEARCH PHASE — do this before anything else:**
+Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
+
 /opsx:propose "Implement My Vratmitras page and persistent chat. Backend: GET /api/v1/vm-relationships/my-vms (list of VA's VMs with scope and journey assignments), WebSocket Gateway (NestJS) for chat — authenticate via session cookie on handshake, room per VA-VM pair, message sequencing, missed-message catch-up via GET /api/v1/chats/:roomId/messages?after=seqNo. Image upload endpoint: POST /api/v1/uploads/chat (10MB max, images only, store in MinIO). Follow documentation/Platform-Engineering-Standard.md WebSocket contract. Frontend: My Vratmitras two-panel page per spec/decisions/27_screen-specs.md screen 6, chat thread view, entity reference chips (@/@# inline)."
 ```
 
@@ -263,6 +326,9 @@ Branch: `feat/my-vratmitras-chat`
 Branch: `feat/actions-guidance`
 
 ```
+**RESEARCH PHASE — do this before anything else:**
+Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
+
 /opsx:propose "Implement the Actions page (VA) and VM guidance page. Backend: GET /api/v1/actions (VA's pending items: ERC in revisit, VM suggestions awaiting decision, items in submitted state, new ERC available, journey closure pending — aggregated query), GET /api/v1/vm-actions (VM's pending items: closure requests, journey completion requests, suggestion status updates, custom ERC review status). Frontend: /actions page per spec/decisions/27_screen-specs.md screen 4, /vratmitra/guidance page per screen 5. Both use the same component patterns but different data sources."
 ```
 
@@ -275,6 +341,9 @@ Branch: `feat/actions-guidance`
 Branch: `feat/experience-logging`
 
 ```
+**RESEARCH PHASE — do this before anything else:**
+Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
+
 /opsx:propose "Implement global experience logging. Backend: POST /api/v1/experience-logs (create — Tiptap JSON body, draft model, visibility tier, entity tags), PATCH /api/v1/experience-logs/:id (edit — visibility, body, tags), DELETE /api/v1/experience-logs/:id (soft delete), GET /api/v1/experience-logs (own list + public pool). Rich text stored as jsonb per documentation/Platform-Engineering-Standard.md. Sanitize with sanitize-html server-side before write. Image uploads via POST /api/v1/uploads/experience (max 5 × 10MB, MinIO). Frontend: experience log editor (Tiptap), draft save model, visibility toggle, entity tag selector, published entry view."
 ```
 
@@ -287,6 +356,9 @@ Branch: `feat/experience-logging`
 Branch: `feat/public-profile`
 
 ```
+**RESEARCH PHASE — do this before anything else:**
+Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
+
 /opsx:propose "Implement the public VA profile. Backend: GET /api/v1/users/:username/profile (public fields only, respecting per-field privacy toggles from spec/decisions/10_public-profile.md — toggled-off fields absent entirely, not null). GET /api/v1/users/:username/experience-logs (public experience entries for this user). POST /api/v1/users/:username/follow, DELETE /api/v1/users/:username/follow. Credibility stat: guided journeys count for users who have acted as VM. Frontend: public profile page per spec/decisions/27_screen-specs.md, follow button, presence indicators (last active, online dot)."
 ```
 
@@ -299,6 +371,9 @@ Branch: `feat/public-profile`
 Branch: `feat/user-search`
 
 ```
+**RESEARCH PHASE — do this before anything else:**
+Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
+
 /opsx:propose "Implement user search and the invitation UI flows. Backend: GET /api/v1/users/search?q= (fuzzy name/username, exact full email — Meilisearch users index). Meilisearch indexing: index users on create/update, filter is_public=true. Frontend: search results page, user search within VM invitation flow (from My Vratmitras → invite → search → select → confirm scope), invitation pending status list, resend reminder (one allowed), cancel pending invite."
 ```
 
@@ -311,6 +386,9 @@ Branch: `feat/user-search`
 Branch: `feat/blogs`
 
 ```
+**RESEARCH PHASE — do this before anything else:**
+Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
+
 /opsx:propose "Implement community blogs. Backend: POST /api/v1/blogs (create — Tiptap JSON body, draft model), PATCH /api/v1/blogs/:id (edit own), DELETE /api/v1/blogs/:id (soft delete own), GET /api/v1/blogs (published list — paginated cursor), GET /api/v1/blogs/:id (single blog + comments). Comments: POST /api/v1/blogs/:id/comments, DELETE /api/v1/blogs/:id/comments/:cid (own comment or blog author or moderator), POST /api/v1/blogs/:id/comments/:cid/report. Sanitize rich text. Frontend: blog list, blog detail + comments, blog editor with Tiptap."
 ```
 
@@ -325,6 +403,9 @@ Branch: `feat/blogs`
 Branch: `feat/virtues-browser`
 
 ```
+**RESEARCH PHASE — do this before anything else:**
+Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
+
 /opsx:propose "Implement the Virtues & Weaknesses browser per spec/decisions/21_virtue-first-reorientation.md. Backend routes already partially exist (weaknesses). Add: GET /api/v1/virtues (list), GET /api/v1/virtues/:id (detail + subvirtues), GET /api/v1/subvirtues/:id (detail + weaknesses it tackles + sentences). Frontend: Virtues & Weaknesses browser page with two sections, virtue detail page, subvirtue detail page, sentence info modal (view only, CTAs to test flow — no journey start direct). Guest accessible — no auth required."
 ```
 
@@ -351,6 +432,9 @@ git checkout -b feat/audit-logging dev
 Branch: `feat/moderation-erc`
 
 ```
+**RESEARCH PHASE — do this before anything else:**
+Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
+
 /opsx:propose "Implement the moderation custom ERC review panel. Backend: GET /api/v1/moderation/custom-erc (pending review queue, paginated), GET /api/v1/moderation/custom-erc/:id (review detail — ERC content + submitter profile + journey title + sentence + subvirtue/virtue + weakness tags), POST /api/v1/moderation/custom-erc/:id/approve (with optional edits — saves moderator edits then adds to global pool), POST /api/v1/moderation/custom-erc/:id/reject (mandatory reason). All actions audit-logged. Notify submitters. Permission: moderator.review_custom_erc. Frontend: moderation queue + review panel per spec/decisions/27_screen-specs.md."
 ```
 
@@ -363,6 +447,9 @@ Branch: `feat/moderation-erc`
 Branch: `feat/content-pages`
 
 ```
+**RESEARCH PHASE — do this before anything else:**
+Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
+
 /opsx:propose "Implement the three distinct content pages per spec/decisions/19_pothi-redesign.md and spec/adr/0007. Backend: GET /api/v1/pothi/sections (list Pothi sections with shlokas), GET /api/v1/shlokas (searchable — Meilisearch shlokas index), GET /api/v1/shlokas/:id, GET /api/v1/resources (list), GET /api/v1/resources/:id. Shloka of the day: GET /api/v1/shlokas/today (checks shloka_schedules for today's date, falls back to queue). All guest-accessible. Frontend: Pothi page, Shlokas library page, Shloka detail modal (with formal + loose tags), Resources page per spec/decisions/27_screen-specs.md content page screens."
 ```
 
@@ -375,6 +462,9 @@ Branch: `feat/content-pages`
 Branch: `feat/admin-content`
 
 ```
+**RESEARCH PHASE — do this before anything else:**
+Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
+
 /opsx:propose "Implement admin content management panels. Taxonomy CRUD: POST/PATCH/DELETE /api/v1/admin/virtues, /subvirtues, /weaknesses, /weakness-subvirtues. Shloka management: POST/PATCH/DELETE /api/v1/admin/shlokas, /api/v1/admin/shlokas/schedule (date scheduling), /api/v1/admin/shlokas/queue (reorder). Pothi section management: CRUD /api/v1/admin/pothi/sections. Resource management: CRUD /api/v1/admin/resources. All admin-only, all audit-logged. Frontend: admin dashboard + management panels per spec/decisions/27_screen-specs.md admin screens."
 ```
 
@@ -387,6 +477,9 @@ Branch: `feat/admin-content`
 Branch: `feat/admin-users`
 
 ```
+**RESEARCH PHASE — do this before anything else:**
+Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
+
 /opsx:propose "Implement admin user management. Backend: GET /api/v1/admin/users (list all users with roles, paginated), GET /api/v1/admin/users/:id (full profile including all journeys, test results — read only), PATCH /api/v1/admin/users/:id/roles (assign/remove roles), POST /api/v1/admin/users/:id/suspend, POST /api/v1/admin/users/:id/force-logout (invalidate all sessions), POST /api/v1/admin/users/:id/anonymise (account deletion — pseudonymous ID, soft delete, retain content). Override journey state: PATCH /api/v1/admin/journeys/:id/state (emergency only, requires reason, audit-logged). All actions audit-logged. Frontend: admin user list + detail view per spec/decisions/27_screen-specs.md."
 ```
 
@@ -401,6 +494,9 @@ Branch: `feat/admin-users`
 Branch: `feat/account-settings`
 
 ```
+**RESEARCH PHASE — do this before anything else:**
+Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
+
 /opsx:propose "Implement account settings page. Backend: PATCH /api/v1/users/me/settings (update language, privacy toggles, notification preferences, show_last_active, show_online_indicator, profile_private). PATCH /api/v1/users/me/password (change password — requires current password). POST /api/v1/auth/request-email-change (sends verification to new email), POST /api/v1/auth/confirm-email-change (token from email). DELETE /api/v1/users/me (account deletion — re-auth required, triggers anonymisation). Frontend: settings page all 6 sections per spec/decisions/27_screen-specs.md and spec/decisions/26_account-settings.md."
 ```
 
@@ -444,6 +540,9 @@ git checkout -b feat/dormant-detection dev
 Branch: `feat/e2e-tests`
 
 ```
+**RESEARCH PHASE — do this before anything else:**
+Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
+
 /opsx:propose "Implement the 10 critical E2E flows from documentation/Testing-Strategy.md using Playwright. Set up Playwright config, test fixtures (seed test DB before each suite), and implement all 10 flows: (1) signup→onboarding→test→report, (2) journey start→ERC select→check-in, (3) VM invitation→accept→suggest ERC→VA accepts→submit→VM approves, (4) non-platform VM invite→signup via link→accept, (5) global VM swap migration, (6) custom ERC→review→approve, (7) blog create→comment→hide→moderator delete, (8) admin override journey state→verify audit log, (9) guest browse→soft prompt→signup, (10) draft test→resume→complete."
 ```
 
