@@ -1,10 +1,12 @@
-import { UserRole } from '@prisma/client';
+import { Role } from '@prisma/client';
 
 export type SessionUser = {
   id: string;
   email: string;
-  name: string | null;
-  role: UserRole;
+  displayName: string;
+  username: string;
+  roles: Role[];
+  language: string;
   emailVerifiedAt: Date | null;
   onboardingCompletedAt: Date | null;
 };

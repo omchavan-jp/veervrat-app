@@ -43,7 +43,7 @@ export class AuthController {
 
   @Post('register')
   async register(@Body() dto: RegisterDto) {
-    const result = await this.authService.register(dto.email, dto.password, dto.name ?? null);
+    const result = await this.authService.register(dto.email, dto.password, dto.displayName, dto.username);
     return {
       ...result.user,
       message: 'Registration successful. Please check your email to verify your account.',
@@ -145,7 +145,7 @@ export class AuthController {
     @Body() dto: CompleteOnboardingDto,
     @CurrentUser() user: SessionUser,
   ) {
-    return this.authService.completeOnboarding(user.id, dto.name);
+    return this.authService.completeOnboarding(user.id, dto.displayName);
   }
 
   @Get('me')

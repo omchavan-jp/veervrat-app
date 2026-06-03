@@ -90,6 +90,7 @@ veervrat-app/
 - `documentation/Audit-Schema.md` — audit event contract, mandatory events, `@Audited` decorator pattern
 - `documentation/Testing-Strategy.md` — what to test, auth matrix tests, E2E flows
 - `documentation/Observability-Standard.md` — structured logging schema, GlitchTip setup, alert thresholds
+- `documentation/Email-Strategy.md` — Resend + React Email, transactional vs notification emails, template structure, bilingual strategy
 
 ## Hard rules — follow exactly
 

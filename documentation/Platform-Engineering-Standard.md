@@ -18,7 +18,8 @@ This document is the canonical reference for all library, tooling, and architect
 | WebSocket (server) | NestJS Gateway | `@nestjs/websockets`, `socket.io` | Native NestJS, cookie auth on handshake |
 | Background jobs (v1) | @nestjs/schedule | `@nestjs/schedule` | Single-instance cron. Known limitation: not multi-instance safe. |
 | Background jobs (v2 path) | BullMQ | `bullmq` | Upgrade path when horizontal scaling is needed. Redis-backed. |
-| Email | Resend SDK | `resend` | Already decided. Free tier: 3k/month. |
+| Email provider | Resend SDK | `resend` | Free tier: 3k/month. Console logging in local dev. |
+| Email templates | React Email | `@react-email/components`, `react`, `react-dom` | JSX-based, type-safe, renders HTML + plain text, bilingual support. |
 | Error tracking | GlitchTip (Sentry SDK) | `@sentry/nextjs`, `@sentry/node` | Open-source, self-hostable, Sentry-compatible SDK |
 | Object storage client | AWS SDK S3 compatible | `@aws-sdk/client-s3` | Works with MinIO (S3-compatible API). Provider-agnostic. |
 | Search | Meilisearch | `meilisearch` | Already decided. See Search Architecture doc. |
