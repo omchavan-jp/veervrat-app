@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { newsreader, tiroDevanagari } from './fonts';
 import { Providers } from '@/lib/providers';
@@ -19,14 +20,17 @@ export const metadata: Metadata = {
   description: 'A platform for self-reliance and personal growth',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headerStore = await headers();
+  const locale = headerStore.get('X-Next-Locale') ?? 'en';
+
   return (
     <html
-      lang="en"
+      lang={locale}
       className={`${geistSans.variable} ${geistMono.variable} ${newsreader.variable} ${tiroDevanagari.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">

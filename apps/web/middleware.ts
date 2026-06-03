@@ -1,0 +1,51 @@
+import { type NextRequest, NextResponse } from 'next/server';
+import { SUPPORTED_LOCALES, type Locale } from '@/lib/i18n-constants';
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+
+function parseAcceptLanguage(header: string | null): Locale {
+  if (!header) return 'en';
+  return header.toLowerCase().includes('mr') ? 'mr' : 'en';
+}
+
+async function resolveLocale(request: NextRequest): Promise<Locale> {
+  const sessionCookie = request.cookies.get('veervrat_session');
+  if (!sessionCookie) {
+    return parseAcceptLanguage(request.headers.get('accept-language'));
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/me`, {
+      headers: {
+        Cookie: `veervrat_session=${sessionCookie.value}`,
+      },
+      cache: 'no-store',
+    });
+
+    if (!res.ok) {
+      return parseAcceptLanguage(request.headers.get('accept-language'));
+    }
+
+    const body = (await res.json()) as { data?: { language?: string } };
+    const lang = body?.data?.language;
+    if (lang && (SUPPORTED_LOCALES as readonly string[]).includes(lang)) {
+      return lang as Locale;
+    }
+    return 'en';
+  } catch {
+    return parseAcceptLanguage(request.headers.get('accept-language'));
+  }
+}
+
+export async function middleware(request: NextRequest) {
+  const locale = await resolveLocale(request);
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('X-Next-Locale', locale);
+  return NextResponse.next({
+    request: { headers: requestHeaders },
+  });
+}
+
+export const config = {
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/).*)'],
+};

@@ -1,4 +1,30 @@
 {
+  "common": {
+    "nav": {
+      "dashboard": "Dashboard",
+      "journeys": "Journeys",
+      "actions": "Actions",
+      "profile": "Profile",
+      "settings": "Settings",
+      "logout": "Log out",
+      "studyFlow": "Study",
+      "workFlow": "Work"
+    },
+    "actions": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "confirm": "Confirm",
+      "delete": "Delete",
+      "edit": "Edit",
+      "submit": "Submit"
+    },
+    "status": {
+      "loading": "Loading...",
+      "error": "Something went wrong.",
+      "empty": "Nothing here yet.",
+      "retry": "Try again"
+    }
+  },
   "auth": {
     "login": {
       "title": "Log in",

@@ -131,7 +131,7 @@ All pages use React Hook Form + Zod for validation, TanStack Query for server st
 - `lib/validations/auth.ts` — Zod schemas for all forms; `signupSchema` includes displayName, username, language
 - `hooks/use-auth.ts` — `useAuth`, `useLogin`, `useSignup`, `useLogout`, `useVerifyEmail`, `useForgotPassword`, `useResetPassword`, `useCompleteOnboarding`
 - `messages/en.json` + `messages/mr.json` — `auth` namespace with all page strings
-- `i18n/request.ts` — next-intl server config
+- `i18n/request.ts` — next-intl server config; resolves locale dynamically from `X-Next-Locale` request header (set by middleware) rather than hardcoding `'en'`; falls back to `'en'` if header absent or unrecognised
 - `app/(public)/layout.tsx` — server layout wrapping `NextIntlClientProvider`
 
 ## Not Yet Implemented

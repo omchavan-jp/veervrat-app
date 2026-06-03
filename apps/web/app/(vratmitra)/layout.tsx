@@ -1,13 +1,12 @@
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
-import { AppLayoutClient } from './layout-client';
 
-export default async function AppLayout({ children }: { children: React.ReactNode }) {
+export default async function VratmitraLayout({ children }: { children: React.ReactNode }) {
   const messages = await getMessages();
 
   return (
     <NextIntlClientProvider messages={messages}>
-      <AppLayoutClient>{children}</AppLayoutClient>
+      {children}
     </NextIntlClientProvider>
   );
 }

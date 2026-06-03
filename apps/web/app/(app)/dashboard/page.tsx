@@ -13,7 +13,7 @@ export default function DashboardPage() {
         Dashboard
       </div>
       <h1 className="mb-6 font-display text-[clamp(28px,3vw,40px)] leading-tight tracking-tight">
-        Welcome back{user.name ? `, ${user.name}` : ''}.
+        Welcome back{user.displayName ? `, ${user.displayName}` : ''}.
       </h1>
 
       <div className="rounded-xl border border-border bg-surface p-6">
@@ -26,9 +26,15 @@ export default function DashboardPage() {
           </div>
           <div>
             <dt className="font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
-              Role
+              Username
             </dt>
-            <dd className="mt-1 capitalize">{user.role.toLowerCase()}</dd>
+            <dd className="mt-1">@{user.username}</dd>
+          </div>
+          <div>
+            <dt className="font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
+              Roles
+            </dt>
+            <dd className="mt-1 capitalize">{user.roles.map((r) => r.toLowerCase()).join(', ')}</dd>
           </div>
           <div>
             <dt className="font-mono text-[11px] uppercase tracking-[0.1em] text-muted">

@@ -1,4 +1,30 @@
 {
+  "common": {
+    "nav": {
+      "dashboard": "डॅशबोर्ड",
+      "journeys": "प्रवास",
+      "actions": "कृती",
+      "profile": "प्रोफाइल",
+      "settings": "सेटिंग्ज",
+      "logout": "लॉग आउट करा",
+      "studyFlow": "अभ्यास",
+      "workFlow": "सराव"
+    },
+    "actions": {
+      "save": "जतन करा",
+      "cancel": "रद्द करा",
+      "confirm": "पुष्टी करा",
+      "delete": "हटवा",
+      "edit": "संपादित करा",
+      "submit": "सादर करा"
+    },
+    "status": {
+      "loading": "लोड होत आहे...",
+      "error": "काहीतरी चुकले.",
+      "empty": "अद्याप काहीही नाही.",
+      "retry": "पुन्हा प्रयत्न करा"
+    }
+  },
   "auth": {
     "login": {
       "title": "लॉग इन करा",

@@ -17,7 +17,7 @@ export function Header({ user }: { user: User }) {
         </Link>
         <div className="flex items-center gap-4">
           <span className="text-sm text-muted">
-            {user.name ?? user.email}
+            {user.displayName ?? user.email}
           </span>
           <Button
             variant="outline"
