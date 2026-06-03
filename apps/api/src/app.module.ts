@@ -6,6 +6,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AppConfigModule } from './config/config.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { EmailModule } from './modules/email/email.module';
+import { UsersModule } from './modules/users/users.module';
 import { RedisModule } from './common/redis/redis.module';
 import { AppController } from './app.controller';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
@@ -34,6 +35,7 @@ import { CsrfGuard } from './common/guards/csrf.guard';
     RedisModule,
     AuthModule,
     EmailModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [

@@ -88,6 +88,12 @@ export class OAuthAccountConflictException extends ConflictException {
   }
 }
 
+export class UserUsernameTakenException extends ConflictException {
+  constructor() {
+    super({ error: 'USER_USERNAME_TAKEN', message: 'This username is already taken' });
+  }
+}
+
 export class AccountLockedException extends HttpException {
   constructor(secondsRemaining: number) {
     super(
