@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: veervrat_local
       POSTGRES_DB: veervrat
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
 
   redis:
     image: redis:8-alpine
