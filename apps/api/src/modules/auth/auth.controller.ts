@@ -162,6 +162,14 @@ export class AuthController {
     return { available };
   }
 
+  @Get('csrf')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  csrf() {
+    // CsrfMiddleware sets the csrf-token cookie on this response.
+    // Clients call this once before the first mutation to bootstrap the cookie
+    // on cold sessions where no prior GET has been made to the API.
+  }
+
   @Get('me')
   @UseGuards(SessionGuard)
   async me(@CurrentUser() user: SessionUser) {
