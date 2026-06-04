@@ -28,7 +28,7 @@ export function useLogin() {
     mutationFn: authApi.login,
     onSuccess: (user) => {
       queryClient.setQueryData(queryKeys.auth.me, user);
-      router.push('/dashboard');
+      router.push(user.onboardingCompletedAt ? '/dashboard' : '/onboarding');
     },
   });
 }
