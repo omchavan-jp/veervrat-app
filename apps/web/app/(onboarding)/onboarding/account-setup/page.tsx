@@ -32,6 +32,7 @@ export default function AccountSetupPage() {
     register,
     handleSubmit,
     watch,
+    reset,
     setError,
     formState: { errors },
   } = useForm<AccountSetupInput>({
@@ -39,24 +40,43 @@ export default function AccountSetupPage() {
     defaultValues: { language: 'EN' },
   });
 
+  // Populate form once user data arrives (user is null on first render while loading)
+  useEffect(() => {
+    if (user) {
+      reset({
+        displayName: user.displayName ?? '',
+        username: user.username ?? '',
+        language: (user.language as 'EN' | 'MR') ?? 'EN',
+      });
+    }
+  }, [user, reset]);
+
   const usernameValue = watch('username', '');
 
-  const checkUsername = useCallback((username: string) => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (!username || username.length < 3) {
-      setUsernameStatus('idle');
-      return;
-    }
-    setUsernameStatus('checking');
-    debounceRef.current = setTimeout(async () => {
-      try {
-        const available = await authApi.checkUsername(username);
-        setUsernameStatus(available ? 'available' : 'taken');
-      } catch {
+  const checkUsername = useCallback(
+    (username: string) => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      if (!username || username.length < 3) {
         setUsernameStatus('idle');
+        return;
       }
-    }, 400);
-  }, []);
+      // Own username: always available — no need to hit the API
+      if (user?.username && username === user.username) {
+        setUsernameStatus('available');
+        return;
+      }
+      setUsernameStatus('checking');
+      debounceRef.current = setTimeout(async () => {
+        try {
+          const available = await authApi.checkUsername(username);
+          setUsernameStatus(available ? 'available' : 'taken');
+        } catch {
+          setUsernameStatus('idle');
+        }
+      }, 400);
+    },
+    [user?.username],
+  );
 
   useEffect(() => {
     checkUsername(usernameValue);
