@@ -21,6 +21,9 @@ export function Header({ user }: { user: User }) {
           <Link href="/study" className="text-muted transition-colors hover:text-fg">
             Study
           </Link>
+          <Link href="/journeys" className="text-muted transition-colors hover:text-fg">
+            Journeys
+          </Link>
         </nav>
         <div className="flex items-center gap-4">
           <ThemeToggle />

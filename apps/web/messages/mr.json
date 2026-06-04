@@ -279,5 +279,33 @@
       "noSuggestions": "वैयक्तिक सूचना पाहण्यासाठी पहिली चाचणी द्या.",
       "startJourney": "प्रवास सुरू करा"
     }
+  },
+  "journey": {
+    "nav": "प्रवास",
+    "list": {
+      "title": "तुमचे प्रवास",
+      "emptyState": "तुम्ही अजून कोणताही प्रवास सुरू केलेला नाही.",
+      "emptyStateCta": "चाचणी द्या आणि सुरू करा"
+    },
+    "stateBadge": {
+      "not_started": "सुरू नाही",
+      "active": "सक्रिय",
+      "paused": "थांबलेला",
+      "dormant": "निष्क्रिय",
+      "completed": "पूर्ण"
+    },
+    "detail": {
+      "cultivating": "{subvirtue} → {virtue} जोपासत आहे",
+      "noVm": "VM नियुक्त नाही",
+      "pause": "प्रवास थांबवा",
+      "resume": "प्रवास पुन्हा सुरू करा",
+      "tabOverview": "स्थिती आढावा",
+      "tabExposures": "एक्सपोजर",
+      "tabResolutions": "संकल्प",
+      "tabChallenges": "आव्हाने",
+      "tabChat": "चॅट",
+      "emptyState": "सुरुवात करण्यासाठी पहिले एक्सपोजर आणि संकल्प निवडा.",
+      "emptyStateCta": "एक्सपोजर पहा"
+    }
   }
 }

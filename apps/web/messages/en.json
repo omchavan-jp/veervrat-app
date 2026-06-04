@@ -279,5 +279,33 @@
       "noSuggestions": "Take your first test to see personalized suggestions.",
       "startJourney": "Start journey"
     }
+  },
+  "journey": {
+    "nav": "Journeys",
+    "list": {
+      "title": "Your journeys",
+      "emptyState": "You haven't started any journeys yet.",
+      "emptyStateCta": "Take a test to begin"
+    },
+    "stateBadge": {
+      "not_started": "Not started",
+      "active": "Active",
+      "paused": "Paused",
+      "dormant": "Dormant",
+      "completed": "Completed"
+    },
+    "detail": {
+      "cultivating": "Cultivating {subvirtue} → {virtue}",
+      "noVm": "No VM assigned",
+      "pause": "Pause journey",
+      "resume": "Resume journey",
+      "tabOverview": "Status Overview",
+      "tabExposures": "Exposures",
+      "tabResolutions": "Resolutions",
+      "tabChallenges": "Challenges",
+      "tabChat": "Chat",
+      "emptyState": "Select your first exposures and resolutions to begin.",
+      "emptyStateCta": "Browse exposures"
+    }
   }
 }
