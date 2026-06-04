@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AuthProvider, Role, VerificationType } from '@prisma/client';
+import { AuthProvider, Role, VerificationType, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 
 // Shared select shape that returns all fields needed for SessionUser
@@ -161,7 +161,12 @@ export class AuthRepository {
     expiresAt: Date;
     metadata?: Record<string, unknown>;
   }) {
-    return this.prisma.verificationToken.create({ data: params });
+    return this.prisma.verificationToken.create({
+      data: {
+        ...params,
+        metadata: params.metadata as Prisma.InputJsonValue | undefined,
+      },
+    });
   }
 
   async addAuthAccount(params: { userId: string; provider: AuthProvider; providerAccountId: string }) {

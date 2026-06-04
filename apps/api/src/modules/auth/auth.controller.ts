@@ -138,8 +138,9 @@ export class AuthController {
         return;
       }
 
-      this.setSessionCookie(res, result.sessionToken);
-      const redirectPath = result.user.onboardingCompletedAt ? '/dashboard' : '/onboarding';
+      const authResult = result as import('./types/auth.types').AuthResult;
+      this.setSessionCookie(res, authResult.sessionToken);
+      const redirectPath = authResult.user.onboardingCompletedAt ? '/dashboard' : '/onboarding';
       res.redirect(`${this.frontendUrl}${redirectPath}`);
     } catch (error) {
       const errorCode =
