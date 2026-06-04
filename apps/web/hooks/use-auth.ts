@@ -58,6 +58,19 @@ export function useVerifyEmail() {
   });
 }
 
+export function useLinkGoogle() {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: authApi.linkGoogle,
+    onSuccess: (user) => {
+      queryClient.setQueryData(queryKeys.auth.me, user);
+      router.push(user.onboardingCompletedAt ? '/dashboard' : '/onboarding');
+    },
+  });
+}
+
 export function useForgotPassword() {
   return useMutation({
     mutationFn: authApi.forgotPassword,

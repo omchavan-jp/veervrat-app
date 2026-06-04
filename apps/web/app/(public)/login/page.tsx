@@ -34,12 +34,11 @@ export default function LoginPage() {
     login.mutate(data);
   };
 
-  const oauthErrorMsg =
-    oauthError === 'OAUTH_ACCOUNT_CONFLICT'
-      ? tErrors('oauthConflict')
-      : oauthError
-        ? tErrors('authError')
-        : null;
+  // OAUTH_ACCOUNT_CONFLICT no longer lands here — it redirects to /link-account instead.
+  // Only show a generic error for other OAuth failures (e.g. Google sign-in cancelled).
+  const oauthErrorMsg = oauthError && oauthError !== 'OAUTH_ACCOUNT_CONFLICT'
+    ? tErrors('authError')
+    : null;
 
   const apiError =
     login.error instanceof ApiError ? login.error.message : login.error?.message;

@@ -36,20 +36,20 @@
 
 ## 6. Frontend — API & Hook
 
-- [ ] 6.1 Add `linkGoogle: (data: { token: string; password: string }) => ...` to `authApi` in `apps/web/lib/api/auth.ts`
-- [ ] 6.2 Add `useLinkGoogle()` mutation hook to `apps/web/hooks/use-auth.ts` — on success: `setQueryData` + redirect to `/onboarding` or `/dashboard` based on `onboardingCompletedAt`
+- [x] 6.1 Add `linkGoogle: (data: { token: string; password: string }) => ...` to `authApi` in `apps/web/lib/api/auth.ts`
+- [x] 6.2 Add `useLinkGoogle()` mutation hook to `apps/web/hooks/use-auth.ts` — on success: `setQueryData` + redirect to `/onboarding` or `/dashboard` based on `onboardingCompletedAt`
 
 ## 7. Frontend — Link-Account Page
 
-- [ ] 7.1 Create `apps/web/app/(public)/link-account/page.tsx` as a `'use client'` component:
+- [x] 7.1 Create `apps/web/app/(public)/link-account/page.tsx` as a `'use client'` component:
   - Read `?token=` from `useSearchParams()`
   - Show error state if no token
   - Form: password field only (email shown as read-only context, sourced from URL or hardcoded pattern)
   - Submit calls `useLinkGoogle` with token + password
   - Error handling: display `INVALID_CREDENTIALS` as "Incorrect password" and `TOKEN_INVALID` as "This link has expired — please try signing in with Google again"
-- [ ] 7.2 Add i18n keys to `apps/web/messages/en.json` under `auth.linkAccount`: `title`, `subtitle`, `passwordLabel`, `passwordPlaceholder`, `submit`, `submitting`, `expiredError`, `wrongPasswordError`, `noToken`
-- [ ] 7.3 Add matching i18n keys to `apps/web/messages/mr.json`
+- [x] 7.2 Add i18n keys to `apps/web/messages/en.json` under `auth.linkAccount`: `title`, `subtitle`, `passwordLabel`, `passwordPlaceholder`, `submit`, `submitting`, `expiredError`, `wrongPasswordError`, `noToken`
+- [x] 7.3 Add matching i18n keys to `apps/web/messages/mr.json`
 
 ## 8. Frontend — Login Page Cleanup
 
-- [ ] 8.1 Remove the `OAUTH_ACCOUNT_CONFLICT` error message handling from `apps/web/app/(public)/login/page.tsx` — the conflict no longer lands on the login page with an error code
+- [x] 8.1 Remove the `OAUTH_ACCOUNT_CONFLICT` error message handling from `apps/web/app/(public)/login/page.tsx` — the conflict no longer lands on the login page with an error code

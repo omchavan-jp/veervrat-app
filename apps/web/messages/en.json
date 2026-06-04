@@ -122,6 +122,17 @@
       "authError": "Authentication failed. Please try again.",
       "rateLimitExceeded": "Too many attempts. Please wait a moment and try again.",
       "accountLocked": "Too many failed login attempts. Please try again later."
+    },
+    "linkAccount": {
+      "title": "Link your Google account",
+      "subtitle": "We found an existing Veervrat account with this email. Enter your password to link your Google account.",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "••••••••",
+      "submit": "Link account",
+      "submitting": "Linking...",
+      "expiredError": "This link has expired. Please try signing in with Google again.",
+      "wrongPasswordError": "Incorrect password. Please try again.",
+      "noToken": "Invalid or missing link. Please try signing in with Google again."
     }
   },
   "onboarding": {

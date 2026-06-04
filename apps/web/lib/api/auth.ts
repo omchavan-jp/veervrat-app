@@ -41,4 +41,7 @@ export const authApi = {
 
   checkUsername: (username: string) =>
     api.get<Wrapped<{ available: boolean }>>(`/auth/check-username?username=${encodeURIComponent(username)}`).then((r) => r.data.available),
+
+  linkGoogle: (data: { token: string; password: string }) =>
+    api.post<Wrapped<User>>('/auth/link-google', data).then((r) => r.data),
 };
