@@ -27,7 +27,8 @@ async function resolveLocale(request: NextRequest): Promise<Locale> {
     }
 
     const body = (await res.json()) as { data?: { language?: string } };
-    const lang = body?.data?.language;
+    // DB stores 'EN'|'MR' (uppercase); SUPPORTED_LOCALES is lowercase
+    const lang = body?.data?.language?.toLowerCase();
     if (lang && (SUPPORTED_LOCALES as readonly string[]).includes(lang)) {
       return lang as Locale;
     }
