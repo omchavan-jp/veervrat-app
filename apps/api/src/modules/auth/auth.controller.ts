@@ -24,6 +24,7 @@ import { SessionGuard } from './guards/session.guard';
 import { GoogleOAuthGuard } from './guards/google-oauth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { SkipCsrf } from '../../common/guards/csrf.guard';
+import { LinkGoogleDto } from './dto/link-google.dto';
 import type { SessionUser, GoogleProfile } from './types/auth.types';
 
 @Controller('auth')
@@ -132,8 +133,12 @@ export class AuthController {
         req.headers['user-agent'] ?? null,
       );
 
-      this.setSessionCookie(res, result.sessionToken);
+      if ('action' in result && result.action === 'link_pending') {
+        res.redirect(`${this.frontendUrl}/link-account?token=${result.token}`);
+        return;
+      }
 
+      this.setSessionCookie(res, result.sessionToken);
       const redirectPath = result.user.onboardingCompletedAt ? '/dashboard' : '/onboarding';
       res.redirect(`${this.frontendUrl}${redirectPath}`);
     } catch (error) {
@@ -143,6 +148,24 @@ export class AuthController {
           : 'AUTH_ERROR';
       res.redirect(`${this.frontendUrl}/login?error=${errorCode}`);
     }
+  }
+
+  @Post('link-google')
+  @SkipCsrf()
+  @HttpCode(HttpStatus.OK)
+  async linkGoogle(
+    @Body() dto: LinkGoogleDto,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.authService.linkGoogleAccount(
+      dto.token,
+      dto.password,
+      req.ip ?? null,
+      req.headers['user-agent'] ?? null,
+    );
+    this.setSessionCookie(res, result.sessionToken);
+    return result.user;
   }
 
   @Post('complete-onboarding')

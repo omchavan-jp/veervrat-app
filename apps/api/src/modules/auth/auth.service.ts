@@ -11,12 +11,11 @@ import {
   EmailNotVerifiedException,
   TokenExpiredException,
   TokenInvalidException,
-  OAuthAccountConflictException,
   EntityNotFoundException,
   AccountLockedException,
 } from '../../common/exceptions/app.exceptions';
 import { REDIS_CLIENT } from '../../common/redis/redis.provider';
-import { SessionUser, AuthResult, GoogleProfile, CreateSessionParams } from './types/auth.types';
+import { SessionUser, AuthResult, LinkPendingResult, GoogleProfile, CreateSessionParams } from './types/auth.types';
 import { EmailService } from '../email/email.service';
 import { VerifyEmailEmail, getSubject as getVerifySubject } from '../email/templates/VerifyEmailEmail';
 import { PasswordResetEmail, getSubject as getResetSubject } from '../email/templates/PasswordResetEmail';
@@ -26,6 +25,7 @@ const BCRYPT_ROUNDS = 12;
 const TOKEN_BYTES = 32;
 const VERIFICATION_TOKEN_EXPIRY_HOURS = 24;
 const PASSWORD_RESET_TOKEN_EXPIRY_HOURS = 1;
+const GOOGLE_LINK_TOKEN_EXPIRY_MINUTES = 15;
 const LOCKOUT_MAX_FAILURES = 10;
 const LOCKOUT_WINDOW_SECONDS = 3600;
 const USERNAME_REGEX = /^[a-z0-9_]{3,30}$/;
@@ -134,7 +134,7 @@ export class AuthService {
     profile: GoogleProfile,
     ipAddress: string | null,
     userAgent: string | null,
-  ): Promise<AuthResult> {
+  ): Promise<AuthResult | LinkPendingResult> {
     const existingAccount = await this.authRepository.findAuthAccount(
       AuthProvider.GOOGLE,
       profile.googleId,
@@ -155,7 +155,22 @@ export class AuthService {
 
     const existingUser = await this.authRepository.findUserByEmail(profile.email);
     if (existingUser) {
-      throw new OAuthAccountConflictException();
+      // Existing credentials account — issue a short-lived link token instead of erroring.
+      // The frontend /link-account page will prompt for the password to confirm ownership.
+      await this.authRepository.invalidateTokensByUserAndType(existingUser.id, VerificationType.GOOGLE_LINK);
+      const linkToken = this.generateToken();
+      await this.authRepository.createVerificationToken({
+        userId: existingUser.id,
+        token: linkToken,
+        type: VerificationType.GOOGLE_LINK,
+        expiresAt: this.minutesFromNow(GOOGLE_LINK_TOKEN_EXPIRY_MINUTES),
+        metadata: {
+          googleId: profile.googleId,
+          googleEmail: profile.email,
+          displayName: profile.name ?? null,
+        },
+      });
+      return { action: 'link_pending', token: linkToken };
     }
 
     // For OAuth users, generate a username from email until they complete onboarding
@@ -179,6 +194,53 @@ export class AuthService {
     });
 
     return { user: this.toSessionUser(user), sessionToken };
+  }
+
+  async linkGoogleAccount(
+    token: string,
+    password: string,
+    ipAddress: string | null,
+    userAgent: string | null,
+  ): Promise<AuthResult> {
+    const verificationToken = await this.authRepository.findVerificationToken(
+      token,
+      VerificationType.GOOGLE_LINK,
+    );
+    if (!verificationToken) {
+      throw new TokenInvalidException();
+    }
+
+    const emailAccount = await this.authRepository.findEmailAccountByUserId(verificationToken.userId);
+    if (!emailAccount?.passwordHash) {
+      throw new InvalidCredentialsException();
+    }
+
+    const passwordValid = await bcrypt.compare(password, emailAccount.passwordHash);
+    if (!passwordValid) {
+      throw new InvalidCredentialsException();
+    }
+
+    const metadata = verificationToken.metadata as { googleId: string; googleEmail: string; displayName: string | null } | null;
+    if (!metadata?.googleId) {
+      throw new TokenInvalidException();
+    }
+
+    await this.authRepository.addAuthAccount({
+      userId: verificationToken.userId,
+      provider: AuthProvider.GOOGLE,
+      providerAccountId: metadata.googleId,
+    });
+
+    await this.authRepository.markTokenUsed(verificationToken.id);
+
+    const sessionToken = await this.createSession({
+      userId: verificationToken.userId,
+      ipAddress,
+      userAgent,
+      ttlDays: this.sessionTtlDays,
+    });
+
+    return { user: this.toSessionUser(verificationToken.user), sessionToken };
   }
 
   async logout(sessionToken: string): Promise<void> {
@@ -433,5 +495,9 @@ export class AuthService {
     const date = new Date();
     date.setHours(date.getHours() + hours);
     return date;
+  }
+
+  private minutesFromNow(minutes: number): Date {
+    return new Date(Date.now() + minutes * 60 * 1000);
   }
 }

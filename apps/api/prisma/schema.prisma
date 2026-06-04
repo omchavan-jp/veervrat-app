@@ -37,6 +37,7 @@ enum VerificationType {
   EMAIL_VERIFICATION @map("email_verification")
   PASSWORD_RESET     @map("password_reset")
   EMAIL_CHANGE       @map("email_change")
+  GOOGLE_LINK        @map("google_link")
 
   @@map("verification_type")
 }
@@ -279,6 +280,7 @@ model VerificationToken {
   userId    String           @map("user_id") @db.Uuid
   token     String           @unique
   type      VerificationType
+  metadata  Json?
   expiresAt DateTime         @map("expires_at")
   usedAt    DateTime?        @map("used_at")
   createdAt DateTime         @default(now()) @map("created_at")

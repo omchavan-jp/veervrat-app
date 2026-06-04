@@ -30,3 +30,8 @@ export type AuthResult = {
   user: SessionUser;
   sessionToken: string;
 };
+
+export type LinkPendingResult = {
+  action: 'link_pending';
+  token: string;
+};

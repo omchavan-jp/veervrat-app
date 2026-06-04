@@ -159,8 +159,19 @@ export class AuthRepository {
     token: string;
     type: VerificationType;
     expiresAt: Date;
+    metadata?: Record<string, unknown>;
   }) {
     return this.prisma.verificationToken.create({ data: params });
+  }
+
+  async addAuthAccount(params: { userId: string; provider: AuthProvider; providerAccountId: string }) {
+    return this.prisma.authAccount.create({
+      data: {
+        userId: params.userId,
+        provider: params.provider,
+        providerAccountId: params.providerAccountId,
+      },
+    });
   }
 
   async findVerificationToken(token: string, type: VerificationType) {
