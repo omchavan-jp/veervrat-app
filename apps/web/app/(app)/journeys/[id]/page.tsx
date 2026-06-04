@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -51,13 +51,19 @@ export default function JourneyDetailPage() {
   const [titleValue, setTitleValue] = useState('');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Flush pending title save on unmount so navigation doesn't lose the edit
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
   const handleTitleBlur = useCallback(() => {
     setEditingTitle(false);
     if (!titleValue.trim() || titleValue === journey?.title) return;
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      updateTitle.mutate({ id, title: titleValue.trim() });
-    }, 300);
+    // Fire immediately on blur — no need to debounce, blur only fires once
+    updateTitle.mutate({ id, title: titleValue.trim() });
   }, [id, titleValue, journey?.title, updateTitle]);
 
   if (isLoading || !journey) {

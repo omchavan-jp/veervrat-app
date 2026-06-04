@@ -109,14 +109,12 @@ export class JourneysRepository {
     });
     if (!journey) return null;
 
-    // Fetch global VM relationship for this journey's VA
-    const globalVm = await this.prisma.vmRelationship.findFirst({
-      where: { vratarthiId: journey.vratarthiId, state: VmRelationshipState.ACTIVE },
-      select: { vmId: true, vratarthiId: true, state: true },
-    });
-
-    // Count ERC items by status
-    const [expCounts, resCounts, chalCounts] = await Promise.all([
+    // Fetch global VM + all ERC counts in parallel (was sequential)
+    const [globalVm, expCounts, resCounts, chalCounts] = await Promise.all([
+      this.prisma.vmRelationship.findFirst({
+        where: { vratarthiId: journey.vratarthiId, state: VmRelationshipState.ACTIVE },
+        select: { vmId: true, vratarthiId: true, state: true },
+      }),
       this.prisma.journeyExposure.groupBy({
         by: ['status'],
         where: { journeyId: id },

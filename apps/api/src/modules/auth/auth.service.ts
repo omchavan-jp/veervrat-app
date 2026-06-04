@@ -221,10 +221,18 @@ export class AuthService {
       throw new InvalidCredentialsException();
     }
 
-    const metadata = verificationToken.metadata as { googleId: string; googleEmail: string; displayName: string | null } | null;
-    if (!metadata?.googleId) {
+    // Validate metadata at runtime — Prisma returns Json? as unknown, cast gives no runtime safety
+    const raw = verificationToken.metadata;
+    if (
+      raw === null ||
+      typeof raw !== 'object' ||
+      Array.isArray(raw) ||
+      typeof (raw as Record<string, unknown>)['googleId'] !== 'string' ||
+      !(raw as Record<string, unknown>)['googleId']
+    ) {
       throw new TokenInvalidException();
     }
+    const metadata = raw as { googleId: string; googleEmail: string; displayName: string | null };
 
     await this.authRepository.addAuthAccount({
       userId: verificationToken.userId,

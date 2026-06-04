@@ -6,6 +6,7 @@ export class WeaknessesRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(userId?: string) {
+    // Single query: include both journey and test attempt counts when userId present
     const weaknesses = await this.prisma.weakness.findMany({
       select: {
         id: true,
@@ -25,6 +26,9 @@ export class WeaknessesRepository {
                       },
                     },
                   },
+                  testAttempts: {
+                    where: { userId, isDraft: false },
+                  },
                 },
               },
             }
@@ -33,29 +37,22 @@ export class WeaknessesRepository {
       orderBy: [{ category: 'asc' }, { nameEn: 'asc' }],
     });
 
-    let testCounts: Record<string, number> = {};
-    if (userId) {
-      const counts = await this.prisma.testAttempt.groupBy({
-        by: ['weaknessId'],
-        where: { userId, isDraft: false },
-        _count: { id: true },
-      });
-      testCounts = Object.fromEntries(counts.map((c) => [c.weaknessId, c._count.id]));
-    }
-
-    return weaknesses.map((w) => ({
-      id: w.id,
-      nameEn: w.nameEn,
-      nameMr: w.nameMr,
-      category: w.category ?? 'other',
-      description: w.description,
-      stats: userId
-        ? {
-            testsTaken: testCounts[w.id] ?? 0,
-            hasActiveJourney: ((w as { _count?: { journeyWeaknesses: number } })._count?.journeyWeaknesses ?? 0) > 0,
-          }
-        : null,
-    }));
+    return weaknesses.map((w) => {
+      const counts = (w as { _count?: { journeyWeaknesses: number; testAttempts: number } })._count;
+      return {
+        id: w.id,
+        nameEn: w.nameEn,
+        nameMr: w.nameMr,
+        category: w.category ?? 'other',
+        description: w.description,
+        stats: userId
+          ? {
+              testsTaken: counts?.testAttempts ?? 0,
+              hasActiveJourney: (counts?.journeyWeaknesses ?? 0) > 0,
+            }
+          : null,
+      };
+    });
   }
 
   async findById(id: string, userId?: string) {

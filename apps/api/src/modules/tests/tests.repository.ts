@@ -66,6 +66,7 @@ export class TestsRepository {
   }
 
   async findReportData(id: string) {
+    // Single query: include sentences via weakness→subvirtues→sentences chain
     const attempt = await this.prisma.testAttempt.findUnique({
       where: { id },
       select: {
@@ -74,38 +75,49 @@ export class TestsRepository {
         weaknessId: true,
         isDraft: true,
         submittedAt: true,
-        weakness: { select: { nameEn: true, nameMr: true } },
-        answers: {
+        weakness: {
           select: {
-            sentenceId: true,
-            score: true,
+            nameEn: true,
+            nameMr: true,
+            subvirtues: {
+              select: {
+                subvirtue: {
+                  select: {
+                    id: true,
+                    nameEn: true,
+                    nameMr: true,
+                    virtue: { select: { id: true, nameEn: true, nameMr: true } },
+                    sentences: {
+                      select: { id: true, textEn: true, textMr: true },
+                      orderBy: { createdAt: 'asc' },
+                    },
+                  },
+                },
+              },
+              orderBy: { priority: 'asc' },
+            },
           },
         },
+        answers: { select: { sentenceId: true, score: true } },
       },
     });
 
     if (!attempt) return null;
 
-    // Fetch all sentences for this weakness with their subvirtue→virtue chain
-    const sentences = await this.prisma.sentence.findMany({
-      where: {
-        subvirtue: { weaknesses: { some: { weaknessId: attempt.weaknessId } } },
-      },
-      select: {
-        id: true,
-        textEn: true,
-        textMr: true,
+    // Flatten sentences from the weakness→subvirtue→sentences join
+    const sentences = attempt.weakness.subvirtues.flatMap((ws) =>
+      ws.subvirtue.sentences.map((s) => ({
+        id: s.id,
+        textEn: s.textEn,
+        textMr: s.textMr,
         subvirtue: {
-          select: {
-            id: true,
-            nameEn: true,
-            nameMr: true,
-            virtue: { select: { id: true, nameEn: true, nameMr: true } },
-          },
+          id: ws.subvirtue.id,
+          nameEn: ws.subvirtue.nameEn,
+          nameMr: ws.subvirtue.nameMr,
+          virtue: ws.subvirtue.virtue,
         },
-      },
-      orderBy: { createdAt: 'asc' },
-    });
+      })),
+    );
 
     const answerMap = new Map(attempt.answers.map((a) => [a.sentenceId, a.score]));
 
