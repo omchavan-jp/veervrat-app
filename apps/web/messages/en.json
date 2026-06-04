@@ -199,5 +199,85 @@
       "next": "Next",
       "back": "Back"
     }
+  },
+  "study": {
+    "nav": "Study",
+    "browser": {
+      "title": "Study your weakness",
+      "subtitle": "Choose a weakness to explore and take a test.",
+      "whyLink": "Why study weaknesses?",
+      "clusterA": "Identity & Self-Perception",
+      "clusterB": "Will, Effort & Relating",
+      "clusterC": "Action & Engagement",
+      "clusterOther": "Other",
+      "testsTaken": "{count} test(s) taken",
+      "takeTest": "Take test",
+      "whyModal": {
+        "title": "Why study weaknesses?",
+        "body": "In Veervrat, weaknesses are not flaws to be ashamed of — they are the diagnostic lens that reveals where virtues need to be cultivated. Studying a weakness helps you identify which virtues to work on. This is the path of \"sadgunachi upasana\" — the pursuit and worship of virtues. The test shows you which sentences (practices) you struggle with, and each sentence is connected to a subvirtue and virtue you can work on. Understanding where you fall short is the first act of self-reliance.",
+        "close": "Understood"
+      }
+    },
+    "detail": {
+      "subvirtuesTitle": "Cultivating these virtues can help",
+      "testHistoryTitle": "Your test history",
+      "testPill": "Test {n} · {date}",
+      "takeTest": "Take test",
+      "resumeDraft": "Resume draft",
+      "noTests": "You haven't taken this test yet."
+    },
+    "test": {
+      "progress": "{answered}/{total} answered",
+      "viewAll": "View all",
+      "oneAtATime": "One at a time",
+      "saveDraft": "Save draft & exit",
+      "saveDraftConfirm": "Save as draft",
+      "discard": "Discard",
+      "submit": "Submit",
+      "always": "Always",
+      "often": "Often",
+      "sometimes": "Sometimes",
+      "never": "Never",
+      "unansweredWarningTitle": "{count} sentences unanswered",
+      "unansweredWarningBody": "You have {count} unanswered sentences. Submit anyway or continue?",
+      "submitAnyway": "Submit anyway",
+      "continueTest": "Continue",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "preview": {
+      "title": "Review your answers",
+      "subtitle": "Confirm your answers before submitting.",
+      "unanswered": "—",
+      "confirmSubmit": "Confirm submission",
+      "goBack": "Go back to review"
+    },
+    "report": {
+      "flaggedTitle": "Sentences to work on",
+      "flaggedSubtitle": "These are areas where you scored Sometimes or Never.",
+      "virtuesTitle": "Virtues to explore",
+      "otherTitle": "All sentences",
+      "otherToggle": "See all {count} sentences",
+      "startJourney": "Start journey",
+      "noFlagged": "No sentences reflected on as Sometimes or Never.",
+      "backToWeakness": "Back to weakness",
+      "score": {
+        "1": "Never",
+        "2": "Sometimes",
+        "3": "Often",
+        "4": "Always"
+      }
+    },
+    "dashboard": {
+      "pathCard01Title": "Study your weakness",
+      "pathCard01Subtitle": "Explore weaknesses and take tests to discover what to work on.",
+      "weaknessesExplored": "{count} weakness(es) explored",
+      "testsTaken": "{count} test(s) taken",
+      "goStudy": "Start studying →",
+      "suggestionsTitle": "Where to focus",
+      "suggestionsSubtitle": "Sentences from your latest tests that scored Sometimes or Never.",
+      "noSuggestions": "Take your first test to see personalized suggestions.",
+      "startJourney": "Start journey"
+    }
   }
 }

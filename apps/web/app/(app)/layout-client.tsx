@@ -36,8 +36,10 @@ export function AppLayoutClient({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-dvh bg-bg">
-      <Header user={user} />
-      <main className="mx-auto max-w-4xl px-4 py-8">{children}</main>
+      <div className="fixed inset-x-0 top-0 z-20">
+        <Header user={user} />
+      </div>
+      <main className="mx-auto max-w-4xl px-4 py-8 pt-[calc(56px+2rem)]">{children}</main>
     </div>
   );
 }

@@ -208,6 +208,7 @@ model User {
   notifications      Notification[]        @relation("NotificationRecipient")
   actorNotifications Notification[]        @relation("NotificationActor")
   journeys           Journey[]             @relation("VratarthiJourneys")
+  testAttempts       TestAttempt[]
   globalVmFor        VmRelationship[]      @relation("GlobalVM")
   journeyVmFor       JourneyVmAssignment[] @relation("JourneyVM")
   experienceLogs     ExperienceLog[]
@@ -356,11 +357,12 @@ model Weakness {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  subvirtues         WeaknessSubvirtue[]
-  journeyWeaknesses  JourneyWeakness[]
-  exposureWeaknesses ExposureWeakness[]
+  subvirtues           WeaknessSubvirtue[]
+  journeyWeaknesses    JourneyWeakness[]
+  exposureWeaknesses   ExposureWeakness[]
   resolutionWeaknesses ResolutionWeakness[]
   challengeWeaknesses  ChallengeWeakness[]
+  testAttempts         TestAttempt[]
 
   @@map("weaknesses")
 }
@@ -494,15 +496,17 @@ model ChallengeWeakness {
 // ═══════════════════════════════════════════════════
 
 model TestAttempt {
-  id         String    @id @default(uuid()) @db.Uuid
-  userId     String    @map("user_id") @db.Uuid
-  weaknessId String    @map("weakness_id") @db.Uuid
-  isDraft    Boolean   @default(true) @map("is_draft")
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  weaknessId  String    @map("weakness_id") @db.Uuid
+  isDraft     Boolean   @default(true) @map("is_draft")
   submittedAt DateTime? @map("submitted_at")
-  createdAt  DateTime  @default(now()) @map("created_at")
-  updatedAt  DateTime  @updatedAt @map("updated_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
-  answers TestAnswer[]
+  answers  TestAnswer[]
+  weakness Weakness @relation(fields: [weaknessId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
 
   @@index([userId, weaknessId])
   @@map("test_attempts")

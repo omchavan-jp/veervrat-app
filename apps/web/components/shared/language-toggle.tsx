@@ -15,7 +15,8 @@ export function LanguageToggle() {
   async function handleToggle(newLocale: string) {
     if (newLocale === locale) return;
     try {
-      await usersApi.updateMe({ language: newLocale });
+      // DB stores 'EN' | 'MR'; middleware reads locale as lowercase 'en' | 'mr'
+      await usersApi.updateMe({ language: newLocale.toUpperCase() });
       router.refresh();
     } catch {
       // Preference not saved — do not refresh; locale stays as-is

@@ -106,3 +106,15 @@ export class AccountLockedException extends HttpException {
     );
   }
 }
+
+export class TestAlreadySubmittedException extends ConflictException {
+  constructor() {
+    super({ error: 'TEST_ALREADY_SUBMITTED', message: 'This test has already been submitted.' });
+  }
+}
+
+export class TestNotSubmittedException extends ConflictException {
+  constructor() {
+    super({ error: 'TEST_NOT_SUBMITTED', message: 'This test has not been submitted yet.' });
+  }
+}

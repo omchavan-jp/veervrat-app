@@ -65,7 +65,7 @@ describe('LanguageToggle', () => {
     fireEvent.click(screen.getByRole('button', { name: 'MR' }));
 
     await waitFor(() => {
-      expect(mockUpdateMe).toHaveBeenCalledWith({ language: 'mr' });
+      expect(mockUpdateMe).toHaveBeenCalledWith({ language: 'MR' });
     });
     expect(mockRouterRefresh).toHaveBeenCalled();
   });

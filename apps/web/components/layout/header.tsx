@@ -12,11 +12,16 @@ export function Header({ user }: { user: User }) {
   const logout = useLogout();
 
   return (
-    <header className="border-b border-border">
+    <header className="border-b border-border bg-bg">
       <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4">
         <Link href="/dashboard">
           <Logo />
         </Link>
+        <nav className="hidden items-center gap-6 text-[14px] sm:flex">
+          <Link href="/study" className="text-muted transition-colors hover:text-fg">
+            Study
+          </Link>
+        </nav>
         <div className="flex items-center gap-4">
           <ThemeToggle />
           <LanguageToggle />
