@@ -23,6 +23,7 @@ import { CompleteOnboardingDto } from './dto/complete-onboarding.dto';
 import { SessionGuard } from './guards/session.guard';
 import { GoogleOAuthGuard } from './guards/google-oauth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
+import { SkipCsrf } from '../../common/guards/csrf.guard';
 import type { SessionUser, GoogleProfile } from './types/auth.types';
 
 @Controller('auth')
@@ -103,6 +104,7 @@ export class AuthController {
   }
 
   @Post('verify-email')
+  @SkipCsrf()
   @HttpCode(HttpStatus.OK)
   async verifyEmail(@Body() dto: VerifyEmailDto) {
     const result = await this.authService.verifyEmail(dto.token);

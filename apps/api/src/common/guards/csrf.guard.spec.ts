@@ -1,20 +1,37 @@
 import { describe, it, expect } from 'vitest';
 import { ExecutionContext } from '@nestjs/common';
-import { CsrfGuard } from './csrf.guard';
+import { Reflector } from '@nestjs/core';
+import { CsrfGuard, SKIP_CSRF_KEY } from './csrf.guard';
 import { AccessDeniedException } from '../exceptions/app.exceptions';
 
 const TOKEN = 'abc123token';
 
-function makeContext(method: string, cookies: Record<string, string>, headers: Record<string, string>): ExecutionContext {
+function makeContext(
+  method: string,
+  cookies: Record<string, string>,
+  headers: Record<string, string>,
+  skipCsrf = false,
+): ExecutionContext {
   return {
     switchToHttp: () => ({
       getRequest: () => ({ method, cookies, headers }),
     }),
+    getHandler: () => ({}),
+    getClass: () => ({}),
+    // Reflector.getAllAndOverride is called with handler/class; stub it here
+    _skipCsrf: skipCsrf,
   } as unknown as ExecutionContext;
 }
 
+function makeGuard(skipCsrfForContext = false): CsrfGuard {
+  const reflector = {
+    getAllAndOverride: (_key: string, _targets: unknown[]) => skipCsrfForContext,
+  } as unknown as Reflector;
+  return new CsrfGuard(reflector);
+}
+
 describe('CsrfGuard', () => {
-  const guard = new CsrfGuard();
+  const guard = makeGuard();
 
   it('allows GET requests without CSRF header', () => {
     const ctx = makeContext('GET', {}, {});
@@ -57,7 +74,22 @@ describe('CsrfGuard', () => {
   });
 
   it('throws on POST with mismatched CSRF token', () => {
-    const ctx = makeContext('POST', { 'csrf-token': TOKEN }, { 'x-csrf-token': 'wrongtoken' });
+    const ctx = makeContext(
+      'POST',
+      { 'csrf-token': TOKEN },
+      { 'x-csrf-token': 'wrongtoken' },
+    );
     expect(() => guard.canActivate(ctx)).toThrow(AccessDeniedException);
+  });
+
+  it('allows POST when @SkipCsrf() is set on the handler', () => {
+    const skipGuard = makeGuard(true);
+    // No CSRF cookie or header — would normally throw
+    const ctx = makeContext('POST', {}, {});
+    expect(skipGuard.canActivate(ctx)).toBe(true);
+  });
+
+  it('exports SKIP_CSRF_KEY constant', () => {
+    expect(SKIP_CSRF_KEY).toBe('skipCsrf');
   });
 });

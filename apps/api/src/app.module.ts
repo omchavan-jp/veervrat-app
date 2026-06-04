@@ -9,6 +9,7 @@ import { EmailModule } from './modules/email/email.module';
 import { UsersModule } from './modules/users/users.module';
 import { RedisModule } from './common/redis/redis.module';
 import { AppController } from './app.controller';
+import { Reflector } from '@nestjs/core';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
 import { CsrfMiddleware } from './common/middleware/csrf.middleware';
 import { CsrfGuard } from './common/guards/csrf.guard';
@@ -40,7 +41,11 @@ import { CsrfGuard } from './common/guards/csrf.guard';
   controllers: [AppController],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
-    { provide: APP_GUARD, useClass: CsrfGuard },
+    {
+      provide: APP_GUARD,
+      useFactory: (reflector: Reflector) => new CsrfGuard(reflector),
+      inject: [Reflector],
+    },
   ],
 })
 export class AppModule implements NestModule {

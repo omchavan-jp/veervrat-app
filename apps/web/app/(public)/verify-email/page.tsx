@@ -1,27 +1,37 @@
-'use client';
-
-import { useEffect, useRef } from 'react';
-import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
+import { getTranslations } from 'next-intl/server';
 import { AuthShell } from '@/components/auth/auth-shell';
 import { StatusBanner } from '@/components/auth/status-banner';
-import { useVerifyEmail } from '@/hooks/use-auth';
-import { ApiError } from '@/lib/api/client';
 
-export default function VerifyEmailPage() {
-  const t = useTranslations('auth.verifyEmail');
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token');
-  const verifyEmail = useVerifyEmail();
-  const hasAttempted = useRef(false);
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
-  useEffect(() => {
-    if (token && !hasAttempted.current) {
-      hasAttempted.current = true;
-      verifyEmail.mutate(token);
-    }
-  }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
+async function verifyEmailToken(token: string): Promise<{ ok: boolean; message?: string }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/verify-email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token }),
+      // Server-side: no CSRF cookie needed — guard only runs on browser requests
+      cache: 'no-store',
+    });
+
+    if (res.ok) return { ok: true };
+
+    const body = await res.json().catch(() => ({}));
+    return { ok: false, message: body.message || 'Verification failed.' };
+  } catch {
+    return { ok: false, message: 'Could not reach the server. Please try again.' };
+  }
+}
+
+export default async function VerifyEmailPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const t = await getTranslations('auth.verifyEmail');
+  const params = await searchParams;
+  const token = typeof params.token === 'string' ? params.token : null;
 
   const hero = {
     eyebrow: 'Verify',
@@ -44,22 +54,16 @@ export default function VerifyEmailPage() {
     );
   }
 
-  if (verifyEmail.isPending) {
-    return (
-      <AuthShell hero={hero}>
-        <h2 className="mb-2 font-display text-[32px] tracking-tight">{t('verifyingTitle')}</h2>
-        <p className="mb-6 text-[15px] text-muted">{t('verifyingBody')}</p>
-        <div className="flex justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent border-t-transparent" />
-        </div>
-      </AuthShell>
-    );
-  }
+  const result = await verifyEmailToken(token);
 
-  if (verifyEmail.isSuccess) {
+  if (result.ok) {
     return (
       <AuthShell hero={hero}>
-        <StatusBanner variant="success" title={t('successTitle')} description={t('successDescription')} />
+        <StatusBanner
+          variant="success"
+          title={t('successTitle')}
+          description={t('successDescription')}
+        />
         <Link
           href="/login"
           className="inline-flex h-auto w-full items-center justify-center rounded-xl bg-accent px-6 py-3.5 text-[15px] font-medium text-bg hover:bg-accent-hover"
@@ -70,14 +74,9 @@ export default function VerifyEmailPage() {
     );
   }
 
-  const apiError =
-    verifyEmail.error instanceof ApiError
-      ? verifyEmail.error.message
-      : verifyEmail.error?.message ?? 'Verification failed.';
-
   return (
     <AuthShell hero={hero}>
-      <StatusBanner variant="error" title={t('failedTitle')} description={apiError} />
+      <StatusBanner variant="error" title={t('failedTitle')} description={result.message} />
       <Link
         href="/login"
         className="inline-flex h-auto w-full items-center justify-center rounded-xl bg-accent px-6 py-3.5 text-[15px] font-medium text-bg hover:bg-accent-hover"
