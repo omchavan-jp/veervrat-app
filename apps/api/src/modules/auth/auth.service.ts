@@ -173,9 +173,10 @@ export class AuthService {
       return { action: 'link_pending', token: linkToken };
     }
 
-    // For OAuth users, generate a username from email until they complete onboarding
-    const baseUsername = profile.email.split('@')[0].replace(/[^a-z0-9_]/gi, '').toLowerCase();
-    const username = `${baseUsername}_${Math.random().toString(36).slice(2, 7)}`;
+    // Derive a clean username from the email local part:
+    // dots/hyphens → underscores, strip everything else, clamp to 28 chars.
+    // Try the clean name first; if taken, append an incrementing number.
+    const username = await this.generateUsername(profile.email);
 
     const user = await this.authRepository.createUserWithOAuthAccount({
       email: profile.email,
@@ -267,15 +268,15 @@ export class AuthService {
     return { user: this.toSessionUser(user) };
   }
 
-  async forgotPassword(email: string): Promise<void> {
+  async forgotPassword(email: string): Promise<'sent' | 'google_only' | 'not_found'> {
     const user = await this.authRepository.findUserByEmail(email);
     if (!user) {
-      return;
+      return 'not_found';
     }
 
     const emailAccount = await this.authRepository.findEmailAccountByUserId(user.id);
     if (!emailAccount) {
-      return;
+      return 'google_only';
     }
 
     await this.authRepository.invalidateTokensByUserAndType(
@@ -297,6 +298,7 @@ export class AuthService {
       createElement(PasswordResetEmail, { displayName: user.displayName, resetUrl, language: lang }),
     );
     await this.emailService.sendTransactional(email, getResetSubject(lang), resetHtml, resetText);
+    return 'sent';
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
@@ -374,12 +376,12 @@ export class AuthService {
     return this.toSessionUser(user);
   }
 
-  async checkUsernameAvailability(username: string): Promise<boolean> {
+  async checkUsernameAvailability(username: string): Promise<{ available: boolean; reason?: 'invalid' | 'taken' }> {
     if (!USERNAME_REGEX.test(username)) {
-      return false;
+      return { available: false, reason: 'invalid' };
     }
     const existing = await this.authRepository.findUserByUsername(username);
-    return !existing;
+    return existing ? { available: false, reason: 'taken' } : { available: true };
   }
 
   async getCurrentUser(userId: string): Promise<SessionUser> {
@@ -439,6 +441,33 @@ export class AuthService {
   }
 
   // ─── Private helpers ────────────────────────────────────────────────────────
+
+  private async generateUsername(email: string): Promise<string> {
+    // Replace dots and hyphens with underscores, strip anything else invalid, clamp to 28 chars
+    const base = email
+      .split('@')[0]
+      .toLowerCase()
+      .replace(/[.\-]/g, '_')
+      .replace(/[^a-z0-9_]/g, '')
+      .replace(/_+/g, '_')        // collapse consecutive underscores
+      .replace(/^_+|_+$/g, '')   // trim leading/trailing underscores
+      .slice(0, 28)
+      || 'user';
+
+    // Try the clean base first
+    if (!(await this.authRepository.findUserByUsername(base))) {
+      return base;
+    }
+    // Fall back to base_2, base_3, … up to base_99
+    for (let n = 2; n <= 99; n++) {
+      const candidate = `${base.slice(0, 25)}_${n}`;
+      if (!(await this.authRepository.findUserByUsername(candidate))) {
+        return candidate;
+      }
+    }
+    // Extremely unlikely last resort
+    return `${base.slice(0, 22)}_${randomBytes(3).toString('hex')}`;
+  }
 
   private async createSession(params: CreateSessionParams): Promise<string> {
     const token = this.generateToken();

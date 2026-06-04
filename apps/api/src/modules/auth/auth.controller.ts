@@ -89,10 +89,8 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { ttl: 3600000, limit: 5 } })
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
-    await this.authService.forgotPassword(dto.email);
-    return {
-      message: 'If an account with that email exists, a password reset link has been sent.',
-    };
+    const status = await this.authService.forgotPassword(dto.email);
+    return { status };
   }
 
   @Post('reset-password')
@@ -182,10 +180,9 @@ export class AuthController {
   @Get('check-username')
   async checkUsername(@Query('username') username: string) {
     if (!username) {
-      return { available: false };
+      return { available: false, reason: 'invalid' };
     }
-    const available = await this.authService.checkUsernameAvailability(username);
-    return { available };
+    return this.authService.checkUsernameAvailability(username);
   }
 
   @Get('csrf')

@@ -78,10 +78,33 @@
   --shadow-card: var(--_shadow-card);
   --shadow-modal: var(--_shadow-modal);
   --shadow-toast: var(--_shadow-toast);
+
+  /* shadcn alias tokens — Tailwind utility mappings for Calendar/Popover components */
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
+  --color-popover: var(--surface);
+  --color-popover-foreground: var(--fg);
+  --color-primary: var(--accent);
+  --color-primary-foreground: #FAF7F2;
+  --color-muted-foreground: var(--muted);
+  --color-ring: var(--accent);
 }
 
 body {
   background: var(--bg);
   color: var(--fg);
   font-family: var(--font-sans);
+}
+
+/* shadcn component token aliases — map shadcn's expected CSS vars to our design tokens */
+:root {
+  --background: var(--bg);
+  --foreground: var(--fg);
+  --popover: var(--surface);
+  --popover-foreground: var(--fg);
+  --primary: var(--accent);
+  --primary-foreground: #FAF7F2;
+  --muted-foreground: var(--muted);
+  --ring: var(--accent);
+  --radius: 8px;
 }

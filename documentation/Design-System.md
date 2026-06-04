@@ -160,3 +160,22 @@ All interactive components (button, input, textarea, select, card, badge, toggle
 - Sidebar nav icons: 20px
 - Card/inline icons: 16px
 - Hero/empty state icons: 24px
+
+---
+
+## shadcn Component Token Aliases
+
+shadcn components (Calendar, Popover) use their own CSS variable names. These are mapped to our design tokens in `globals.css` so shadcn components automatically inherit the correct colours:
+
+| shadcn token | Our token | Notes |
+|---|---|---|
+| `--background` / `bg-background` | `--bg` | Page background |
+| `--foreground` / `text-foreground` | `--fg` | Primary text |
+| `--popover` / `bg-popover` | `--surface` | Popup/dropdown background |
+| `--popover-foreground` | `--fg` | Popup text |
+| `--primary` / `bg-primary` | `--accent` | Selected day, active states |
+| `--primary-foreground` | `#FAF7F2` | Text on accent background |
+| `--muted-foreground` | `--muted` | Subdued text (weekday labels, outside days) |
+| `--ring` | `--accent` | Focus ring |
+
+Do not add new shadcn token aliases without updating this table and `globals.css`.

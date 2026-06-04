@@ -26,6 +26,8 @@ This document is the canonical reference for all library, tooling, and architect
 | Search | Meilisearch | `meilisearch` | Already decided. See Search Architecture doc. |
 | Validation (backend) | class-validator + class-transformer | `class-validator`, `class-transformer` | Already in stack. All DTOs use this. |
 | Validation (frontend) | Zod | `zod` | Already in stack. All forms use React Hook Form + Zod. |
+| Date picker | shadcn Calendar + react-day-picker | `react-day-picker` (peer dep of shadcn) | Custom calendar popup via shadcn Calendar + Popover, styled to design tokens. date-fns for date formatting. Use `DatePicker` wrapper at `components/ui/date-picker.tsx`. |
+| Date utilities | date-fns | `date-fns` | Installed as peer dep of react-day-picker. Use for date formatting/parsing in date picker only. Do not add moment.js or dayjs. |
 | Structured logging (backend) | nestjs-pino + pino-http | `nestjs-pino`, `pino-http`, `pino-pretty` (dev) | NestJS LoggerService adapter for Pino. pino-http attaches request context. pino-pretty for human-readable dev output. |
 | Config validation | Joi | `joi` | Validates required env vars at startup via ConfigModule validationSchema. Fail-fast on missing config. |
 | Redis client | ioredis | `ioredis` | Used for account lockout, OG cache TTL, and future BullMQ upgrade. Injected as `REDIS_CLIENT` provider. |

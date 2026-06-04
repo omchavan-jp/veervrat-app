@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { AuthShell } from '@/components/auth/auth-shell';
+import { StatusBanner } from '@/components/auth/status-banner';
 import { useForgotPassword } from '@/hooks/use-auth';
 import { forgotPasswordSchema, type ForgotPasswordInput } from '@/lib/validations/auth';
 
@@ -33,17 +34,51 @@ export default function ForgotPasswordPage() {
     gloss: 'No matter. A fresh start is always possible.',
   };
 
-  if (forgotPassword.isSuccess) {
+  const status = forgotPassword.data?.status;
+
+  if (status === 'sent') {
     return (
       <AuthShell hero={hero}>
-        <h2 className="mb-2 font-display text-[32px] tracking-tight">{t('successTitle')}</h2>
-        <p className="mb-8 text-[15px] text-muted">{t('successDescription')}</p>
+        <StatusBanner variant="success" title={t('sentTitle')} description={t('sentDescription')} />
         <Link
           href="/login"
-          className="inline-flex h-auto w-full items-center justify-center rounded-xl bg-accent px-6 py-3.5 text-[15px] font-medium text-bg hover:bg-accent-hover"
+          className="mt-4 inline-flex h-auto w-full items-center justify-center rounded-xl bg-accent px-6 py-3.5 text-[15px] font-medium text-bg hover:bg-accent-hover"
         >
           {t('backToLogin')}
         </Link>
+      </AuthShell>
+    );
+  }
+
+  if (status === 'google_only') {
+    return (
+      <AuthShell hero={hero}>
+        <StatusBanner variant="error" title={t('googleOnlyTitle')} description={t('googleOnlyDescription')} />
+        <Link
+          href="/login"
+          className="mt-4 inline-flex h-auto w-full items-center justify-center rounded-xl bg-accent px-6 py-3.5 text-[15px] font-medium text-bg hover:bg-accent-hover"
+        >
+          {t('backToLogin')}
+        </Link>
+      </AuthShell>
+    );
+  }
+
+  if (status === 'not_found') {
+    return (
+      <AuthShell hero={hero}>
+        <StatusBanner variant="error" title={t('notFoundTitle')} description={t('notFoundDescription')} />
+        <button
+          onClick={() => forgotPassword.reset()}
+          className="mt-4 inline-flex h-auto w-full items-center justify-center rounded-xl bg-accent px-6 py-3.5 text-[15px] font-medium text-bg hover:bg-accent-hover"
+        >
+          {t('tryAgain')}
+        </button>
+        <p className="mt-4 text-center text-sm text-muted">
+          <Link href="/signup" className="text-accent underline decoration-accent/40 hover:no-underline">
+            Create an account
+          </Link>
+        </p>
       </AuthShell>
     );
   }
@@ -80,10 +115,7 @@ export default function ForgotPasswordPage() {
 
       <p className="mt-8 text-center text-sm text-muted">
         {t('rememberedIt')}{' '}
-        <Link
-          href="/login"
-          className="text-accent underline decoration-accent/40 hover:no-underline"
-        >
+        <Link href="/login" className="text-accent underline decoration-accent/40 hover:no-underline">
           {t('backToLogin')}
         </Link>
       </p>

@@ -1,18 +1,19 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { DatePicker } from '@/components/ui/date-picker';
 import { useAuth, useCompleteOnboarding } from '@/hooks/use-auth';
 import { accountSetupSchema, type AccountSetupInput } from '@/lib/validations/onboarding';
 import { authApi } from '@/lib/api/auth';
 import { ApiError } from '@/lib/api/client';
 
-type UsernameStatus = 'idle' | 'checking' | 'available' | 'taken';
+type UsernameStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
 
 export default function AccountSetupPage() {
   const t = useTranslations('onboarding.accountSetup');
@@ -23,16 +24,19 @@ export default function AccountSetupPage() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (!isLoading && user && user.onboardingCompletedAt !== null) {
+    // Guard for direct navigation to account-setup by an already-onboarded user.
+    // Skip when the mutation just succeeded — onSuccess handles the redirect to /onboarding/framework.
+    if (!isLoading && user && user.onboardingCompletedAt !== null && !completeOnboarding.isSuccess) {
       router.replace('/dashboard');
     }
-  }, [isLoading, user, router]);
+  }, [isLoading, user, router, completeOnboarding.isSuccess]);
 
   const {
     register,
     handleSubmit,
     watch,
     reset,
+    control,
     setError,
     formState: { errors },
   } = useForm<AccountSetupInput>({
@@ -52,6 +56,7 @@ export default function AccountSetupPage() {
   }, [user, reset]);
 
   const usernameValue = watch('username', '');
+  const genderValue = watch('gender');
 
   const checkUsername = useCallback(
     (username: string) => {
@@ -68,8 +73,12 @@ export default function AccountSetupPage() {
       setUsernameStatus('checking');
       debounceRef.current = setTimeout(async () => {
         try {
-          const available = await authApi.checkUsername(username);
-          setUsernameStatus(available ? 'available' : 'taken');
+          const result = await authApi.checkUsername(username);
+          if (result.available) {
+            setUsernameStatus('available');
+          } else {
+            setUsernameStatus(result.reason === 'invalid' ? 'invalid' : 'taken');
+          }
         } catch {
           setUsernameStatus('idle');
         }
@@ -86,12 +95,17 @@ export default function AccountSetupPage() {
   }, [usernameValue, checkUsername]);
 
   const onSubmit = (data: AccountSetupInput) => {
+    const resolvedGender =
+      data.gender === 'other'
+        ? (data.genderCustom?.trim() || undefined)
+        : data.gender;
+
     completeOnboarding.mutate(
       {
         displayName: data.displayName,
         username: data.username,
         language: data.language,
-        gender: data.gender || undefined,
+        gender: resolvedGender,
         dob: data.dob || undefined,
       },
       {
@@ -163,6 +177,9 @@ export default function AccountSetupPage() {
               {usernameStatus === 'taken' && (
                 <p className="text-xs text-accent">{t('usernameTaken')}</p>
               )}
+              {usernameStatus === 'invalid' && (
+                <p className="text-xs text-accent">{t('usernameHint')}</p>
+              )}
               {usernameStatus === 'idle' && (
                 <p className="text-xs text-muted">{t('usernameHint')}</p>
               )}
@@ -192,26 +209,44 @@ export default function AccountSetupPage() {
           </div>
 
           <div>
-            <label className="mb-2 block font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
+            <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
               {t('gender')}
-            </label>
-            <Input
-              type="text"
-              placeholder={t('genderPlaceholder')}
-              className="rounded-none border-0 border-b border-border-strong bg-transparent px-0 py-3 text-base focus-visible:border-accent focus-visible:ring-0"
-              {...register('gender')}
-            />
+              <span className="ml-1 normal-case tracking-normal text-muted/60">{t('optional')}</span>
+            </p>
+            <div className="flex flex-wrap gap-x-6 gap-y-3">
+              {(['Male', 'Female', 'other'] as const).map((val) => (
+                <label key={val} className="flex cursor-pointer items-center gap-2 text-sm">
+                  <input type="radio" value={val} {...register('gender')} className="accent-accent" />
+                  {val === 'other' ? t('genderOther') : val}
+                </label>
+              ))}
+            </div>
+            {genderValue === 'other' && (
+              <Input
+                type="text"
+                placeholder={t('genderCustomPlaceholder')}
+                className="mt-3 rounded-none border-0 border-b border-border-strong bg-transparent px-0 py-3 text-base focus-visible:border-accent focus-visible:ring-0"
+                {...register('genderCustom')}
+              />
+            )}
           </div>
 
           <div>
             <label className="mb-2 block font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
               {t('dob')}
+              <span className="ml-1 normal-case tracking-normal text-muted/60">{t('optional')}</span>
             </label>
-            <Input
-              type="text"
-              placeholder={t('dobPlaceholder')}
-              className="rounded-none border-0 border-b border-border-strong bg-transparent px-0 py-3 text-base focus-visible:border-accent focus-visible:ring-0"
-              {...register('dob')}
+            <Controller
+              name="dob"
+              control={control}
+              render={({ field }) => (
+                <DatePicker
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  placeholder={t('dobPlaceholder')}
+                  max={new Date().toISOString().split('T')[0]}
+                />
+              )}
             />
             {errors.dob && (
               <p className="mt-1.5 text-xs text-accent">{errors.dob.message}</p>
