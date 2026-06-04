@@ -107,6 +107,26 @@ export class AccountLockedException extends HttpException {
   }
 }
 
+export class JourneyConflictException extends ConflictException {
+  constructor(existingJourneyId: string, state: string) {
+    super({
+      error: 'JOURNEY_ALREADY_EXISTS',
+      message: 'A non-completed journey already exists for this sentence.',
+      details: { existingJourneyId, state },
+    });
+  }
+}
+
+export class InvalidStateTransitionException extends ConflictException {
+  constructor(from: string, action: string) {
+    super({
+      error: 'INVALID_STATE_TRANSITION',
+      message: `Cannot perform '${action}' on a journey in state '${from}'.`,
+      details: { from, action },
+    });
+  }
+}
+
 export class TestAlreadySubmittedException extends ConflictException {
   constructor() {
     super({ error: 'TEST_ALREADY_SUBMITTED', message: 'This test has already been submitted.' });

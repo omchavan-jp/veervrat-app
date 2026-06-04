@@ -9,6 +9,7 @@ import { EmailModule } from './modules/email/email.module';
 import { UsersModule } from './modules/users/users.module';
 import { WeaknessesModule } from './modules/weaknesses/weaknesses.module';
 import { TestsModule } from './modules/tests/tests.module';
+import { JourneysModule } from './modules/journeys/journeys.module';
 import { RedisModule } from './common/redis/redis.module';
 import { AppController } from './app.controller';
 import { Reflector } from '@nestjs/core';
@@ -41,6 +42,7 @@ import { CsrfGuard } from './common/guards/csrf.guard';
     UsersModule,
     WeaknessesModule,
     TestsModule,
+    JourneysModule,
   ],
   controllers: [AppController],
   providers: [
