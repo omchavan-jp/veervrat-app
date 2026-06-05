@@ -107,6 +107,22 @@ export class AccountLockedException extends HttpException {
   }
 }
 
+export class ErcAlreadySelectedException extends ConflictException {
+  constructor() {
+    super({ error: 'ERC_ALREADY_SELECTED', message: 'This item is already selected in this journey.' });
+  }
+}
+
+export class InvalidErcStatusTransitionException extends ConflictException {
+  constructor(from: string, to: string) {
+    super({
+      error: 'INVALID_ERC_STATUS_TRANSITION',
+      message: `Cannot transition ERC item from '${from}' to '${to}'.`,
+      details: { from, to },
+    });
+  }
+}
+
 export class JourneyConflictException extends ConflictException {
   constructor(existingJourneyId: string, state: string) {
     super({
