@@ -27,7 +27,7 @@
 #### Scenario: POSITIVE — VA lists journey exposures
 - **WHEN** `GET /api/v1/journeys/:id/exposures` is called by the journey owner
 - **THEN** the response SHALL return all JourneyExposures for this journey, including deactivated ones
-- **THEN** each item SHALL include: id, status, isDeactivated, titleEn, descriptionEn, tier, startedAt, submittedAt, approvedAt
+- **THEN** each item SHALL include: id, status, isDeactivated, isCustom, createdById, titleEn, descriptionEn, tier, startedAt, submittedAt, approvedAt, reviewStatus, vmSidenote
 
 ## MODIFIED Requirements
 

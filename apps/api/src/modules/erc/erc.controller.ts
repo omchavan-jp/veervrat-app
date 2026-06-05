@@ -6,6 +6,10 @@ import { ErcService } from './erc.service';
 import { SelectErcDto } from './dto/select-erc.dto';
 import { UpdateErcStatusDto } from './dto/update-erc-status.dto';
 import { SuggestErcDto } from './dto/suggest-erc.dto';
+import { CreateCustomExposureDto } from './dto/create-custom-exposure.dto';
+import { CreateCustomResolutionDto } from './dto/create-custom-resolution.dto';
+import { CreateCustomChallengeDto } from './dto/create-custom-challenge.dto';
+import { EditCustomErcDto } from './dto/edit-custom-erc.dto';
 import { SessionGuard } from '../auth/guards/session.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { SessionUser } from '../auth/types/auth.types';
@@ -26,6 +30,18 @@ export class ExposuresController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   select(@Param('journeyId') j: string, @Body() dto: SelectErcDto, @CurrentUser() u: SessionUser) { return this.ercService.selectItem(u, j, dto.poolItemId, 'exposure'); }
+
+  @Post('custom')
+  @HttpCode(HttpStatus.CREATED)
+  createCustom(@Param('journeyId') j: string, @Body() dto: CreateCustomExposureDto, @CurrentUser() u: SessionUser) { return this.ercService.createCustomItem(u, j, dto, 'exposure'); }
+
+  @Patch(':itemId')
+  @HttpCode(HttpStatus.OK)
+  editCustom(@Param('journeyId') j: string, @Param('itemId') i: string, @Body() dto: EditCustomErcDto, @CurrentUser() u: SessionUser) { return this.ercService.editCustomItem(u, j, i, dto, 'exposure'); }
+
+  @Post(':itemId/submit-for-review')
+  @HttpCode(HttpStatus.OK)
+  submitForReview(@Param('journeyId') j: string, @Param('itemId') i: string, @CurrentUser() u: SessionUser) { return this.ercService.submitForReview(u, j, i, 'exposure'); }
 
   @Patch(':itemId/status')
   @HttpCode(HttpStatus.OK)
@@ -81,6 +97,18 @@ export class ResolutionsController {
   @HttpCode(HttpStatus.CREATED)
   select(@Param('journeyId') j: string, @Body() dto: SelectErcDto, @CurrentUser() u: SessionUser) { return this.ercService.selectItem(u, j, dto.poolItemId, 'resolution'); }
 
+  @Post('custom')
+  @HttpCode(HttpStatus.CREATED)
+  createCustom(@Param('journeyId') j: string, @Body() dto: CreateCustomResolutionDto, @CurrentUser() u: SessionUser) { return this.ercService.createCustomItem(u, j, dto, 'resolution'); }
+
+  @Patch(':itemId')
+  @HttpCode(HttpStatus.OK)
+  editCustom(@Param('journeyId') j: string, @Param('itemId') i: string, @Body() dto: EditCustomErcDto, @CurrentUser() u: SessionUser) { return this.ercService.editCustomItem(u, j, i, dto, 'resolution'); }
+
+  @Post(':itemId/submit-for-review')
+  @HttpCode(HttpStatus.OK)
+  submitForReview(@Param('journeyId') j: string, @Param('itemId') i: string, @CurrentUser() u: SessionUser) { return this.ercService.submitForReview(u, j, i, 'resolution'); }
+
   @Patch(':itemId/status')
   @HttpCode(HttpStatus.OK)
   updateStatus(@Param('journeyId') j: string, @Param('itemId') i: string, @Body() dto: UpdateErcStatusDto, @CurrentUser() u: SessionUser) { return this.ercService.updateStatus(u, j, i, dto.status, 'resolution'); }
@@ -134,6 +162,18 @@ export class ChallengesController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   select(@Param('journeyId') j: string, @Body() dto: SelectErcDto, @CurrentUser() u: SessionUser) { return this.ercService.selectItem(u, j, dto.poolItemId, 'challenge'); }
+
+  @Post('custom')
+  @HttpCode(HttpStatus.CREATED)
+  createCustom(@Param('journeyId') j: string, @Body() dto: CreateCustomChallengeDto, @CurrentUser() u: SessionUser) { return this.ercService.createCustomItem(u, j, dto, 'challenge'); }
+
+  @Patch(':itemId')
+  @HttpCode(HttpStatus.OK)
+  editCustom(@Param('journeyId') j: string, @Param('itemId') i: string, @Body() dto: EditCustomErcDto, @CurrentUser() u: SessionUser) { return this.ercService.editCustomItem(u, j, i, dto, 'challenge'); }
+
+  @Post(':itemId/submit-for-review')
+  @HttpCode(HttpStatus.OK)
+  submitForReview(@Param('journeyId') j: string, @Param('itemId') i: string, @CurrentUser() u: SessionUser) { return this.ercService.submitForReview(u, j, i, 'challenge'); }
 
   @Patch(':itemId/status')
   @HttpCode(HttpStatus.OK)

@@ -64,6 +64,8 @@ export type JourneyErcItem = {
   status: ErcStatus;
   isDeactivated: boolean;
   isCustom: boolean;
+  createdById: string | null;
+  reviewStatus: string | null;
   titleEn: string;
   descriptionEn: string | null;
   startedAt: string | null;

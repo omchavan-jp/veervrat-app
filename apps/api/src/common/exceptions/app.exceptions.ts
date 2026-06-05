@@ -190,3 +190,12 @@ export class PendingGlobalVmInviteException extends ConflictException {
     });
   }
 }
+
+export class CustomErcAlreadyPendingException extends ConflictException {
+  constructor() {
+    super({
+      error: 'CUSTOM_ERC_ALREADY_PENDING',
+      message: 'This custom ERC item is already pending review.',
+    });
+  }
+}

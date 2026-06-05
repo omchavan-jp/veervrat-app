@@ -629,14 +629,16 @@ model JourneyExposure {
   startedAt       DateTime? @map("started_at")
   submittedAt     DateTime? @map("submitted_at")
   approvedAt      DateTime? @map("approved_at")
+  createdById     String?   @map("created_by_id") @db.Uuid // null for pool-sourced items
   // Submit-for-global-review
   reviewStatus    String?   @map("review_status") // pending/approved/rejected
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
-  journey     Journey   @relation(fields: [journeyId], references: [id], onDelete: Cascade)
-  poolExposure Exposure? @relation(fields: [poolExposureId], references: [id])
-  vmSidenote  VmSidenote?
+  journey          Journey            @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+  poolExposure     Exposure?          @relation(fields: [poolExposureId], references: [id])
+  vmSidenote       VmSidenote?
+  customErcReviews CustomErcReview[]
 
   @@index([journeyId])
   @@map("journey_exposures")
@@ -658,14 +660,16 @@ model JourneyResolution {
   startedAt        DateTime? @map("started_at")
   submittedAt      DateTime? @map("submitted_at")
   approvedAt       DateTime? @map("approved_at")
+  createdById      String?   @map("created_by_id") @db.Uuid // null for pool-sourced items
   reviewStatus     String?   @map("review_status")
   createdAt        DateTime  @default(now()) @map("created_at")
   updatedAt        DateTime  @updatedAt @map("updated_at")
 
-  journey        Journey     @relation(fields: [journeyId], references: [id], onDelete: Cascade)
-  poolResolution Resolution? @relation(fields: [poolResolutionId], references: [id])
-  checkins       ResolutionCheckin[]
-  vmSidenote     VmSidenote?
+  journey          Journey            @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+  poolResolution   Resolution?        @relation(fields: [poolResolutionId], references: [id])
+  checkins         ResolutionCheckin[]
+  vmSidenote       VmSidenote?
+  customErcReviews CustomErcReview[]
 
   @@index([journeyId])
   @@map("journey_resolutions")
@@ -698,16 +702,39 @@ model JourneyChallenge {
   startedAt        DateTime? @map("started_at")
   submittedAt      DateTime? @map("submitted_at")
   approvedAt       DateTime? @map("approved_at")
+  createdById      String?   @map("created_by_id") @db.Uuid // null for pool-sourced items
   reviewStatus     String?   @map("review_status")
   createdAt        DateTime  @default(now()) @map("created_at")
   updatedAt        DateTime  @updatedAt @map("updated_at")
 
-  journey       Journey    @relation(fields: [journeyId], references: [id], onDelete: Cascade)
-  poolChallenge Challenge? @relation(fields: [poolChallengeId], references: [id])
-  vmSidenote    VmSidenote?
+  journey          Journey            @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+  poolChallenge    Challenge?         @relation(fields: [poolChallengeId], references: [id])
+  vmSidenote       VmSidenote?
+  customErcReviews CustomErcReview[]
 
   @@index([journeyId])
   @@map("journey_challenges")
+}
+
+model CustomErcReview {
+  id                  String        @id @default(uuid()) @db.Uuid
+  entityType          ErcEntityType @map("entity_type")
+  journeyExposureId   String?       @map("journey_exposure_id") @db.Uuid
+  journeyResolutionId String?       @map("journey_resolution_id") @db.Uuid
+  journeyChallengeId  String?       @map("journey_challenge_id") @db.Uuid
+  submittedById       String        @map("submitted_by_id") @db.Uuid
+  status              String        @default("pending") // pending/approved/rejected
+  reviewedById        String?       @map("reviewed_by_id") @db.Uuid
+  reviewedAt          DateTime?     @map("reviewed_at")
+  reviewNote          String?       @map("review_note")
+  createdAt           DateTime      @default(now()) @map("created_at")
+  updatedAt           DateTime      @updatedAt @map("updated_at")
+
+  journeyExposure   JourneyExposure?   @relation(fields: [journeyExposureId], references: [id])
+  journeyResolution JourneyResolution? @relation(fields: [journeyResolutionId], references: [id])
+  journeyChallenge  JourneyChallenge?  @relation(fields: [journeyChallengeId], references: [id])
+
+  @@map("custom_erc_reviews")
 }
 
 model VmSidenote {

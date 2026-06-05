@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ErcStatus, NotificationEventType } from '@prisma/client';
 import { ErcRepository, ErcType } from './erc.repository';
+import { CustomErcReviewsRepository } from './custom-erc-reviews.repository';
 import { JourneysRepository } from '../journeys/journeys.repository';
 import { NotificationsRepository } from '../notifications/notifications.repository';
 import { hasPermission } from '../../common/permissions/has-permission';
@@ -9,6 +10,7 @@ import {
   AccessDeniedException,
   ErcAlreadySelectedException,
   InvalidErcStatusTransitionException,
+  CustomErcAlreadyPendingException,
 } from '../../common/exceptions/app.exceptions';
 import type { SessionUser } from '../auth/types/auth.types';
 
@@ -30,11 +32,12 @@ const STATUS_MAP: Record<'in_progress' | 'submitted' | 'approved' | 'revisit', E
 export class ErcService {
   constructor(
     private readonly ercRepository: ErcRepository,
+    private readonly customErcReviewsRepository: CustomErcReviewsRepository,
     private readonly journeysRepository: JourneysRepository,
     private readonly notificationsRepository: NotificationsRepository,
   ) {}
 
-  private async getJourneyAndCheckPermission(user: SessionUser, journeyId: string, action: 'journey.view' | 'erc.select' | 'erc.suggest' | 'erc.approve_closure' | 'erc.revisit' | 'erc.deactivate' | 'erc.remove') {
+  private async getJourneyAndCheckPermission(user: SessionUser, journeyId: string, action: 'journey.view' | 'erc.select' | 'erc.suggest' | 'erc.approve_closure' | 'erc.revisit' | 'erc.deactivate' | 'erc.remove' | 'custom_erc.create' | 'custom_erc.submit_for_review') {
     const journey = await this.journeysRepository.findById(journeyId);
     if (!journey) throw new EntityNotFoundException('Journey', journeyId);
     const slim = this.journeysRepository.buildJourneySlim(journey);
@@ -187,5 +190,68 @@ export class ErcService {
     const sidenote = await this.ercRepository.acknowledgeSidenote(itemId, ercType);
     if (!sidenote) throw new EntityNotFoundException('VmSidenote', itemId);
     return sidenote;
+  }
+
+  async createCustomItem(
+    user: SessionUser,
+    journeyId: string,
+    data: { titleEn: string; descriptionEn?: string; tier?: import('@prisma/client').ExposureTier; durationWeeks?: number; frequencyPerWeek?: number; frequencyLabel?: string; durationDays?: number },
+    ercType: ErcType,
+  ) {
+    await this.getJourneyAndCheckPermission(user, journeyId, 'custom_erc.create');
+    return this.ercRepository.createCustomItem(journeyId, user.id, data, ercType);
+  }
+
+  async editCustomItem(
+    user: SessionUser,
+    journeyId: string,
+    itemId: string,
+    data: { titleEn?: string; descriptionEn?: string; tier?: import('@prisma/client').ExposureTier; durationWeeks?: number; frequencyPerWeek?: number; frequencyLabel?: string; durationDays?: number },
+    ercType: ErcType,
+  ) {
+    const journey = await this.journeysRepository.findById(journeyId);
+    if (!journey) throw new EntityNotFoundException('Journey', journeyId);
+    const slim = this.journeysRepository.buildJourneySlim(journey);
+
+    const item = await this.ercRepository.findById(itemId, ercType);
+    if (!item || item.journeyId !== journeyId) throw new EntityNotFoundException('ERC item', itemId);
+
+    if (!item.isCustom) throw new AccessDeniedException();
+
+    if (!hasPermission(user, { type: 'erc', journey: slim, erc: { journeyId, createdById: item.createdById ?? undefined, status: item.status } }, 'custom_erc.edit')) {
+      throw new AccessDeniedException();
+    }
+
+    return this.ercRepository.updateCustomItem(itemId, data, ercType);
+  }
+
+  async submitForReview(user: SessionUser, journeyId: string, itemId: string, ercType: ErcType) {
+    const { journey } = await this.getJourneyAndCheckPermission(user, journeyId, 'custom_erc.submit_for_review');
+
+    const item = await this.ercRepository.findById(itemId, ercType);
+    if (!item || item.journeyId !== journeyId) throw new EntityNotFoundException('ERC item', itemId);
+
+    if (!item.isCustom) throw new AccessDeniedException();
+    if (item.reviewStatus !== null) throw new CustomErcAlreadyPendingException();
+
+    await this.customErcReviewsRepository.create({
+      entityType: this.ercRepository.ercTypeToEntityType(ercType),
+      submittedById: user.id,
+      journeyExposureId: ercType === 'exposure' ? itemId : undefined,
+      journeyResolutionId: ercType === 'resolution' ? itemId : undefined,
+      journeyChallengeId: ercType === 'challenge' ? itemId : undefined,
+    });
+
+    const updated = await this.ercRepository.setReviewStatus(itemId, 'pending', ercType);
+
+    await this.notificationsRepository.create(
+      journey.vratarthiId,
+      user.id,
+      NotificationEventType.CUSTOM_ERC_REVIEW_REQUESTED,
+      ercType,
+      itemId,
+    );
+
+    return updated;
   }
 }

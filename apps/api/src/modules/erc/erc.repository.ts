@@ -33,6 +33,8 @@ export type JourneyErcItem = {
   id: string; journeyId: string; status: ErcStatus; isDeactivated: boolean; isCustom: boolean;
   titleEn: string; descriptionEn: string | null;
   startedAt: Date | null; submittedAt: Date | null; approvedAt: Date | null;
+  createdById: string | null;
+  reviewStatus: string | null;
   poolExposureId?: string | null; poolResolutionId?: string | null; poolChallengeId?: string | null;
   // Resolution-specific
   durationWeeks?: number | null; frequencyPerWeek?: number | null; frequencyLabel?: string | null;
@@ -111,7 +113,7 @@ export class ErcRepository {
   // ─── Journey item queries ──────────────────────────────────────────────────
 
   async listJourneyItems(journeyId: string, ercType: ErcType): Promise<JourneyErcItem[]> {
-    const common = { journeyId: true, status: true, isDeactivated: true, isCustom: true, titleEn: true, descriptionEn: true, startedAt: true, submittedAt: true, approvedAt: true };
+    const common = { journeyId: true, status: true, isDeactivated: true, isCustom: true, titleEn: true, descriptionEn: true, startedAt: true, submittedAt: true, approvedAt: true, createdById: true, reviewStatus: true };
     if (ercType === 'exposure') {
       const items = await this.prisma.journeyExposure.findMany({
         where: { journeyId },
@@ -137,7 +139,7 @@ export class ErcRepository {
   }
 
   async findById(id: string, ercType: ErcType): Promise<JourneyErcItem | null> {
-    const common = { journeyId: true, status: true, isDeactivated: true, isCustom: true, titleEn: true, descriptionEn: true, startedAt: true, submittedAt: true, approvedAt: true };
+    const common = { journeyId: true, status: true, isDeactivated: true, isCustom: true, titleEn: true, descriptionEn: true, startedAt: true, submittedAt: true, approvedAt: true, createdById: true, reviewStatus: true };
     if (ercType === 'exposure') {
       const item = await this.prisma.journeyExposure.findUnique({ where: { id }, select: { id: true, ...common, tier: true, poolExposureId: true, ...this.sidenoteRelationSelect } });
       return item ? { ...item, vmSidenote: item.vmSidenote ?? null } : null;
@@ -166,7 +168,7 @@ export class ErcRepository {
       if (!pool) throw new EntityNotFoundException('Exposure', poolItemId);
       const item = await this.prisma.journeyExposure.create({
         data: { journeyId, poolExposureId: poolItemId, titleEn: pool.titleEn, descriptionEn: pool.descriptionEn, tier: pool.tier },
-        select: { id: true, journeyId: true, status: true, isDeactivated: true, isCustom: true, titleEn: true, descriptionEn: true, tier: true, startedAt: true, submittedAt: true, approvedAt: true, poolExposureId: true },
+        select: { id: true, journeyId: true, status: true, isDeactivated: true, isCustom: true, titleEn: true, descriptionEn: true, tier: true, startedAt: true, submittedAt: true, approvedAt: true, createdById: true, reviewStatus: true, poolExposureId: true },
       });
       return item;
     }
@@ -175,7 +177,7 @@ export class ErcRepository {
       if (!pool) throw new EntityNotFoundException('Resolution', poolItemId);
       const item = await this.prisma.journeyResolution.create({
         data: { journeyId, poolResolutionId: poolItemId, titleEn: pool.titleEn, descriptionEn: pool.descriptionEn, durationWeeks: pool.durationWeeks, frequencyPerWeek: pool.frequencyPerWeek, frequencyLabel: pool.frequencyLabel },
-        select: { id: true, journeyId: true, status: true, isDeactivated: true, isCustom: true, titleEn: true, descriptionEn: true, durationWeeks: true, frequencyPerWeek: true, frequencyLabel: true, startedAt: true, submittedAt: true, approvedAt: true, poolResolutionId: true },
+        select: { id: true, journeyId: true, status: true, isDeactivated: true, isCustom: true, titleEn: true, descriptionEn: true, durationWeeks: true, frequencyPerWeek: true, frequencyLabel: true, startedAt: true, submittedAt: true, approvedAt: true, createdById: true, reviewStatus: true, poolResolutionId: true },
       });
       return item;
     }
@@ -183,7 +185,7 @@ export class ErcRepository {
     if (!pool) throw new EntityNotFoundException('Challenge', poolItemId);
     const item = await this.prisma.journeyChallenge.create({
       data: { journeyId, poolChallengeId: poolItemId, titleEn: pool.titleEn, descriptionEn: pool.descriptionEn, durationDays: pool.durationDays },
-      select: { id: true, journeyId: true, status: true, isDeactivated: true, isCustom: true, titleEn: true, descriptionEn: true, durationDays: true, startedAt: true, submittedAt: true, approvedAt: true, poolChallengeId: true },
+      select: { id: true, journeyId: true, status: true, isDeactivated: true, isCustom: true, titleEn: true, descriptionEn: true, durationDays: true, startedAt: true, submittedAt: true, approvedAt: true, createdById: true, reviewStatus: true, poolChallengeId: true },
     });
     return item;
   }
@@ -195,7 +197,7 @@ export class ErcRepository {
     if (status === ErcStatus.SUBMITTED) timestamps.submittedAt = now;
     if (status === ErcStatus.APPROVED) timestamps.approvedAt = now;
 
-    const common = { journeyId: true, status: true, isDeactivated: true, isCustom: true, titleEn: true, descriptionEn: true, startedAt: true, submittedAt: true, approvedAt: true };
+    const common = { journeyId: true, status: true, isDeactivated: true, isCustom: true, titleEn: true, descriptionEn: true, startedAt: true, submittedAt: true, approvedAt: true, createdById: true, reviewStatus: true };
     if (ercType === 'exposure') {
       const item = await this.prisma.journeyExposure.update({ where: { id }, data: { status, ...timestamps }, select: { id: true, ...common, tier: true, poolExposureId: true } });
       return item;
@@ -209,7 +211,7 @@ export class ErcRepository {
   }
 
   async setDeactivated(id: string, isDeactivated: boolean, ercType: ErcType): Promise<JourneyErcItem> {
-    const common = { journeyId: true, status: true, isDeactivated: true, isCustom: true, titleEn: true, descriptionEn: true, startedAt: true, submittedAt: true, approvedAt: true };
+    const common = { journeyId: true, status: true, isDeactivated: true, isCustom: true, titleEn: true, descriptionEn: true, startedAt: true, submittedAt: true, approvedAt: true, createdById: true, reviewStatus: true };
     if (ercType === 'exposure') return this.prisma.journeyExposure.update({ where: { id }, data: { isDeactivated }, select: { id: true, ...common, tier: true, poolExposureId: true } });
     if (ercType === 'resolution') return this.prisma.journeyResolution.update({ where: { id }, data: { isDeactivated }, select: { id: true, ...common, durationWeeks: true, frequencyPerWeek: true, frequencyLabel: true, poolResolutionId: true } });
     return this.prisma.journeyChallenge.update({ where: { id }, data: { isDeactivated }, select: { id: true, ...common, durationDays: true, poolChallengeId: true } });
@@ -221,12 +223,77 @@ export class ErcRepository {
     await this.prisma.journeyChallenge.delete({ where: { id } });
   }
 
+  // ─── Custom ERC CRUD ──────────────────────────────────────────────────────
+
+  async createCustomItem(
+    journeyId: string,
+    createdById: string,
+    data: { titleEn: string; descriptionEn?: string; tier?: ExposureTier; durationWeeks?: number; frequencyPerWeek?: number; frequencyLabel?: string; durationDays?: number },
+    ercType: ErcType,
+  ): Promise<JourneyErcItem> {
+    const common = { journeyId: true, status: true, isDeactivated: true, isCustom: true, titleEn: true, descriptionEn: true, startedAt: true, submittedAt: true, approvedAt: true, createdById: true, reviewStatus: true };
+    if (ercType === 'exposure') {
+      return this.prisma.journeyExposure.create({
+        data: { journeyId, createdById, isCustom: true, titleEn: data.titleEn, descriptionEn: data.descriptionEn, tier: data.tier! },
+        select: { id: true, ...common, tier: true, poolExposureId: true },
+      });
+    }
+    if (ercType === 'resolution') {
+      return this.prisma.journeyResolution.create({
+        data: { journeyId, createdById, isCustom: true, titleEn: data.titleEn, descriptionEn: data.descriptionEn, durationWeeks: data.durationWeeks, frequencyPerWeek: data.frequencyPerWeek, frequencyLabel: data.frequencyLabel },
+        select: { id: true, ...common, durationWeeks: true, frequencyPerWeek: true, frequencyLabel: true, poolResolutionId: true },
+      });
+    }
+    return this.prisma.journeyChallenge.create({
+      data: { journeyId, createdById, isCustom: true, titleEn: data.titleEn, descriptionEn: data.descriptionEn, durationDays: data.durationDays },
+      select: { id: true, ...common, durationDays: true, poolChallengeId: true },
+    });
+  }
+
+  async updateCustomItem(
+    id: string,
+    data: { titleEn?: string; descriptionEn?: string; tier?: ExposureTier; durationWeeks?: number; frequencyPerWeek?: number; frequencyLabel?: string; durationDays?: number },
+    ercType: ErcType,
+  ): Promise<JourneyErcItem> {
+    const common = { journeyId: true, status: true, isDeactivated: true, isCustom: true, titleEn: true, descriptionEn: true, startedAt: true, submittedAt: true, approvedAt: true, createdById: true, reviewStatus: true };
+    if (ercType === 'exposure') {
+      return this.prisma.journeyExposure.update({
+        where: { id },
+        data: { titleEn: data.titleEn, descriptionEn: data.descriptionEn, tier: data.tier },
+        select: { id: true, ...common, tier: true, poolExposureId: true },
+      });
+    }
+    if (ercType === 'resolution') {
+      return this.prisma.journeyResolution.update({
+        where: { id },
+        data: { titleEn: data.titleEn, descriptionEn: data.descriptionEn, durationWeeks: data.durationWeeks, frequencyPerWeek: data.frequencyPerWeek, frequencyLabel: data.frequencyLabel },
+        select: { id: true, ...common, durationWeeks: true, frequencyPerWeek: true, frequencyLabel: true, poolResolutionId: true },
+      });
+    }
+    return this.prisma.journeyChallenge.update({
+      where: { id },
+      data: { titleEn: data.titleEn, descriptionEn: data.descriptionEn, durationDays: data.durationDays },
+      select: { id: true, ...common, durationDays: true, poolChallengeId: true },
+    });
+  }
+
+  async setReviewStatus(id: string, reviewStatus: string, ercType: ErcType): Promise<JourneyErcItem> {
+    const common = { journeyId: true, status: true, isDeactivated: true, isCustom: true, titleEn: true, descriptionEn: true, startedAt: true, submittedAt: true, approvedAt: true, createdById: true, reviewStatus: true };
+    if (ercType === 'exposure') {
+      return this.prisma.journeyExposure.update({ where: { id }, data: { reviewStatus }, select: { id: true, ...common, tier: true, poolExposureId: true } });
+    }
+    if (ercType === 'resolution') {
+      return this.prisma.journeyResolution.update({ where: { id }, data: { reviewStatus }, select: { id: true, ...common, durationWeeks: true, frequencyPerWeek: true, frequencyLabel: true, poolResolutionId: true } });
+    }
+    return this.prisma.journeyChallenge.update({ where: { id }, data: { reviewStatus }, select: { id: true, ...common, durationDays: true, poolChallengeId: true } });
+  }
+
   // ─── VM sidenote CRUD ──────────────────────────────────────────────────────
 
   private sidenoteSelect = { id: true, vmId: true, text: true, acknowledgedAt: true, createdAt: true } as const;
   private sidenoteRelationSelect = { vmSidenote: { select: { id: true, vmId: true, text: true, acknowledgedAt: true, createdAt: true }, where: { revokedAt: null } } } as const;
 
-  private ercTypeToEntityType(ercType: ErcType): ErcEntityType {
+  ercTypeToEntityType(ercType: ErcType): ErcEntityType {
     if (ercType === 'exposure') return ErcEntityType.EXPOSURE;
     if (ercType === 'resolution') return ErcEntityType.RESOLUTION;
     return ErcEntityType.CHALLENGE;
