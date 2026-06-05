@@ -95,6 +95,10 @@ function makeConfigService() {
   return { get: vi.fn().mockReturnValue('http://localhost:3000') };
 }
 
+function makeNotificationsService() {
+  return { create: vi.fn().mockResolvedValue(undefined) };
+}
+
 function makeService(
   invitationsRepo = makeInvitationsRepo(),
   vmRelSvc = makeVmRelationshipsService(),
@@ -108,6 +112,7 @@ function makeService(
   s['usersService'] = usersSvc;
   s['journeysRepository'] = journeysRepo;
   s['emailService'] = makeEmailService();
+  s['notificationsService'] = makeNotificationsService();
   s['configService'] = makeConfigService();
   s['frontendUrl'] = 'http://localhost:3000';
   return svc;

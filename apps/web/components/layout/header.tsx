@@ -6,6 +6,7 @@ import { Logo } from '@/components/auth/logo';
 import { useLogout } from '@/hooks/use-auth';
 import { LanguageToggle } from '@/components/shared/language-toggle';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
+import { NotificationBell } from '@/components/layout/notification-bell';
 import type { User } from '@/lib/api/auth';
 
 export function Header({ user }: { user: User }) {
@@ -28,6 +29,7 @@ export function Header({ user }: { user: User }) {
         <div className="flex items-center gap-4">
           <ThemeToggle />
           <LanguageToggle />
+          <NotificationBell />
           <span className="text-sm text-muted">
             {user.displayName ?? user.email}
           </span>

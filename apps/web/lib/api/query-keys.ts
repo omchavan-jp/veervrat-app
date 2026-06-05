@@ -24,4 +24,8 @@ export const queryKeys = {
     list: (journeyId: string, resolutionId: string) =>
       ['journeys', journeyId, 'resolutions', resolutionId, 'checkins'] as const,
   },
+  notifications: {
+    list: ['notifications', 'list'] as const,
+    unreadCount: ['notifications', 'unread-count'] as const,
+  },
 } as const;

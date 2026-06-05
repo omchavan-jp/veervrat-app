@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { InvitationStatus, InvitationType } from '@prisma/client';
+import { InvitationStatus, InvitationType, NotificationEventType } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
 import { createElement } from 'react';
 import { InvitationsRepository } from './invitations.repository';
@@ -7,6 +7,7 @@ import { VmRelationshipsService } from '../vm-relationships/vm-relationships.ser
 import { UsersService } from '../users/users.service';
 import { JourneysRepository } from '../journeys/journeys.repository';
 import { EmailService } from '../email/email.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { hasPermission } from '../../common/permissions/has-permission';
 import {
   EntityNotFoundException,
@@ -32,6 +33,7 @@ export class InvitationsService {
     private readonly usersService: UsersService,
     private readonly journeysRepository: JourneysRepository,
     private readonly emailService: EmailService,
+    private readonly notificationsService: NotificationsService,
     private readonly configService: ConfigService,
   ) {
     this.frontendUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
@@ -77,6 +79,16 @@ export class InvitationsService {
     );
     this.emailService.sendNotification(dto.inviteeEmail, getVmInviteSubject(lang), html, text);
 
+    if (invitee) {
+      void this.notificationsService.create(
+        invitee.id,
+        user.id,
+        NotificationEventType.VM_INVITATION_RECEIVED,
+        'invitation',
+        invitation.id,
+      );
+    }
+
     return invitation;
   }
 
@@ -103,6 +115,14 @@ export class InvitationsService {
       await this.vmRelationshipsService.createFromJourneyInvite(invitation.scopeId, user.id, now);
     }
 
+    void this.notificationsService.create(
+      invitation.inviterId,
+      user.id,
+      NotificationEventType.VM_INVITATION_ACCEPTED,
+      'invitation',
+      invitation.id,
+    );
+
     return accepted;
   }
 
@@ -126,6 +146,14 @@ export class InvitationsService {
       );
       this.emailService.sendNotification(inviter.email, getDeclinedSubject(lang), html, text);
     }
+
+    void this.notificationsService.create(
+      invitation.inviterId,
+      user.id,
+      NotificationEventType.VM_INVITATION_DECLINED,
+      'invitation',
+      invitation.id,
+    );
 
     return updated;
   }

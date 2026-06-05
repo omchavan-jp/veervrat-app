@@ -7,9 +7,10 @@ import { EmailModule } from '../email/email.module';
 import { JourneysModule } from '../journeys/journeys.module';
 import { UsersModule } from '../users/users.module';
 import { VmRelationshipsModule } from '../vm-relationships/vm-relationships.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [AuthModule, EmailModule, JourneysModule, UsersModule, VmRelationshipsModule],
+  imports: [AuthModule, EmailModule, JourneysModule, UsersModule, VmRelationshipsModule, NotificationsModule],
   controllers: [InvitationsController],
   providers: [InvitationsService, InvitationsRepository],
   exports: [InvitationsService],

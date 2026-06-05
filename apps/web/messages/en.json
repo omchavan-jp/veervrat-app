@@ -280,6 +280,12 @@
       "startJourney": "Start journey"
     }
   },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "empty": "No notifications yet",
+    "unread": "unread"
+  },
   "journey": {
     "nav": "Journeys",
     "list": {
