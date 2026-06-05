@@ -5,6 +5,7 @@ import {
 import { ErcService } from './erc.service';
 import { SelectErcDto } from './dto/select-erc.dto';
 import { UpdateErcStatusDto } from './dto/update-erc-status.dto';
+import { SuggestErcDto } from './dto/suggest-erc.dto';
 import { SessionGuard } from '../auth/guards/session.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { SessionUser } from '../auth/types/auth.types';
@@ -37,6 +38,18 @@ export class ExposuresController {
   @Post(':itemId/revisit')
   @HttpCode(HttpStatus.OK)
   revisit(@Param('journeyId') j: string, @Param('itemId') i: string, @CurrentUser() u: SessionUser) { return this.ercService.revisitItem(u, j, i, 'exposure'); }
+
+  @Post(':itemId/suggest')
+  @HttpCode(HttpStatus.OK)
+  suggest(@Param('journeyId') j: string, @Param('itemId') i: string, @Body() dto: SuggestErcDto, @CurrentUser() u: SessionUser) { return this.ercService.suggestItem(u, j, i, dto.text, 'exposure'); }
+
+  @Delete(':itemId/suggest')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async unsuggest(@Param('journeyId') j: string, @Param('itemId') i: string, @CurrentUser() u: SessionUser) { await this.ercService.unsuggestItem(u, j, i, 'exposure'); }
+
+  @Post(':itemId/sidenote/acknowledge')
+  @HttpCode(HttpStatus.OK)
+  acknowledgeSidenote(@Param('journeyId') j: string, @Param('itemId') i: string, @CurrentUser() u: SessionUser) { return this.ercService.acknowledgeSidenoteItem(u, j, i, 'exposure'); }
 
   @Post(':itemId/deactivate')
   @HttpCode(HttpStatus.OK)
@@ -80,6 +93,18 @@ export class ResolutionsController {
   @HttpCode(HttpStatus.OK)
   revisit(@Param('journeyId') j: string, @Param('itemId') i: string, @CurrentUser() u: SessionUser) { return this.ercService.revisitItem(u, j, i, 'resolution'); }
 
+  @Post(':itemId/suggest')
+  @HttpCode(HttpStatus.OK)
+  suggest(@Param('journeyId') j: string, @Param('itemId') i: string, @Body() dto: SuggestErcDto, @CurrentUser() u: SessionUser) { return this.ercService.suggestItem(u, j, i, dto.text, 'resolution'); }
+
+  @Delete(':itemId/suggest')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async unsuggest(@Param('journeyId') j: string, @Param('itemId') i: string, @CurrentUser() u: SessionUser) { await this.ercService.unsuggestItem(u, j, i, 'resolution'); }
+
+  @Post(':itemId/sidenote/acknowledge')
+  @HttpCode(HttpStatus.OK)
+  acknowledgeSidenote(@Param('journeyId') j: string, @Param('itemId') i: string, @CurrentUser() u: SessionUser) { return this.ercService.acknowledgeSidenoteItem(u, j, i, 'resolution'); }
+
   @Post(':itemId/deactivate')
   @HttpCode(HttpStatus.OK)
   deactivate(@Param('journeyId') j: string, @Param('itemId') i: string, @CurrentUser() u: SessionUser) { return this.ercService.deactivate(u, j, i, 'resolution'); }
@@ -121,6 +146,18 @@ export class ChallengesController {
   @Post(':itemId/revisit')
   @HttpCode(HttpStatus.OK)
   revisit(@Param('journeyId') j: string, @Param('itemId') i: string, @CurrentUser() u: SessionUser) { return this.ercService.revisitItem(u, j, i, 'challenge'); }
+
+  @Post(':itemId/suggest')
+  @HttpCode(HttpStatus.OK)
+  suggest(@Param('journeyId') j: string, @Param('itemId') i: string, @Body() dto: SuggestErcDto, @CurrentUser() u: SessionUser) { return this.ercService.suggestItem(u, j, i, dto.text, 'challenge'); }
+
+  @Delete(':itemId/suggest')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async unsuggest(@Param('journeyId') j: string, @Param('itemId') i: string, @CurrentUser() u: SessionUser) { await this.ercService.unsuggestItem(u, j, i, 'challenge'); }
+
+  @Post(':itemId/sidenote/acknowledge')
+  @HttpCode(HttpStatus.OK)
+  acknowledgeSidenote(@Param('journeyId') j: string, @Param('itemId') i: string, @CurrentUser() u: SessionUser) { return this.ercService.acknowledgeSidenoteItem(u, j, i, 'challenge'); }
 
   @Post(':itemId/deactivate')
   @HttpCode(HttpStatus.OK)

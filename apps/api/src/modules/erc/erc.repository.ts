@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ErcStatus, ExposureTier } from '@prisma/client';
+import { ErcEntityType, ErcStatus, ExposureTier } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EntityNotFoundException } from '../../common/exceptions/app.exceptions';
 
@@ -21,6 +21,14 @@ export type PoolChallenge = {
   weaknessTags: { weaknessId: string }[];
 };
 
+export type VmSidenoteSlim = {
+  id: string;
+  vmId: string;
+  text: string;
+  acknowledgedAt: Date | null;
+  createdAt: Date;
+};
+
 export type JourneyErcItem = {
   id: string; journeyId: string; status: ErcStatus; isDeactivated: boolean; isCustom: boolean;
   titleEn: string; descriptionEn: string | null;
@@ -32,6 +40,8 @@ export type JourneyErcItem = {
   durationDays?: number | null;
   // Exposure-specific
   tier?: ExposureTier;
+  // VM sidenote (active only — revokedAt IS NULL)
+  vmSidenote?: VmSidenoteSlim | null;
 };
 
 @Injectable()
@@ -105,39 +115,39 @@ export class ErcRepository {
     if (ercType === 'exposure') {
       const items = await this.prisma.journeyExposure.findMany({
         where: { journeyId },
-        select: { id: true, ...common, tier: true, poolExposureId: true },
+        select: { id: true, ...common, tier: true, poolExposureId: true, ...this.sidenoteRelationSelect },
         orderBy: { createdAt: 'asc' },
       });
-      return items.map((i) => ({ ...i, journeyId }));
+      return items.map((i) => ({ ...i, journeyId, vmSidenote: i.vmSidenote ?? null }));
     }
     if (ercType === 'resolution') {
       const items = await this.prisma.journeyResolution.findMany({
         where: { journeyId },
-        select: { id: true, ...common, durationWeeks: true, frequencyPerWeek: true, frequencyLabel: true, poolResolutionId: true },
+        select: { id: true, ...common, durationWeeks: true, frequencyPerWeek: true, frequencyLabel: true, poolResolutionId: true, ...this.sidenoteRelationSelect },
         orderBy: { createdAt: 'asc' },
       });
-      return items.map((i) => ({ ...i, journeyId }));
+      return items.map((i) => ({ ...i, journeyId, vmSidenote: i.vmSidenote ?? null }));
     }
     const items = await this.prisma.journeyChallenge.findMany({
       where: { journeyId },
-      select: { id: true, ...common, durationDays: true, poolChallengeId: true },
+      select: { id: true, ...common, durationDays: true, poolChallengeId: true, ...this.sidenoteRelationSelect },
       orderBy: { createdAt: 'asc' },
     });
-    return items.map((i) => ({ ...i, journeyId }));
+    return items.map((i) => ({ ...i, journeyId, vmSidenote: i.vmSidenote ?? null }));
   }
 
   async findById(id: string, ercType: ErcType): Promise<JourneyErcItem | null> {
     const common = { journeyId: true, status: true, isDeactivated: true, isCustom: true, titleEn: true, descriptionEn: true, startedAt: true, submittedAt: true, approvedAt: true };
     if (ercType === 'exposure') {
-      const item = await this.prisma.journeyExposure.findUnique({ where: { id }, select: { id: true, ...common, tier: true, poolExposureId: true } });
-      return item ? { ...item } : null;
+      const item = await this.prisma.journeyExposure.findUnique({ where: { id }, select: { id: true, ...common, tier: true, poolExposureId: true, ...this.sidenoteRelationSelect } });
+      return item ? { ...item, vmSidenote: item.vmSidenote ?? null } : null;
     }
     if (ercType === 'resolution') {
-      const item = await this.prisma.journeyResolution.findUnique({ where: { id }, select: { id: true, ...common, durationWeeks: true, frequencyPerWeek: true, frequencyLabel: true, poolResolutionId: true } });
-      return item ? { ...item } : null;
+      const item = await this.prisma.journeyResolution.findUnique({ where: { id }, select: { id: true, ...common, durationWeeks: true, frequencyPerWeek: true, frequencyLabel: true, poolResolutionId: true, ...this.sidenoteRelationSelect } });
+      return item ? { ...item, vmSidenote: item.vmSidenote ?? null } : null;
     }
-    const item = await this.prisma.journeyChallenge.findUnique({ where: { id }, select: { id: true, ...common, durationDays: true, poolChallengeId: true } });
-    return item ? { ...item } : null;
+    const item = await this.prisma.journeyChallenge.findUnique({ where: { id }, select: { id: true, ...common, durationDays: true, poolChallengeId: true, ...this.sidenoteRelationSelect } });
+    return item ? { ...item, vmSidenote: item.vmSidenote ?? null } : null;
   }
 
   async findByPoolItemId(journeyId: string, poolItemId: string, ercType: ErcType): Promise<{ id: string } | null> {
@@ -209,5 +219,59 @@ export class ErcRepository {
     if (ercType === 'exposure') { await this.prisma.journeyExposure.delete({ where: { id } }); return; }
     if (ercType === 'resolution') { await this.prisma.journeyResolution.delete({ where: { id } }); return; }
     await this.prisma.journeyChallenge.delete({ where: { id } });
+  }
+
+  // ─── VM sidenote CRUD ──────────────────────────────────────────────────────
+
+  private sidenoteSelect = { id: true, vmId: true, text: true, acknowledgedAt: true, createdAt: true } as const;
+  private sidenoteRelationSelect = { vmSidenote: { select: { id: true, vmId: true, text: true, acknowledgedAt: true, createdAt: true }, where: { revokedAt: null } } } as const;
+
+  private ercTypeToEntityType(ercType: ErcType): ErcEntityType {
+    if (ercType === 'exposure') return ErcEntityType.EXPOSURE;
+    if (ercType === 'resolution') return ErcEntityType.RESOLUTION;
+    return ErcEntityType.CHALLENGE;
+  }
+
+  private itemFk(itemId: string, ercType: ErcType) {
+    if (ercType === 'exposure') return { journeyExposureId: itemId };
+    if (ercType === 'resolution') return { journeyResolutionId: itemId };
+    return { journeyChallengeId: itemId };
+  }
+
+  async upsertSidenote(itemId: string, vmId: string, text: string, ercType: ErcType): Promise<VmSidenoteSlim> {
+    const fk = this.itemFk(itemId, ercType);
+    const entityType = this.ercTypeToEntityType(ercType);
+    return this.prisma.vmSidenote.upsert({
+      where: fk,
+      update: { vmId, text, revokedAt: null, acknowledgedAt: null },
+      create: { vmId, entityType, text, ...fk },
+      select: this.sidenoteSelect,
+    });
+  }
+
+  async revokeSidenote(itemId: string, ercType: ErcType): Promise<VmSidenoteSlim | null> {
+    const existing = await this.prisma.vmSidenote.findFirst({
+      where: { ...this.itemFk(itemId, ercType), revokedAt: null },
+      select: { id: true },
+    });
+    if (!existing) return null;
+    return this.prisma.vmSidenote.update({
+      where: { id: existing.id },
+      data: { revokedAt: new Date(), acknowledgedAt: null },
+      select: this.sidenoteSelect,
+    });
+  }
+
+  async acknowledgeSidenote(itemId: string, ercType: ErcType): Promise<VmSidenoteSlim | null> {
+    const existing = await this.prisma.vmSidenote.findFirst({
+      where: { ...this.itemFk(itemId, ercType), revokedAt: null },
+      select: { id: true },
+    });
+    if (!existing) return null;
+    return this.prisma.vmSidenote.update({
+      where: { id: existing.id },
+      data: { acknowledgedAt: new Date() },
+      select: this.sidenoteSelect,
+    });
   }
 }

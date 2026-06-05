@@ -47,6 +47,8 @@ const makeItem = (status: ErcStatus, isDeactivated = false) => ({
   tier: 'LOCAL' as const,
 });
 
+const SIDENOTE = { id: 'sn-1', vmId: VM.id, text: 'Try this', acknowledgedAt: null, createdAt: new Date() };
+
 function makeRepo(overrides: Record<string, unknown> = {}) {
   return {
     getPool: vi.fn().mockResolvedValue([]),
@@ -57,6 +59,9 @@ function makeRepo(overrides: Record<string, unknown> = {}) {
     updateStatus: vi.fn().mockImplementation((_id, status) => makeItem(status)),
     setDeactivated: vi.fn().mockImplementation((_id, v) => makeItem(ErcStatus.NOT_STARTED, v)),
     remove: vi.fn().mockResolvedValue(undefined),
+    upsertSidenote: vi.fn().mockResolvedValue(SIDENOTE),
+    revokeSidenote: vi.fn().mockResolvedValue(SIDENOTE),
+    acknowledgeSidenote: vi.fn().mockResolvedValue({ ...SIDENOTE, acknowledgedAt: new Date() }),
     ...overrides,
   };
 }
@@ -246,5 +251,101 @@ describe('ErcService — revisitItem', () => {
     const service = makeServiceWithVm(ercRepo);
     await expect(service.revisitItem(VM, JOURNEY_ID, ITEM_ID, 'exposure'))
       .rejects.toThrow(InvalidErcStatusTransitionException);
+  });
+});
+
+// ─── suggestItem ──────────────────────────────────────────────────────────────
+
+describe('ErcService — suggestItem', () => {
+  it('AUTH MATRIX POSITIVE: assigned VM can suggest → creates sidenote + notification to VA', async () => {
+    const ercRepo = makeRepo();
+    const notifRepo = makeNotificationsRepo();
+    const service = makeServiceWithVm(ercRepo, notifRepo);
+    const result = await service.suggestItem(VM, JOURNEY_ID, ITEM_ID, 'Try this', 'exposure');
+    expect(ercRepo.upsertSidenote).toHaveBeenCalledWith(ITEM_ID, VM.id, 'Try this', 'exposure');
+    expect(notifRepo.create).toHaveBeenCalledWith(VA.id, VM.id, 'VM_SUGGESTION_NEW', 'exposure', ITEM_ID);
+    expect(result.id).toBe(SIDENOTE.id);
+  });
+
+  it('AUTH MATRIX NEGATIVE: VA cannot suggest → 403', async () => {
+    const service = makeServiceWithVm();
+    await expect(service.suggestItem(VA, JOURNEY_ID, ITEM_ID, 'Try this', 'exposure'))
+      .rejects.toThrow(AccessDeniedException);
+  });
+
+  it('AUTH MATRIX NEGATIVE: non-assigned VM cannot suggest → 403', async () => {
+    const service = makeServiceWithVm();
+    await expect(service.suggestItem(OTHER_VM, JOURNEY_ID, ITEM_ID, 'Try this', 'exposure'))
+      .rejects.toThrow(AccessDeniedException);
+  });
+
+  it('NEGATIVE: ERC item not found → 404 EntityNotFoundException', async () => {
+    const ercRepo = makeRepo({ findById: vi.fn().mockResolvedValue(null) });
+    const service = makeServiceWithVm(ercRepo);
+    await expect(service.suggestItem(VM, JOURNEY_ID, ITEM_ID, 'Try this', 'exposure'))
+      .rejects.toThrow(EntityNotFoundException);
+  });
+});
+
+// ─── unsuggestItem ────────────────────────────────────────────────────────────
+
+describe('ErcService — unsuggestItem', () => {
+  it('AUTH MATRIX POSITIVE: assigned VM revokes sidenote → notification to VA', async () => {
+    const ercRepo = makeRepo();
+    const notifRepo = makeNotificationsRepo();
+    const service = makeServiceWithVm(ercRepo, notifRepo);
+    await service.unsuggestItem(VM, JOURNEY_ID, ITEM_ID, 'exposure');
+    expect(ercRepo.revokeSidenote).toHaveBeenCalledWith(ITEM_ID, 'exposure');
+    expect(notifRepo.create).toHaveBeenCalledWith(VA.id, VM.id, 'VM_SUGGESTION_DISMISSED', 'exposure', ITEM_ID);
+  });
+
+  it('AUTH MATRIX NEGATIVE: VA cannot unsuggest → 403', async () => {
+    const service = makeServiceWithVm();
+    await expect(service.unsuggestItem(VA, JOURNEY_ID, ITEM_ID, 'exposure'))
+      .rejects.toThrow(AccessDeniedException);
+  });
+
+  it('AUTH MATRIX NEGATIVE: non-assigned VM cannot unsuggest → 403', async () => {
+    const service = makeServiceWithVm();
+    await expect(service.unsuggestItem(OTHER_VM, JOURNEY_ID, ITEM_ID, 'exposure'))
+      .rejects.toThrow(AccessDeniedException);
+  });
+
+  it('NEGATIVE: no active sidenote exists → 404 EntityNotFoundException', async () => {
+    const ercRepo = makeRepo({ revokeSidenote: vi.fn().mockResolvedValue(null) });
+    const service = makeServiceWithVm(ercRepo);
+    await expect(service.unsuggestItem(VM, JOURNEY_ID, ITEM_ID, 'exposure'))
+      .rejects.toThrow(EntityNotFoundException);
+  });
+});
+
+// ─── acknowledgeSidenoteItem ──────────────────────────────────────────────────
+
+describe('ErcService — acknowledgeSidenoteItem', () => {
+  it('AUTH MATRIX POSITIVE: VA owner can acknowledge sidenote', async () => {
+    const ercRepo = makeRepo();
+    const service = makeService(ercRepo, makeJourneyRepo());
+    const result = await service.acknowledgeSidenoteItem(VA, JOURNEY_ID, ITEM_ID, 'exposure');
+    expect(ercRepo.acknowledgeSidenote).toHaveBeenCalledWith(ITEM_ID, 'exposure');
+    expect(result.acknowledgedAt).not.toBeNull();
+  });
+
+  it('AUTH MATRIX NEGATIVE: VM cannot acknowledge → 403', async () => {
+    const service = makeServiceWithVm();
+    await expect(service.acknowledgeSidenoteItem(VM, JOURNEY_ID, ITEM_ID, 'exposure'))
+      .rejects.toThrow(AccessDeniedException);
+  });
+
+  it('AUTH MATRIX NEGATIVE: non-owner VA cannot acknowledge → 403', async () => {
+    const service = makeService(makeRepo(), makeJourneyRepo());
+    await expect(service.acknowledgeSidenoteItem(OTHER_VA, JOURNEY_ID, ITEM_ID, 'exposure'))
+      .rejects.toThrow(AccessDeniedException);
+  });
+
+  it('NEGATIVE: no active sidenote exists → 404 EntityNotFoundException', async () => {
+    const ercRepo = makeRepo({ acknowledgeSidenote: vi.fn().mockResolvedValue(null) });
+    const service = makeService(ercRepo, makeJourneyRepo());
+    await expect(service.acknowledgeSidenoteItem(VA, JOURNEY_ID, ITEM_ID, 'exposure'))
+      .rejects.toThrow(EntityNotFoundException);
   });
 });

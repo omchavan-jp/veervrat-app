@@ -34,7 +34,7 @@ export class ErcService {
     private readonly notificationsRepository: NotificationsRepository,
   ) {}
 
-  private async getJourneyAndCheckPermission(user: SessionUser, journeyId: string, action: 'journey.view' | 'erc.select' | 'erc.approve_closure' | 'erc.revisit' | 'erc.deactivate' | 'erc.remove') {
+  private async getJourneyAndCheckPermission(user: SessionUser, journeyId: string, action: 'journey.view' | 'erc.select' | 'erc.suggest' | 'erc.approve_closure' | 'erc.revisit' | 'erc.deactivate' | 'erc.remove') {
     const journey = await this.journeysRepository.findById(journeyId);
     if (!journey) throw new EntityNotFoundException('Journey', journeyId);
     const slim = this.journeysRepository.buildJourneySlim(journey);
@@ -148,5 +148,44 @@ export class ErcService {
     const item = await this.ercRepository.findById(itemId, ercType);
     if (!item || item.journeyId !== journeyId) throw new EntityNotFoundException('ERC item', itemId);
     await this.ercRepository.remove(itemId, ercType);
+  }
+
+  async suggestItem(user: SessionUser, journeyId: string, itemId: string, text: string, ercType: ErcType) {
+    const { journey } = await this.getJourneyAndCheckPermission(user, journeyId, 'erc.suggest');
+    const item = await this.ercRepository.findById(itemId, ercType);
+    if (!item || item.journeyId !== journeyId) throw new EntityNotFoundException('ERC item', itemId);
+    const sidenote = await this.ercRepository.upsertSidenote(itemId, user.id, text, ercType);
+    await this.notificationsRepository.create(
+      journey.vratarthiId,
+      user.id,
+      NotificationEventType.VM_SUGGESTION_NEW,
+      ercType,
+      itemId,
+    );
+    return sidenote;
+  }
+
+  async unsuggestItem(user: SessionUser, journeyId: string, itemId: string, ercType: ErcType) {
+    const { journey } = await this.getJourneyAndCheckPermission(user, journeyId, 'erc.suggest');
+    const item = await this.ercRepository.findById(itemId, ercType);
+    if (!item || item.journeyId !== journeyId) throw new EntityNotFoundException('ERC item', itemId);
+    const sidenote = await this.ercRepository.revokeSidenote(itemId, ercType);
+    if (!sidenote) throw new EntityNotFoundException('VmSidenote', itemId);
+    await this.notificationsRepository.create(
+      journey.vratarthiId,
+      user.id,
+      NotificationEventType.VM_SUGGESTION_DISMISSED,
+      ercType,
+      itemId,
+    );
+  }
+
+  async acknowledgeSidenoteItem(user: SessionUser, journeyId: string, itemId: string, ercType: ErcType) {
+    await this.getJourneyAndCheckPermission(user, journeyId, 'erc.select'); // VA owner only
+    const item = await this.ercRepository.findById(itemId, ercType);
+    if (!item || item.journeyId !== journeyId) throw new EntityNotFoundException('ERC item', itemId);
+    const sidenote = await this.ercRepository.acknowledgeSidenote(itemId, ercType);
+    if (!sidenote) throw new EntityNotFoundException('VmSidenote', itemId);
+    return sidenote;
   }
 }
