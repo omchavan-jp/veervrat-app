@@ -28,11 +28,6 @@ export function ResolutionsTab({ journeyId, hasVm }: Props) {
         </div>
       )}
 
-      {hasItems && (
-        <p className="mt-4 text-[12px] text-muted/60">
-          Check-in logging coming soon (item 13).
-        </p>
-      )}
     </div>
   );
 }

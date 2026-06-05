@@ -96,6 +96,32 @@ export type PoolItem = {
   durationDays?: number | null;
 };
 
+// ─── Checkin types ────────────────────────────────────────────────────────────
+
+export type CheckinStatus = 'DONE' | 'PARTIAL' | 'MISSED';
+
+export type ResolutionCheckin = {
+  id: string;
+  journeyResolutionId: string;
+  status: CheckinStatus;
+  note: string | null;
+  checkedInAt: string;
+  createdAt: string;
+};
+
+export type CheckinsResponse = {
+  checkins: ResolutionCheckin[];
+  streak: number;
+};
+
+export const checkinsApi = {
+  logCheckin: (journeyId: string, resolutionId: string, status: CheckinStatus, note?: string) =>
+    api.post<Wrapped<ResolutionCheckin>>(`/journeys/${journeyId}/resolutions/${resolutionId}/checkins`, { status, note }).then((r) => r.data),
+
+  listCheckins: (journeyId: string, resolutionId: string) =>
+    api.get<Wrapped<CheckinsResponse>>(`/journeys/${journeyId}/resolutions/${resolutionId}/checkins`).then((r) => r.data),
+};
+
 export const ercApi = {
   getPool: (journeyId: string, type: ErcType) =>
     api.get<Wrapped<PoolItem[]>>(`/journeys/${journeyId}/${type}s/pool`).then((r) => r.data),

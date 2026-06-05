@@ -1,10 +1,11 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
 import type { JourneyErcItem, ErcType } from '@/lib/api/journeys';
 import {
   useUpdateErcStatus, useDeactivateErc, useReactivateErc, useRemoveErc,
 } from '@/hooks/use-journeys';
+import { CheckinForm } from './checkin-form';
+import { CheckinHistory } from './checkin-history';
 
 const STATUS_BADGE: Record<string, string> = {
   NOT_STARTED: 'bg-muted/10 text-muted',
@@ -131,6 +132,14 @@ export function ErcItemCard({ item, ercType, journeyId, hasVm }: Props) {
           </>
         )}
       </div>
+
+      {ercType === 'resolution' && item.status === 'IN_PROGRESS' && !item.isDeactivated && (
+        <CheckinForm journeyId={journeyId} resolutionId={item.id} />
+      )}
+
+      {ercType === 'resolution' && item.status !== 'NOT_STARTED' && !item.isDeactivated && (
+        <CheckinHistory journeyId={journeyId} resolutionId={item.id} />
+      )}
     </div>
   );
 }

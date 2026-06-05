@@ -133,6 +133,15 @@ export class JourneyConflictException extends ConflictException {
   }
 }
 
+export class InvalidCheckinStateException extends UnprocessableEntityException {
+  constructor() {
+    super({
+      error: 'INVALID_CHECKIN_STATE',
+      message: 'Check-ins can only be logged on in-progress resolutions.',
+    });
+  }
+}
+
 export class InvalidStateTransitionException extends ConflictException {
   constructor(from: string, action: string) {
     super({

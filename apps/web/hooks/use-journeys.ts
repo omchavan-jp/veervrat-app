@@ -1,8 +1,8 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { journeysApi, ercApi } from '@/lib/api/journeys';
-import type { ErcType } from '@/lib/api/journeys';
+import { journeysApi, ercApi, checkinsApi } from '@/lib/api/journeys';
+import type { ErcType, CheckinStatus } from '@/lib/api/journeys';
 import { queryKeys } from '@/lib/api/query-keys';
 
 export function useJourneys() {
@@ -124,4 +124,25 @@ export function useRemoveErc(journeyId: string, type: ErcType) {
     journeyId,
     type,
   );
+}
+
+// ─── Checkin hooks ──────────────────────────────────────────────────────────
+
+export function useCheckins(journeyId: string, resolutionId: string) {
+  return useQuery({
+    queryKey: queryKeys.checkins.list(journeyId, resolutionId),
+    queryFn: () => checkinsApi.listCheckins(journeyId, resolutionId),
+    enabled: !!journeyId && !!resolutionId,
+  });
+}
+
+export function useLogCheckin(journeyId: string, resolutionId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ status, note }: { status: CheckinStatus; note?: string }) =>
+      checkinsApi.logCheckin(journeyId, resolutionId, status, note),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.checkins.list(journeyId, resolutionId) });
+    },
+  });
 }

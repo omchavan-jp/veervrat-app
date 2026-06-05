@@ -20,4 +20,8 @@ export const queryKeys = {
     pool: (journeyId: string, type: string) => ['journeys', journeyId, type, 'pool'] as const,
     list: (journeyId: string, type: string) => ['journeys', journeyId, type] as const,
   },
+  checkins: {
+    list: (journeyId: string, resolutionId: string) =>
+      ['journeys', journeyId, 'resolutions', resolutionId, 'checkins'] as const,
+  },
 } as const;
