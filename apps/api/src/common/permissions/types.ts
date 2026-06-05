@@ -18,6 +18,7 @@ type ErcAction =
   | 'erc.select'
   | 'erc.suggest'
   | 'erc.approve_closure'
+  | 'erc.revisit'
   | 'erc.deactivate'
   | 'erc.remove';
 

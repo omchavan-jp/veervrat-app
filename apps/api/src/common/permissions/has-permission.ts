@@ -84,6 +84,11 @@ function checkLayerOne(
       return false;
     }
 
+    case 'erc.revisit': {
+      if (resource.type !== 'erc') return false;
+      return isVm(user) && isActiveJourneyVm(user, resource.journey);
+    }
+
     case 'erc.deactivate': {
       if (resource.type !== 'erc') return false;
       return isVa(user) && isJourneyOwner(user, resource.journey);

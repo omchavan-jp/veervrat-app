@@ -1,4 +1,4 @@
-## ADDED Requirements
+## MODIFIED Requirements
 
 ### Requirement: ERC status transitions
 `PATCH /api/v1/journeys/:id/exposures/:eid/status` SHALL update the status of a journey ERC item following the defined state machine.

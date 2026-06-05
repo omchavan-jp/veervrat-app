@@ -7,9 +7,10 @@ import { ResolutionCheckinsService } from './resolution-checkins.service';
 import { ResolutionCheckinsRepository } from './resolution-checkins.repository';
 import { AuthModule } from '../auth/auth.module';
 import { JourneysModule } from '../journeys/journeys.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [AuthModule, JourneysModule],
+  imports: [AuthModule, JourneysModule, NotificationsModule],
   controllers: [ExposuresController, ResolutionsController, ChallengesController, ResolutionCheckinsController],
   providers: [ErcService, ErcRepository, ResolutionCheckinsService, ResolutionCheckinsRepository],
   exports: [ErcService],

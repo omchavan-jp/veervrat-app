@@ -30,6 +30,14 @@ export class ExposuresController {
   @HttpCode(HttpStatus.OK)
   updateStatus(@Param('journeyId') j: string, @Param('itemId') i: string, @Body() dto: UpdateErcStatusDto, @CurrentUser() u: SessionUser) { return this.ercService.updateStatus(u, j, i, dto.status, 'exposure'); }
 
+  @Post(':itemId/approve')
+  @HttpCode(HttpStatus.OK)
+  approve(@Param('journeyId') j: string, @Param('itemId') i: string, @CurrentUser() u: SessionUser) { return this.ercService.approveItem(u, j, i, 'exposure'); }
+
+  @Post(':itemId/revisit')
+  @HttpCode(HttpStatus.OK)
+  revisit(@Param('journeyId') j: string, @Param('itemId') i: string, @CurrentUser() u: SessionUser) { return this.ercService.revisitItem(u, j, i, 'exposure'); }
+
   @Post(':itemId/deactivate')
   @HttpCode(HttpStatus.OK)
   deactivate(@Param('journeyId') j: string, @Param('itemId') i: string, @CurrentUser() u: SessionUser) { return this.ercService.deactivate(u, j, i, 'exposure'); }
@@ -64,6 +72,14 @@ export class ResolutionsController {
   @HttpCode(HttpStatus.OK)
   updateStatus(@Param('journeyId') j: string, @Param('itemId') i: string, @Body() dto: UpdateErcStatusDto, @CurrentUser() u: SessionUser) { return this.ercService.updateStatus(u, j, i, dto.status, 'resolution'); }
 
+  @Post(':itemId/approve')
+  @HttpCode(HttpStatus.OK)
+  approve(@Param('journeyId') j: string, @Param('itemId') i: string, @CurrentUser() u: SessionUser) { return this.ercService.approveItem(u, j, i, 'resolution'); }
+
+  @Post(':itemId/revisit')
+  @HttpCode(HttpStatus.OK)
+  revisit(@Param('journeyId') j: string, @Param('itemId') i: string, @CurrentUser() u: SessionUser) { return this.ercService.revisitItem(u, j, i, 'resolution'); }
+
   @Post(':itemId/deactivate')
   @HttpCode(HttpStatus.OK)
   deactivate(@Param('journeyId') j: string, @Param('itemId') i: string, @CurrentUser() u: SessionUser) { return this.ercService.deactivate(u, j, i, 'resolution'); }
@@ -97,6 +113,14 @@ export class ChallengesController {
   @Patch(':itemId/status')
   @HttpCode(HttpStatus.OK)
   updateStatus(@Param('journeyId') j: string, @Param('itemId') i: string, @Body() dto: UpdateErcStatusDto, @CurrentUser() u: SessionUser) { return this.ercService.updateStatus(u, j, i, dto.status, 'challenge'); }
+
+  @Post(':itemId/approve')
+  @HttpCode(HttpStatus.OK)
+  approve(@Param('journeyId') j: string, @Param('itemId') i: string, @CurrentUser() u: SessionUser) { return this.ercService.approveItem(u, j, i, 'challenge'); }
+
+  @Post(':itemId/revisit')
+  @HttpCode(HttpStatus.OK)
+  revisit(@Param('journeyId') j: string, @Param('itemId') i: string, @CurrentUser() u: SessionUser) { return this.ercService.revisitItem(u, j, i, 'challenge'); }
 
   @Post(':itemId/deactivate')
   @HttpCode(HttpStatus.OK)

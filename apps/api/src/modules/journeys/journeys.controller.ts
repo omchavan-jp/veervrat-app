@@ -58,4 +58,16 @@ export class JourneysController {
   ) {
     return this.journeysService.updateTitle(user, id, dto.title);
   }
+
+  @Post(':id/complete')
+  @HttpCode(HttpStatus.OK)
+  async submitCompletion(@Param('id') id: string, @CurrentUser() user: SessionUser) {
+    return this.journeysService.submitCompletion(user, id);
+  }
+
+  @Post(':id/complete/approve')
+  @HttpCode(HttpStatus.OK)
+  async approveCompletion(@Param('id') id: string, @CurrentUser() user: SessionUser) {
+    return this.journeysService.approveCompletion(user, id);
+  }
 }

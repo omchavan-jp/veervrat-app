@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { JourneyState, VmRelationshipState } from '@prisma/client';
+import { JourneyState, Role, VmRelationshipState } from '@prisma/client';
 import { JourneysService } from './journeys.service';
 import {
   JourneyConflictException,
@@ -7,7 +7,6 @@ import {
   AccessDeniedException,
 } from '../../common/exceptions/app.exceptions';
 import type { SessionUser } from '../auth/types/auth.types';
-import { Role } from '@prisma/client';
 
 const VA_USER: SessionUser = {
   id: 'va-1',
@@ -15,6 +14,19 @@ const VA_USER: SessionUser = {
   displayName: 'VA User',
   username: 'va_user',
   roles: [Role.VRATARTHI],
+  language: 'EN',
+  gender: null,
+  dob: null,
+  emailVerifiedAt: new Date(),
+  onboardingCompletedAt: new Date(),
+};
+
+const VM_USER: SessionUser = {
+  id: 'vm-1',
+  email: 'vm@example.com',
+  displayName: 'VM User',
+  username: 'vm_user',
+  roles: [Role.VRATMITRA],
   language: 'EN',
   gender: null,
   dob: null,
@@ -30,8 +42,15 @@ const JOURNEY_ID = 'journey-1';
 
 const ACTIVE_JOURNEY_SLIM = {
   id: JOURNEY_ID,
-  vratarthiId: 'va-1',
+  vratarthiId: VA_USER.id,
   vmAssignments: [],
+  globalVmRelationship: null,
+};
+
+const JOURNEY_SLIM_WITH_VM = {
+  id: JOURNEY_ID,
+  vratarthiId: VA_USER.id,
+  vmAssignments: [{ vmId: VM_USER.id, state: VmRelationshipState.ACTIVE }],
   globalVmRelationship: null,
 };
 
@@ -62,17 +81,31 @@ function makeRepo(overrides: Record<string, unknown> = {}) {
     findById: vi.fn().mockResolvedValue(makeJourneyDetail()),
     updateState: vi.fn().mockResolvedValue({ id: JOURNEY_ID, state: JourneyState.PAUSED }),
     updateTitle: vi.fn().mockResolvedValue({ id: JOURNEY_ID, title: 'New Title' }),
+    setCompleted: vi.fn().mockResolvedValue({ id: JOURNEY_ID, state: JourneyState.COMPLETED, completedAt: new Date() }),
     buildJourneySlim: vi.fn().mockReturnValue(ACTIVE_JOURNEY_SLIM),
     ...overrides,
   };
 }
 
-function makeService(repo: ReturnType<typeof makeRepo>) {
+function makeNotificationsRepo() {
+  return { create: vi.fn().mockResolvedValue({}) };
+}
+
+function makeService(repo: ReturnType<typeof makeRepo>, notifRepo: ReturnType<typeof makeNotificationsRepo> = makeNotificationsRepo()) {
   const service = Object.create(JourneysService.prototype) as JourneysService;
   const s = service as unknown as Record<string, unknown>;
   s['journeysRepository'] = repo;
+  s['notificationsRepository'] = notifRepo;
   s['prisma'] = { sentence: { findUnique: vi.fn().mockResolvedValue({ textEn: 'Test sentence' }) } };
   return service;
+}
+
+function makeServiceWithVm(notifRepo: ReturnType<typeof makeNotificationsRepo> = makeNotificationsRepo()) {
+  const repo = makeRepo({
+    findById: vi.fn().mockResolvedValue({ ...makeJourneyDetail(), vmAssignments: JOURNEY_SLIM_WITH_VM.vmAssignments }),
+    buildJourneySlim: vi.fn().mockReturnValue(JOURNEY_SLIM_WITH_VM),
+  });
+  return { service: makeService(repo, notifRepo), repo, notifRepo };
 }
 
 // ─── createJourney ────────────────────────────────────────────────────────────
@@ -163,5 +196,86 @@ describe('JourneysService — getJourney', () => {
     const service = makeService(repo);
     await expect(service.getJourney(OTHER_USER, JOURNEY_ID))
       .rejects.toThrow(AccessDeniedException);
+  });
+});
+
+// ─── submitCompletion ─────────────────────────────────────────────────────────
+
+describe('JourneysService — submitCompletion', () => {
+  it('AUTH MATRIX POSITIVE: VA self-approves completion when no VM assigned → state COMPLETED', async () => {
+    const repo = makeRepo();
+    const notifRepo = makeNotificationsRepo();
+    const service = makeService(repo, notifRepo);
+    const result = await service.submitCompletion(VA_USER, JOURNEY_ID);
+    expect(repo.setCompleted).toHaveBeenCalledWith(JOURNEY_ID);
+    expect((result as { state: JourneyState }).state).toBe(JourneyState.COMPLETED);
+  });
+
+  it('AUTH MATRIX POSITIVE: VA submits when VM assigned → notification to VM, returns pending_vm_approval', async () => {
+    const notifRepo = makeNotificationsRepo();
+    const { service } = makeServiceWithVm(notifRepo);
+    const result = await service.submitCompletion(VA_USER, JOURNEY_ID);
+    expect((result as { status: string }).status).toBe('pending_vm_approval');
+    expect(notifRepo.create).toHaveBeenCalledWith(VM_USER.id, VA_USER.id, 'JOURNEY_COMPLETION_SUBMITTED', 'journey', JOURNEY_ID);
+  });
+
+  it('AUTH MATRIX NEGATIVE: VM cannot call submitCompletion → 403', async () => {
+    const service = makeService(makeRepo());
+    await expect(service.submitCompletion(VM_USER, JOURNEY_ID))
+      .rejects.toThrow(AccessDeniedException);
+  });
+
+  it('AUTH MATRIX NEGATIVE: VA who does not own the journey → 403', async () => {
+    const service = makeService(makeRepo());
+    await expect(service.submitCompletion(OTHER_USER, JOURNEY_ID))
+      .rejects.toThrow(AccessDeniedException);
+  });
+
+  it('NEGATIVE: already COMPLETED journey → 409 InvalidStateTransitionException', async () => {
+    const repo = makeRepo({ findById: vi.fn().mockResolvedValue(makeJourneyDetail(JourneyState.COMPLETED)) });
+    const service = makeService(repo);
+    await expect(service.submitCompletion(VA_USER, JOURNEY_ID))
+      .rejects.toThrow(InvalidStateTransitionException);
+  });
+
+  it('NEGATIVE: PAUSED journey cannot be submitted for completion → 409', async () => {
+    const repo = makeRepo({ findById: vi.fn().mockResolvedValue(makeJourneyDetail(JourneyState.PAUSED)) });
+    const service = makeService(repo);
+    await expect(service.submitCompletion(VA_USER, JOURNEY_ID))
+      .rejects.toThrow(InvalidStateTransitionException);
+  });
+});
+
+// ─── approveCompletion ────────────────────────────────────────────────────────
+
+describe('JourneysService — approveCompletion', () => {
+  it('AUTH MATRIX POSITIVE: VM with active assignment approves completion → state COMPLETED + notification to VA', async () => {
+    const notifRepo = makeNotificationsRepo();
+    const { service, repo } = makeServiceWithVm(notifRepo);
+    const result = await service.approveCompletion(VM_USER, JOURNEY_ID);
+    expect(repo.setCompleted).toHaveBeenCalledWith(JOURNEY_ID);
+    expect((result as { state: JourneyState }).state).toBe(JourneyState.COMPLETED);
+    expect(notifRepo.create).toHaveBeenCalledWith(VA_USER.id, VM_USER.id, 'JOURNEY_COMPLETION_APPROVED', 'journey', JOURNEY_ID);
+  });
+
+  it('AUTH MATRIX NEGATIVE: VA cannot call approveCompletion → 403', async () => {
+    const { service } = makeServiceWithVm();
+    await expect(service.approveCompletion(VA_USER, JOURNEY_ID))
+      .rejects.toThrow(AccessDeniedException);
+  });
+
+  it('AUTH MATRIX NEGATIVE: non-assigned VM cannot approve → 403', async () => {
+    const { service } = makeServiceWithVm();
+    const OTHER_VM = { ...VM_USER, id: 'other-vm-1' };
+    await expect(service.approveCompletion(OTHER_VM, JOURNEY_ID))
+      .rejects.toThrow(AccessDeniedException);
+  });
+
+  it('NEGATIVE: already COMPLETED journey → 409 InvalidStateTransitionException', async () => {
+    const notifRepo = makeNotificationsRepo();
+    const { service, repo } = makeServiceWithVm(notifRepo);
+    (repo.findById as ReturnType<typeof vi.fn>).mockResolvedValue({ ...makeJourneyDetail(JourneyState.COMPLETED), vmAssignments: JOURNEY_SLIM_WITH_VM.vmAssignments });
+    await expect(service.approveCompletion(VM_USER, JOURNEY_ID))
+      .rejects.toThrow(InvalidStateTransitionException);
   });
 });

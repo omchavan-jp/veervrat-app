@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { ErcStatus } from '@prisma/client';
+import { ErcStatus, NotificationEventType } from '@prisma/client';
 import { ErcRepository, ErcType } from './erc.repository';
 import { JourneysRepository } from '../journeys/journeys.repository';
+import { NotificationsRepository } from '../notifications/notifications.repository';
 import { hasPermission } from '../../common/permissions/has-permission';
 import {
   EntityNotFoundException,
@@ -30,9 +31,10 @@ export class ErcService {
   constructor(
     private readonly ercRepository: ErcRepository,
     private readonly journeysRepository: JourneysRepository,
+    private readonly notificationsRepository: NotificationsRepository,
   ) {}
 
-  private async getJourneyAndCheckPermission(user: SessionUser, journeyId: string, action: 'journey.view' | 'erc.select' | 'erc.deactivate' | 'erc.remove') {
+  private async getJourneyAndCheckPermission(user: SessionUser, journeyId: string, action: 'journey.view' | 'erc.select' | 'erc.approve_closure' | 'erc.revisit' | 'erc.deactivate' | 'erc.remove') {
     const journey = await this.journeysRepository.findById(journeyId);
     if (!journey) throw new EntityNotFoundException('Journey', journeyId);
     const slim = this.journeysRepository.buildJourneySlim(journey);
@@ -79,13 +81,52 @@ export class ErcService {
       }
     }
 
-    // REVISIT: VM only — the permission check above (erc.select is VA-only) already blocked
-    // a non-VM from getting here; double-check for REVISIT
+    // REVISIT is a VM-only action via POST .../revisit — VA cannot set it via PATCH /status
     if (targetStatus === ErcStatus.REVISIT) {
-      throw new AccessDeniedException(); // VM approval is item 15
+      throw new AccessDeniedException();
     }
 
     return this.ercRepository.updateStatus(itemId, targetStatus, ercType);
+  }
+
+  async approveItem(user: SessionUser, journeyId: string, itemId: string, ercType: ErcType) {
+    const { journey } = await this.getJourneyAndCheckPermission(user, journeyId, 'erc.approve_closure');
+
+    const item = await this.ercRepository.findById(itemId, ercType);
+    if (!item || item.journeyId !== journeyId) throw new EntityNotFoundException('ERC item', itemId);
+    if (item.isDeactivated || item.status !== ErcStatus.SUBMITTED) {
+      throw new InvalidErcStatusTransitionException(item.status, ErcStatus.APPROVED);
+    }
+
+    const updated = await this.ercRepository.updateStatus(itemId, ErcStatus.APPROVED, ercType);
+    await this.notificationsRepository.create(
+      journey.vratarthiId,
+      user.id,
+      NotificationEventType.ERC_CLOSURE_APPROVED,
+      ercType,
+      itemId,
+    );
+    return updated;
+  }
+
+  async revisitItem(user: SessionUser, journeyId: string, itemId: string, ercType: ErcType) {
+    const { journey } = await this.getJourneyAndCheckPermission(user, journeyId, 'erc.revisit');
+
+    const item = await this.ercRepository.findById(itemId, ercType);
+    if (!item || item.journeyId !== journeyId) throw new EntityNotFoundException('ERC item', itemId);
+    if (item.isDeactivated || item.status !== ErcStatus.SUBMITTED) {
+      throw new InvalidErcStatusTransitionException(item.status, ErcStatus.REVISIT);
+    }
+
+    const updated = await this.ercRepository.updateStatus(itemId, ErcStatus.REVISIT, ercType);
+    await this.notificationsRepository.create(
+      journey.vratarthiId,
+      user.id,
+      NotificationEventType.ERC_RETURNED_FOR_REVISIT,
+      ercType,
+      itemId,
+    );
+    return updated;
   }
 
   async deactivate(user: SessionUser, journeyId: string, itemId: string, ercType: ErcType) {

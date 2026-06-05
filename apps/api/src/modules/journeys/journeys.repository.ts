@@ -150,6 +150,14 @@ export class JourneysRepository {
     };
   }
 
+  async setCompleted(id: string) {
+    return this.prisma.journey.update({
+      where: { id },
+      data: { state: JourneyState.COMPLETED, completedAt: new Date() },
+      select: { id: true, state: true, completedAt: true, updatedAt: true },
+    });
+  }
+
   async updateState(id: string, state: JourneyState) {
     const timestamps: Record<string, Date | null> = {};
     if (state === JourneyState.PAUSED) timestamps.pausedAt = new Date();

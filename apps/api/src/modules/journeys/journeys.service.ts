@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { JourneyState } from '@prisma/client';
+import { JourneyState, NotificationEventType, VmRelationshipState } from '@prisma/client';
 import { JourneysRepository } from './journeys.repository';
+import { NotificationsRepository } from '../notifications/notifications.repository';
 import { CreateJourneyDto } from './dto/create-journey.dto';
 import type { SessionUser } from '../auth/types/auth.types';
 import { hasPermission } from '../../common/permissions/has-permission';
+import { isVa, isVm } from '../../common/permissions/types';
 import {
   EntityNotFoundException,
   AccessDeniedException,
@@ -16,6 +18,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 export class JourneysService {
   constructor(
     private readonly journeysRepository: JourneysRepository,
+    private readonly notificationsRepository: NotificationsRepository,
     private readonly prisma: PrismaService,
   ) {}
 
@@ -81,6 +84,63 @@ export class JourneysService {
 
     const newState = action === 'pause' ? JourneyState.PAUSED : JourneyState.ACTIVE;
     return this.journeysRepository.updateState(id, newState);
+  }
+
+  async submitCompletion(user: SessionUser, journeyId: string) {
+    const journey = await this.journeysRepository.findById(journeyId);
+    if (!journey) throw new EntityNotFoundException('Journey', journeyId);
+
+    const slim = this.journeysRepository.buildJourneySlim(journey);
+
+    if (!isVa(user) || !hasPermission(user, { type: 'journey', journey: slim }, 'journey.complete')) {
+      throw new AccessDeniedException();
+    }
+
+    if (journey.state !== JourneyState.ACTIVE) {
+      throw new InvalidStateTransitionException(journey.state, 'complete');
+    }
+
+    const activeAssignment = slim.vmAssignments.find((a) => a.state === VmRelationshipState.ACTIVE);
+
+    if (!activeAssignment) {
+      const updated = await this.journeysRepository.setCompleted(journeyId);
+      return updated;
+    }
+
+    const vmId = activeAssignment.vmId;
+    await this.notificationsRepository.create(
+      vmId,
+      user.id,
+      NotificationEventType.JOURNEY_COMPLETION_SUBMITTED,
+      'journey',
+      journeyId,
+    );
+    return { status: 'pending_vm_approval' as const };
+  }
+
+  async approveCompletion(user: SessionUser, journeyId: string) {
+    const journey = await this.journeysRepository.findById(journeyId);
+    if (!journey) throw new EntityNotFoundException('Journey', journeyId);
+
+    const slim = this.journeysRepository.buildJourneySlim(journey);
+
+    if (!isVm(user) || !hasPermission(user, { type: 'journey', journey: slim }, 'journey.complete')) {
+      throw new AccessDeniedException();
+    }
+
+    if (journey.state !== JourneyState.ACTIVE) {
+      throw new InvalidStateTransitionException(journey.state, 'complete');
+    }
+
+    const updated = await this.journeysRepository.setCompleted(journeyId);
+    await this.notificationsRepository.create(
+      journey.vratarthiId,
+      user.id,
+      NotificationEventType.JOURNEY_COMPLETION_APPROVED,
+      'journey',
+      journeyId,
+    );
+    return updated;
   }
 
   async updateTitle(user: SessionUser, id: string, title: string) {
