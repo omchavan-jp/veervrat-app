@@ -11,6 +11,8 @@ import { WeaknessesModule } from './modules/weaknesses/weaknesses.module';
 import { TestsModule } from './modules/tests/tests.module';
 import { JourneysModule } from './modules/journeys/journeys.module';
 import { ErcModule } from './modules/erc/erc.module';
+import { InvitationsModule } from './modules/invitations/invitations.module';
+import { VmRelationshipsModule } from './modules/vm-relationships/vm-relationships.module';
 import { RedisModule } from './common/redis/redis.module';
 import { AppController } from './app.controller';
 import { Reflector } from '@nestjs/core';
@@ -45,6 +47,8 @@ import { CsrfGuard } from './common/guards/csrf.guard';
     TestsModule,
     JourneysModule,
     ErcModule,
+    InvitationsModule,
+    VmRelationshipsModule,
   ],
   controllers: [AppController],
   providers: [

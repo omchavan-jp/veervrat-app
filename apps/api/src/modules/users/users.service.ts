@@ -73,6 +73,14 @@ export class UsersService {
     return profile;
   }
 
+  async findByEmail(email: string) {
+    return this.usersRepository.findByEmail(email);
+  }
+
+  async findById(id: string) {
+    return this.usersRepository.findById(id);
+  }
+
   async checkUsernameAvailable(username: string, requestingUserId: string): Promise<boolean> {
     if (!USERNAME_REGEX.test(username)) return false;
 

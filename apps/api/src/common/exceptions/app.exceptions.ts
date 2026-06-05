@@ -163,3 +163,30 @@ export class TestNotSubmittedException extends ConflictException {
     super({ error: 'TEST_NOT_SUBMITTED', message: 'This test has not been submitted yet.' });
   }
 }
+
+export class InvitationExpiredException extends UnprocessableEntityException {
+  constructor() {
+    super({ error: 'INVITATION_EXPIRED', message: 'This invitation has expired.' });
+  }
+}
+
+export class InvitationNotPendingException extends ConflictException {
+  constructor() {
+    super({ error: 'INVITATION_NOT_PENDING', message: 'This invitation is no longer pending.' });
+  }
+}
+
+export class InvitationNotCancellableException extends ConflictException {
+  constructor() {
+    super({ error: 'INVITATION_NOT_CANCELLABLE', message: 'Only pending invitations can be cancelled.' });
+  }
+}
+
+export class PendingGlobalVmInviteException extends ConflictException {
+  constructor() {
+    super({
+      error: 'PENDING_GLOBAL_VM_INVITE_EXISTS',
+      message: 'A pending global VM invitation already exists. Cancel it before sending a new one.',
+    });
+  }
+}

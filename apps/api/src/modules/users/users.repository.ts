@@ -103,6 +103,13 @@ export class UsersRepository {
     });
   }
 
+  async findByEmail(email: string) {
+    return this.prisma.user.findFirst({
+      where: { email, deletedAt: null },
+      select: { id: true, email: true, displayName: true, language: true },
+    });
+  }
+
   async isUsernameTaken(username: string, excludeUserId: string): Promise<boolean> {
     const existing = await this.prisma.user.findFirst({
       where: {

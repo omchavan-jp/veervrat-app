@@ -299,6 +299,7 @@ model Invitation {
   inviteeId    String?           @map("invitee_id") @db.Uuid
   type         InvitationType
   scopeId      String?           @map("scope_id") @db.Uuid // journey id if VM_JOURNEY
+  token        String            @unique
   status       InvitationStatus  @default(PENDING)
   channel      InvitationChannel @default(IN_APP)
   invitedAt    DateTime          @default(now()) @map("invited_at")
