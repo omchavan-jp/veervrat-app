@@ -39,7 +39,7 @@ function SentenceCard({ sentence, index }: { sentence: ReportSentence; index: nu
       <div className="flex items-center justify-between">
         <span className="text-[12px] text-muted">{sentence.subvirtueNameEn} → {sentence.virtueNameEn}</span>
         <Link
-          href={`/journeys/new?sentenceId=${sentence.sentenceId}`}
+          href={`/journeys/new?sentenceId=${sentence.sentenceId}&weaknessId=${report.weaknessId}`}
           className="text-[13px] text-accent underline decoration-accent/40 hover:no-underline"
         >
           {t('startJourney')}
