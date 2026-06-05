@@ -6,6 +6,9 @@ import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useJourney, useUpdateJourneyState, useUpdateJourneyTitle } from '@/hooks/use-journeys';
 import type { JourneyState, ErcCounts } from '@/lib/api/journeys';
+import { ExposuresTab } from '@/components/journey/exposures-tab';
+import { ResolutionsTab } from '@/components/journey/resolutions-tab';
+import { ChallengesTab } from '@/components/journey/challenges-tab';
 
 const STATE_COLORS: Record<JourneyState, string> = {
   NOT_STARTED: 'text-muted bg-muted/10',
@@ -221,13 +224,18 @@ export default function JourneyDetailPage() {
           )
         )}
 
-        {activeTab !== 'overview' && (
+        {activeTab === 'exposures' && (
+          <ExposuresTab journeyId={journey.id} hasVm={!!journey.globalVmRelationship} />
+        )}
+        {activeTab === 'resolutions' && (
+          <ResolutionsTab journeyId={journey.id} hasVm={!!journey.globalVmRelationship} />
+        )}
+        {activeTab === 'challenges' && (
+          <ChallengesTab journeyId={journey.id} hasVm={!!journey.globalVmRelationship} />
+        )}
+        {activeTab === 'chat' && (
           <div className="rounded-xl border border-dashed border-border p-12 text-center">
-            <p className="text-[14px] text-muted">
-              {activeTab === 'chat'
-                ? 'Chat coming in a future update.'
-                : `${tabs.find((t) => t.key === activeTab)?.label} selection coming in a future update.`}
-            </p>
+            <p className="text-[14px] text-muted">Chat coming in a future update.</p>
           </div>
         )}
       </div>

@@ -1,7 +1,8 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { journeysApi } from '@/lib/api/journeys';
+import { journeysApi, ercApi } from '@/lib/api/journeys';
+import type { ErcType } from '@/lib/api/journeys';
 import { queryKeys } from '@/lib/api/query-keys';
 
 export function useJourneys() {
@@ -49,4 +50,78 @@ export function useUpdateJourneyTitle() {
       queryClient.invalidateQueries({ queryKey: queryKeys.journeys.detail(id) });
     },
   });
+}
+
+// ─── ERC hooks ─────────────────────────────────────────────────────────────
+
+export function useErcPool(journeyId: string, type: ErcType) {
+  return useQuery({
+    queryKey: queryKeys.erc.pool(journeyId, type),
+    queryFn: () => ercApi.getPool(journeyId, type),
+    enabled: !!journeyId,
+  });
+}
+
+export function useErcItems(journeyId: string, type: ErcType) {
+  return useQuery({
+    queryKey: queryKeys.erc.list(journeyId, type),
+    queryFn: () => ercApi.list(journeyId, type),
+    enabled: !!journeyId,
+  });
+}
+
+function useErcMutation<TArgs>(
+  mutationFn: (args: TArgs) => Promise<unknown>,
+  journeyId: string,
+  type: ErcType,
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.erc.list(journeyId, type) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.erc.pool(journeyId, type) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.journeys.detail(journeyId) });
+    },
+  });
+}
+
+export function useSelectErc(journeyId: string, type: ErcType) {
+  return useErcMutation(
+    ({ poolItemId }: { poolItemId: string }) => ercApi.select(journeyId, type, poolItemId),
+    journeyId,
+    type,
+  );
+}
+
+export function useUpdateErcStatus(journeyId: string, type: ErcType) {
+  return useErcMutation(
+    ({ itemId, status }: { itemId: string; status: string }) => ercApi.updateStatus(journeyId, type, itemId, status),
+    journeyId,
+    type,
+  );
+}
+
+export function useDeactivateErc(journeyId: string, type: ErcType) {
+  return useErcMutation(
+    ({ itemId }: { itemId: string }) => ercApi.deactivate(journeyId, type, itemId),
+    journeyId,
+    type,
+  );
+}
+
+export function useReactivateErc(journeyId: string, type: ErcType) {
+  return useErcMutation(
+    ({ itemId }: { itemId: string }) => ercApi.reactivate(journeyId, type, itemId),
+    journeyId,
+    type,
+  );
+}
+
+export function useRemoveErc(journeyId: string, type: ErcType) {
+  return useErcMutation(
+    ({ itemId }: { itemId: string }) => ercApi.remove(journeyId, type, itemId),
+    journeyId,
+    type,
+  );
 }

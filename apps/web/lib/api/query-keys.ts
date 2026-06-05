@@ -16,4 +16,8 @@ export const queryKeys = {
     list: (filters?: Record<string, unknown>) => ['journeys', { ...filters }] as const,
     detail: (id: string) => ['journeys', id] as const,
   },
+  erc: {
+    pool: (journeyId: string, type: string) => ['journeys', journeyId, type, 'pool'] as const,
+    list: (journeyId: string, type: string) => ['journeys', journeyId, type] as const,
+  },
 } as const;
