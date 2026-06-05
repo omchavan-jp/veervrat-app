@@ -16,7 +16,7 @@ const SCORE_COLORS: Record<number, string> = {
   1: 'bg-accent/15 text-accent border-accent/30',
 };
 
-function SentenceCard({ sentence, index }: { sentence: ReportSentence; index: number }) {
+function SentenceCard({ sentence, index, weaknessId }: { sentence: ReportSentence; index: number; weaknessId: string }) {
   const t = useTranslations('study.report');
   return (
     <motion.div
@@ -39,7 +39,7 @@ function SentenceCard({ sentence, index }: { sentence: ReportSentence; index: nu
       <div className="flex items-center justify-between">
         <span className="text-[12px] text-muted">{sentence.subvirtueNameEn} → {sentence.virtueNameEn}</span>
         <Link
-          href={`/journeys/new?sentenceId=${sentence.sentenceId}&weaknessId=${report.weaknessId}`}
+          href={`/journeys/new?sentenceId=${sentence.sentenceId}&weaknessId=${weaknessId}`}
           className="text-[13px] text-accent underline decoration-accent/40 hover:no-underline"
         >
           {t('startJourney')}
@@ -106,7 +106,7 @@ export default function TestReportPage() {
             ) : (
               <div className="space-y-3">
                 {report.flaggedSentences.map((s, i) => (
-                  <SentenceCard key={s.sentenceId} sentence={s} index={i} />
+                  <SentenceCard key={s.sentenceId} sentence={s} index={i} weaknessId={report.weaknessId} />
                 ))}
               </div>
             )}
@@ -131,7 +131,7 @@ export default function TestReportPage() {
                     className="space-y-3 overflow-hidden"
                   >
                     {report.otherSentences.map((s, i) => (
-                      <SentenceCard key={s.sentenceId} sentence={s} index={i} />
+                      <SentenceCard key={s.sentenceId} sentence={s} index={i} weaknessId={report.weaknessId} />
                     ))}
                   </motion.div>
                 )}
