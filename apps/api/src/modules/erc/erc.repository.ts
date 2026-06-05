@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ErcStatus, ExposureTier } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { EntityNotFoundException } from '../../common/exceptions/app.exceptions';
 
 export type ErcType = 'exposure' | 'resolution' | 'challenge';
 
@@ -151,7 +152,8 @@ export class ErcRepository {
 
   async selectPoolItem(journeyId: string, poolItemId: string, ercType: ErcType): Promise<JourneyErcItem> {
     if (ercType === 'exposure') {
-      const pool = await this.prisma.exposure.findUniqueOrThrow({ where: { id: poolItemId }, select: { titleEn: true, descriptionEn: true, tier: true } });
+      const pool = await this.prisma.exposure.findUnique({ where: { id: poolItemId }, select: { titleEn: true, descriptionEn: true, tier: true } });
+      if (!pool) throw new EntityNotFoundException('Exposure', poolItemId);
       const item = await this.prisma.journeyExposure.create({
         data: { journeyId, poolExposureId: poolItemId, titleEn: pool.titleEn, descriptionEn: pool.descriptionEn, tier: pool.tier },
         select: { id: true, journeyId: true, status: true, isDeactivated: true, isCustom: true, titleEn: true, descriptionEn: true, tier: true, startedAt: true, submittedAt: true, approvedAt: true, poolExposureId: true },
@@ -159,14 +161,16 @@ export class ErcRepository {
       return item;
     }
     if (ercType === 'resolution') {
-      const pool = await this.prisma.resolution.findUniqueOrThrow({ where: { id: poolItemId }, select: { titleEn: true, descriptionEn: true, durationWeeks: true, frequencyPerWeek: true, frequencyLabel: true } });
+      const pool = await this.prisma.resolution.findUnique({ where: { id: poolItemId }, select: { titleEn: true, descriptionEn: true, durationWeeks: true, frequencyPerWeek: true, frequencyLabel: true } });
+      if (!pool) throw new EntityNotFoundException('Resolution', poolItemId);
       const item = await this.prisma.journeyResolution.create({
         data: { journeyId, poolResolutionId: poolItemId, titleEn: pool.titleEn, descriptionEn: pool.descriptionEn, durationWeeks: pool.durationWeeks, frequencyPerWeek: pool.frequencyPerWeek, frequencyLabel: pool.frequencyLabel },
         select: { id: true, journeyId: true, status: true, isDeactivated: true, isCustom: true, titleEn: true, descriptionEn: true, durationWeeks: true, frequencyPerWeek: true, frequencyLabel: true, startedAt: true, submittedAt: true, approvedAt: true, poolResolutionId: true },
       });
       return item;
     }
-    const pool = await this.prisma.challenge.findUniqueOrThrow({ where: { id: poolItemId }, select: { titleEn: true, descriptionEn: true, durationDays: true } });
+    const pool = await this.prisma.challenge.findUnique({ where: { id: poolItemId }, select: { titleEn: true, descriptionEn: true, durationDays: true } });
+    if (!pool) throw new EntityNotFoundException('Challenge', poolItemId);
     const item = await this.prisma.journeyChallenge.create({
       data: { journeyId, poolChallengeId: poolItemId, titleEn: pool.titleEn, descriptionEn: pool.descriptionEn, durationDays: pool.durationDays },
       select: { id: true, journeyId: true, status: true, isDeactivated: true, isCustom: true, titleEn: true, descriptionEn: true, durationDays: true, startedAt: true, submittedAt: true, approvedAt: true, poolChallengeId: true },

@@ -60,6 +60,7 @@ export class ErcService {
   }
 
   async updateStatus(user: SessionUser, journeyId: string, itemId: string, targetStatusStr: 'in_progress' | 'submitted' | 'approved' | 'revisit', ercType: ErcType) {
+    // Status update is a VA-owner action (erc.select is the broadest VA ownership check)
     const { journey, slim } = await this.getJourneyAndCheckPermission(user, journeyId, 'erc.select');
     const item = await this.ercRepository.findById(itemId, ercType);
     if (!item || item.journeyId !== journeyId) throw new EntityNotFoundException('ERC item', itemId);
@@ -88,21 +89,21 @@ export class ErcService {
   }
 
   async deactivate(user: SessionUser, journeyId: string, itemId: string, ercType: ErcType) {
-    await this.getJourneyAndCheckPermission(user, journeyId, 'erc.deactivate');
+    await this.getJourneyAndCheckPermission(user, journeyId, 'erc.deactivate'); // VA owner only
     const item = await this.ercRepository.findById(itemId, ercType);
     if (!item || item.journeyId !== journeyId) throw new EntityNotFoundException('ERC item', itemId);
     return this.ercRepository.setDeactivated(itemId, true, ercType);
   }
 
   async reactivate(user: SessionUser, journeyId: string, itemId: string, ercType: ErcType) {
-    await this.getJourneyAndCheckPermission(user, journeyId, 'erc.deactivate');
+    await this.getJourneyAndCheckPermission(user, journeyId, 'erc.deactivate'); // VA owner only
     const item = await this.ercRepository.findById(itemId, ercType);
     if (!item || item.journeyId !== journeyId) throw new EntityNotFoundException('ERC item', itemId);
     return this.ercRepository.setDeactivated(itemId, false, ercType);
   }
 
   async remove(user: SessionUser, journeyId: string, itemId: string, ercType: ErcType) {
-    await this.getJourneyAndCheckPermission(user, journeyId, 'erc.remove');
+    await this.getJourneyAndCheckPermission(user, journeyId, 'erc.remove'); // VA owner only
     const item = await this.ercRepository.findById(itemId, ercType);
     if (!item || item.journeyId !== journeyId) throw new EntityNotFoundException('ERC item', itemId);
     await this.ercRepository.remove(itemId, ercType);
