@@ -12,6 +12,7 @@ import {
   isActiveJourneyVm,
   isGlobalVmForJourney,
   hasActiveJourneyVm,
+  isRoomParticipant,
 } from './types';
 
 export function hasPermission(
@@ -151,6 +152,9 @@ function checkLayerOne(
     // ── Chat actions ─────────────────────────────────────────────────────────
 
     case 'chat.view': {
+      if (resource.type === 'room') {
+        return isRoomParticipant(user, resource.id);
+      }
       if (resource.type !== 'journey') return false;
       const { journey } = resource;
       if (isVa(user) && isJourneyOwner(user, journey)) return true;
@@ -160,6 +164,9 @@ function checkLayerOne(
     }
 
     case 'chat.send': {
+      if (resource.type === 'room') {
+        return isRoomParticipant(user, resource.id);
+      }
       if (resource.type !== 'journey') return false;
       const { journey } = resource;
       if (isVa(user) && isJourneyOwner(user, journey)) return true;

@@ -216,6 +216,7 @@ model User {
   blogComments       BlogComment[]
   auditEvents        AuditEvent[]          @relation("AuditActor")
   chatMessages       ChatMessage[]
+  uploads            Upload[]
 
   @@index([username])
   @@index([email])
@@ -807,6 +808,25 @@ model ChatMessage {
 
   @@index([roomId, seqNo])
   @@map("chat_messages")
+}
+
+// ═══════════════════════════════════════════════════
+// UPLOADS (chat images, etc)
+// ═══════════════════════════════════════════════════
+
+model Upload {
+  id        String   @id @default(uuid()) @db.Uuid
+  uploaderId String  @map("uploader_id") @db.Uuid
+  roomId    String?  @map("room_id") // Optional: associate with chat room
+  minioUrl  String   @map("minio_url") // Public MinIO URL
+  filename  String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  uploader User @relation(fields: [uploaderId], references: [id])
+
+  @@index([uploaderId])
+  @@index([roomId])
+  @@map("uploads")
 }
 
 // ═══════════════════════════════════════════════════

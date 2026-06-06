@@ -161,7 +161,8 @@ export type PermissionResource =
   | { type: 'blog_comment'; blog: BlogSlim; comment: BlogCommentSlim }
   | { type: 'test_attempt'; attempt: TestAttemptSlim; journey: JourneySlim | null }
   | { type: 'invitation'; invitation: InvitationSlim }
-  | { type: 'vm_relationship'; relationship: VmRelationshipResourceSlim };
+  | { type: 'vm_relationship'; relationship: VmRelationshipResourceSlim }
+  | { type: 'room'; id: string };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -211,4 +212,9 @@ export function isGlobalVmForJourney(user: SessionUser, journey: JourneySlim): b
 
 export function hasActiveJourneyVm(journey: JourneySlim): boolean {
   return journey.vmAssignments.some((a) => a.state === VmRelationshipState.ACTIVE);
+}
+
+export function isRoomParticipant(user: SessionUser, roomId: string): boolean {
+  const [, userId1, userId2] = roomId.split(':');
+  return user.id === userId1 || user.id === userId2;
 }

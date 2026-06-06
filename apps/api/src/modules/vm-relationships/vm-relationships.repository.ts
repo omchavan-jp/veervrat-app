@@ -97,4 +97,91 @@ export class VmRelationshipsRepository {
       data: { endedAt: new Date() },
     });
   }
+
+  async getMyVms(vratarthiId: string, scope?: 'GLOBAL' | 'JOURNEY') {
+    let globalVm = null;
+    let journeyVms: any[] = [];
+
+    if (!scope || scope === 'GLOBAL') {
+      globalVm = await this.prisma.vmRelationship.findFirst({
+        where: {
+          vratarthiId,
+          state: VmRelationshipState.ACTIVE,
+          endedAt: null,
+        },
+        include: {
+          vm: {
+            select: {
+              id: true,
+              displayName: true,
+              username: true,
+              avatarUrl: true,
+            },
+          },
+        },
+      });
+    }
+
+    if (!scope || scope === 'JOURNEY') {
+      journeyVms = await this.prisma.journeyVmAssignment.findMany({
+        where: {
+          journey: {
+            vratarthiId,
+          },
+          state: VmRelationshipState.ACTIVE,
+          endedAt: null,
+        },
+        distinct: ['vmId'],
+        include: {
+          vm: {
+            select: {
+              id: true,
+              displayName: true,
+              username: true,
+              avatarUrl: true,
+            },
+          },
+          journey: {
+            select: {
+              id: true,
+            },
+          },
+        },
+      });
+    }
+
+    const vms: any[] = [];
+    const vmIds = new Set<string>();
+
+    if (globalVm) {
+      vms.push({
+        id: globalVm.vm.id,
+        displayName: globalVm.vm.displayName,
+        username: globalVm.vm.username,
+        avatarUrl: globalVm.vm.avatarUrl,
+        scope: 'GLOBAL',
+        assignedJourneys: [],
+      });
+      vmIds.add(globalVm.vm.id);
+    }
+
+    journeyVms.forEach((ja) => {
+      const existingVm = vms.find((v) => v.id === ja.vm.id);
+      if (existingVm) {
+        existingVm.assignedJourneys.push(ja.journey.id);
+      } else {
+        vms.push({
+          id: ja.vm.id,
+          displayName: ja.vm.displayName,
+          username: ja.vm.username,
+          avatarUrl: ja.vm.avatarUrl,
+          scope: 'JOURNEY',
+          assignedJourneys: [ja.journey.id],
+        });
+        vmIds.add(ja.vm.id);
+      }
+    });
+
+    return vms;
+  }
 }

@@ -61,4 +61,9 @@ export class VmRelationshipsService {
   ) {
     return this.vmRelationshipsRepository.createJourneyAssignment(journeyId, vmId, acceptedAt);
   }
+
+  async getMyVms(user: SessionUser, scope?: 'GLOBAL' | 'JOURNEY') {
+    if (!isVa(user)) throw new AccessDeniedException();
+    return this.vmRelationshipsRepository.getMyVms(user.id, scope);
+  }
 }
