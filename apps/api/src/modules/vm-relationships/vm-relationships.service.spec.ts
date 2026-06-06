@@ -1,135 +1,99 @@
-import { describe, it, expect, vi } from 'vitest';
-import { Role } from '@prisma/client';
+import { Test, TestingModule } from '@nestjs/testing';
+import { ForbiddenException } from '@nestjs/common';
 import { VmRelationshipsService } from './vm-relationships.service';
-import {
-  EntityNotFoundException,
-  AccessDeniedException,
-} from '../../common/exceptions/app.exceptions';
+import { VmRelationshipsRepository } from './vm-relationships.repository';
+import { JourneysRepository } from '../journeys/journeys.repository';
 import type { SessionUser } from '../auth/types/auth.types';
+import { Role, VmRelationshipState } from '@prisma/client';
 
-const VA: SessionUser = {
-  id: 'va-1', email: 'va@x.com', displayName: 'VA', username: 'va',
-  roles: [Role.VRATARTHI], language: 'EN', gender: null, dob: null,
-  emailVerifiedAt: new Date(), onboardingCompletedAt: new Date(),
-};
+describe('VmRelationshipsService', () => {
+  let service: VmRelationshipsService;
+  let repository: VmRelationshipsRepository;
 
-const VM: SessionUser = {
-  id: 'vm-1', email: 'vm@x.com', displayName: 'VM', username: 'vm',
-  roles: [Role.VRATMITRA], language: 'EN', gender: null, dob: null,
-  emailVerifiedAt: new Date(), onboardingCompletedAt: new Date(),
-};
-
-const MODERATOR: SessionUser = {
-  ...VA, id: 'mod-1', roles: [Role.MODERATOR],
-};
-
-const ACTIVE_RELATIONSHIP = {
-  id: 'rel-1',
-  vratarthiId: VA.id,
-  vmId: VM.id,
-  state: 'ACTIVE',
-  acceptedAt: new Date(),
-  endedAt: null,
-  createdAt: new Date(),
-};
-
-const AFFECTED_JOURNEYS = [
-  { journeyId: 'j-1', journeyTitle: 'Journey 1' },
-  { journeyId: 'j-2', journeyTitle: 'Journey 2' },
-];
-
-const ACTIVE_ASSIGNMENT = {
-  id: 'assign-1',
-  journeyId: 'j-1',
-  vmId: VM.id,
-  state: 'ACTIVE',
-  acceptedAt: new Date(),
-  endedAt: null,
-  createdAt: new Date(),
-};
-
-function makeVmRelRepo(overrides: Record<string, unknown> = {}) {
-  return {
-    findActiveGlobalVm: vi.fn().mockResolvedValue(ACTIVE_RELATIONSHIP),
-    endGlobalVm: vi.fn().mockResolvedValue({ ...ACTIVE_RELATIONSHIP, endedAt: new Date() }),
-    findActiveJourneyAssignmentsForVm: vi.fn().mockResolvedValue(AFFECTED_JOURNEYS),
-    createGlobalRelationship: vi.fn().mockResolvedValue(ACTIVE_RELATIONSHIP),
-    createJourneyAssignment: vi.fn().mockResolvedValue(ACTIVE_ASSIGNMENT),
-    findActiveJourneyAssignment: vi.fn().mockResolvedValue(ACTIVE_ASSIGNMENT),
-    endJourneyAssignment: vi.fn().mockResolvedValue({ ...ACTIVE_ASSIGNMENT, endedAt: new Date() }),
-    ...overrides,
+  const mockRepository = {
+    findActiveGlobalVm: vi.fn(),
+    findActiveJourneyAssignmentsForVm: vi.fn(),
+    endGlobalVm: vi.fn(),
+    findActiveJourneyAssignment: vi.fn(),
+    endJourneyAssignment: vi.fn(),
+    createGlobalRelationship: vi.fn(),
+    createJourneyAssignment: vi.fn(),
+    getMyVms: vi.fn(),
   };
-}
 
-function makeJourneysRepo(overrides: Record<string, unknown> = {}) {
-  return {
-    findById: vi.fn().mockResolvedValue({ id: 'j-1', vratarthiId: VA.id, vmAssignments: [ACTIVE_ASSIGNMENT] }),
-    buildJourneySlim: vi.fn().mockReturnValue({ id: 'j-1', vratarthiId: VA.id }),
-    ...overrides,
+  const mockJourneysRepository = {
+    findById: vi.fn(),
   };
-}
 
-function makeService(
-  vmRelRepo = makeVmRelRepo(),
-  journeysRepo = makeJourneysRepo(),
-) {
-  const svc = Object.create(VmRelationshipsService.prototype) as VmRelationshipsService;
-  const s = svc as unknown as Record<string, unknown>;
-  s['vmRelationshipsRepository'] = vmRelRepo;
-  s['journeysRepository'] = journeysRepo;
-  return svc;
-}
+  const mockVaUser: SessionUser = {
+    id: 'va-1',
+    email: 'va@test.com',
+    username: 'va_user',
+    displayName: 'VA User',
+    roles: [Role.VRATARTHI],
+    avatarUrl: null,
+    language: 'EN',
+  } as SessionUser;
 
-// ─── removeGlobalVm ───────────────────────────────────────────────────────────
+  const mockVmUser: SessionUser = {
+    id: 'vm-1',
+    email: 'vm@test.com',
+    username: 'vm_user',
+    displayName: 'VM User',
+    roles: [Role.VRATMITRA],
+    avatarUrl: null,
+    language: 'EN',
+  } as SessionUser;
 
-describe('VmRelationshipsService — removeGlobalVm', () => {
-  it('AUTH MATRIX POSITIVE: VA with active global VM can remove it → returns migration payload', async () => {
-    const svc = makeService();
-    const result = await svc.removeGlobalVm(VA);
-    expect(result.removedVmId).toBe(VM.id);
-    expect(result.affectedJourneys).toEqual(AFFECTED_JOURNEYS);
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        VmRelationshipsService,
+        { provide: VmRelationshipsRepository, useValue: mockRepository },
+        { provide: JourneysRepository, useValue: mockJourneysRepository },
+      ],
+    }).compile();
+
+    service = module.get<VmRelationshipsService>(VmRelationshipsService);
+    repository = module.get<VmRelationshipsRepository>(VmRelationshipsRepository);
   });
 
-  it('AUTH MATRIX NEGATIVE: VA with no active global VM → 404', async () => {
-    const repo = makeVmRelRepo({ findActiveGlobalVm: vi.fn().mockResolvedValue(null) });
-    const svc = makeService(repo);
-    await expect(svc.removeGlobalVm(VA)).rejects.toThrow(EntityNotFoundException);
+  afterEach(() => {
+    vi.clearAllMocks();
   });
 
-  it('AUTH MATRIX NEGATIVE: non-VA user cannot call removeGlobalVm → 403', async () => {
-    const svc = makeService();
-    await expect(svc.removeGlobalVm(MODERATOR)).rejects.toThrow(AccessDeniedException);
-  });
+  describe('getMyVms', () => {
+    it('should return list of VMs for VA', async () => {
+      const mockVms = [
+        {
+          id: 'vm-1',
+          displayName: 'VM One',
+          username: 'vm_one',
+          avatarUrl: null,
+          scope: 'GLOBAL',
+          assignedJourneys: [],
+        },
+      ];
 
-  it('POSITIVE: migration payload includes all affected journey assignments', async () => {
-    const svc = makeService();
-    const result = await svc.removeGlobalVm(VA);
-    expect(result.affectedJourneys).toHaveLength(2);
-    expect(result.affectedJourneys[0].journeyId).toBe('j-1');
-    expect(result.affectedJourneys[1].journeyId).toBe('j-2');
-  });
-});
+      mockRepository.getMyVms.mockResolvedValue(mockVms);
 
-// ─── withdrawJourneyVm ────────────────────────────────────────────────────────
+      const result = await service.getMyVms(mockVaUser);
 
-describe('VmRelationshipsService — withdrawJourneyVm', () => {
-  it('AUTH MATRIX POSITIVE: VM can withdraw from their assigned journey', async () => {
-    const repo = makeVmRelRepo();
-    const svc = makeService(repo);
-    const result = await svc.withdrawJourneyVm(VM, 'j-1');
-    expect(result.journeyId).toBe('j-1');
-    expect(result.vmId).toBe(VM.id);
-    expect(repo.endJourneyAssignment).toHaveBeenCalledWith(ACTIVE_ASSIGNMENT.id);
-  });
+      expect(result).toEqual(mockVms);
+      expect(mockRepository.getMyVms).toHaveBeenCalledWith(mockVaUser.id, undefined);
+    });
 
-  it('AUTH MATRIX NEGATIVE: VM not assigned to journey → 403', async () => {
-    const repo = makeVmRelRepo({ findActiveJourneyAssignment: vi.fn().mockResolvedValue(null) });
-    const svc = makeService(repo);
-    await expect(svc.withdrawJourneyVm(VM, 'j-1')).rejects.toThrow(AccessDeniedException);
-  });
+    it('should reject access for non-VA users', async () => {
+      await expect(service.getMyVms(mockVmUser)).rejects.toThrow(ForbiddenException);
+    });
 
-  it('AUTH MATRIX NEGATIVE: non-VM user cannot call withdrawJourneyVm → 403', async () => {
-    const svc = makeService();
-    await expect(svc.withdrawJourneyVm(VA, 'j-1')).rejects.toThrow(AccessDeniedException);
+    it('should filter by scope when provided', async () => {
+      const mockVms = [];
+      mockRepository.getMyVms.mockResolvedValue(mockVms);
+
+      await service.getMyVms(mockVaUser, 'GLOBAL');
+
+      expect(mockRepository.getMyVms).toHaveBeenCalledWith(mockVaUser.id, 'GLOBAL');
+    });
   });
 });

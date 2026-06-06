@@ -9,6 +9,6 @@ import { JourneysModule } from '../journeys/journeys.module';
   imports: [AuthModule, JourneysModule],
   controllers: [VmRelationshipsController],
   providers: [VmRelationshipsService, VmRelationshipsRepository],
-  exports: [VmRelationshipsService],
+  exports: [VmRelationshipsService, VmRelationshipsRepository],
 })
 export class VmRelationshipsModule {}

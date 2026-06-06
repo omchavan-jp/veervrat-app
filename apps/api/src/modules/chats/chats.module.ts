@@ -4,9 +4,10 @@ import { ChatsService } from './chats.service';
 import { ChatsRepository } from './chats.repository';
 import { ChatsGateway } from './chats.gateway';
 import { AuthModule } from '../auth/auth.module';
+import { VmRelationshipsModule } from '../vm-relationships/vm-relationships.module';
 
 @Module({
-  imports: [AuthModule],
+  imports: [AuthModule, VmRelationshipsModule],
   controllers: [ChatsController],
   providers: [ChatsService, ChatsRepository, ChatsGateway],
   exports: [ChatsService],
