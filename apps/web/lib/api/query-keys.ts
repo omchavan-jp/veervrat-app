@@ -28,4 +28,9 @@ export const queryKeys = {
     list: ['notifications', 'list'] as const,
     unreadCount: ['notifications', 'unread-count'] as const,
   },
+  dashboard: {
+    stats: ['dashboard', 'stats'] as const,
+    suggestions: ['dashboard', 'suggestions'] as const,
+    platformStats: ['dashboard', 'platform-stats'] as const,
+  },
 } as const;

@@ -15,6 +15,7 @@ import { ErcModule } from './modules/erc/erc.module';
 import { InvitationsModule } from './modules/invitations/invitations.module';
 import { VmRelationshipsModule } from './modules/vm-relationships/vm-relationships.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { RedisModule } from './common/redis/redis.module';
 import { AppController } from './app.controller';
 import { Reflector } from '@nestjs/core';
@@ -53,6 +54,7 @@ import { CsrfGuard } from './common/guards/csrf.guard';
     InvitationsModule,
     VmRelationshipsModule,
     NotificationsModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [
