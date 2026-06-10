@@ -194,6 +194,9 @@ model User {
   showLastActive        Boolean   @default(true) @map("show_last_active")
   showOnlineIndicator   Boolean   @default(true) @map("show_online_indicator")
   profilePrivate        Boolean   @default(false) @map("profile_private")
+  // Per-field public-profile visibility (spec/10). Empty/missing key = visible
+  // (all fields public by default). Only `false` entries hide a field.
+  profileVisibility     Json      @default("{}") @map("profile_visibility")
   deletedAt             DateTime? @map("deleted_at")
   createdAt             DateTime  @default(now()) @map("created_at")
   updatedAt             DateTime  @updatedAt @map("updated_at")

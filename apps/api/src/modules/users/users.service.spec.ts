@@ -17,12 +17,19 @@ const makeUser = (overrides: Record<string, unknown> = {}) => ({
   showLastActive: true,
   showOnlineIndicator: true,
   profilePrivate: false,
+  profileVisibility: {},
   lastActiveAt: new Date('2026-06-03T10:00:00Z'),
   createdAt: new Date('2026-01-01T00:00:00Z'),
   updatedAt: new Date('2026-06-01T00:00:00Z'),
   journeysCompleted: 2,
   journeysActive: 1,
   testsTaken: 5,
+  weaknessesWorkedOn: 4,
+  exposuresActive: 1,
+  exposuresCompleted: 2,
+  resolutionsActive: 1,
+  resolutionsCompleted: 1,
+  challengesCompleted: 1,
   publicExperienceCount: 3,
   ...overrides,
 });
@@ -31,12 +38,14 @@ function makeRepo(overrides: Partial<{
   findById: () => Promise<unknown>;
   findByUsername: () => Promise<unknown>;
   updateProfile: () => Promise<unknown>;
+  updateVisibility: () => Promise<unknown>;
   isUsernameTaken: () => Promise<boolean>;
 }> = {}) {
   return {
     findById: vi.fn().mockResolvedValue(makeUser()),
     findByUsername: vi.fn().mockResolvedValue(makeUser()),
     updateProfile: vi.fn().mockResolvedValue(makeUser()),
+    updateVisibility: vi.fn().mockResolvedValue(makeUser()),
     isUsernameTaken: vi.fn().mockResolvedValue(false),
     ...overrides,
   };
@@ -96,6 +105,71 @@ describe('UsersService — getPublicProfile', () => {
     const result = await service.getPublicProfile('testuser');
 
     expect('isOnline' in result).toBe(false);
+  });
+
+  it('includes all stat fields when visibility map is empty (public default)', async () => {
+    const result = await makeService(makeRepo()).getPublicProfile('testuser');
+    expect(result.testsTaken).toBe(5);
+    expect(result.weaknessesWorkedOn).toBe(4);
+    expect(result.exposuresActive).toBe(1);
+    expect(result.challengesCompleted).toBe(1);
+    expect(result.publicExperienceCount).toBe(3);
+  });
+
+  it('omits a field entirely when toggled off in profileVisibility', async () => {
+    const repo = makeRepo({
+      findByUsername: vi.fn().mockResolvedValue(
+        makeUser({ profileVisibility: { testsTaken: false, exposures: false } }),
+      ),
+    });
+    const result = await makeService(repo).getPublicProfile('testuser');
+    expect('testsTaken' in result).toBe(false);
+    expect('exposuresActive' in result).toBe(false);
+    expect('exposuresCompleted' in result).toBe(false);
+    // unaffected fields remain
+    expect(result.journeysCompleted).toBe(2);
+    expect(result.challengesCompleted).toBe(1);
+  });
+
+  it('always keeps username + displayName regardless of visibility', async () => {
+    const repo = makeRepo({
+      findByUsername: vi.fn().mockResolvedValue(
+        makeUser({ profileVisibility: { avatar: false, memberSince: false } }),
+      ),
+    });
+    const result = await makeService(repo).getPublicProfile('testuser');
+    expect(result.username).toBe('testuser');
+    expect(result.displayName).toBe('Test User');
+    expect('avatarUrl' in result).toBe(false);
+    expect('memberSince' in result).toBe(false);
+  });
+});
+
+describe('UsersService — updateVisibility', () => {
+  it('merges partial field updates with existing visibility', async () => {
+    const repo = makeRepo({
+      findById: vi.fn().mockResolvedValue(makeUser({ profileVisibility: { testsTaken: false } })),
+    });
+    const service = makeService(repo);
+
+    await service.updateVisibility('user-1', { profileVisibility: { exposures: false } });
+
+    expect(repo.updateVisibility).toHaveBeenCalledWith(
+      'user-1',
+      expect.objectContaining({
+        profileVisibility: { testsTaken: false, exposures: false },
+      }),
+    );
+  });
+
+  it('passes through profilePrivate toggle', async () => {
+    const repo = makeRepo();
+    const service = makeService(repo);
+    await service.updateVisibility('user-1', { profilePrivate: true });
+    expect(repo.updateVisibility).toHaveBeenCalledWith(
+      'user-1',
+      expect.objectContaining({ profilePrivate: true }),
+    );
   });
 });
 

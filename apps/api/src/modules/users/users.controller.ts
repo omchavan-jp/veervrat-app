@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { UpdateVisibilityDto } from './dto/update-visibility.dto';
 import { SessionGuard } from '../auth/guards/session.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { SessionUser } from '../auth/types/auth.types';
@@ -45,6 +46,16 @@ export class UsersController {
     @CurrentUser() user: SessionUser,
   ) {
     return this.usersService.updateOwnProfile(user.id, dto);
+  }
+
+  @Patch('me/visibility')
+  @UseGuards(SessionGuard)
+  @HttpCode(HttpStatus.OK)
+  async updateVisibility(
+    @Body() dto: UpdateVisibilityDto,
+    @CurrentUser() user: SessionUser,
+  ) {
+    return this.usersService.updateVisibility(user.id, dto);
   }
 
   @Get(':username')

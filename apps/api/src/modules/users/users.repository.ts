@@ -13,6 +13,7 @@ const ownProfileSelect = {
   showLastActive: true,
   showOnlineIndicator: true,
   profilePrivate: true,
+  profileVisibility: true,
   lastActiveAt: true,
   createdAt: true,
   updatedAt: true,
@@ -26,6 +27,7 @@ const publicProfileSelect = {
   showLastActive: true,
   showOnlineIndicator: true,
   profilePrivate: true,
+  profileVisibility: true,
   lastActiveAt: true,
   createdAt: true,
 } as const;
@@ -59,7 +61,18 @@ export class UsersRepository {
 
     if (!user) return null;
 
-    const [journeysCompleted, journeysActive, testsTaken] = await Promise.all([
+    const journeyOwner = { journey: { vratarthiId: user.id, deletedAt: null } };
+    const [
+      journeysCompleted,
+      journeysActive,
+      testsTaken,
+      weaknessesWorkedOn,
+      exposuresActive,
+      exposuresCompleted,
+      resolutionsActive,
+      resolutionsCompleted,
+      challengesCompleted,
+    ] = await Promise.all([
       this.prisma.journey.count({
         where: { vratarthiId: user.id, state: 'COMPLETED', deletedAt: null },
       }),
@@ -69,6 +82,16 @@ export class UsersRepository {
       this.prisma.testAttempt.count({
         where: { userId: user.id, isDraft: false },
       }),
+      this.prisma.journeyWeakness.findMany({
+        where: journeyOwner,
+        select: { weaknessId: true },
+        distinct: ['weaknessId'],
+      }),
+      this.prisma.journeyExposure.count({ where: { ...journeyOwner, status: 'IN_PROGRESS' } }),
+      this.prisma.journeyExposure.count({ where: { ...journeyOwner, status: 'APPROVED' } }),
+      this.prisma.journeyResolution.count({ where: { ...journeyOwner, status: 'IN_PROGRESS' } }),
+      this.prisma.journeyResolution.count({ where: { ...journeyOwner, status: 'APPROVED' } }),
+      this.prisma.journeyChallenge.count({ where: { ...journeyOwner, status: 'APPROVED' } }),
     ]);
 
     return {
@@ -76,8 +99,39 @@ export class UsersRepository {
       journeysCompleted,
       journeysActive,
       testsTaken,
+      weaknessesWorkedOn: weaknessesWorkedOn.length,
+      exposuresActive,
+      exposuresCompleted,
+      resolutionsActive,
+      resolutionsCompleted,
+      challengesCompleted,
       publicExperienceCount: user._count.experienceLogs,
     };
+  }
+
+  async updateVisibility(
+    id: string,
+    fields: {
+      profilePrivate?: boolean;
+      showLastActive?: boolean;
+      showOnlineIndicator?: boolean;
+      profileVisibility?: Record<string, boolean>;
+    },
+  ) {
+    return this.prisma.user.update({
+      where: { id },
+      data: {
+        ...(fields.profilePrivate !== undefined ? { profilePrivate: fields.profilePrivate } : {}),
+        ...(fields.showLastActive !== undefined ? { showLastActive: fields.showLastActive } : {}),
+        ...(fields.showOnlineIndicator !== undefined
+          ? { showOnlineIndicator: fields.showOnlineIndicator }
+          : {}),
+        ...(fields.profileVisibility !== undefined
+          ? { profileVisibility: fields.profileVisibility }
+          : {}),
+      },
+      select: ownProfileSelect,
+    });
   }
 
   async updateProfile(
