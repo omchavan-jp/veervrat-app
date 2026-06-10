@@ -154,7 +154,10 @@ function LeftRail({
         {/* Compact icon toggles — present in BOTH states (stacked when collapsed) */}
         <div className={`flex gap-2 ${collapsed ? 'flex-col items-center' : ''}`}>
           <ThemeToggle className={collapsed ? 'w-9' : 'flex-1'} />
-          <LanguageToggle className={collapsed ? 'w-9 !gap-0 [&>span]:hidden' : 'flex-1'} />
+          <LanguageToggle
+            display={collapsed ? 'icon' : 'label'}
+            className={collapsed ? 'w-9' : 'flex-1'}
+          />
         </div>
 
         {!collapsed ? (
@@ -291,7 +294,7 @@ export function AppLayoutClient({ children }: { children: React.ReactNode }) {
           <div className="ml-auto flex items-center gap-1.5">
             {/* Theme + language live in the rail footer on desktop; surfaced here on
                 mobile as uniform square icon-only buttons (label hidden) */}
-            <LanguageToggle className="!h-8 w-8 !gap-0 !border-transparent [&>span]:hidden md:hidden" />
+            <LanguageToggle display="reveal" className="!h-8 min-w-8 !border-transparent px-1.5 md:hidden" />
             <ThemeToggle className="!h-8 w-8 !border-transparent md:hidden" />
             <NotificationBell />
             <Link
