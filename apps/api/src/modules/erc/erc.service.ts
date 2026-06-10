@@ -89,7 +89,44 @@ export class ErcService {
       throw new AccessDeniedException();
     }
 
-    return this.ercRepository.updateStatus(itemId, targetStatus, ercType);
+    const updated = await this.ercRepository.updateStatus(itemId, targetStatus, ercType);
+
+    // Notify the assigned VM(s) when the VA submits an item for closure review.
+    if (targetStatus === ErcStatus.SUBMITTED) {
+      await this.notifyJourneyVms(
+        slim,
+        user.id,
+        NotificationEventType.ERC_CLOSURE_SUBMITTED,
+        ercType,
+        itemId,
+      );
+    }
+
+    return updated;
+  }
+
+  // Notifies every VM with an active stake in the journey (assigned journey VMs and the
+  // global VM), excluding the actor. Used to signal VA-initiated events like a closure
+  // submission so the VM knows work is waiting.
+  private async notifyJourneyVms(
+    journey: { vmAssignments: { vmId: string; state: string }[]; globalVmRelationship: { vmId: string; state: string } | null },
+    actorId: string,
+    eventType: NotificationEventType,
+    resourceType: string,
+    resourceId: string,
+  ): Promise<void> {
+    const recipientIds = new Set<string>();
+    for (const a of journey.vmAssignments) {
+      if (a.state === 'ACTIVE' && a.vmId !== actorId) recipientIds.add(a.vmId);
+    }
+    const g = journey.globalVmRelationship;
+    if (g && g.state === 'ACTIVE' && g.vmId !== actorId) recipientIds.add(g.vmId);
+
+    await Promise.all(
+      Array.from(recipientIds).map((vmId) =>
+        this.notificationsRepository.create(vmId, actorId, eventType, resourceType, resourceId),
+      ),
+    );
   }
 
   async approveItem(user: SessionUser, journeyId: string, itemId: string, ercType: ErcType) {

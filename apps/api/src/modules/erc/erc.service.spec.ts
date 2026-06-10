@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { ErcStatus, Role, VmRelationshipState } from '@prisma/client';
+import { ErcStatus, NotificationEventType, Role, VmRelationshipState } from '@prisma/client';
 import { ErcService } from './erc.service';
 import {
   ErcAlreadySelectedException,
@@ -162,6 +162,29 @@ describe('ErcService — updateStatus', () => {
     const service = makeService(ercRepo, makeJourneyRepo());
     await service.updateStatus(VA, JOURNEY_ID, ITEM_ID, 'approved', 'exposure');
     expect(ercRepo.updateStatus).toHaveBeenCalledWith(ITEM_ID, ErcStatus.APPROVED, 'exposure');
+  });
+
+  it('POSITIVE: IN_PROGRESS → SUBMITTED notifies the assigned VM (ERC_CLOSURE_SUBMITTED)', async () => {
+    const ercRepo = makeRepo({ findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.IN_PROGRESS)) });
+    const notifRepo = makeNotificationsRepo();
+    const service = makeServiceWithVm(ercRepo, notifRepo);
+    await service.updateStatus(VA, JOURNEY_ID, ITEM_ID, 'submitted', 'exposure');
+    expect(ercRepo.updateStatus).toHaveBeenCalledWith(ITEM_ID, ErcStatus.SUBMITTED, 'exposure');
+    expect(notifRepo.create).toHaveBeenCalledWith(
+      VM.id,
+      VA.id,
+      NotificationEventType.ERC_CLOSURE_SUBMITTED,
+      'exposure',
+      ITEM_ID,
+    );
+  });
+
+  it('SUBMITTED with no VM fires no notification', async () => {
+    const ercRepo = makeRepo({ findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.IN_PROGRESS)) });
+    const notifRepo = makeNotificationsRepo();
+    const service = makeService(ercRepo, makeJourneyRepo(), notifRepo);
+    await service.updateStatus(VA, JOURNEY_ID, ITEM_ID, 'submitted', 'exposure');
+    expect(notifRepo.create).not.toHaveBeenCalled();
   });
 
   it('AUTH MATRIX NEGATIVE: VA cannot set REVISIT via PATCH /status → 403', async () => {

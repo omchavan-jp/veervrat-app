@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import { NotificationEventType } from '@prisma/client';
 import { VmRelationshipsRepository } from './vm-relationships.repository';
 import { JourneysRepository } from '../journeys/journeys.repository';
+import { NotificationsRepository } from '../notifications/notifications.repository';
 import { hasPermission } from '../../common/permissions/has-permission';
 import {
   EntityNotFoundException,
@@ -14,6 +16,7 @@ export class VmRelationshipsService {
   constructor(
     private readonly vmRelationshipsRepository: VmRelationshipsRepository,
     private readonly journeysRepository: JourneysRepository,
+    private readonly notificationsRepository: NotificationsRepository,
   ) {}
 
   async removeGlobalVm(user: SessionUser) {
@@ -43,6 +46,16 @@ export class VmRelationshipsService {
     }
 
     await this.vmRelationshipsRepository.endJourneyAssignment(assignment.id);
+
+    // Notify the VA that their journey VM has withdrawn.
+    await this.notificationsRepository.create(
+      journey.vratarthiId,
+      user.id,
+      NotificationEventType.VM_WITHDREW,
+      'journey',
+      journeyId,
+    );
+
     return { journeyId, vmId: user.id };
   }
 
