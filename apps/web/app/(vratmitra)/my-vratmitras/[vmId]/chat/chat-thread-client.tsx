@@ -54,10 +54,10 @@ export function ChatThreadClient({ vmId }: ChatThreadClientProps) {
     queryKey: ['chat-messages', roomId],
     queryFn: async () => {
       if (!roomId) return [];
-      const response = await api.get(
+      const response = await api.get<{ data: Message[] }>(
         `/chats/${encodeURIComponent(roomId)}/messages?after=-1&limit=50`,
       );
-      return (response?.data || []) as Message[];
+      return response?.data || [];
     },
     enabled: !!roomId,
   });

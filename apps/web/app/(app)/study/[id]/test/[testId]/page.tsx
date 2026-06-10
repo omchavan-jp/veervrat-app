@@ -49,7 +49,7 @@ export default function TestQuestionPage() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const sentences: Sentence[] = (weakness?.subvirtues ?? []).flatMap(
-    (sv: { sentences?: Sentence[] }) => sv.sentences ?? [],
+    (sv) => sv.sentences,
   );
 
   // Redirect if already submitted

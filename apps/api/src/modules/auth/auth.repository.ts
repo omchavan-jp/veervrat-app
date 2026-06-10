@@ -11,6 +11,7 @@ const userSelect = {
   language: true,
   gender: true,
   dob: true,
+  avatarUrl: true,
   emailVerifiedAt: true,
   onboardingCompletedAt: true,
   deletedAt: true,

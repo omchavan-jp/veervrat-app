@@ -1,11 +1,14 @@
-import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common';
-import { Response } from 'express';
+import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import { Request, Response } from 'express';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(GlobalExceptionFilter.name);
+
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
+    const request = ctx.getRequest<Request>();
 
     let statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
     let error = 'INTERNAL_ERROR';
@@ -24,6 +27,21 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       } else {
         message = String(body);
       }
+    }
+
+    // Server errors are always logged with their stack; client (4xx) errors are not.
+    if (statusCode >= HttpStatus.INTERNAL_SERVER_ERROR) {
+      const stack = exception instanceof Error ? exception.stack : undefined;
+      this.logger.error(
+        {
+          msg: 'Unhandled server error',
+          statusCode,
+          method: request?.method,
+          path: request?.url,
+          error: exception instanceof Error ? exception.message : String(exception),
+        },
+        stack,
+      );
     }
 
     response.status(statusCode).json({

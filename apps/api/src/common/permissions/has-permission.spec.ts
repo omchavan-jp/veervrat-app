@@ -26,6 +26,7 @@ function makeUser(roles: Role[], overrides: Partial<SessionUser> = {}): SessionU
     language: 'EN',
     gender: null,
     dob: null,
+    avatarUrl: null,
     roles,
     emailVerifiedAt: new Date(),
     onboardingCompletedAt: new Date(),

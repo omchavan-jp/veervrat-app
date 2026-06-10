@@ -9,6 +9,7 @@ export type SessionUser = {
   language: string;
   gender: string | null;
   dob: Date | null;
+  avatarUrl: string | null;
   emailVerifiedAt: Date | null;
   onboardingCompletedAt: Date | null;
 };

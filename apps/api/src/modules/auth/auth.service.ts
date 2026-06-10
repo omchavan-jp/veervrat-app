@@ -504,6 +504,7 @@ export class AuthService {
     language: string;
     gender?: string | null;
     dob?: Date | null;
+    avatarUrl?: string | null;
     roles: { role: Role }[];
     emailVerifiedAt: Date | null;
     onboardingCompletedAt: Date | null;
@@ -516,6 +517,7 @@ export class AuthService {
       language: user.language,
       gender: user.gender ?? null,
       dob: user.dob ?? null,
+      avatarUrl: user.avatarUrl ?? null,
       roles: user.roles.map((r) => r.role),
       emailVerifiedAt: user.emailVerifiedAt,
       onboardingCompletedAt: user.onboardingCompletedAt,

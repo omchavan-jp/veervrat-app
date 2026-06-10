@@ -10,13 +10,13 @@ import type { SessionUser } from '../auth/types/auth.types';
 
 const VA: SessionUser = {
   id: 'va-1', email: 'va@x.com', displayName: 'VA', username: 'va',
-  roles: [Role.VRATARTHI], language: 'EN', gender: null, dob: null,
+  roles: [Role.VRATARTHI], language: 'EN', gender: null, dob: null, avatarUrl: null,
   emailVerifiedAt: new Date(), onboardingCompletedAt: new Date(),
 };
 const OTHER_VA: SessionUser = { ...VA, id: 'other-1' };
 const VM: SessionUser = {
   id: 'vm-1', email: 'vm@x.com', displayName: 'VM', username: 'vm',
-  roles: [Role.VRATMITRA], language: 'EN', gender: null, dob: null,
+  roles: [Role.VRATMITRA], language: 'EN', gender: null, dob: null, avatarUrl: null,
   emailVerifiedAt: new Date(), onboardingCompletedAt: new Date(),
 };
 const STRANGER: SessionUser = { ...OTHER_VA, id: 'stranger-1' };

@@ -8,6 +8,7 @@ export type User = {
   language: string;
   gender: string | null;
   dob: string | null;
+  avatarUrl: string | null;
   roles: string[];
   emailVerifiedAt: string | null;
   onboardingCompletedAt: string | null;

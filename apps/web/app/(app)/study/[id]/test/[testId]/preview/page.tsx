@@ -26,7 +26,7 @@ export default function TestPreviewPage() {
   const [unansweredExpanded, setUnansweredExpanded] = useState(false);
 
   const sentences: Sentence[] = (weakness?.subvirtues ?? []).flatMap(
-    (sv: { sentences?: Sentence[] }) => sv.sentences ?? [],
+    (sv) => sv.sentences,
   );
 
   const answerMap = new Map<string, Score>(

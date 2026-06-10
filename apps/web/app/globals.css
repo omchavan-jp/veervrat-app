@@ -15,6 +15,16 @@
   --warning: #C4841D;
   --danger: #C0512F;
 
+  /* shadcn semantic tokens — light mode (mapped onto the warm palette) */
+  --card: var(--surface);
+  --card-foreground: var(--fg);
+  --destructive: var(--danger);
+  --destructive-foreground: #FAF7F2;
+  --secondary: #F0EAE0;
+  --secondary-foreground: var(--fg);
+  --accent-foreground: #FAF7F2;
+  --input: rgba(28, 26, 23, 0.16);
+
   /* Shadows — light mode (internal vars, consumed by @theme inline via distinct names) */
   --_shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
   --_shadow-modal: 0 8px 32px rgba(0, 0, 0, 0.12);
@@ -41,6 +51,16 @@
   --warning: #D4943A;
   --danger: #D4694A;
 
+  /* shadcn semantic tokens — dark mode */
+  --card: var(--surface);
+  --card-foreground: var(--fg);
+  --destructive: var(--danger);
+  --destructive-foreground: #1A1816;
+  --secondary: #2E2B28;
+  --secondary-foreground: var(--fg);
+  --accent-foreground: #1A1816;
+  --input: rgba(200, 190, 180, 0.20);
+
   /* Shadows — dark mode */
   --_shadow-card: 0 1px 3px rgba(0, 0, 0, 0.20);
   --_shadow-modal: 0 8px 32px rgba(0, 0, 0, 0.30);
@@ -61,6 +81,16 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
+
+  /* shadcn semantic color utilities — drive border/bg/text/ring on shadcn components */
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-input: var(--input);
 
   /* Fonts */
   --font-sans: var(--font-geist-sans);

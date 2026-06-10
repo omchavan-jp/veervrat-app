@@ -62,13 +62,13 @@ describe('NotificationsService', () => {
       expect(repo.listForUser).toHaveBeenCalledWith(USER_A, 'cursor-token', 10);
     });
 
-    it('AUTH MATRIX POSITIVE — returns only own notifications (repo enforces recipientId filter)', async () => {
+    it('AUTH MATRIX POSITIVE — scopes the query to the caller (repo enforces recipientId filter)', async () => {
       const ownNotif = makeNotif({ recipientId: USER_A });
-      const { service } = makeService({
-        listForUser: vi.fn().mockResolvedValue({ items: [ownNotif], nextCursor: null }),
-      });
+      const listForUser = vi.fn().mockResolvedValue({ items: [ownNotif], nextCursor: null });
+      const { service } = makeService({ listForUser });
       const result = await service.listForUser(USER_A);
-      expect(result.items.every((n) => n.recipientId === USER_A)).toBe(true);
+      expect(listForUser).toHaveBeenCalledWith(USER_A, undefined, undefined);
+      expect(result.items).toEqual([ownNotif]);
     });
   });
 

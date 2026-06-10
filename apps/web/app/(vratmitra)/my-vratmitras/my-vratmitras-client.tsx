@@ -27,8 +27,8 @@ export function MyVratmitrasClient() {
   const { data, isLoading, error } = useQuery({
     queryKey: ['my-vms'],
     queryFn: async () => {
-      const response = await api.get('/vm-relationships/my-vms');
-      return (response?.data || []) as VM[];
+      const response = await api.get<{ data: VM[] }>('/vm-relationships/my-vms');
+      return response?.data || [];
     },
     staleTime: 30000,
   });

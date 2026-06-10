@@ -35,7 +35,7 @@ describe('ChatsService', () => {
     language: 'EN',
   } as SessionUser;
 
-  const mockRoom = service?.deriveRoomId(mockVaUser.id, mockVmUser.id) || 'chat:va-1:vm-1';
+  const mockRoom = `chat:${[mockVaUser.id, mockVmUser.id].sort().join(':')}`;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({

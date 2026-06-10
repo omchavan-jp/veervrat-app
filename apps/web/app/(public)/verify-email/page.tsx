@@ -76,7 +76,7 @@ export default async function VerifyEmailPage({
 
   return (
     <AuthShell hero={hero}>
-      <StatusBanner variant="error" title={t('failedTitle')} description={result.message} />
+      <StatusBanner variant="error" title={t('failedTitle')} description={result.message ?? t('invalidLink')} />
       <Link
         href="/login"
         className="inline-flex h-auto w-full items-center justify-center rounded-xl bg-accent px-6 py-3.5 text-[15px] font-medium text-bg hover:bg-accent-hover"

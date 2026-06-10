@@ -12,12 +12,12 @@ import type { SessionUser } from '../auth/types/auth.types';
 
 const VA: SessionUser = {
   id: 'va-1', email: 'va@x.com', displayName: 'VA', username: 'va',
-  roles: [Role.VRATARTHI], language: 'EN', gender: null, dob: null,
+  roles: [Role.VRATARTHI], language: 'EN', gender: null, dob: null, avatarUrl: null,
   emailVerifiedAt: new Date(), onboardingCompletedAt: new Date(),
 };
 const VM: SessionUser = {
   id: 'vm-1', email: 'vm@x.com', displayName: 'VM', username: 'vm',
-  roles: [Role.VRATMITRA], language: 'EN', gender: null, dob: null,
+  roles: [Role.VRATMITRA], language: 'EN', gender: null, dob: null, avatarUrl: null,
   emailVerifiedAt: new Date(), onboardingCompletedAt: new Date(),
 };
 const OTHER_VM: SessionUser = { ...VM, id: 'other-vm-1' };

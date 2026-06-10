@@ -88,7 +88,7 @@ describe('VmRelationshipsService', () => {
     });
 
     it('should filter by scope when provided', async () => {
-      const mockVms = [];
+      const mockVms: unknown[] = [];
       mockRepository.getMyVms.mockResolvedValue(mockVms);
 
       await service.getMyVms(mockVaUser, 'GLOBAL');

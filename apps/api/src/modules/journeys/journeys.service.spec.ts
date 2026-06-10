@@ -17,6 +17,7 @@ const VA_USER: SessionUser = {
   language: 'EN',
   gender: null,
   dob: null,
+  avatarUrl: null,
   emailVerifiedAt: new Date(),
   onboardingCompletedAt: new Date(),
 };
@@ -30,6 +31,7 @@ const VM_USER: SessionUser = {
   language: 'EN',
   gender: null,
   dob: null,
+  avatarUrl: null,
   emailVerifiedAt: new Date(),
   onboardingCompletedAt: new Date(),
 };
@@ -54,7 +56,7 @@ const JOURNEY_SLIM_WITH_VM = {
   globalVmRelationship: null,
 };
 
-const makeJourneyDetail = (state = JourneyState.ACTIVE) => ({
+const makeJourneyDetail = (state: JourneyState = JourneyState.ACTIVE) => ({
   id: JOURNEY_ID,
   title: 'My Journey',
   state,
