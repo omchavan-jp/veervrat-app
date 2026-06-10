@@ -162,7 +162,7 @@ export type PermissionResource =
   | { type: 'test_attempt'; attempt: TestAttemptSlim; journey: JourneySlim | null }
   | { type: 'invitation'; invitation: InvitationSlim }
   | { type: 'vm_relationship'; relationship: VmRelationshipResourceSlim }
-  | { type: 'room'; id: string };
+  | { type: 'room'; id: string; relationshipVerified: boolean };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -214,7 +214,16 @@ export function hasActiveJourneyVm(journey: JourneySlim): boolean {
   return journey.vmAssignments.some((a) => a.state === VmRelationshipState.ACTIVE);
 }
 
-export function isRoomParticipant(user: SessionUser, roomId: string): boolean {
+// Authorizes a 1:1 chat room. The caller must be one of the two ids embedded in the
+// room string AND an active VM relationship must exist between the two participants.
+// `relationshipVerified` is computed by the service layer via DB — never trust the
+// room string alone (a client can craft chat:<self>:<victim>).
+export function isRoomParticipant(
+  user: SessionUser,
+  roomId: string,
+  relationshipVerified: boolean,
+): boolean {
+  if (!relationshipVerified) return false;
   const [, userId1, userId2] = roomId.split(':');
   return user.id === userId1 || user.id === userId2;
 }

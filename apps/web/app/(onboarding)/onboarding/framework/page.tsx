@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth, useCompleteFramework } from '@/hooks/use-auth';
 
 type Section = 'section1' | 'section2' | 'cta';
 
@@ -16,13 +16,18 @@ export default function FrameworkOnboardingPage() {
 
   useEffect(() => {
     if (isLoading) return;
-    // If user has not completed account setup, redirect back
-    if (!user || user.onboardingCompletedAt === null) {
+    // Already fully onboarded → app.
+    if (user && user.onboardingCompletedAt !== null) {
+      router.replace('/dashboard');
+      return;
+    }
+    // Reached framework without finishing account setup → go back to step 1.
+    if (!user || user.accountSetupCompletedAt === null) {
       router.replace('/onboarding/account-setup');
     }
   }, [isLoading, user, router]);
 
-  if (isLoading || !user || user.onboardingCompletedAt === null) {
+  if (isLoading || !user || user.accountSetupCompletedAt === null || user.onboardingCompletedAt !== null) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-bg">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent border-t-transparent" />
@@ -147,6 +152,15 @@ function CtaScreen({
   onBack: () => void;
 }) {
   const router = useRouter();
+  const completeFramework = useCompleteFramework();
+
+  // Mark onboarding fully complete (grants app access), then go to the chosen destination.
+  const finish = (destination: string) => {
+    completeFramework.mutate(undefined, {
+      onSuccess: () => router.push(destination),
+    });
+  };
+
   return (
     <div className="space-y-8 text-center">
       <div>
@@ -158,14 +172,16 @@ function CtaScreen({
 
       <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
         <Button
-          onClick={() => router.push('/study')}
+          onClick={() => finish('/study')}
+          disabled={completeFramework.isPending}
           className="h-auto rounded-xl bg-accent px-8 py-4 text-[15px] text-bg hover:bg-accent-hover"
         >
           {t('ctaTakeTest')}
         </Button>
         <Button
           variant="outline"
-          onClick={() => router.push('/dashboard')}
+          onClick={() => finish('/dashboard')}
+          disabled={completeFramework.isPending}
           className="h-auto rounded-xl border-border-strong bg-surface px-8 py-4 text-[15px] text-fg hover:bg-bg"
         >
           {t('ctaExplore')}
@@ -175,7 +191,8 @@ function CtaScreen({
       <div className="pt-2">
         <button
           onClick={onBack}
-          className="text-sm text-muted hover:text-fg"
+          disabled={completeFramework.isPending}
+          className="text-sm text-muted hover:text-fg disabled:opacity-50"
         >
           ← {t('back')}
         </button>

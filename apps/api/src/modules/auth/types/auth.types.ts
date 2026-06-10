@@ -11,6 +11,7 @@ export type SessionUser = {
   dob: Date | null;
   avatarUrl: string | null;
   emailVerifiedAt: Date | null;
+  accountSetupCompletedAt: Date | null;
   onboardingCompletedAt: Date | null;
 };
 

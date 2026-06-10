@@ -20,7 +20,7 @@ interface UploadChatImageRequest {
   roomId?: string;
 }
 
-@Controller('api/v1/uploads')
+@Controller('uploads')
 @UseGuards(SessionGuard)
 export class UploadsController {
   constructor(private uploadsService: UploadsService) {}

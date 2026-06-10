@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
-import { CreateMessageDto } from './dto/create-message.dto';
+import type { TiptapDoc } from './tiptap-content';
 
 @Injectable()
 export class ChatsRepository {
@@ -9,14 +10,14 @@ export class ChatsRepository {
   async createMessage(
     roomId: string,
     senderId: string,
-    content: any,
+    content: TiptapDoc,
     journeyId?: string,
   ) {
     return this.prisma.chatMessage.create({
       data: {
         roomId,
         senderId,
-        body: content,
+        body: content as unknown as Prisma.InputJsonValue,
         journeyId,
         seqNo: await this.getNextSeqNo(roomId),
       },

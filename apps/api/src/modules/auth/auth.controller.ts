@@ -177,6 +177,13 @@ export class AuthController {
     return this.authService.completeOnboarding(user.id, dto.displayName, dto.username, dto.language, dto.gender, dto.dob);
   }
 
+  @Post('complete-framework')
+  @UseGuards(SessionGuard)
+  @HttpCode(HttpStatus.OK)
+  async completeFramework(@CurrentUser() user: SessionUser) {
+    return this.authService.completeFramework(user.id);
+  }
+
   @Get('check-username')
   async checkUsername(@Query('username') username: string) {
     if (!username) {

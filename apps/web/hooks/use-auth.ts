@@ -96,3 +96,16 @@ export function useCompleteOnboarding() {
     },
   });
 }
+
+// Step 2: marks the framework walkthrough complete (grants app access). The caller
+// triggers navigation to the chosen destination once the cache is updated.
+export function useCompleteFramework() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: authApi.completeFramework,
+    onSuccess: (user: User) => {
+      queryClient.setQueryData(queryKeys.auth.me, user);
+    },
+  });
+}

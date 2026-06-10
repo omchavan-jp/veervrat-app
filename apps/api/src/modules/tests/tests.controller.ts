@@ -50,6 +50,6 @@ export class TestsController {
 
   @Get(':id/report')
   async report(@Param('id') id: string, @CurrentUser() user: SessionUser) {
-    return this.testsService.getReport(user.id, id);
+    return this.testsService.getReport(user, id);
   }
 }

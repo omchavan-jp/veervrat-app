@@ -218,6 +218,11 @@ export class ErcService {
 
     if (!item.isCustom) throw new AccessDeniedException();
 
+    // Once a custom item enters review (pending/approved/rejected), its definition is
+    // frozen — editing after submission would let content change out from under a VM's
+    // review. The author must withdraw/revisit before editing again.
+    if (item.reviewStatus !== null) throw new CustomErcAlreadyPendingException();
+
     if (!hasPermission(user, { type: 'erc', journey: slim, erc: { journeyId, createdById: item.createdById ?? undefined, status: item.status } }, 'custom_erc.edit')) {
       throw new AccessDeniedException();
     }

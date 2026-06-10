@@ -74,7 +74,7 @@ export class ChatsGateway
     data: {
       type: string;
       roomId: string;
-      content: any;
+      content: unknown;
       tempId: string;
     },
   ) {

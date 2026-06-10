@@ -34,9 +34,9 @@ export default function ForgotPasswordPage() {
     gloss: 'No matter. A fresh start is always possible.',
   };
 
-  const status = forgotPassword.data?.status;
-
-  if (status === 'sent') {
+  // Enumeration prevention: the API always returns 'sent'. We show one neutral
+  // confirmation regardless of whether the address has an account.
+  if (forgotPassword.isSuccess) {
     return (
       <AuthShell hero={hero}>
         <StatusBanner variant="success" title={t('sentTitle')} description={t('sentDescription')} />
@@ -46,39 +46,6 @@ export default function ForgotPasswordPage() {
         >
           {t('backToLogin')}
         </Link>
-      </AuthShell>
-    );
-  }
-
-  if (status === 'google_only') {
-    return (
-      <AuthShell hero={hero}>
-        <StatusBanner variant="error" title={t('googleOnlyTitle')} description={t('googleOnlyDescription')} />
-        <Link
-          href="/login"
-          className="mt-4 inline-flex h-auto w-full items-center justify-center rounded-xl bg-accent px-6 py-3.5 text-[15px] font-medium text-bg hover:bg-accent-hover"
-        >
-          {t('backToLogin')}
-        </Link>
-      </AuthShell>
-    );
-  }
-
-  if (status === 'not_found') {
-    return (
-      <AuthShell hero={hero}>
-        <StatusBanner variant="error" title={t('notFoundTitle')} description={t('notFoundDescription')} />
-        <button
-          onClick={() => forgotPassword.reset()}
-          className="mt-4 inline-flex h-auto w-full items-center justify-center rounded-xl bg-accent px-6 py-3.5 text-[15px] font-medium text-bg hover:bg-accent-hover"
-        >
-          {t('tryAgain')}
-        </button>
-        <p className="mt-4 text-center text-sm text-muted">
-          <Link href="/signup" className="text-accent underline decoration-accent/40 hover:no-underline">
-            Create an account
-          </Link>
-        </p>
       </AuthShell>
     );
   }

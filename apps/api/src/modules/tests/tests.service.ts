@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { TestsRepository } from './tests.repository';
+import { VmRelationshipsRepository } from '../vm-relationships/vm-relationships.repository';
+import { hasPermission } from '../../common/permissions/has-permission';
+import type { SessionUser } from '../auth/types/auth.types';
+import type { JourneySlim } from '../../common/permissions/types';
 import {
   EntityNotFoundException,
   AccessDeniedException,
@@ -9,8 +13,41 @@ import {
 
 @Injectable()
 export class TestsService {
-  constructor(private readonly testsRepository: TestsRepository) {}
+  constructor(
+    private readonly testsRepository: TestsRepository,
+    private readonly vmRelationshipsRepository: VmRelationshipsRepository,
+  ) {}
 
+  // Builds the VM-context "journey" slim used by test.view_results: the test owner's
+  // active global VM + journey VM assignments, collapsed onto one synthetic JourneySlim
+  // so hasPermission can authorize the owner and their VMs uniformly.
+  private async buildOwnerVmContext(ownerId: string): Promise<JourneySlim> {
+    const ctx = await this.vmRelationshipsRepository.getVratarthiVmContext(ownerId);
+    return {
+      id: `test-owner:${ownerId}`,
+      vratarthiId: ownerId,
+      vmAssignments: ctx.vmAssignments,
+      globalVmRelationship: ctx.globalVmRelationship,
+    };
+  }
+
+  private async assertCanViewResults(
+    user: SessionUser,
+    attempt: { userId: string; weaknessId: string },
+  ): Promise<void> {
+    // Fast path: owner — no need to load VM context.
+    if (attempt.userId === user.id) return;
+    const journey = await this.buildOwnerVmContext(attempt.userId);
+    const allowed = hasPermission(
+      user,
+      { type: 'test_attempt', attempt, journey },
+      'test.view_results',
+    );
+    if (!allowed) throw new AccessDeniedException();
+  }
+
+  // Draft-editor data (answers for taking/resuming) — owner-only. VMs view finished
+  // results via getReport, never the draft editor.
   async getTest(userId: string, testId: string) {
     const test = await this.testsRepository.findById(testId);
     if (!test) throw new EntityNotFoundException('TestAttempt', testId);
@@ -50,10 +87,10 @@ export class TestsService {
     return this.testsRepository.markSubmitted(testId);
   }
 
-  async getReport(userId: string, testId: string) {
+  async getReport(user: SessionUser, testId: string) {
     const data = await this.testsRepository.findReportData(testId);
     if (!data) throw new EntityNotFoundException('TestAttempt', testId);
-    if (data.userId !== userId) throw new AccessDeniedException();
+    await this.assertCanViewResults(user, { userId: data.userId, weaknessId: data.weaknessId });
     if (data.isDraft) throw new TestNotSubmittedException();
 
     const flaggedSentences = data.sentences

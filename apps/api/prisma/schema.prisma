@@ -188,6 +188,7 @@ model User {
   dob                   DateTime? @db.Date
   language              Language  @default(EN)
   emailVerifiedAt       DateTime? @map("email_verified_at")
+  accountSetupCompletedAt DateTime? @map("account_setup_completed_at")
   onboardingCompletedAt DateTime? @map("onboarding_completed_at")
   lastActiveAt          DateTime? @map("last_active_at")
   showLastActive        Boolean   @default(true) @map("show_last_active")

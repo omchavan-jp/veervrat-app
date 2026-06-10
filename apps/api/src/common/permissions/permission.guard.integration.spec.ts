@@ -90,6 +90,7 @@ function makeUserHeader(roles: Role[], id = 'user-1'): string {
     avatarUrl: null,
     roles,
     emailVerifiedAt: new Date().toISOString() as unknown as Date,
+    accountSetupCompletedAt: new Date().toISOString() as unknown as Date,
     onboardingCompletedAt: new Date().toISOString() as unknown as Date,
   };
   return JSON.stringify(user);

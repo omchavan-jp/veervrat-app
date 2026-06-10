@@ -11,7 +11,7 @@ import { SessionGuard } from '../auth/guards/session.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { SessionUser } from '../auth/types/auth.types';
 
-@Controller('api/v1/chats')
+@Controller('chats')
 @UseGuards(SessionGuard)
 export class ChatsController {
   constructor(private chatsService: ChatsService) {}
