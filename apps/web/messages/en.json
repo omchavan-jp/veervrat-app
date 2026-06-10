@@ -353,7 +353,13 @@
       "tabChallenges": "Challenges",
       "tabChat": "Chat",
       "emptyState": "Select your first exposures and resolutions to begin.",
-      "emptyStateCta": "Browse exposures"
+      "emptyStateCta": "Browse exposures",
+      "complete": "Submit for completion",
+      "completeSuccess": "Journey submitted for completion.",
+      "completeError": "Could not complete this journey yet.",
+      "chatBanner": "Chat with your Vratmitra about “{title}”.",
+      "openChat": "Open chat",
+      "chatNoVm": "Invite a Vratmitra to start a conversation."
     },
     "erc": {
       "statusNotStarted": "Not started",
@@ -380,7 +386,10 @@
       "poolEmptyExposures": "No exposures available for your weakness context.",
       "poolEmptyResolutions": "No resolutions available for your weakness context.",
       "poolEmptyChallenges": "No challenges available for your weakness context.",
-      "select": "Select"
+      "select": "Select",
+      "sidenoteFrom": "Sidenote from your Vratmitra",
+      "sidenoteAcknowledge": "Acknowledge",
+      "sidenoteAcknowledged": "Acknowledged"
     },
     "checkin": {
       "logTitle": "Log check-in",

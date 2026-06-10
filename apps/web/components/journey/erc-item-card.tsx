@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl';
 import type { JourneyErcItem, ErcType } from '@/lib/api/journeys';
 import {
-  useUpdateErcStatus, useDeactivateErc, useReactivateErc, useRemoveErc,
+  useUpdateErcStatus, useDeactivateErc, useReactivateErc, useRemoveErc, useAcknowledgeSidenote,
 } from '@/hooks/use-journeys';
 import { CheckinForm } from './checkin-form';
 import { CheckinHistory } from './checkin-history';
@@ -49,6 +49,7 @@ export function ErcItemCard({ item, ercType, journeyId, hasVm }: Props) {
   const deactivate = useDeactivateErc(journeyId, ercType);
   const reactivate = useReactivateErc(journeyId, ercType);
   const remove = useRemoveErc(journeyId, ercType);
+  const acknowledgeSidenote = useAcknowledgeSidenote(journeyId, ercType);
 
   const isPending = updateStatus.isPending || deactivate.isPending || reactivate.isPending || remove.isPending;
 
@@ -140,6 +141,30 @@ export function ErcItemCard({ item, ercType, journeyId, hasVm }: Props) {
           </>
         )}
       </div>
+
+      {/* VM sidenote — guidance attached by the Vratmitra (spec/16). Acknowledgeable. */}
+      {item.vmSidenote && (
+        <div className="mt-3 rounded-xl border border-accent-2/20 bg-accent-2/[0.07] p-3.5">
+          <div className="mb-1.5 flex items-center gap-2 text-[11px] font-medium text-accent-2">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-accent-2 text-[9px] font-semibold text-bg">
+              VM
+            </span>
+            {t('sidenoteFrom')}
+          </div>
+          <p className="text-[13px] leading-relaxed">{item.vmSidenote.text}</p>
+          {item.vmSidenote.acknowledgedAt ? (
+            <p className="mt-2 text-[11px] text-success">✓ {t('sidenoteAcknowledged')}</p>
+          ) : (
+            <button
+              onClick={() => acknowledgeSidenote.mutate({ itemId: item.id })}
+              disabled={acknowledgeSidenote.isPending}
+              className="mt-2.5 rounded-lg border border-border-strong px-3 py-1.5 text-[12px] transition-colors hover:border-accent hover:text-accent disabled:opacity-40"
+            >
+              {t('sidenoteAcknowledge')}
+            </button>
+          )}
+        </div>
+      )}
 
       {ercType === 'resolution' && item.status === 'IN_PROGRESS' && !item.isDeactivated && (
         <CheckinForm journeyId={journeyId} resolutionId={item.id} />

@@ -126,6 +126,25 @@ export function useRemoveErc(journeyId: string, type: ErcType) {
   );
 }
 
+export function useAcknowledgeSidenote(journeyId: string, type: ErcType) {
+  return useErcMutation(
+    ({ itemId }: { itemId: string }) => ercApi.acknowledgeSidenote(journeyId, type, itemId),
+    journeyId,
+    type,
+  );
+}
+
+export function useCompleteJourney() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id }: { id: string }) => journeysApi.complete(id),
+    onSuccess: (_data, { id }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.journeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.journeys.all });
+    },
+  });
+}
+
 // ─── Checkin hooks ──────────────────────────────────────────────────────────
 
 export function useCheckins(journeyId: string, resolutionId: string) {

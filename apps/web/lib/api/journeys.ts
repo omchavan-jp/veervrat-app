@@ -58,6 +58,14 @@ export type JourneyListResponse = {
 export type ErcStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'SUBMITTED' | 'APPROVED' | 'REVISIT';
 export type ErcType = 'exposure' | 'resolution' | 'challenge';
 
+export type VmSidenote = {
+  id: string;
+  vmId: string;
+  text: string;
+  acknowledgedAt: string | null;
+  createdAt: string;
+};
+
 export type JourneyErcItem = {
   id: string;
   journeyId: string;
@@ -82,6 +90,8 @@ export type JourneyErcItem = {
   // Challenge-specific
   durationDays?: number | null;
   poolChallengeId?: string | null;
+  // VM sidenote (active only — null if none/revoked)
+  vmSidenote?: VmSidenote | null;
 };
 
 export type PoolItem = {
@@ -145,6 +155,11 @@ export const ercApi = {
 
   remove: (journeyId: string, type: ErcType, itemId: string) =>
     api.delete<void>(`/journeys/${journeyId}/${type}s/${itemId}`),
+
+  acknowledgeSidenote: (journeyId: string, type: ErcType, itemId: string) =>
+    api
+      .post<Wrapped<VmSidenote>>(`/journeys/${journeyId}/${type}s/${itemId}/sidenote/acknowledge`)
+      .then((r) => r.data),
 };
 
 export const journeysApi = {
@@ -162,4 +177,7 @@ export const journeysApi = {
 
   updateTitle: (id: string, title: string) =>
     api.patch<Wrapped<{ id: string; title: string }>>(`/journeys/${id}/title`, { title }).then((r) => r.data),
+
+  complete: (id: string) =>
+    api.post<Wrapped<{ id: string; state: JourneyState }>>(`/journeys/${id}/complete`).then((r) => r.data),
 };
