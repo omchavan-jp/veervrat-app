@@ -490,6 +490,22 @@
     "fieldChallenges": "Challenges",
     "fieldExperiences": "Public experiences"
   },
+  "invitation": {
+    "title": "Vratmitra invitation",
+    "body": "You've been invited to become a Vratmitra. Accept to begin guiding their practice.",
+    "accept": "Accept invitation",
+    "decline": "Decline",
+    "accepting": "Accepting…",
+    "declining": "Declining…",
+    "acceptedTitle": "Invitation accepted",
+    "acceptedBody": "You're now connected. Find them under My Vratmitras.",
+    "declinedTitle": "Invitation declined",
+    "declinedBody": "No problem — the invitation has been declined.",
+    "errorTitle": "Couldn't process this invitation",
+    "errorBody": "It may have expired or already been used.",
+    "goToVratmitras": "Go to My Vratmitras",
+    "goToDashboard": "Go to dashboard"
+  },
   "publicProfile": {
     "memberSince": "Member since {date}",
     "online": "Online now",
