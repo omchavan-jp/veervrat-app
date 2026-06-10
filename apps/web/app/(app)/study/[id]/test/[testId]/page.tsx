@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
 import { useWeakness } from '@/hooks/use-weaknesses';
 import { useTest, useSaveAnswers } from '@/hooks/use-tests';
 import { queryKeys } from '@/lib/api/query-keys';
@@ -12,8 +13,12 @@ type Score = 1 | 2 | 3 | 4;
 type ViewMode = 'one-at-a-time' | 'view-all';
 type Sentence = { sentenceId: string; textEn: string; textMr: string | null };
 
-const SCORE_LABELS: Record<Score, string> = { 4: 'Always', 3: 'Often', 2: 'Sometimes', 1: 'Never' };
-const SCORE_MR: Record<Score, string> = { 4: 'नेहमी', 3: 'कधी कधी', 2: 'क्वचित', 1: 'कधीच नाही' };
+const SCORE_KEYS: Record<Score, 'always' | 'often' | 'sometimes' | 'never'> = {
+  4: 'always',
+  3: 'often',
+  2: 'sometimes',
+  1: 'never',
+};
 const SCORE_COLORS: Record<Score, string> = {
   4: 'bg-success/20 border-success text-success',
   3: 'bg-accent-2/20 border-accent-2 text-accent-2',
@@ -25,6 +30,8 @@ export default function TestQuestionPage() {
   const { id, testId } = useParams<{ id: string; testId: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const t = useTranslations('study.test');
+  const scoreLabel = (score: Score) => t(SCORE_KEYS[score]);
 
   const { data: weakness } = useWeakness(id);
   const { data: testData } = useTest(testId);
@@ -162,7 +169,7 @@ export default function TestQuestionPage() {
         <div className="mx-auto flex max-w-2xl items-center gap-4">
           <div className="flex-1">
             <div className="mb-1 text-[13px] text-muted">
-              {respondedSentences}/{sentences.length} reflected on
+              {t('reflectedProgress', { answered: respondedSentences, total: sentences.length })}
             </div>
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
               <div
@@ -175,13 +182,13 @@ export default function TestQuestionPage() {
             onClick={() => setViewMode(viewMode === 'one-at-a-time' ? 'view-all' : 'one-at-a-time')}
             className="shrink-0 text-[12px] text-muted underline hover:text-fg"
           >
-            {viewMode === 'one-at-a-time' ? 'View all' : 'One at a time'}
+            {viewMode === 'one-at-a-time' ? t('viewAll') : t('oneAtATime')}
           </button>
           <button
             onClick={() => { setPendingNavHref(`/study/${id}`); setShowExitConfirm(true); }}
             className="shrink-0 text-[12px] text-muted hover:text-fg"
           >
-            Save & exit
+            {t('saveExit')}
           </button>
         </div>
       </div>
@@ -203,7 +210,7 @@ export default function TestQuestionPage() {
                     <button
                       onClick={() => { setCurrentIndex(i); setViewMode('one-at-a-time'); }}
                       className="mt-0.5 shrink-0 rounded bg-accent/10 px-1.5 py-0.5 font-mono text-[11px] text-accent hover:bg-accent/20"
-                      title="Open in single question mode"
+                      title={t('oneAtATime')}
                     >
                       #{i + 1}
                     </button>
@@ -213,7 +220,7 @@ export default function TestQuestionPage() {
                     </div>
                     {answers.has(s.sentenceId) && (
                       <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium ${SCORE_COLORS[answers.get(s.sentenceId)!]}`}>
-                        {SCORE_LABELS[answers.get(s.sentenceId)!]}
+                        {scoreLabel(answers.get(s.sentenceId)!)}
                       </span>
                     )}
                   </div>
@@ -228,7 +235,7 @@ export default function TestQuestionPage() {
                             : 'border-border-strong bg-bg hover:border-accent/40'
                         }`}
                       >
-                        {SCORE_LABELS[score]}
+                        {scoreLabel(score)}
                       </button>
                     ))}
                   </div>
@@ -244,7 +251,7 @@ export default function TestQuestionPage() {
         <div className="mx-auto max-w-2xl space-y-3">
           {viewMode === 'one-at-a-time' && current && (
             <>
-              <p className="text-center text-[11px] text-muted/50">Tap again to clear</p>
+              <p className="text-center text-[11px] text-muted/50">{t('tapToClear')}</p>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {([4, 3, 2, 1] as Score[]).map((score) => (
                   <button
@@ -256,8 +263,7 @@ export default function TestQuestionPage() {
                         : 'border-border-strong bg-surface hover:border-accent/40'
                     }`}
                   >
-                    <div>{SCORE_LABELS[score]}</div>
-                    <div className="mt-0.5 font-deva text-[11px] opacity-70">{SCORE_MR[score]}</div>
+                    <div>{scoreLabel(score)}</div>
                   </button>
                 ))}
               </div>
@@ -267,14 +273,14 @@ export default function TestQuestionPage() {
                   disabled={currentIndex === 0}
                   className="rounded-xl bg-fg/8 px-5 py-2 text-[13px] font-medium hover:bg-fg/15 disabled:opacity-30"
                 >
-                  ← Previous
+                  ← {t('previous')}
                 </button>
                 <button
                   onClick={() => setCurrentIndex((i) => Math.min(sentences.length - 1, i + 1))}
                   disabled={currentIndex === sentences.length - 1}
                   className="rounded-xl bg-fg/8 px-5 py-2 text-[13px] font-medium hover:bg-fg/15 disabled:opacity-30"
                 >
-                  Next →
+                  {t('next')} →
                 </button>
               </div>
             </>
@@ -285,8 +291,8 @@ export default function TestQuestionPage() {
             className="h-auto w-full rounded-xl bg-accent px-6 py-3 text-[14px] text-bg hover:bg-accent-hover disabled:opacity-40"
           >
             {respondedSentences === sentences.length
-              ? 'Review responses ✓'
-              : `Review responses (${respondedSentences}/${sentences.length})`}
+              ? t('reviewResponses')
+              : t('reviewResponsesProgress', { answered: respondedSentences, total: sentences.length })}
           </Button>
         </div>
       </div>
@@ -295,22 +301,22 @@ export default function TestQuestionPage() {
       {showExitConfirm && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-fg/30 px-4 pb-8 sm:items-center sm:pb-0">
           <div className="w-full max-w-sm rounded-2xl bg-surface p-6 shadow-modal">
-            <h3 className="mb-2 font-display text-[18px]">Leave the test?</h3>
+            <h3 className="mb-2 font-display text-[18px]">{t('exitTitle')}</h3>
             <p className="mb-6 text-[14px] text-muted">
-              Your responses so far are saved. You can resume this test any time from the weakness page.
+              {t('exitBody')}
             </p>
             <div className="space-y-2">
               <button
                 onClick={() => handleExitConfirm(true)}
                 className="w-full rounded-xl bg-accent px-4 py-3 text-[14px] font-medium text-bg hover:bg-accent-hover"
               >
-                Save & leave
+                {t('saveLeave')}
               </button>
               <button
                 onClick={() => { setShowExitConfirm(false); setPendingNavHref(null); }}
                 className="w-full rounded-xl border border-border-strong px-4 py-3 text-[14px] text-fg hover:bg-bg"
               >
-                Continue reflecting
+                {t('continueReflecting')}
               </button>
             </div>
           </div>

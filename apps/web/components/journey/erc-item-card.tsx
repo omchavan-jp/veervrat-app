@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import type { JourneyErcItem, ErcType } from '@/lib/api/journeys';
 import {
   useUpdateErcStatus, useDeactivateErc, useReactivateErc, useRemoveErc,
@@ -15,18 +16,24 @@ const STATUS_BADGE: Record<string, string> = {
   REVISIT: 'bg-accent/10 text-accent',
 };
 
-const STATUS_LABEL: Record<string, string> = {
-  NOT_STARTED: 'Not started',
-  IN_PROGRESS: 'In progress',
-  SUBMITTED: 'Submitted',
-  APPROVED: 'Approved',
-  REVISIT: 'Revisit',
+const STATUS_LABEL_KEY: Record<string, string> = {
+  NOT_STARTED: 'statusNotStarted',
+  IN_PROGRESS: 'statusInProgress',
+  SUBMITTED: 'statusSubmitted',
+  APPROVED: 'statusApproved',
+  REVISIT: 'statusRevisit',
 };
 
 const TIER_BADGE: Record<string, string> = {
   LOCAL: 'border-border text-muted',
   NATIONAL: 'border-accent-2/40 text-accent-2',
   INTERNATIONAL: 'border-accent/40 text-accent',
+};
+
+const TIER_LABEL_KEY: Record<string, string> = {
+  LOCAL: 'tierLocal',
+  NATIONAL: 'tierNational',
+  INTERNATIONAL: 'tierInternational',
 };
 
 type Props = {
@@ -37,6 +44,7 @@ type Props = {
 };
 
 export function ErcItemCard({ item, ercType, journeyId, hasVm }: Props) {
+  const t = useTranslations('journey.erc');
   const updateStatus = useUpdateErcStatus(journeyId, ercType);
   const deactivate = useDeactivateErc(journeyId, ercType);
   const reactivate = useReactivateErc(journeyId, ercType);
@@ -51,21 +59,21 @@ export function ErcItemCard({ item, ercType, journeyId, hasVm }: Props) {
           <div className="mb-1 flex items-center gap-2">
             {item.tier && (
               <span className={`rounded-full border px-2 py-0.5 text-[11px] ${TIER_BADGE[item.tier] ?? ''}`}>
-                {item.tier.charAt(0) + item.tier.slice(1).toLowerCase()}
+                {TIER_LABEL_KEY[item.tier] ? t(TIER_LABEL_KEY[item.tier]) : item.tier}
               </span>
             )}
             <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${STATUS_BADGE[item.status] ?? ''}`}>
-              {STATUS_LABEL[item.status] ?? item.status}
+              {STATUS_LABEL_KEY[item.status] ? t(STATUS_LABEL_KEY[item.status]) : item.status}
             </span>
             {item.isDeactivated && (
-              <span className="rounded-full bg-muted/10 px-2 py-0.5 text-[11px] text-muted">Deactivated</span>
+              <span className="rounded-full bg-muted/10 px-2 py-0.5 text-[11px] text-muted">{t('deactivated')}</span>
             )}
           </div>
           <p className="text-[14px] font-medium">{item.titleEn}</p>
           {item.descriptionEn && <p className="mt-0.5 text-[13px] text-muted">{item.descriptionEn}</p>}
           {item.frequencyLabel && <p className="mt-0.5 text-[12px] text-muted">🔁 {item.frequencyLabel}</p>}
-          {item.durationWeeks && <p className="mt-0.5 text-[12px] text-muted">{item.durationWeeks} week{item.durationWeeks !== 1 ? 's' : ''}</p>}
-          {item.durationDays && <p className="mt-0.5 text-[12px] text-muted">{item.durationDays} day{item.durationDays !== 1 ? 's' : ''}</p>}
+          {item.durationWeeks && <p className="mt-0.5 text-[12px] text-muted">{t('weeks', { count: item.durationWeeks })}</p>}
+          {item.durationDays && <p className="mt-0.5 text-[12px] text-muted">{t('days', { count: item.durationDays })}</p>}
         </div>
       </div>
 
@@ -78,7 +86,7 @@ export function ErcItemCard({ item, ercType, journeyId, hasVm }: Props) {
                 disabled={isPending}
                 className="rounded-lg bg-accent-2/10 px-3 py-1.5 text-[12px] font-medium text-accent-2 hover:bg-accent-2/20 disabled:opacity-40"
               >
-                Start
+                {t('start')}
               </button>
             )}
             {item.status === 'IN_PROGRESS' && (
@@ -87,7 +95,7 @@ export function ErcItemCard({ item, ercType, journeyId, hasVm }: Props) {
                 disabled={isPending}
                 className="rounded-lg bg-warning/10 px-3 py-1.5 text-[12px] font-medium text-warning hover:bg-warning/20 disabled:opacity-40"
               >
-                Submit for closure
+                {t('submitForClosure')}
               </button>
             )}
             {item.status === 'SUBMITTED' && !hasVm && (
@@ -96,11 +104,11 @@ export function ErcItemCard({ item, ercType, journeyId, hasVm }: Props) {
                 disabled={isPending}
                 className="rounded-lg bg-success/10 px-3 py-1.5 text-[12px] font-medium text-success hover:bg-success/20 disabled:opacity-40"
               >
-                Mark as done
+                {t('markAsDone')}
               </button>
             )}
             {item.status === 'SUBMITTED' && hasVm && (
-              <span className="text-[12px] text-muted">Awaiting VM approval</span>
+              <span className="text-[12px] text-muted">{t('awaitingVm')}</span>
             )}
             {item.status !== 'APPROVED' && (
               <button
@@ -108,7 +116,7 @@ export function ErcItemCard({ item, ercType, journeyId, hasVm }: Props) {
                 disabled={isPending}
                 className="rounded-lg border border-border-strong px-3 py-1.5 text-[12px] text-muted hover:bg-bg disabled:opacity-40"
               >
-                Deactivate
+                {t('deactivate')}
               </button>
             )}
           </>
@@ -120,14 +128,14 @@ export function ErcItemCard({ item, ercType, journeyId, hasVm }: Props) {
               disabled={isPending}
               className="rounded-lg bg-accent-2/10 px-3 py-1.5 text-[12px] text-accent-2 hover:bg-accent-2/20 disabled:opacity-40"
             >
-              Reactivate
+              {t('reactivate')}
             </button>
             <button
               onClick={() => remove.mutate({ itemId: item.id })}
               disabled={isPending}
               className="rounded-lg px-3 py-1.5 text-[12px] text-accent hover:underline disabled:opacity-40"
             >
-              Remove
+              {t('remove')}
             </button>
           </>
         )}
