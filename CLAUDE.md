@@ -140,7 +140,7 @@ veervrat-app/
 
 ### Permissions
 - every protected route must enforce two layers: guard (who are you) + service check (are you allowed on this specific resource)
-- use `hasPermission(user, resource, action, context)` — never check `user.role === 'admin'` directly
+- use `hasPermission(user, resource, action)` — never check `user.role === 'admin'` directly. (3-arg: ABAC context is carried inside the discriminated-union `resource`, not a separate 4th param.)
 - permission matrix is in `spec/decisions/05_permissions.md` — implement exactly what is there
 
 ## Implementation SOP

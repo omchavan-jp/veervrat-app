@@ -4,11 +4,12 @@ _Last updated: 2026-05-31 | Round: R1_
 ## Confirmed Decisions
 
 ### Authorization Philosophy
-- **Check permissions, not roles.** Code never checks `user.role === 'admin'`. It always checks `hasPermission(user, resource, action, context)`.
+- **Check permissions, not roles.** Code never checks `user.role === 'admin'`. It always checks `hasPermission(user, resource, action)`.
 - **RBAC + ABAC hybrid:** RBAC assigns role-level permissions (admin, moderator, VA, VM). ABAC handles resource-scoped checks — "is this VM assigned to this journey?", "is this VA the owner of this journey?" Pure RBAC cannot express these without hardcoded conditionals.
 - **Permission naming convention:** `resource.action` dot notation. Lowercase, always resource first. Examples: `journey.view`, `journey.complete`, `erc.suggest`, `erc.select`, `challenge.approve`, `custom_erc.submit_for_review`.
-- **One central definition point:** all permission logic lives in a single `hasPermission(user, resource, action, context)` function (or equivalent guard/policy layer). No scattered role checks in controllers or templates.
+- **One central definition point:** all permission logic lives in a single `hasPermission(user, resource, action)` function (or equivalent guard/policy layer). No scattered role checks in controllers or templates.
 - **Context objects, not IDs:** permission checks receive the full resource object (journey, ERC entity, etc.) so attribute inspection is possible — e.g. `journey.va_id === user.id`. This is required for ABAC to work correctly.
+- **Signature is 3-arg** (`hasPermission(user, resource, action)`): the ABAC context is folded into the discriminated-union `resource` (each variant carries the slim fields the check inspects) rather than passed as a separate 4th `context` param. This avoids dual-channel ambiguity. Implemented in `apps/api/src/common/permissions/`.
 - **Dynamic DB-backed permission UI:** out of scope for v1. Permission definitions are code-based, not admin-configurable at runtime.
 
 ### Roles (grouping labels only)
