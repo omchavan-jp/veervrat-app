@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { journeysApi, ercApi, checkinsApi } from '@/lib/api/journeys';
-import type { ErcType, CheckinStatus } from '@/lib/api/journeys';
+import type { ErcType, CheckinStatus, CustomErcInput } from '@/lib/api/journeys';
 import { queryKeys } from '@/lib/api/query-keys';
 
 export function useJourneys() {
@@ -154,6 +154,22 @@ export function useSuggestSidenote(journeyId: string, type: ErcType) {
   return useErcMutation(
     ({ itemId, text }: { itemId: string; text: string }) =>
       ercApi.suggestSidenote(journeyId, type, itemId, text),
+    journeyId,
+    type,
+  );
+}
+
+export function useCreateCustomErc(journeyId: string, type: ErcType) {
+  return useErcMutation(
+    (data: CustomErcInput) => ercApi.createCustom(journeyId, type, data),
+    journeyId,
+    type,
+  );
+}
+
+export function useSubmitCustomForReview(journeyId: string, type: ErcType) {
+  return useErcMutation(
+    ({ itemId }: { itemId: string }) => ercApi.submitForReview(journeyId, type, itemId),
     journeyId,
     type,
   );

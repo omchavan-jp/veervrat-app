@@ -1,13 +1,19 @@
 'use client';
 
+import { useState } from 'react';
+import { useTranslations } from 'next-intl';
+import { Plus } from 'lucide-react';
 import { useErcItems } from '@/hooks/use-journeys';
 import { ErcPoolSection } from './erc-pool-section';
 import { ErcItemCard } from './erc-item-card';
+import { CustomErcForm } from './custom-erc-form';
 
 type Props = { journeyId: string; hasVm: boolean; viewerIsVm?: boolean };
 
 export function ExposuresTab({ journeyId, hasVm, viewerIsVm = false }: Props) {
+  const t = useTranslations('journey.erc');
   const { data: items = [], isLoading } = useErcItems(journeyId, 'exposure');
+  const [customOpen, setCustomOpen] = useState(false);
   const hasItems = items.length > 0;
 
   return (
@@ -28,6 +34,17 @@ export function ExposuresTab({ journeyId, hasVm, viewerIsVm = false }: Props) {
           ))}
         </div>
       )}
+
+      {!viewerIsVm && (
+        <button
+          onClick={() => setCustomOpen(true)}
+          className="mt-4 inline-flex items-center gap-2 rounded-xl border border-border-strong px-4 py-2 text-[13px] text-muted transition-colors hover:border-accent hover:text-fg"
+        >
+          <Plus className="h-4 w-4" />
+          {t('addCustomExposure')}
+        </button>
+      )}
+      <CustomErcForm journeyId={journeyId} ercType="exposure" open={customOpen} onOpenChange={setCustomOpen} />
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import type { JourneyErcItem, ErcType } from '@/lib/api/journeys';
 import {
   useUpdateErcStatus, useDeactivateErc, useReactivateErc, useRemoveErc, useAcknowledgeSidenote,
-  useApproveErc, useRevisitErc, useSuggestSidenote,
+  useApproveErc, useRevisitErc, useSuggestSidenote, useSubmitCustomForReview,
 } from '@/hooks/use-journeys';
 import { CheckinForm } from './checkin-form';
 import { CheckinHistory } from './checkin-history';
@@ -58,6 +58,7 @@ export function ErcItemCard({ item, ercType, journeyId, hasVm, viewerIsVm = fals
   const approve = useApproveErc(journeyId, ercType);
   const revisit = useRevisitErc(journeyId, ercType);
   const suggestSidenote = useSuggestSidenote(journeyId, ercType);
+  const submitForReview = useSubmitCustomForReview(journeyId, ercType);
 
   const [composing, setComposing] = useState(false);
   const [sidenoteText, setSidenoteText] = useState('');
@@ -122,6 +123,19 @@ export function ErcItemCard({ item, ercType, journeyId, hasVm, viewerIsVm = fals
             )}
             {item.status === 'SUBMITTED' && hasVm && (
               <span className="text-[12px] text-muted">{t('awaitingVm')}</span>
+            )}
+            {/* Custom items can be submitted for global review (once, before any review) */}
+            {item.isCustom && item.reviewStatus === null && (
+              <button
+                onClick={() => submitForReview.mutate({ itemId: item.id })}
+                disabled={submitForReview.isPending}
+                className="rounded-lg border border-accent-2/40 px-3 py-1.5 text-[12px] font-medium text-accent-2 hover:bg-accent-2/10 disabled:opacity-40"
+              >
+                {t('submitForReview')}
+              </button>
+            )}
+            {item.isCustom && item.reviewStatus === 'pending' && (
+              <span className="text-[12px] italic text-muted">{t('reviewPending')}</span>
             )}
             {item.status !== 'APPROVED' && (
               <button

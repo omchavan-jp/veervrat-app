@@ -170,6 +170,26 @@ export const ercApi = {
 
   suggestSidenote: (journeyId: string, type: ErcType, itemId: string, text: string) =>
     api.post<Wrapped<VmSidenote>>(`/journeys/${journeyId}/${type}s/${itemId}/suggest`, { text }).then((r) => r.data),
+
+  // ── Custom ERC ──
+  createCustom: (journeyId: string, type: ErcType, data: CustomErcInput) =>
+    api.post<Wrapped<JourneyErcItem>>(`/journeys/${journeyId}/${type}s/custom`, data).then((r) => r.data),
+
+  submitForReview: (journeyId: string, type: ErcType, itemId: string) =>
+    api.post<Wrapped<JourneyErcItem>>(`/journeys/${journeyId}/${type}s/${itemId}/submit-for-review`).then((r) => r.data),
+};
+
+export type CustomErcInput = {
+  titleEn: string;
+  descriptionEn?: string;
+  // exposure
+  tier?: 'LOCAL' | 'NATIONAL' | 'INTERNATIONAL';
+  // resolution
+  durationWeeks?: number;
+  frequencyPerWeek?: number;
+  frequencyLabel?: string;
+  // challenge
+  durationDays?: number;
 };
 
 export const journeysApi = {
