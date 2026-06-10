@@ -429,7 +429,14 @@
       "select": "Select",
       "sidenoteFrom": "Sidenote from your Vratmitra",
       "sidenoteAcknowledge": "Acknowledge",
-      "sidenoteAcknowledged": "Acknowledged"
+      "sidenoteAcknowledged": "Acknowledged",
+      "vmApprove": "Approve",
+      "vmRevisit": "Return for revisit",
+      "vmAddSidenote": "Add a sidenote",
+      "vmSidenotePlaceholder": "Guidance for your Vratarthi…",
+      "vmSidenoteSave": "Send sidenote",
+      "vmSidenoteCancel": "Cancel",
+      "vmAwaitingVa": "Awaiting Vratarthi action"
     },
     "checkin": {
       "logTitle": "Log check-in",

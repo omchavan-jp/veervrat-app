@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { useJourney, useUpdateJourneyState, useUpdateJourneyTitle, useCompleteJourney } from '@/hooks/use-journeys';
 import type { JourneyState, ErcCounts } from '@/lib/api/journeys';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
 import { ExposuresTab } from '@/components/journey/exposures-tab';
 import { ResolutionsTab } from '@/components/journey/resolutions-tab';
 import { ChallengesTab } from '@/components/journey/challenges-tab';
@@ -51,6 +52,7 @@ export default function JourneyDetailPage() {
   const updateTitle = useUpdateJourneyTitle();
   const completeJourney = useCompleteJourney();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [editingTitle, setEditingTitle] = useState(false);
@@ -79,6 +81,14 @@ export default function JourneyDetailPage() {
       </div>
     );
   }
+
+  // Viewer is the journey's VM (global or an active journey assignment) and not the owner.
+  const isOwner = !!user && journey.vratarthiId === user.id;
+  const viewerIsVm =
+    !!user &&
+    !isOwner &&
+    (journey.globalVmRelationship?.vmId === user.id ||
+      journey.vmAssignments.some((a) => a.vmId === user.id && a.state === 'ACTIVE'));
 
   const canPause = journey.state === 'ACTIVE';
   const canResume = journey.state === 'PAUSED' || journey.state === 'DORMANT';
@@ -259,13 +269,13 @@ export default function JourneyDetailPage() {
         )}
 
         {activeTab === 'exposures' && (
-          <ExposuresTab journeyId={journey.id} hasVm={!!journey.globalVmRelationship} />
+          <ExposuresTab journeyId={journey.id} hasVm={!!journey.globalVmRelationship} viewerIsVm={viewerIsVm} />
         )}
         {activeTab === 'resolutions' && (
-          <ResolutionsTab journeyId={journey.id} hasVm={!!journey.globalVmRelationship} />
+          <ResolutionsTab journeyId={journey.id} hasVm={!!journey.globalVmRelationship} viewerIsVm={viewerIsVm} />
         )}
         {activeTab === 'challenges' && (
-          <ChallengesTab journeyId={journey.id} hasVm={!!journey.globalVmRelationship} />
+          <ChallengesTab journeyId={journey.id} hasVm={!!journey.globalVmRelationship} viewerIsVm={viewerIsVm} />
         )}
         {activeTab === 'chat' && (() => {
           const vmId =

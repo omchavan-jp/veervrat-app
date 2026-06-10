@@ -134,6 +134,31 @@ export function useAcknowledgeSidenote(journeyId: string, type: ErcType) {
   );
 }
 
+export function useApproveErc(journeyId: string, type: ErcType) {
+  return useErcMutation(
+    ({ itemId }: { itemId: string }) => ercApi.approve(journeyId, type, itemId),
+    journeyId,
+    type,
+  );
+}
+
+export function useRevisitErc(journeyId: string, type: ErcType) {
+  return useErcMutation(
+    ({ itemId }: { itemId: string }) => ercApi.revisit(journeyId, type, itemId),
+    journeyId,
+    type,
+  );
+}
+
+export function useSuggestSidenote(journeyId: string, type: ErcType) {
+  return useErcMutation(
+    ({ itemId, text }: { itemId: string; text: string }) =>
+      ercApi.suggestSidenote(journeyId, type, itemId, text),
+    journeyId,
+    type,
+  );
+}
+
 export function useCompleteJourney() {
   const queryClient = useQueryClient();
   return useMutation({

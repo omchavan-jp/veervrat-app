@@ -4,15 +4,16 @@ import { useErcItems } from '@/hooks/use-journeys';
 import { ErcPoolSection } from './erc-pool-section';
 import { ErcItemCard } from './erc-item-card';
 
-type Props = { journeyId: string; hasVm: boolean };
+type Props = { journeyId: string; hasVm: boolean; viewerIsVm?: boolean };
 
-export function ExposuresTab({ journeyId, hasVm }: Props) {
+export function ExposuresTab({ journeyId, hasVm, viewerIsVm = false }: Props) {
   const { data: items = [], isLoading } = useErcItems(journeyId, 'exposure');
   const hasItems = items.length > 0;
 
   return (
     <div>
-      <ErcPoolSection journeyId={journeyId} ercType="exposure" defaultOpen={!hasItems} />
+      {/* Pool selection is a VA action only */}
+      {!viewerIsVm && <ErcPoolSection journeyId={journeyId} ercType="exposure" defaultOpen={!hasItems} />}
 
       {isLoading ? (
         <div className="flex justify-center py-8">
@@ -23,7 +24,7 @@ export function ExposuresTab({ journeyId, hasVm }: Props) {
       ) : (
         <div className="space-y-3">
           {items.map((item) => (
-            <ErcItemCard key={item.id} item={item} ercType="exposure" journeyId={journeyId} hasVm={hasVm} />
+            <ErcItemCard key={item.id} item={item} ercType="exposure" journeyId={journeyId} hasVm={hasVm} viewerIsVm={viewerIsVm} />
           ))}
         </div>
       )}

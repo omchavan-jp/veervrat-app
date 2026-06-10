@@ -160,6 +160,16 @@ export const ercApi = {
     api
       .post<Wrapped<VmSidenote>>(`/journeys/${journeyId}/${type}s/${itemId}/sidenote/acknowledge`)
       .then((r) => r.data),
+
+  // ── VM actions ──
+  approve: (journeyId: string, type: ErcType, itemId: string) =>
+    api.post<Wrapped<JourneyErcItem>>(`/journeys/${journeyId}/${type}s/${itemId}/approve`).then((r) => r.data),
+
+  revisit: (journeyId: string, type: ErcType, itemId: string) =>
+    api.post<Wrapped<JourneyErcItem>>(`/journeys/${journeyId}/${type}s/${itemId}/revisit`).then((r) => r.data),
+
+  suggestSidenote: (journeyId: string, type: ErcType, itemId: string, text: string) =>
+    api.post<Wrapped<VmSidenote>>(`/journeys/${journeyId}/${type}s/${itemId}/suggest`, { text }).then((r) => r.data),
 };
 
 export const journeysApi = {

@@ -1,9 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import type { JourneyErcItem, ErcType } from '@/lib/api/journeys';
 import {
   useUpdateErcStatus, useDeactivateErc, useReactivateErc, useRemoveErc, useAcknowledgeSidenote,
+  useApproveErc, useRevisitErc, useSuggestSidenote,
 } from '@/hooks/use-journeys';
 import { CheckinForm } from './checkin-form';
 import { CheckinHistory } from './checkin-history';
@@ -41,15 +43,24 @@ type Props = {
   ercType: ErcType;
   journeyId: string;
   hasVm: boolean;
+  // When true, the viewer is the journey's VM — show VM actions (approve/revisit/sidenote)
+  // instead of the VA's own-item actions.
+  viewerIsVm?: boolean;
 };
 
-export function ErcItemCard({ item, ercType, journeyId, hasVm }: Props) {
+export function ErcItemCard({ item, ercType, journeyId, hasVm, viewerIsVm = false }: Props) {
   const t = useTranslations('journey.erc');
   const updateStatus = useUpdateErcStatus(journeyId, ercType);
   const deactivate = useDeactivateErc(journeyId, ercType);
   const reactivate = useReactivateErc(journeyId, ercType);
   const remove = useRemoveErc(journeyId, ercType);
   const acknowledgeSidenote = useAcknowledgeSidenote(journeyId, ercType);
+  const approve = useApproveErc(journeyId, ercType);
+  const revisit = useRevisitErc(journeyId, ercType);
+  const suggestSidenote = useSuggestSidenote(journeyId, ercType);
+
+  const [composing, setComposing] = useState(false);
+  const [sidenoteText, setSidenoteText] = useState('');
 
   const isPending = updateStatus.isPending || deactivate.isPending || reactivate.isPending || remove.isPending;
 
@@ -78,6 +89,7 @@ export function ErcItemCard({ item, ercType, journeyId, hasVm }: Props) {
         </div>
       </div>
 
+      {!viewerIsVm && (
       <div className="flex flex-wrap gap-2">
         {!item.isDeactivated && (
           <>
@@ -141,6 +153,75 @@ export function ErcItemCard({ item, ercType, journeyId, hasVm }: Props) {
           </>
         )}
       </div>
+      )}
+
+      {/* VM actions — approve/revisit a submitted item, or attach a sidenote (spec/15-16) */}
+      {viewerIsVm && (
+        <div className="flex flex-wrap items-center gap-2">
+          {item.status === 'SUBMITTED' && (
+            <>
+              <button
+                onClick={() => approve.mutate({ itemId: item.id })}
+                disabled={approve.isPending || revisit.isPending}
+                className="rounded-lg bg-success/12 px-3 py-1.5 text-[12px] font-medium text-success hover:bg-success/20 disabled:opacity-40"
+              >
+                {t('vmApprove')}
+              </button>
+              <button
+                onClick={() => revisit.mutate({ itemId: item.id })}
+                disabled={approve.isPending || revisit.isPending}
+                className="rounded-lg bg-accent/10 px-3 py-1.5 text-[12px] font-medium text-accent hover:bg-accent/20 disabled:opacity-40"
+              >
+                {t('vmRevisit')}
+              </button>
+            </>
+          )}
+          {!item.vmSidenote && !composing && (
+            <button
+              onClick={() => setComposing(true)}
+              className="rounded-lg border border-border-strong px-3 py-1.5 text-[12px] text-muted hover:border-accent hover:text-fg"
+            >
+              {t('vmAddSidenote')}
+            </button>
+          )}
+          {item.status !== 'SUBMITTED' && !composing && (
+            <span className="text-[12px] italic text-muted">{t('vmAwaitingVa')}</span>
+          )}
+        </div>
+      )}
+
+      {viewerIsVm && composing && (
+        <div className="mt-3 rounded-xl border border-border bg-bg p-3">
+          <textarea
+            value={sidenoteText}
+            onChange={(e) => setSidenoteText(e.target.value)}
+            rows={2}
+            maxLength={500}
+            placeholder={t('vmSidenotePlaceholder')}
+            className="w-full resize-none rounded-lg border border-border bg-surface px-3 py-2 text-[13px] placeholder:text-muted/60 focus:outline-none focus:ring-2 focus:ring-accent"
+          />
+          <div className="mt-2 flex gap-2">
+            <button
+              onClick={() =>
+                suggestSidenote.mutate(
+                  { itemId: item.id, text: sidenoteText.trim() },
+                  { onSuccess: () => { setComposing(false); setSidenoteText(''); } },
+                )
+              }
+              disabled={!sidenoteText.trim() || suggestSidenote.isPending}
+              className="rounded-lg bg-accent px-3 py-1.5 text-[12px] font-medium text-bg hover:bg-accent-hover disabled:opacity-40"
+            >
+              {t('vmSidenoteSave')}
+            </button>
+            <button
+              onClick={() => { setComposing(false); setSidenoteText(''); }}
+              className="rounded-lg border border-border-strong px-3 py-1.5 text-[12px] text-muted hover:border-accent"
+            >
+              {t('vmSidenoteCancel')}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* VM sidenote — guidance attached by the Vratmitra (spec/16). Acknowledgeable. */}
       {item.vmSidenote && (

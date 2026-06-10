@@ -429,7 +429,14 @@
       "select": "निवडा",
       "sidenoteFrom": "तुमच्या व्रतमित्राकडून टीप",
       "sidenoteAcknowledge": "स्वीकारा",
-      "sidenoteAcknowledged": "स्वीकारले"
+      "sidenoteAcknowledged": "स्वीकारले",
+      "vmApprove": "मंजूर करा",
+      "vmRevisit": "पुनरावलोकनासाठी परत करा",
+      "vmAddSidenote": "टीप जोडा",
+      "vmSidenotePlaceholder": "तुमच्या व्रतार्थीसाठी मार्गदर्शन…",
+      "vmSidenoteSave": "टीप पाठवा",
+      "vmSidenoteCancel": "रद्द करा",
+      "vmAwaitingVa": "व्रतार्थीच्या कृतीच्या प्रतीक्षेत"
     },
     "checkin": {
       "logTitle": "चेक-इन नोंदवा",
