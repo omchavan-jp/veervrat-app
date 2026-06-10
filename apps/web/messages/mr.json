@@ -8,7 +8,11 @@
       "settings": "सेटिंग्ज",
       "logout": "लॉग आउट करा",
       "studyFlow": "अभ्यास",
-      "workFlow": "सराव"
+      "workFlow": "सराव",
+      "myVratmitras": "माझे व्रतमित्र",
+      "pothi": "पोथी",
+      "groupPractice": "साधना",
+      "groupGuidance": "मार्गदर्शन"
     },
     "actions": {
       "save": "जतन करा",

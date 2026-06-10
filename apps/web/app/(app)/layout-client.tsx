@@ -3,241 +3,237 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Search, BookOpen, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import {
+  LayoutDashboard,
+  Search,
+  BookOpen,
+  Activity,
+  Users,
+  LogOut,
+  PanelLeftClose,
+  PanelLeftOpen,
+} from 'lucide-react';
 import { useAuth, useLogout } from '@/hooks/use-auth';
 import { Logo } from '@/components/auth/logo';
 import { LanguageToggle } from '@/components/shared/language-toggle';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
 import { NotificationBell } from '@/components/layout/notification-bell';
 
-const NAV_ITEMS = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/study', label: 'Study weaknesses', icon: Search },
-  { href: '/journeys', label: 'Work on weaknesses', icon: BookOpen },
+type NavItem = {
+  href: string;
+  labelKey: string;
+  icon: typeof LayoutDashboard;
+  badge?: number;
+};
+
+const PRACTICE: NavItem[] = [
+  { href: '/dashboard', labelKey: 'dashboard', icon: LayoutDashboard },
+  { href: '/study', labelKey: 'studyFlow', icon: Search },
+  { href: '/journeys', labelKey: 'journeys', icon: BookOpen },
 ];
 
-function RightSidebar({ collapsed }: { collapsed: boolean }) {
-  return (
-    <aside className="flex shrink-0 flex-col border-l border-border bg-bg transition-all duration-200 ease-out overflow-hidden" style={{ width: collapsed ? '0px' : '280px', willChange: 'width' }}>
-      {/* Top: heading */}
-      <div className="flex min-h-[78px] items-center border-b border-border px-5 py-[22px]">
-        <h3 className="font-display text-sm font-medium">Reflections</h3>
-      </div>
+const GUIDANCE: NavItem[] = [
+  { href: '/actions', labelKey: 'actions', icon: Activity },
+  { href: '/my-vratmitras', labelKey: 'myVratmitras', icon: Users },
+];
 
-      {/* Body: shloka + philosophy + stats */}
-      <div className="flex flex-1 flex-col gap-5 overflow-y-auto px-5 py-[20px]">
-        {/* Shloka card */}
-        <div className="rounded-xl border border-border bg-surface p-5">
-          <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.14em] text-accent-2">
-            Shloka of the day
-          </div>
-          <p className="font-deva text-[14px] leading-relaxed text-fg">
-            उद्धरेदात्मनात्मानं<br/>नात्मानमवसादयेत्।<br/>आत्मैव ह्यात्मनो बन्धुः
-          </p>
-          <p className="mt-3 border-t border-border pt-3 text-[12px] leading-relaxed text-muted">
-            Lift yourself by yourself. You are your own friend, and your own enemy.
-          </p>
-          <div className="mt-3 flex items-center justify-between border-t border-border pt-3 text-[10px] text-muted">
-            <span>Bhagavad Gita · 6.5</span>
-            <span className="text-accent-2">Open →</span>
-          </div>
-        </div>
+// The five destinations surfaced in the mobile floating pill nav.
+const PILL: NavItem[] = [...PRACTICE, ...GUIDANCE];
 
-        {/* Platform stats */}
-        <div>
-          <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
-            Platform stats
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-lg border border-border bg-surface p-3">
-              <div className="font-display text-lg leading-none">12.4K</div>
-              <div className="mt-1.5 font-mono text-[9px] uppercase tracking-[0.1em] text-muted">
-                Vratarthis
-              </div>
-            </div>
-            <div className="rounded-lg border border-border bg-surface p-3">
-              <div className="font-display text-lg leading-none">324</div>
-              <div className="mt-1.5 font-mono text-[9px] uppercase tracking-[0.1em] text-muted">
-                Vratmitras
-              </div>
-            </div>
-            <div className="rounded-lg border border-border bg-surface p-3">
-              <div className="font-display text-lg leading-none">48.6K</div>
-              <div className="mt-1.5 font-mono text-[9px] uppercase tracking-[0.1em] text-muted">
-                Tests solved
-              </div>
-            </div>
-            <div className="rounded-lg border border-border bg-surface p-3">
-              <div className="font-display text-lg leading-none">1.86M</div>
-              <div className="mt-1.5 font-mono text-[9px] uppercase tracking-[0.1em] text-muted">
-                Practice days
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </aside>
-  );
+function isActive(pathname: string, href: string): boolean {
+  return pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
 }
 
-function LeftSidebar({ user, collapsed }: { user: { displayName: string | null; email: string }, collapsed: boolean }) {
-  const pathname = usePathname();
-  const logout = useLogout();
-  const [hoveredNavHref, setHoveredNavHref] = useState<string | null>(null);
-
-  const initials = user.displayName
+function initialsOf(user: { displayName: string | null; email: string }): string {
+  return user.displayName
     ? user.displayName.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
     : user.email.slice(0, 2).toUpperCase();
+}
+
+function LeftRail({
+  user,
+  collapsed,
+  onToggle,
+}: {
+  user: { displayName: string | null; email: string };
+  collapsed: boolean;
+  onToggle: () => void;
+}) {
+  const t = useTranslations('common.nav');
+  const pathname = usePathname();
+  const logout = useLogout();
+  const initials = initialsOf(user);
+
+  const renderItem = ({ href, labelKey, icon: Icon, badge }: NavItem) => {
+    const active = isActive(pathname, href);
+    return (
+      <Link
+        key={href}
+        href={href}
+        title={collapsed ? t(labelKey) : undefined}
+        className={`group relative mb-0.5 flex items-center gap-3 rounded-lg px-3 py-2.5 text-[14px] transition-[background,color,transform] duration-150 active:scale-[0.97] ${
+          collapsed ? 'justify-center' : ''
+        } ${active ? 'bg-accent/10 font-medium text-accent' : 'text-fg hover:bg-fg/[0.04]'}`}
+      >
+        {active && (
+          <span className="absolute -left-3 top-1/2 h-[18px] w-[3px] -translate-y-1/2 rounded-r bg-accent" />
+        )}
+        <Icon className={`h-[18px] w-[18px] shrink-0 ${active ? 'text-accent' : 'text-muted'}`} />
+        {!collapsed && <span className="flex-1 truncate">{t(labelKey)}</span>}
+        {!collapsed && badge ? (
+          <span className="rounded-full bg-accent px-1.5 py-px font-mono text-[10px] font-semibold text-bg">
+            {badge}
+          </span>
+        ) : null}
+        {collapsed && badge ? (
+          <span className="absolute right-1.5 top-1.5 h-[7px] w-[7px] rounded-full bg-accent" />
+        ) : null}
+      </Link>
+    );
+  };
 
   return (
-    <aside className="flex w-[280px] shrink-0 flex-col border-r border-border bg-bg transition-all duration-200 ease-out" style={collapsed ? { width: '68px' } : {}}>
-      {/* Top: logo + collapse btn */}
-      <div className="flex min-h-[78px] items-center justify-between border-b border-border px-5 py-[22px]">
-        {!collapsed && (
-          <Link href="/dashboard">
+    <aside
+      className="flex shrink-0 flex-col border-r border-border bg-bg transition-[width] duration-200 ease-out"
+      style={{ width: collapsed ? '68px' : '240px' }}
+    >
+      {/* Header: logo + collapse toggle */}
+      <div className="flex min-h-[60px] items-center justify-between gap-2 border-b border-border px-4">
+        {!collapsed ? (
+          <Link href="/dashboard" className="min-w-0">
             <Logo />
           </Link>
-        )}
-        {collapsed && (
-          <Link href="/dashboard" className="flex h-10 w-10 items-center justify-center rounded-full bg-fg text-lg font-deva text-bg">
+        ) : (
+          <Link
+            href="/dashboard"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-fg font-deva text-base text-bg"
+          >
             वी
           </Link>
         )}
+        <button
+          onClick={onToggle}
+          title={collapsed ? 'Expand' : 'Collapse'}
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-border bg-surface text-muted transition-colors hover:border-accent hover:text-fg"
+        >
+          {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+        </button>
       </div>
 
-      {/* Body: nav */}
-      <div className="flex flex-1 flex-col overflow-y-auto">
+      {/* Nav */}
+      <nav className="flex-1 overflow-y-auto px-3 py-4">
         {!collapsed && (
-          <nav className="px-[14px] py-[18px]">
-            <div className="mb-2.5 px-2 font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
-              Navigation
-            </div>
-            {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-              const active = pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={`mb-0.5 flex items-center gap-3 rounded-lg px-3 py-2.5 text-[14px] transition-colors ${
-                    active
-                      ? 'bg-accent/10 text-accent'
-                      : 'text-fg hover:bg-fg/[0.04]'
-                  }`}
-                >
-                  <Icon
-                    className={`h-4 w-4 shrink-0 ${active ? 'text-accent' : 'text-muted'}`}
-                  />
-                  {label}
-                </Link>
-              );
-            })}
-          </nav>
+          <div className="mb-1.5 px-2 font-mono text-[9px] uppercase tracking-[0.14em] text-muted">
+            {t('groupPractice')}
+          </div>
         )}
-        {collapsed && (
-          <nav className="flex flex-col items-center gap-2 px-2 py-4">
-            {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-              const active = pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
-              const isHovered = hoveredNavHref === href;
-              return (
-                <div
-                  key={href}
-                  className="relative w-full"
-                  onMouseEnter={() => setHoveredNavHref(href)}
-                  onMouseLeave={() => setHoveredNavHref(null)}
-                >
-                  <Link
-                    href={href}
-                    title={label}
-                    className={`flex h-9 items-center justify-center rounded-lg border transition-all duration-150 ${
-                      isHovered
-                        ? 'w-40 gap-2 px-3'
-                        : 'w-9'
-                    } ${
-                      active
-                        ? 'border-accent bg-accent/10 text-accent'
-                        : 'border-border bg-surface text-muted hover:border-fg hover:text-fg'
-                    }`}
-                  >
-                    <Icon className="h-4 w-4 shrink-0" />
-                    {isHovered && (
-                      <span className="text-[12px] font-medium whitespace-nowrap overflow-hidden">{label}</span>
-                    )}
-                  </Link>
-                </div>
-              );
-            })}
-          </nav>
+        {PRACTICE.map(renderItem)}
+        {!collapsed && (
+          <div className="mb-1.5 mt-5 px-2 font-mono text-[9px] uppercase tracking-[0.14em] text-muted">
+            {t('groupGuidance')}
+          </div>
         )}
-      </div>
+        {collapsed && <div className="my-3 h-px bg-border" />}
+        {GUIDANCE.map(renderItem)}
+      </nav>
 
-      {/* Footer: controls + user chip + sign-out */}
-      <div className={`flex flex-col gap-2.5 border-t border-border bg-bg px-4 py-3.5 ${collapsed ? 'items-center' : ''}`}>
-        {!collapsed && (
+      {/* Footer: controls + user + sign-out */}
+      <div className={`flex flex-col gap-2.5 border-t border-border px-3 py-3.5 ${collapsed ? 'items-center' : ''}`}>
+        {!collapsed ? (
           <>
             <div className="flex items-center gap-2">
               <ThemeToggle />
               <LanguageToggle />
-              <NotificationBell />
             </div>
-            <div className="flex items-center gap-2.5 rounded-full border border-border bg-surface px-2 py-[7px]">
-              <span className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full bg-accent-2 font-body text-[11px] font-medium text-bg">
+            <Link
+              href="/profile"
+              className="flex items-center gap-2.5 rounded-full border border-border bg-surface px-2 py-[7px] transition-colors hover:border-accent"
+            >
+              <span className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full bg-accent-2 text-[11px] font-medium text-bg">
                 {initials}
               </span>
               <span className="min-w-0 flex-1 leading-tight">
                 <span className="block truncate text-[13px]">{user.displayName ?? user.email}</span>
                 <span className="block text-[10px] text-muted">Vratarthi</span>
               </span>
-            </div>
+            </Link>
             <button
               onClick={() => logout.mutate()}
               disabled={logout.isPending}
-              className="flex items-center gap-2.5 rounded-lg border border-border bg-transparent px-3.5 py-2.5 text-left font-body text-[13px] text-fg transition-colors hover:border-accent hover:bg-accent hover:text-bg disabled:opacity-50"
+              className="flex items-center gap-2.5 rounded-lg border border-border bg-transparent px-3.5 py-2.5 text-left text-[13px] text-fg transition-colors hover:border-accent hover:bg-accent hover:text-bg disabled:opacity-50"
             >
               <LogOut className="h-3.5 w-3.5 shrink-0" />
-              {logout.isPending ? 'Signing out…' : 'Sign out'}
+              <span className="truncate">{logout.isPending ? '…' : t('logout')}</span>
             </button>
           </>
-        )}
-        {collapsed && (
-          <div className="flex flex-col items-center gap-2">
-            <ThemeToggle />
-            <LanguageToggle />
-            <NotificationBell />
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-accent-2 font-body text-[10px] font-medium text-bg">
+        ) : (
+          <>
+            <Link
+              href="/profile"
+              title={user.displayName ?? user.email}
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-accent-2 text-[10px] font-medium text-bg"
+            >
               {initials}
-            </span>
+            </Link>
             <button
               onClick={() => logout.mutate()}
               disabled={logout.isPending}
-              title="Sign out"
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-transparent text-fg transition-colors hover:border-accent hover:bg-accent hover:text-bg disabled:opacity-50"
+              title={t('logout')}
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-fg transition-colors hover:border-accent hover:bg-accent hover:text-bg disabled:opacity-50"
             >
               <LogOut className="h-3.5 w-3.5" />
             </button>
-          </div>
+          </>
         )}
       </div>
     </aside>
   );
 }
 
-function RightCollapseButton({ collapsed, onClick }: { collapsed: boolean; onClick: () => void }) {
+function PillNav() {
+  const t = useTranslations('common.nav');
+  const pathname = usePathname();
   return (
-    <button
-      onClick={onClick}
-      title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-      className="flex h-7 w-7 items-center justify-center rounded-lg border border-border bg-surface text-muted hover:border-accent hover:text-fg transition-colors shrink-0"
-    >
-      {collapsed ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-    </button>
+    <nav className="fixed bottom-5 left-1/2 z-40 flex -translate-x-1/2 gap-1 rounded-full border border-border-strong bg-surface/90 p-1.5 shadow-raised backdrop-blur-md md:hidden">
+      {PILL.map(({ href, labelKey, icon: Icon, badge }) => {
+        const active = isActive(pathname, href);
+        return (
+          <Link
+            key={href}
+            href={href}
+            title={t(labelKey)}
+            className={`relative flex items-center gap-2 rounded-full px-3.5 py-2.5 text-[13px] transition-[background,color] duration-200 active:scale-[0.94] ${
+              active ? 'bg-accent text-bg' : 'text-muted'
+            }`}
+          >
+            <Icon className="h-5 w-5 shrink-0" />
+            <span
+              className="overflow-hidden whitespace-nowrap transition-[max-width] duration-300 ease-out"
+              style={{ maxWidth: active ? '120px' : '0px' }}
+            >
+              {t(labelKey)}
+            </span>
+            {badge ? (
+              <span
+                className={`absolute right-2 top-1 flex h-[15px] min-w-[15px] items-center justify-center rounded-full border-2 px-[3px] font-mono text-[9px] font-semibold ${
+                  active ? 'border-accent bg-bg text-accent' : 'border-surface bg-accent text-bg'
+                }`}
+              >
+                {badge}
+              </span>
+            ) : null}
+          </Link>
+        );
+      })}
+    </nav>
   );
 }
 
 export function AppLayoutClient({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
-  const [leftCollapsed, setLeftCollapsed] = useState(false);
-  const [rightCollapsed, setRightCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -256,39 +252,52 @@ export function AppLayoutClient({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!isAuthenticated || !user) {
-    return null;
-  }
-
-  if (user.onboardingCompletedAt === null) {
+  if (!isAuthenticated || !user || user.onboardingCompletedAt === null) {
     return null;
   }
 
   return (
     <div className="flex h-dvh bg-bg">
-      <LeftSidebar user={user} collapsed={leftCollapsed} />
-      <main className="flex-1 overflow-hidden border-r border-border flex flex-col">
-        <div className="flex h-full flex-col">
-          {/* Top controls bar */}
-          <div className="flex items-center justify-between border-b border-border px-8 py-4 shrink-0">
-            <button
-              onClick={() => setLeftCollapsed(!leftCollapsed)}
-              title={leftCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              className="flex h-7 w-7 items-center justify-center rounded-lg border border-border bg-surface text-muted hover:border-accent hover:text-fg transition-colors"
+      {/* Desktop / tablet rail */}
+      <div className="hidden md:flex">
+        <LeftRail user={user} collapsed={collapsed} onToggle={() => setCollapsed((v) => !v)} />
+      </div>
+
+      <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        {/* Top bar */}
+        <header className="flex h-[60px] shrink-0 items-center gap-3 border-b border-border px-4 md:px-6">
+          {/* Mobile brand */}
+          <Link href="/dashboard" className="flex items-center gap-2 md:hidden">
+            <span className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-fg font-deva text-sm text-bg">
+              वी
+            </span>
+            <span className="font-display text-[17px]">
+              <span className="text-accent">Veer</span>vrat
+            </span>
+          </Link>
+          <div className="ml-auto flex items-center gap-2">
+            <span className="md:hidden">
+              <ThemeToggle />
+            </span>
+            <NotificationBell />
+            <Link
+              href="/profile"
+              className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-accent-2 text-[11px] font-medium text-bg md:hidden"
             >
-              {leftCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-            </button>
+              {initialsOf(user)}
+            </Link>
           </div>
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto px-16 py-14">
-            {children}
-          </div>
+        </header>
+
+        {/* Content — generous padding + room for the mobile pill nav. Each page sets its
+            own max-width (reading-heavy pages cap ~760px; richer pages go wider). */}
+        <div className="flex-1 overflow-y-auto px-5 py-8 pb-28 md:px-10 md:py-12 md:pb-12 lg:px-16">
+          {children}
         </div>
       </main>
-      <div className="flex items-center shrink-0" style={{ willChange: 'width' }}>
-        <RightCollapseButton collapsed={rightCollapsed} onClick={() => setRightCollapsed(!rightCollapsed)} />
-      </div>
-      <RightSidebar collapsed={rightCollapsed} />
+
+      {/* Mobile floating pill nav */}
+      <PillNav />
     </div>
   );
 }

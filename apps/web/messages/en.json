@@ -8,7 +8,11 @@
       "settings": "Settings",
       "logout": "Log out",
       "studyFlow": "Study",
-      "workFlow": "Work"
+      "workFlow": "Work",
+      "myVratmitras": "My Vratmitras",
+      "pothi": "Pothi",
+      "groupPractice": "Practice",
+      "groupGuidance": "Guidance"
     },
     "actions": {
       "save": "Save",
