@@ -1,28 +1,27 @@
 'use client';
 
 import { useTheme } from 'next-themes';
+import { useEffect, useState } from 'react';
+import { Sun, Moon } from 'lucide-react';
 
-const OPTIONS = [
-  { value: 'light', label: 'Light' },
-  { value: 'dark', label: 'Dark' },
-  { value: 'system', label: 'System' },
-] as const;
+// Compact icon toggle: shows the icon for the mode you'd switch TO, flips light↔dark.
+// Resolves 'system' to its effective theme so the first click always does the obvious thing.
+export function ThemeToggle({ className = '' }: { className?: string }) {
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
-export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
+  const isDark = mounted ? resolvedTheme === 'dark' : false;
 
   return (
-    <div className="flex items-center gap-1 rounded-lg border border-border p-0.5 text-xs font-mono">
-      {OPTIONS.map((opt) => (
-        <button
-          key={opt.value}
-          onClick={() => setTheme(opt.value)}
-          aria-pressed={theme === opt.value}
-          className="rounded px-2 py-1 transition-colors aria-pressed:bg-surface aria-pressed:text-fg text-muted hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-2"
-        >
-          {opt.label}
-        </button>
-      ))}
-    </div>
+    <button
+      type="button"
+      onClick={() => setTheme(isDark ? 'light' : 'dark')}
+      title={isDark ? 'Switch to light' : 'Switch to dark'}
+      aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
+      className={`flex h-9 items-center justify-center gap-1.5 rounded-lg border border-border text-[12px] text-muted transition-colors hover:border-accent hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${className}`}
+    >
+      {isDark ? <Sun className="h-4 w-4 shrink-0" /> : <Moon className="h-4 w-4 shrink-0" />}
+    </button>
   );
 }

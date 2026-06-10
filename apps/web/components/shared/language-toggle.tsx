@@ -2,47 +2,41 @@
 
 import { useRouter } from 'next/navigation';
 import { useLocale } from 'next-intl';
+import { Languages } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { usersApi } from '@/lib/api/users';
 
-export function LanguageToggle() {
+// Compact icon toggle: flips EN↔MR. Shows the target language's short label next to a
+// globe/languages icon. Persists the preference (DB stores EN/MR; middleware reads lowercase).
+export function LanguageToggle({ className = '' }: { className?: string }) {
   const locale = useLocale();
   const router = useRouter();
   const { isAuthenticated } = useAuth();
 
   if (!isAuthenticated) return null;
 
-  async function handleToggle(newLocale: string) {
-    if (newLocale === locale) return;
+  const next = locale === 'mr' ? 'en' : 'mr';
+  const targetLabel = next === 'mr' ? 'मराठी' : 'EN';
+
+  async function handleToggle() {
     try {
-      // DB stores 'EN' | 'MR'; middleware reads locale as lowercase 'en' | 'mr'
-      await usersApi.updateMe({ language: newLocale.toUpperCase() });
+      await usersApi.updateMe({ language: next.toUpperCase() });
       router.refresh();
     } catch {
-      // Preference not saved — do not refresh; locale stays as-is
+      // Preference not saved — leave locale as-is.
     }
   }
 
   return (
-    <div className="flex items-center gap-1 rounded-lg border border-border p-0.5 text-xs font-mono">
-      <button
-        onClick={() => handleToggle('en')}
-        className={`rounded-md px-2.5 py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-2 ${
-          locale === 'en' ? 'bg-accent text-bg' : 'text-muted hover:text-fg'
-        }`}
-        aria-pressed={locale === 'en'}
-      >
-        EN
-      </button>
-      <button
-        onClick={() => handleToggle('mr')}
-        className={`rounded-md px-2.5 py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-2 ${
-          locale === 'mr' ? 'bg-accent text-bg' : 'text-muted hover:text-fg'
-        }`}
-        aria-pressed={locale === 'mr'}
-      >
-        MR
-      </button>
-    </div>
+    <button
+      type="button"
+      onClick={handleToggle}
+      title={`Switch to ${next === 'mr' ? 'Marathi' : 'English'}`}
+      aria-label={`Switch to ${next === 'mr' ? 'Marathi' : 'English'}`}
+      className={`flex h-9 items-center justify-center gap-1.5 rounded-lg border border-border text-[12px] font-medium text-muted transition-colors hover:border-accent hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${className}`}
+    >
+      <Languages className="h-4 w-4 shrink-0" />
+      <span>{targetLabel}</span>
+    </button>
   );
 }

@@ -98,28 +98,39 @@ function LeftRail({
       className="flex shrink-0 flex-col border-r border-border bg-bg transition-[width] duration-200 ease-out"
       style={{ width: collapsed ? '68px' : '240px' }}
     >
-      {/* Header: logo + collapse toggle */}
-      <div className="flex min-h-[60px] items-center justify-between gap-2 border-b border-border px-4">
-        {!collapsed ? (
+      {/* Header: expanded = logo + collapse btn; collapsed = logo only (centered) */}
+      {!collapsed ? (
+        <div className="flex min-h-[60px] items-center justify-between gap-2 border-b border-border px-4">
           <Link href="/dashboard" className="min-w-0">
             <Logo />
           </Link>
-        ) : (
+          <button
+            onClick={onToggle}
+            title="Collapse"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-border bg-surface text-muted transition-colors hover:border-accent hover:text-fg"
+          >
+            <PanelLeftClose className="h-4 w-4" />
+          </button>
+        </div>
+      ) : (
+        <div className="flex min-h-[60px] flex-col items-center justify-center gap-2 border-b border-border">
           <Link
             href="/dashboard"
             className="flex h-9 w-9 items-center justify-center rounded-full bg-fg font-deva text-base text-bg"
           >
             वी
           </Link>
-        )}
+        </div>
+      )}
+      {collapsed && (
         <button
           onClick={onToggle}
-          title={collapsed ? 'Expand' : 'Collapse'}
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-border bg-surface text-muted transition-colors hover:border-accent hover:text-fg"
+          title="Expand"
+          className="mx-auto mt-2 flex h-7 w-7 items-center justify-center rounded-lg border border-border bg-surface text-muted transition-colors hover:border-accent hover:text-fg"
         >
-          {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+          <PanelLeftOpen className="h-4 w-4" />
         </button>
-      </div>
+      )}
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto px-3 py-4">
@@ -140,12 +151,14 @@ function LeftRail({
 
       {/* Footer: controls + user + sign-out */}
       <div className={`flex flex-col gap-2.5 border-t border-border px-3 py-3.5 ${collapsed ? 'items-center' : ''}`}>
+        {/* Compact icon toggles — present in BOTH states (stacked when collapsed) */}
+        <div className={`flex gap-2 ${collapsed ? 'flex-col items-center' : ''}`}>
+          <ThemeToggle className={collapsed ? 'w-9' : 'flex-1'} />
+          <LanguageToggle className={collapsed ? 'w-9 !gap-0 [&>span]:hidden' : 'flex-1'} />
+        </div>
+
         {!collapsed ? (
           <>
-            <div className="flex items-center gap-2">
-              <ThemeToggle />
-              <LanguageToggle />
-            </div>
             <Link
               href="/profile"
               className="flex items-center gap-2.5 rounded-full border border-border bg-surface px-2 py-[7px] transition-colors hover:border-accent"
@@ -276,9 +289,9 @@ export function AppLayoutClient({ children }: { children: React.ReactNode }) {
             </span>
           </Link>
           <div className="ml-auto flex items-center gap-2">
-            <span className="md:hidden">
-              <ThemeToggle />
-            </span>
+            {/* Theme + language live in the rail footer on desktop; surfaced here on mobile */}
+            <LanguageToggle className="md:hidden" />
+            <ThemeToggle className="md:hidden" />
             <NotificationBell />
             <Link
               href="/profile"
