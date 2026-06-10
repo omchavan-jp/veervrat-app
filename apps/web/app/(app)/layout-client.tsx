@@ -288,10 +288,11 @@ export function AppLayoutClient({ children }: { children: React.ReactNode }) {
               <span className="text-accent">Veer</span>vrat
             </span>
           </Link>
-          <div className="ml-auto flex items-center gap-2">
-            {/* Theme + language live in the rail footer on desktop; surfaced here on mobile */}
-            <LanguageToggle className="md:hidden" />
-            <ThemeToggle className="md:hidden" />
+          <div className="ml-auto flex items-center gap-1.5">
+            {/* Theme + language live in the rail footer on desktop; surfaced here on
+                mobile as uniform square icon-only buttons (label hidden) */}
+            <LanguageToggle className="!h-8 w-8 !gap-0 !border-transparent [&>span]:hidden md:hidden" />
+            <ThemeToggle className="!h-8 w-8 !border-transparent md:hidden" />
             <NotificationBell />
             <Link
               href="/profile"
