@@ -95,41 +95,47 @@ function LeftRail({
 
   return (
     <aside
-      className="flex shrink-0 flex-col border-r border-border bg-bg transition-[width] duration-200 ease-out"
-      style={{ width: collapsed ? '68px' : '240px' }}
+      className="relative flex shrink-0 flex-col border-r border-border bg-bg transition-[width] duration-300 ease-[var(--ease-spring)]"
+      style={{ width: collapsed ? '76px' : '240px' }}
     >
-      {/* Header: expanded = logo + collapse btn; collapsed = logo only (centered) */}
+      {/* Collapse / expand toggle straddles the rail's right edge — a fixed-position
+          control on the boundary (same place whether open or closed), reading as
+          "outside" the rail rather than crammed inside it. */}
+      <button
+        onClick={onToggle}
+        title={collapsed ? t('expandSidebar') : t('collapseSidebar')}
+        aria-label={collapsed ? t('expandSidebar') : t('collapseSidebar')}
+        className="absolute -right-3 top-[18px] z-30 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-surface text-muted shadow-card transition-colors hover:border-accent hover:text-fg"
+      >
+        {collapsed ? <PanelLeftOpen className="h-3.5 w-3.5" /> : <PanelLeftClose className="h-3.5 w-3.5" />}
+      </button>
+
+      {/* Header / brand */}
       {!collapsed ? (
-        <div className="flex min-h-[60px] items-center justify-between gap-2 border-b border-border px-4">
+        <div className="flex min-h-[60px] items-center border-b border-border px-4">
           <Link href="/dashboard" className="min-w-0">
             <Logo />
           </Link>
-          <button
-            onClick={onToggle}
-            title="Collapse"
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-border bg-surface text-muted transition-colors hover:border-accent hover:text-fg"
-          >
-            <PanelLeftClose className="h-4 w-4" />
-          </button>
         </div>
       ) : (
-        <div className="flex min-h-[60px] flex-col items-center justify-center gap-2 border-b border-border">
+        <div className="flex min-h-[60px] items-center justify-center border-b border-border">
           <Link
             href="/dashboard"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-fg font-deva text-base text-bg"
+            title="Veervrat"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-fg font-deva text-lg text-bg"
           >
             वी
           </Link>
         </div>
       )}
+      {/* Brand name stays present when collapsed, set vertically so it survives the
+          narrow rail instead of vanishing entirely. */}
       {collapsed && (
-        <button
-          onClick={onToggle}
-          title="Expand"
-          className="mx-auto mt-2 flex h-7 w-7 items-center justify-center rounded-lg border border-border bg-surface text-muted transition-colors hover:border-accent hover:text-fg"
-        >
-          <PanelLeftOpen className="h-4 w-4" />
-        </button>
+        <div className="flex justify-center pt-3">
+          <span className="font-display text-[12px] tracking-[0.05em] [writing-mode:vertical-rl] text-muted">
+            <span className="text-accent">Veer</span>vrat
+          </span>
+        </div>
       )}
 
       {/* Nav */}
