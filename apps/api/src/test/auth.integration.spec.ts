@@ -118,7 +118,11 @@ describe('Auth — integration', () => {
       expect(updated?.language).toBe('MR');
       expect(updated?.gender).toBe('Male');
       expect(updated?.dob).not.toBeNull();
-      expect(updated?.onboardingCompletedAt).not.toBeNull();
+      // Account setup is step 1 of the two-flag onboarding gate (I9-F1): it sets
+      // accountSetupCompletedAt only. onboardingCompletedAt is granted separately by
+      // the framework walkthrough, which keeps the framework un-skippable.
+      expect(updated?.accountSetupCompletedAt).not.toBeNull();
+      expect(updated?.onboardingCompletedAt).toBeNull();
     });
 
     it('NEGATIVE — returns 4xx when no session cookie is present', async () => {
