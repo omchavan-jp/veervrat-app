@@ -79,6 +79,7 @@ veervrat-app/
 ### Start here
 - `documentation/System Decisions & Status.md` — master list of all tech decisions and status
 - `documentation/Local Development Setup.md` — how to run the app locally
+- `documentation/Implementation-Cautions-and-Principles.md` — **read before implementing any item.** Generalized principles, a feature Definition-of-Done, and a verification ladder distilled from a remediation pass on earlier AI-built code. Prevents the recurring failure classes (unverified "done", layer-only features, unmapped tokens, transport misconfig, partial i18n, missing negative tests).
 
 ### Convention docs
 - `documentation/Auth Architecture Decision - v1.md` — auth, sessions, OAuth, CSRF (double-submit cookie), rate limiting, brute force

@@ -12,6 +12,11 @@ Spec refs use shorthand: `spec/05` = `spec/decisions/05_permissions.md`, `doc/au
 2. The session prompt already contains the research directive — do not skip it
 3. After implement: `/code-review` → fix → commit → squash merge to dev → `/opsx:archive`
 
+> **Before implementing any item from here on, read `documentation/Implementation-Cautions-and-Principles.md`.**
+> It defines the feature Definition-of-Done and the verification ladder. An item is not
+> "done" until each applicable Definition-of-Done dimension is *verified* (build + tests +
+> end-to-end), not assumed. This applies to every [FULL] and [DIRECT] item below.
+
 ---
 
 ## TIER 1 — Infrastructure & Identity (do these before any feature)
