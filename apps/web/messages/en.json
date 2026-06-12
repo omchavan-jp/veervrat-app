@@ -12,7 +12,9 @@
       "myVratmitras": "My Vratmitras",
       "pothi": "Pothi",
       "groupPractice": "Practice",
-      "groupGuidance": "Guidance"
+      "groupGuidance": "Guidance",
+      "collapseSidebar": "Collapse sidebar",
+      "expandSidebar": "Expand sidebar"
     },
     "actions": {
       "save": "Save",
@@ -30,7 +32,8 @@
     },
     "loading": "Loading...",
     "error_loading": "Error loading data",
-    "auth_required": "Authentication required"
+    "auth_required": "Authentication required",
+    "back": "Back"
   },
   "auth": {
     "login": {
@@ -480,7 +483,8 @@
     "open_chat": "Open Chat",
     "global_vm": "Global Mentor",
     "journey_vm": "Journey Mentor",
-    "assigned_journeys": "Assigned to:"
+    "assigned_journeys": "Assigned to:",
+    "assigned_count": "{count, plural, one {# journey} other {# journeys}}"
   },
   "chat": {
     "title": "Chat",
@@ -488,7 +492,8 @@
     "connecting": "Connecting to chat...",
     "error": "Chat error",
     "no_messages": "No messages yet. Start the conversation.",
-    "type_message": "Type a message..."
+    "type_message": "Type a message...",
+    "image_soon": "Image sharing coming soon"
   },
   "profile": {
     "title": "Profile & privacy",

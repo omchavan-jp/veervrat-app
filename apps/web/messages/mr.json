@@ -12,7 +12,9 @@
       "myVratmitras": "माझे व्रतमित्र",
       "pothi": "पोथी",
       "groupPractice": "साधना",
-      "groupGuidance": "मार्गदर्शन"
+      "groupGuidance": "मार्गदर्शन",
+      "collapseSidebar": "साइडबार लहान करा",
+      "expandSidebar": "साइडबार मोठा करा"
     },
     "actions": {
       "save": "जतन करा",
@@ -30,7 +32,8 @@
     },
     "loading": "लोड होत आहे...",
     "error_loading": "डेटा लोड करण्यात त्रुटी",
-    "auth_required": "प्रमाणीकरण आवश्यक आहे"
+    "auth_required": "प्रमाणीकरण आवश्यक आहे",
+    "back": "मागे"
   },
   "auth": {
     "login": {
@@ -480,7 +483,8 @@
     "open_chat": "चॅट उघडा",
     "global_vm": "जागतिक मार्गदर्शक",
     "journey_vm": "प्रवास मार्गदर्शक",
-    "assigned_journeys": "नियुक्त:"
+    "assigned_journeys": "नियुक्त:",
+    "assigned_count": "{count, plural, one {# प्रवास} other {# प्रवास}}"
   },
   "chat": {
     "title": "चॅट",
@@ -488,7 +492,8 @@
     "connecting": "चॅटशी जोडत आहे...",
     "error": "चॅट त्रुटी",
     "no_messages": "अद्याप संदेश नाही. संभाषण सुरू करा.",
-    "type_message": "संदेश टाइप करा..."
+    "type_message": "संदेश टाइप करा...",
+    "image_soon": "प्रतिमा शेअरिंग लवकरच येत आहे"
   },
   "profile": {
     "title": "प्रोफाइल आणि गोपनीयता",
