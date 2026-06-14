@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { queryKeys } from '@/lib/api/query-keys';
 import { dashboardApi } from '@/lib/api/dashboard';
+import { BilingualText } from '@/components/shared/bilingual-text';
 
 export function DashboardSuggestions() {
   const t = useTranslations('dashboard');
@@ -49,10 +50,12 @@ export function DashboardSuggestions() {
               className="flex items-start justify-between gap-4 rounded-xl border border-border bg-surface p-4"
             >
               <div className="min-w-0 flex-1">
-                <p className="text-[14px] text-fg">{s.sentenceTextEn}</p>
+                <BilingualText en={s.sentenceTextEn} mr={s.sentenceTextMr} size="sm" />
                 <div className="mt-1.5 flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-accent/10 px-2.5 py-0.5 text-[11px] font-medium text-accent">
-                    {s.subvirtueNameEn}
+                  <span
+                    className={`rounded-full bg-accent/10 px-2.5 py-0.5 text-[11px] font-medium text-accent ${s.subvirtueNameMr ? 'font-deva' : ''}`}
+                  >
+                    {s.subvirtueNameMr ?? s.subvirtueNameEn}
                   </span>
                   <span className="text-[11px] text-muted">{s.weaknessNameEn}</span>
                   <span className="text-[11px] text-muted">{t('scoreLabel', { score: s.score })}</span>

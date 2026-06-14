@@ -8,6 +8,7 @@ import { useWeakness } from '@/hooks/use-weaknesses';
 import { useTest, useSaveAnswers } from '@/hooks/use-tests';
 import { queryKeys } from '@/lib/api/query-keys';
 import { Button } from '@/components/ui/button';
+import { BilingualText } from '@/components/shared/bilingual-text';
 
 type Score = 1 | 2 | 3 | 4;
 type ViewMode = 'one-at-a-time' | 'view-all';
@@ -199,8 +200,7 @@ export default function TestQuestionPage() {
           {viewMode === 'one-at-a-time' && current ? (
             <div>
               <div className="mb-2 font-mono text-[11px] text-muted">{currentIndex + 1} / {sentences.length}</div>
-              <p className="font-display text-[22px] leading-snug tracking-tight">{current.textEn}</p>
-              {current.textMr && <p className="mt-3 font-deva text-[17px] text-muted">{current.textMr}</p>}
+              <BilingualText en={current.textEn} mr={current.textMr} size="lg" as="p" />
             </div>
           ) : (
             <div className="space-y-3 pb-4">
@@ -215,8 +215,7 @@ export default function TestQuestionPage() {
                       #{i + 1}
                     </button>
                     <div className="flex-1">
-                      <p className="text-[15px]">{s.textEn}</p>
-                      {s.textMr && <p className="mt-1 font-deva text-[13px] text-muted">{s.textMr}</p>}
+                      <BilingualText en={s.textEn} mr={s.textMr} size="sm" />
                     </div>
                     {answers.has(s.sentenceId) && (
                       <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium ${SCORE_COLORS[answers.get(s.sentenceId)!]}`}>

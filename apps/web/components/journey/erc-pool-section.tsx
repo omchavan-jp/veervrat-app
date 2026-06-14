@@ -75,8 +75,19 @@ export function ErcPoolSection({ journeyId, ercType, defaultOpen = true }: Props
                         </span>
                       )}
                     </div>
-                    <p className="text-[14px] font-medium">{item.titleEn}</p>
-                    {item.descriptionEn && <p className="mt-0.5 text-[12px] text-muted">{item.descriptionEn}</p>}
+                    {item.titleMr ? (
+                      <>
+                        <p className="font-deva text-[15px] font-medium leading-snug">{item.titleMr}</p>
+                        <p className="text-[12px] text-muted">{item.titleEn}</p>
+                      </>
+                    ) : (
+                      <p className="text-[14px] font-medium">{item.titleEn}</p>
+                    )}
+                    {item.descriptionMr ? (
+                      <p className="mt-0.5 font-deva text-[12px] text-muted">{item.descriptionMr}</p>
+                    ) : (
+                      item.descriptionEn && <p className="mt-0.5 text-[12px] text-muted">{item.descriptionEn}</p>
+                    )}
                     {item.frequencyLabel && <p className="mt-0.5 text-[11px] text-muted">🔁 {item.frequencyLabel}</p>}
                     {item.durationDays && <p className="mt-0.5 text-[11px] text-muted">{t('days', { count: item.durationDays })}</p>}
                   </div>

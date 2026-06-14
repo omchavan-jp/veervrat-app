@@ -57,11 +57,16 @@ export default function JourneysPage() {
                   {t(`stateBadge.${journey.state.toLowerCase()}`)}
                 </span>
               </div>
-              <p className="mb-2 line-clamp-1 text-[13px] text-muted">{journey.sentence.textEn}</p>
+              <p className={`mb-2 line-clamp-1 text-[13px] text-muted ${journey.sentence.textMr ? 'font-deva' : ''}`}>
+                {journey.sentence.textMr ?? journey.sentence.textEn}
+              </p>
               <div className="flex flex-wrap gap-1.5">
                 {journey.weaknesses.map((w, i) => (
-                  <span key={i} className="rounded-full border border-border px-2 py-0.5 text-[11px] text-muted">
-                    {w.weakness.nameEn}
+                  <span
+                    key={i}
+                    className={`rounded-full border border-border px-2 py-0.5 text-[11px] text-muted ${w.weakness.nameMr ? 'font-deva' : ''}`}
+                  >
+                    {w.weakness.nameMr ?? w.weakness.nameEn}
                   </span>
                 ))}
               </div>

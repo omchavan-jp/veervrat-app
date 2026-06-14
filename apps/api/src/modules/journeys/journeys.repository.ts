@@ -88,9 +88,9 @@ export class JourneysRepository {
         title: true,
         state: true,
         updatedAt: true,
-        sentence: { select: { textEn: true } },
+        sentence: { select: { textEn: true, textMr: true } },
         weaknesses: {
-          select: { weakness: { select: { nameEn: true } } },
+          select: { weakness: { select: { nameEn: true, nameMr: true } } },
         },
       },
       orderBy: { updatedAt: 'desc' },

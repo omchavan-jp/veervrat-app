@@ -9,8 +9,8 @@ export type JourneySummary = {
   title: string;
   state: JourneyState;
   updatedAt: string;
-  sentence: { textEn: string };
-  weaknesses: { weakness: { nameEn: string } }[];
+  sentence: { textEn: string; textMr: string | null };
+  weaknesses: { weakness: { nameEn: string; nameMr: string | null } }[];
 };
 
 export type ErcCounts = { total: number; active: number; approved: number };
@@ -75,7 +75,9 @@ export type JourneyErcItem = {
   createdById: string | null;
   reviewStatus: string | null;
   titleEn: string;
+  titleMr: string | null;
   descriptionEn: string | null;
+  descriptionMr: string | null;
   startedAt: string | null;
   submittedAt: string | null;
   approvedAt: string | null;
@@ -97,7 +99,9 @@ export type JourneyErcItem = {
 export type PoolItem = {
   id: string;
   titleEn: string;
+  titleMr: string | null;
   descriptionEn: string | null;
+  descriptionMr: string | null;
   weaknessTags: { weaknessId: string }[];
   // Exposure
   tier?: 'LOCAL' | 'NATIONAL' | 'INTERNATIONAL';

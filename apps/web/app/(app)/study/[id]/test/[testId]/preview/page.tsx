@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useWeakness } from '@/hooks/use-weaknesses';
 import { useTest, useSubmitTest } from '@/hooks/use-tests';
 import { Button } from '@/components/ui/button';
+import { BilingualText } from '@/components/shared/bilingual-text';
 
 type Score = 1 | 2 | 3 | 4;
 type Sentence = { sentenceId: string; textEn: string; textMr: string | null };
@@ -81,7 +82,7 @@ export default function TestPreviewPage() {
                   return (
                     <div key={s.sentenceId} className="flex items-center gap-3 rounded-lg border border-border bg-surface px-4 py-3">
                       <span className="shrink-0 font-mono text-[11px] text-muted">{globalIndex + 1}</span>
-                      <p className="flex-1 text-[14px]">{s.textEn}</p>
+                      <BilingualText en={s.textEn} mr={s.textMr} size="sm" className="flex-1" />
                       <span className={`shrink-0 rounded-full border px-3 py-0.5 text-[12px] font-medium ${SCORE_COLORS[score]}`}>
                         {SCORE_LABELS[score]}
                       </span>
@@ -111,7 +112,7 @@ export default function TestPreviewPage() {
                     return (
                       <div key={s.sentenceId} className="flex items-center gap-3 rounded-lg border border-dashed border-border px-4 py-3 opacity-50">
                         <span className="shrink-0 font-mono text-[11px] text-muted">{globalIndex + 1}</span>
-                        <p className="flex-1 text-[14px] text-muted">{s.textEn}</p>
+                        <BilingualText en={s.textEn} mr={s.textMr} size="sm" className="flex-1" />
                         <span className="shrink-0 text-[13px] text-muted/50">—</span>
                       </div>
                     );

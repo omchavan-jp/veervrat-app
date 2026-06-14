@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { ExposuresTab } from '@/components/journey/exposures-tab';
 import { ResolutionsTab } from '@/components/journey/resolutions-tab';
 import { ChallengesTab } from '@/components/journey/challenges-tab';
+import { BilingualText } from '@/components/shared/bilingual-text';
 
 const STATE_COLORS: Record<JourneyState, string> = {
   NOT_STARTED: 'text-muted bg-muted/10',
@@ -163,22 +164,22 @@ export default function JourneyDetailPage() {
           </div>
 
           {/* Sentence context */}
-          <p className="mb-1 text-[15px]">{journey.sentence.textEn}</p>
-          {journey.sentence.textMr && (
-            <p className="mb-2 font-deva text-[14px] text-muted">{journey.sentence.textMr}</p>
-          )}
+          <BilingualText en={journey.sentence.textEn} mr={journey.sentence.textMr} size="md" as="p" className="mb-2" />
           <p className="mb-3 text-[13px] text-accent-2">
             {t('detail.cultivating', {
-              subvirtue: journey.sentence.subvirtue.nameEn,
-              virtue: journey.sentence.subvirtue.virtue.nameEn,
+              subvirtue: journey.sentence.subvirtue.nameMr ?? journey.sentence.subvirtue.nameEn,
+              virtue: journey.sentence.subvirtue.virtue.nameMr ?? journey.sentence.subvirtue.virtue.nameEn,
             })}
           </p>
 
           {/* Weakness tags */}
           <div className="mb-3 flex flex-wrap gap-1.5">
             {journey.weaknesses.map((w) => (
-              <span key={w.id} className="rounded-full border border-border px-2 py-0.5 text-[11px] text-muted">
-                {w.nameEn}
+              <span
+                key={w.id}
+                className={`rounded-full border border-border px-2 py-0.5 text-[11px] text-muted ${w.nameMr ? 'font-deva' : ''}`}
+              >
+                {w.nameMr ?? w.nameEn}
               </span>
             ))}
           </div>

@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTestReport } from '@/hooks/use-tests';
 import type { ReportSentence } from '@/lib/api/tests';
+import { BilingualText } from '@/components/shared/bilingual-text';
 
 const SCORE_LABELS: Record<number, string> = { 4: 'Always', 3: 'Often', 2: 'Sometimes', 1: 'Never' };
 const SCORE_COLORS: Record<number, string> = {
@@ -27,8 +28,7 @@ function SentenceCard({ sentence, index, weaknessId }: { sentence: ReportSentenc
     >
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="flex-1">
-          <p className="text-[15px] leading-snug">{sentence.textEn}</p>
-          {sentence.textMr && <p className="mt-1 font-deva text-[13px] text-muted">{sentence.textMr}</p>}
+          <BilingualText en={sentence.textEn} mr={sentence.textMr} size="sm" />
         </div>
         {sentence.score !== null && (
           <span className={`shrink-0 rounded-full border px-3 py-1 text-[12px] font-medium ${SCORE_COLORS[sentence.score] ?? ''}`}>
@@ -37,7 +37,15 @@ function SentenceCard({ sentence, index, weaknessId }: { sentence: ReportSentenc
         )}
       </div>
       <div className="flex items-center justify-between">
-        <span className="text-[12px] text-muted">{sentence.subvirtueNameEn} → {sentence.virtueNameEn}</span>
+        <span className="text-[12px] text-muted">
+          <span className={sentence.subvirtueNameMr ? 'font-deva' : undefined}>
+            {sentence.subvirtueNameMr ?? sentence.subvirtueNameEn}
+          </span>
+          {' → '}
+          <span className={sentence.virtueNameMr ? 'font-deva' : undefined}>
+            {sentence.virtueNameMr ?? sentence.virtueNameEn}
+          </span>
+        </span>
         <Link
           href={`/journeys/new?sentenceId=${sentence.sentenceId}&weaknessId=${weaknessId}`}
           className="text-[13px] text-accent underline decoration-accent/40 hover:no-underline"
@@ -71,9 +79,13 @@ export default function TestReportPage() {
             ← {t('backToWeakness')}
           </Link>
 
-          <h1 className="mb-1 font-display text-[clamp(24px,3vw,36px)] leading-tight tracking-tight">
-            {report.weaknessNameEn}
-          </h1>
+          <BilingualText
+            en={report.weaknessNameEn}
+            mr={report.weaknessNameMr}
+            size="xl"
+            as="h1"
+            className="mb-1"
+          />
           <p className="mb-6 text-[13px] text-muted">
             {report.answeredCount}/{report.totalSentences} reflected on · {new Date(report.submittedAt).toLocaleDateString()}
           </p>
@@ -89,8 +101,11 @@ export default function TestReportPage() {
               <h2 className="mb-3 font-mono text-[11px] uppercase tracking-[0.12em] text-muted">{t('virtuesTitle')}</h2>
               <div className="flex flex-wrap gap-2">
                 {report.virtuesToExplore.map((v) => (
-                  <span key={v.virtueId} className="rounded-full bg-accent-2/10 px-4 py-1.5 text-[13px] font-medium text-accent-2">
-                    {v.virtueNameEn}
+                  <span
+                    key={v.virtueId}
+                    className={`rounded-full bg-accent-2/10 px-4 py-1.5 text-[13px] font-medium text-accent-2 ${v.virtueNameMr ? 'font-deva' : ''}`}
+                  >
+                    {v.virtueNameMr ?? v.virtueNameEn}
                   </span>
                 ))}
               </div>

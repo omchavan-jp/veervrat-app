@@ -82,8 +82,26 @@ export function ErcItemCard({ item, ercType, journeyId, hasVm, viewerIsVm = fals
               <span className="rounded-full bg-muted/10 px-2 py-0.5 text-[11px] text-muted">{t('deactivated')}</span>
             )}
           </div>
-          <p className="text-[14px] font-medium">{item.titleEn}</p>
-          {item.descriptionEn && <p className="mt-0.5 text-[13px] text-muted">{item.descriptionEn}</p>}
+          {item.titleMr ? (
+            <>
+              <p className="font-deva text-[15px] font-medium leading-snug">{item.titleMr}</p>
+              <p className="text-[12px] text-muted">{item.titleEn}</p>
+            </>
+          ) : (
+            <p className="text-[14px] font-medium">{item.titleEn}</p>
+          )}
+          {(item.descriptionMr || item.descriptionEn) && (
+            <p className="mt-1 text-[13px] text-muted">
+              {item.descriptionMr ? (
+                <>
+                  <span className="font-deva">{item.descriptionMr}</span>
+                  {item.descriptionEn && <span className="mt-0.5 block text-[12px]">{item.descriptionEn}</span>}
+                </>
+              ) : (
+                item.descriptionEn
+              )}
+            </p>
+          )}
           {item.frequencyLabel && <p className="mt-0.5 text-[12px] text-muted">🔁 {item.frequencyLabel}</p>}
           {item.durationWeeks && <p className="mt-0.5 text-[12px] text-muted">{t('weeks', { count: item.durationWeeks })}</p>}
           {item.durationDays && <p className="mt-0.5 text-[12px] text-muted">{t('days', { count: item.durationDays })}</p>}
