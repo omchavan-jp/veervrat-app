@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { screen, fireEvent } from '@testing-library/react';
+import { renderWithProviders } from './helpers/render';
 
 const mockSelectMutate = vi.hoisted(() => vi.fn());
 const mockUpdateStatusMutate = vi.hoisted(() => vi.fn());
@@ -30,17 +30,18 @@ vi.mock('@/hooks/use-journeys', () => ({
   useDeactivateErc: vi.fn().mockReturnValue({ mutate: mockDeactivateMutate, isPending: false }),
   useReactivateErc: vi.fn().mockReturnValue({ mutate: mockReactivateMutate, isPending: false }),
   useRemoveErc: vi.fn().mockReturnValue({ mutate: mockRemoveMutate, isPending: false }),
-}));
-
-vi.mock('next-intl', () => ({
-  useTranslations: () => (key: string) => key,
+  useCreateCustomErc: vi.fn().mockReturnValue({ mutate: vi.fn(), isPending: false }),
+  useSubmitCustomForReview: vi.fn().mockReturnValue({ mutate: vi.fn(), isPending: false }),
+  useAcknowledgeSidenote: vi.fn().mockReturnValue({ mutate: vi.fn(), isPending: false }),
+  useApproveErc: vi.fn().mockReturnValue({ mutate: vi.fn(), isPending: false }),
+  useRevisitErc: vi.fn().mockReturnValue({ mutate: vi.fn(), isPending: false }),
+  useSuggestSidenote: vi.fn().mockReturnValue({ mutate: vi.fn(), isPending: false }),
 }));
 
 import { ExposuresTab } from '../../components/journey/exposures-tab';
 
 function wrap(ui: React.ReactElement) {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(<QueryClientProvider client={qc}>{ui}</QueryClientProvider>);
+  return renderWithProviders(ui);
 }
 
 describe('ExposuresTab — pool section (no items selected)', () => {

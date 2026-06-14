@@ -24,6 +24,8 @@ vi.mock('@/lib/api/users', () => ({
 
 import { LanguageToggle } from '../../components/shared/language-toggle';
 
+// Single button that flips EN↔MR and shows the CURRENT language. Clicking always
+// switches to the other language (persist via updateMe, then refresh).
 describe('LanguageToggle', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -31,10 +33,9 @@ describe('LanguageToggle', () => {
     mockLocale.value = 'en';
   });
 
-  it('renders EN and MR buttons when authenticated', () => {
+  it('renders a single toggle button when authenticated', () => {
     render(<LanguageToggle />);
-    expect(screen.getByRole('button', { name: /EN/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /MR/i })).toBeInTheDocument();
+    expect(screen.getAllByRole('button')).toHaveLength(1);
   });
 
   it('renders nothing when not authenticated', () => {
@@ -43,55 +44,43 @@ describe('LanguageToggle', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it('EN button has active style when locale is en', () => {
+  it('shows the current language (EN) and labels the switch target', () => {
     mockLocale.value = 'en';
     render(<LanguageToggle />);
-    const enBtn = screen.getByRole('button', { name: 'EN' });
-    expect(enBtn).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Switch language (currently English)' })).toBeInTheDocument();
+    expect(screen.getByText('EN')).toBeInTheDocument();
   });
 
-  it('MR button has active style when locale is mr', () => {
+  it('shows the current language (मराठी) when locale is mr', () => {
     mockLocale.value = 'mr';
     render(<LanguageToggle />);
-    const mrBtn = screen.getByRole('button', { name: 'MR' });
-    expect(mrBtn).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Switch language (currently Marathi)' })).toBeInTheDocument();
+    expect(screen.getByText('मराठी')).toBeInTheDocument();
   });
 
-  it('clicking the non-active locale calls updateMe with new locale and refreshes', async () => {
+  it('clicking in EN switches to MR and refreshes', async () => {
     mockUpdateMe.mockResolvedValue({});
     mockLocale.value = 'en';
     render(<LanguageToggle />);
-
-    fireEvent.click(screen.getByRole('button', { name: 'MR' }));
-
-    await waitFor(() => {
-      expect(mockUpdateMe).toHaveBeenCalledWith({ language: 'MR' });
-    });
+    fireEvent.click(screen.getByRole('button'));
+    await waitFor(() => expect(mockUpdateMe).toHaveBeenCalledWith({ language: 'MR' }));
     expect(mockRouterRefresh).toHaveBeenCalled();
   });
 
-  it('clicking the already-active locale does nothing', async () => {
-    mockLocale.value = 'en';
+  it('clicking in MR switches to EN', async () => {
+    mockUpdateMe.mockResolvedValue({});
+    mockLocale.value = 'mr';
     render(<LanguageToggle />);
-
-    fireEvent.click(screen.getByRole('button', { name: 'EN' }));
-
-    // No API call, no refresh
-    expect(mockUpdateMe).not.toHaveBeenCalled();
-    expect(mockRouterRefresh).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button'));
+    await waitFor(() => expect(mockUpdateMe).toHaveBeenCalledWith({ language: 'EN' }));
   });
 
-  it('does NOT call router.refresh when updateMe throws', async () => {
+  it('does NOT refresh when updateMe throws', async () => {
     mockUpdateMe.mockRejectedValue(new Error('Network error'));
     mockLocale.value = 'en';
     render(<LanguageToggle />);
-
-    fireEvent.click(screen.getByRole('button', { name: 'MR' }));
-
-    // Wait long enough for the promise to settle
-    await waitFor(() => {
-      expect(mockUpdateMe).toHaveBeenCalled();
-    });
+    fireEvent.click(screen.getByRole('button'));
+    await waitFor(() => expect(mockUpdateMe).toHaveBeenCalled());
     expect(mockRouterRefresh).not.toHaveBeenCalled();
   });
 });

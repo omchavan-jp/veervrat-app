@@ -88,7 +88,7 @@ describe('SignupPage', () => {
   });
 
   it('shows username available text when check returns true', async () => {
-    mockCheckUsername.mockResolvedValue(true);
+    mockCheckUsername.mockResolvedValue({ available: true });
     render(<SignupPage />);
 
     const usernameInput = screen.getByPlaceholderText('auth.signup.usernamePlaceholder');
@@ -103,7 +103,7 @@ describe('SignupPage', () => {
   });
 
   it('shows username taken text when check returns false', async () => {
-    mockCheckUsername.mockResolvedValue(false);
+    mockCheckUsername.mockResolvedValue({ available: false, reason: 'taken' });
     render(<SignupPage />);
 
     const usernameInput = screen.getByPlaceholderText('auth.signup.usernamePlaceholder');
