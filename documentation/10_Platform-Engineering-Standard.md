@@ -9,6 +9,8 @@ This document is the canonical reference for all library, tooling, and architect
 | Concern | Library | Package | Rationale |
 |---|---|---|---|
 | Rich text editor | Tiptap | `@tiptap/react`, `@tiptap/starter-kit` | ProseMirror-based, App Router compatible, JSON AST native, shadcn-friendly |
+| Rich text — images | Tiptap Image extension | `@tiptap/extension-image` | Inline image nodes (`{type:'image',attrs:{src}}`) for chat/experience uploads. Src restricted to MinIO/CDN domain (see sanitization). |
+| Rich text — entity references | Tiptap Mention extension | `@tiptap/extension-mention`, `@tiptap/suggestion` | Generic `@`/`#` entity-reference system (CONTEXT.md "Entity Reference") rendered as clickable chips. One mention node type with an `entityType` attr — not per-type handlers. |
 | Rich text storage format | Tiptap JSON AST | — | Stored as `jsonb` in PostgreSQL. Structural sanitization. Deterministic rendering. |
 | Rich text sanitization | sanitize-html | `sanitize-html` | Server-side, node-allowlist based. Runs on all user-generated rich text before DB write. |
 | i18n | next-intl | `next-intl` | App Router native, server-component-first, ICU message format, no URL-based locale routing |

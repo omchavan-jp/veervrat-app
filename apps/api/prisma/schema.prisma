@@ -414,7 +414,9 @@ model Exposure {
   sentenceId       String       @map("sentence_id") @db.Uuid
   tier             ExposureTier
   titleEn          String       @map("title_en")
+  titleMr          String?      @map("title_mr")
   descriptionEn    String?      @map("description_en")
+  descriptionMr    String?      @map("description_mr")
   sortOrder        Int          @default(0) @map("sort_order")
   createdAt        DateTime     @default(now()) @map("created_at")
   updatedAt        DateTime     @updatedAt @map("updated_at")
@@ -442,7 +444,9 @@ model Resolution {
   id                String   @id @default(uuid()) @db.Uuid
   sentenceId        String   @map("sentence_id") @db.Uuid
   titleEn           String   @map("title_en")
+  titleMr           String?  @map("title_mr")
   descriptionEn     String?  @map("description_en")
+  descriptionMr     String?  @map("description_mr")
   durationWeeks     Int?     @map("duration_weeks")
   frequencyPerWeek  Int?     @map("frequency_per_week")
   frequencyLabel    String?  @map("frequency_label")
@@ -473,7 +477,9 @@ model Challenge {
   id            String   @id @default(uuid()) @db.Uuid
   sentenceId    String   @map("sentence_id") @db.Uuid
   titleEn       String   @map("title_en")
+  titleMr       String?  @map("title_mr")
   descriptionEn String?  @map("description_en")
+  descriptionMr String?  @map("description_mr")
   durationDays  Int?     @map("duration_days")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
@@ -630,7 +636,9 @@ model JourneyExposure {
   // Custom fields (mirror pool or override)
   tier            ExposureTier
   titleEn         String    @map("title_en")
+  titleMr         String?   @map("title_mr")
   descriptionEn   String?   @map("description_en")
+  descriptionMr   String?   @map("description_mr")
   startedAt       DateTime? @map("started_at")
   submittedAt     DateTime? @map("submitted_at")
   approvedAt      DateTime? @map("approved_at")
@@ -658,7 +666,9 @@ model JourneyResolution {
   status           ErcStatus @default(NOT_STARTED)
   // Custom/overridable fields
   titleEn          String    @map("title_en")
+  titleMr          String?   @map("title_mr")
   descriptionEn    String?   @map("description_en")
+  descriptionMr    String?   @map("description_mr")
   durationWeeks    Int?      @map("duration_weeks")
   frequencyPerWeek Int?      @map("frequency_per_week")
   frequencyLabel   String?   @map("frequency_label")
@@ -702,7 +712,9 @@ model JourneyChallenge {
   isDeactivated    Boolean   @default(false) @map("is_deactivated")
   status           ErcStatus @default(NOT_STARTED)
   titleEn          String    @map("title_en")
+  titleMr          String?   @map("title_mr")
   descriptionEn    String?   @map("description_en")
+  descriptionMr    String?   @map("description_mr")
   durationDays     Int?      @map("duration_days")
   startedAt        DateTime? @map("started_at")
   submittedAt      DateTime? @map("submitted_at")
