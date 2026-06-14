@@ -17,11 +17,28 @@ const ALLOWED_NODE_TYPES = new Set([
   'listItem',
   'blockquote',
   'image',
+  'mention',
 ]);
 
 const ALLOWED_MARK_TYPES = new Set(['bold', 'italic', 'link']);
 
 const ALLOWED_HEADING_LEVELS = new Set([2, 3, 4]);
+
+// Entity-reference (@/#) target types. A mention node carries only an entityType +
+// entityId + a display label — never trusted content. The label is clamped; the
+// id/type are validated structurally. Rendering resolves the chip from these.
+const ALLOWED_ENTITY_TYPES = new Set([
+  'weakness',
+  'virtue',
+  'subvirtue',
+  'sentence',
+  'journey',
+  'exposure',
+  'resolution',
+  'challenge',
+]);
+
+const MENTION_LABEL_MAX = 120;
 
 export type TiptapNode = {
   type: string;
@@ -93,6 +110,20 @@ function sanitizeNode(node: unknown): TiptapNode | null {
     if (!isSafeUrl(src)) return null; // drop images without a safe URL
     out.attrs = { src };
     return out;
+  }
+
+  if (n.type === 'mention') {
+    const entityType = n.attrs?.entityType;
+    const entityId = n.attrs?.entityId;
+    const label = n.attrs?.label;
+    if (typeof entityType !== 'string' || !ALLOWED_ENTITY_TYPES.has(entityType)) return null;
+    if (typeof entityId !== 'string' || entityId.length === 0 || entityId.length > 64) return null;
+    out.attrs = {
+      entityType,
+      entityId,
+      label: typeof label === 'string' ? label.slice(0, MENTION_LABEL_MAX) : '',
+    };
+    return out; // leaf node — no children
   }
 
   if (Array.isArray(n.content)) {
