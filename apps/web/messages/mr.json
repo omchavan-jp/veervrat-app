@@ -404,6 +404,15 @@
       "openChat": "चॅट उघडा",
       "chatNoVm": "संभाषण सुरू करण्यासाठी व्रतमित्राला आमंत्रित करा."
     },
+    "activity": {
+      "title": "अलीकडील घडामोडी",
+      "empty": "अद्याप काही घडामोडी नाहीत. तुमची प्रगती येथे दिसेल.",
+      "ercStarted": "<b>{title}</b> सुरू केले",
+      "ercSubmitted": "<b>{title}</b> सादर केले",
+      "ercApproved": "<b>{title}</b> मंजूर झाले",
+      "checkin": "<b>{title}</b> वर चेक-इन केले",
+      "vmSuggestion": "व्रतमित्राने <b>{title}</b> वर टीप जोडली"
+    },
     "erc": {
       "statusNotStarted": "सुरू केले नाही",
       "statusInProgress": "सुरू आहे",

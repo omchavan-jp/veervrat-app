@@ -1,7 +1,25 @@
 import { Injectable } from '@nestjs/common';
-import { ErcStatus, JourneyState, VmRelationshipState } from '@prisma/client';
+import { CheckinStatus, ErcStatus, JourneyState, VmRelationshipState } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { JourneySlim, JourneyVmAssignmentSlim, VmRelationshipSlim } from '../../common/permissions/types';
+
+export type JourneyActivityEventType =
+  | 'erc_started'
+  | 'erc_submitted'
+  | 'erc_approved'
+  | 'checkin'
+  | 'vm_suggestion';
+
+export type JourneyActivityEvent = {
+  id: string;
+  type: JourneyActivityEventType;
+  at: string;
+  ercType: 'exposure' | 'resolution' | 'challenge';
+  itemId: string;
+  titleEn: string;
+  titleMr: string | null;
+  checkinStatus?: CheckinStatus;
+};
 
 const journeySelect = {
   id: true,
@@ -148,6 +166,122 @@ export class JourneysRepository {
         challenges: countByStatus(chalCounts),
       },
     };
+  }
+
+  // Recent-activity feed for the Status Overview tab (spec/27). Aggregates the most
+  // recent events across a journey's ERC items, check-ins, and VM sidenotes into a
+  // single time-ordered list. Read-only — derived from existing timestamps, no new table.
+  async getActivity(journeyId: string, limit = 8): Promise<JourneyActivityEvent[]> {
+    const ercItemSelect = {
+      id: true,
+      titleEn: true,
+      titleMr: true,
+      status: true,
+      submittedAt: true,
+      approvedAt: true,
+      startedAt: true,
+      updatedAt: true,
+    } as const;
+
+    const [exposures, resolutions, challenges, checkins, sidenotes] = await Promise.all([
+      this.prisma.journeyExposure.findMany({ where: { journeyId }, select: ercItemSelect }),
+      this.prisma.journeyResolution.findMany({ where: { journeyId }, select: ercItemSelect }),
+      this.prisma.journeyChallenge.findMany({ where: { journeyId }, select: ercItemSelect }),
+      this.prisma.resolutionCheckin.findMany({
+        where: { journeyResolution: { journeyId } },
+        select: {
+          id: true,
+          status: true,
+          checkedInAt: true,
+          journeyResolution: { select: { id: true, titleEn: true, titleMr: true } },
+        },
+        orderBy: { checkedInAt: 'desc' },
+        take: limit,
+      }),
+      this.prisma.vmSidenote.findMany({
+        where: {
+          revokedAt: null,
+          OR: [
+            { journeyExposure: { journeyId } },
+            { journeyResolution: { journeyId } },
+            { journeyChallenge: { journeyId } },
+          ],
+        },
+        select: {
+          id: true,
+          createdAt: true,
+          journeyExposure: { select: { id: true, titleEn: true, titleMr: true } },
+          journeyResolution: { select: { id: true, titleEn: true, titleMr: true } },
+          journeyChallenge: { select: { id: true, titleEn: true, titleMr: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+      }),
+    ]);
+
+    const events: JourneyActivityEvent[] = [];
+
+    const pushErcStatusEvent = (
+      ercType: 'exposure' | 'resolution' | 'challenge',
+      item: {
+        id: string;
+        titleEn: string;
+        titleMr: string | null;
+        status: ErcStatus;
+        submittedAt: Date | null;
+        approvedAt: Date | null;
+        startedAt: Date | null;
+      },
+    ) => {
+      // Surface the most meaningful timestamp the item has reached.
+      const at = item.approvedAt ?? item.submittedAt ?? item.startedAt;
+      if (!at) return;
+      const kind =
+        item.approvedAt != null ? 'erc_approved' : item.submittedAt != null ? 'erc_submitted' : 'erc_started';
+      events.push({
+        id: `${ercType}:${item.id}:${kind}`,
+        type: kind,
+        at: at.toISOString(),
+        ercType,
+        itemId: item.id,
+        titleEn: item.titleEn,
+        titleMr: item.titleMr,
+      });
+    };
+
+    exposures.forEach((i) => pushErcStatusEvent('exposure', i));
+    resolutions.forEach((i) => pushErcStatusEvent('resolution', i));
+    challenges.forEach((i) => pushErcStatusEvent('challenge', i));
+
+    checkins.forEach((c) => {
+      events.push({
+        id: `checkin:${c.id}`,
+        type: 'checkin',
+        at: c.checkedInAt.toISOString(),
+        ercType: 'resolution',
+        itemId: c.journeyResolution.id,
+        titleEn: c.journeyResolution.titleEn,
+        titleMr: c.journeyResolution.titleMr,
+        checkinStatus: c.status,
+      });
+    });
+
+    sidenotes.forEach((s) => {
+      const item = s.journeyExposure ?? s.journeyResolution ?? s.journeyChallenge;
+      if (!item) return;
+      const ercType = s.journeyExposure ? 'exposure' : s.journeyResolution ? 'resolution' : 'challenge';
+      events.push({
+        id: `sidenote:${s.id}`,
+        type: 'vm_suggestion',
+        at: s.createdAt.toISOString(),
+        ercType,
+        itemId: item.id,
+        titleEn: item.titleEn,
+        titleMr: item.titleMr,
+      });
+    });
+
+    return events.sort((a, b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : 0)).slice(0, limit);
   }
 
   async setCompleted(id: string) {

@@ -87,6 +87,7 @@ function makeRepo(overrides: Record<string, unknown> = {}) {
     updateTitle: vi.fn().mockResolvedValue({ id: JOURNEY_ID, title: 'New Title' }),
     setCompleted: vi.fn().mockResolvedValue({ id: JOURNEY_ID, state: JourneyState.COMPLETED, completedAt: new Date() }),
     buildJourneySlim: vi.fn().mockReturnValue(ACTIVE_JOURNEY_SLIM),
+    getActivity: vi.fn().mockResolvedValue([]),
     ...overrides,
   };
 }
@@ -200,6 +201,28 @@ describe('JourneysService — getJourney', () => {
     const service = makeService(repo);
     await expect(service.getJourney(OTHER_USER, JOURNEY_ID))
       .rejects.toThrow(AccessDeniedException);
+  });
+});
+
+describe('JourneysService — getActivity', () => {
+  it('POSITIVE: VA gets activity feed for own journey', async () => {
+    const feed = [
+      { id: 'exposure:e1:erc_approved', type: 'erc_approved', at: '2026-06-14T00:00:00.000Z', ercType: 'exposure', itemId: 'e1', titleEn: 'X', titleMr: null },
+    ];
+    const repo = makeRepo({ getActivity: vi.fn().mockResolvedValue(feed) });
+    const service = makeService(repo);
+    const result = await service.getActivity(VA_USER, JOURNEY_ID);
+    expect(result).toEqual(feed);
+    expect(repo.getActivity).toHaveBeenCalledWith(JOURNEY_ID);
+  });
+
+  it('NEGATIVE: throws AccessDeniedException when user neither owns the journey nor is its VM', async () => {
+    const repo = makeRepo({
+      buildJourneySlim: vi.fn().mockReturnValue({ ...ACTIVE_JOURNEY_SLIM, vratarthiId: 'va-1' }),
+    });
+    const service = makeService(repo);
+    await expect(service.getActivity(OTHER_USER, JOURNEY_ID)).rejects.toThrow(AccessDeniedException);
+    expect(repo.getActivity).not.toHaveBeenCalled();
   });
 });
 

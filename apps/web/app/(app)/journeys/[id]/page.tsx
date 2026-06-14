@@ -12,6 +12,7 @@ import { ExposuresTab } from '@/components/journey/exposures-tab';
 import { ResolutionsTab } from '@/components/journey/resolutions-tab';
 import { ChallengesTab } from '@/components/journey/challenges-tab';
 import { BilingualText } from '@/components/shared/bilingual-text';
+import { JourneyActivityFeed } from '@/components/journey/journey-activity-feed';
 
 const STATE_COLORS: Record<JourneyState, string> = {
   NOT_STARTED: 'text-muted bg-muted/10',
@@ -261,10 +262,13 @@ export default function JourneyDetailPage() {
               </div>
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-3">
-              <ErcCard label={t('detail.tabExposures')} counts={journey.ercCounts.exposures} />
-              <ErcCard label={t('detail.tabResolutions')} counts={journey.ercCounts.resolutions} />
-              <ErcCard label={t('detail.tabChallenges')} counts={journey.ercCounts.challenges} />
+            <div className="space-y-6">
+              <div className="grid gap-4 sm:grid-cols-3">
+                <ErcCard label={t('detail.tabExposures')} counts={journey.ercCounts.exposures} />
+                <ErcCard label={t('detail.tabResolutions')} counts={journey.ercCounts.resolutions} />
+                <ErcCard label={t('detail.tabChallenges')} counts={journey.ercCounts.challenges} />
+              </div>
+              <JourneyActivityFeed journeyId={journey.id} />
             </div>
           )
         )}

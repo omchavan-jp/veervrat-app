@@ -20,6 +20,14 @@ export function useJourney(id: string) {
   });
 }
 
+export function useJourneyActivity(id: string) {
+  return useQuery({
+    queryKey: queryKeys.journeys.activity(id),
+    queryFn: () => journeysApi.activity(id),
+    enabled: !!id,
+  });
+}
+
 export function useCreateJourney() {
   const queryClient = useQueryClient();
   return useMutation({

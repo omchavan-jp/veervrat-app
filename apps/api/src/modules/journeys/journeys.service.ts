@@ -64,6 +64,18 @@ export class JourneysService {
     return journey;
   }
 
+  async getActivity(user: SessionUser, id: string) {
+    const journey = await this.journeysRepository.findById(id);
+    if (!journey) throw new EntityNotFoundException('Journey', id);
+
+    const slim = this.journeysRepository.buildJourneySlim(journey);
+    if (!hasPermission(user, { type: 'journey', journey: slim }, 'journey.view')) {
+      throw new AccessDeniedException();
+    }
+
+    return this.journeysRepository.getActivity(id);
+  }
+
   async updateState(user: SessionUser, id: string, action: 'pause' | 'resume') {
     const journey = await this.journeysRepository.findById(id);
     if (!journey) throw new EntityNotFoundException('Journey', id);

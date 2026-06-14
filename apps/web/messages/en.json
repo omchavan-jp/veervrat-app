@@ -404,6 +404,15 @@
       "openChat": "Open chat",
       "chatNoVm": "Invite a Vratmitra to start a conversation."
     },
+    "activity": {
+      "title": "Recent activity",
+      "empty": "No activity yet. Your progress will show up here.",
+      "ercStarted": "Started <b>{title}</b>",
+      "ercSubmitted": "Submitted <b>{title}</b>",
+      "ercApproved": "Approved <b>{title}</b>",
+      "checkin": "Checked in on <b>{title}</b>",
+      "vmSuggestion": "Vratmitra added a note on <b>{title}</b>"
+    },
     "erc": {
       "statusNotStarted": "Not started",
       "statusInProgress": "In progress",

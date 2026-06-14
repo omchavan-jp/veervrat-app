@@ -130,6 +130,26 @@ export type CheckinsResponse = {
   streak: number;
 };
 
+// ─── Activity feed ──────────────────────────────────────────────────────────────
+
+export type JourneyActivityEventType =
+  | 'erc_started'
+  | 'erc_submitted'
+  | 'erc_approved'
+  | 'checkin'
+  | 'vm_suggestion';
+
+export type JourneyActivityEvent = {
+  id: string;
+  type: JourneyActivityEventType;
+  at: string;
+  ercType: ErcType;
+  itemId: string;
+  titleEn: string;
+  titleMr: string | null;
+  checkinStatus?: CheckinStatus;
+};
+
 export const checkinsApi = {
   logCheckin: (journeyId: string, resolutionId: string, status: CheckinStatus, note?: string) =>
     api.post<Wrapped<ResolutionCheckin>>(`/journeys/${journeyId}/resolutions/${resolutionId}/checkins`, { status, note }).then((r) => r.data),
@@ -205,6 +225,9 @@ export const journeysApi = {
 
   detail: (id: string) =>
     api.get<Wrapped<JourneyDetail>>(`/journeys/${id}`).then((r) => r.data),
+
+  activity: (id: string) =>
+    api.get<Wrapped<JourneyActivityEvent[]>>(`/journeys/${id}/activity`).then((r) => r.data),
 
   updateState: (id: string, action: 'pause' | 'resume') =>
     api.patch<Wrapped<{ id: string; state: JourneyState }>>(`/journeys/${id}/state`, { action }).then((r) => r.data),
