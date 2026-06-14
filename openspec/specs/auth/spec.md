@@ -144,9 +144,9 @@ All pages use React Hook Form + Zod for validation, TanStack Query for server st
 
 ## References
 
-- `documentation/Auth Architecture Decision - v1.md` — full architecture rationale
-- `documentation/Backend Conventions - v1.md` — layering and module patterns
-- `documentation/API Conventions - v1.md` — endpoint design conventions
+- `documentation/14_Auth-Architecture-Decision.md` — full architecture rationale
+- `documentation/11_Backend-Conventions.md` — layering and module patterns
+- `documentation/12_API-Conventions.md` — endpoint design conventions
 - `openspec/specs/csrf-protection/spec.md` — CSRF double-submit cookie spec
 - `openspec/specs/rate-limiting/spec.md` — throttler limits per route
 - `openspec/specs/account-lockout/spec.md` — Redis-backed lockout spec

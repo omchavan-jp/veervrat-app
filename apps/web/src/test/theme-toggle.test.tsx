@@ -2,57 +2,50 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 
 const mockSetTheme = vi.hoisted(() => vi.fn());
-const mockTheme = vi.hoisted(() => ({ value: 'system' }));
+const mockResolvedTheme = vi.hoisted(() => ({ value: 'light' }));
 
 vi.mock('next-themes', () => ({
-  useTheme: () => ({ theme: mockTheme.value, setTheme: mockSetTheme }),
+  useTheme: () => ({ resolvedTheme: mockResolvedTheme.value, setTheme: mockSetTheme }),
 }));
 
 import { ThemeToggle } from '../../components/shared/theme-toggle';
 
+// The toggle is a single icon button that flips light↔dark (system resolves to its
+// effective theme first). It shows the icon for the mode you'd switch TO.
 describe('ThemeToggle', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockTheme.value = 'system';
+    mockResolvedTheme.value = 'light';
   });
 
-  it('renders Light, Dark, and System buttons', () => {
+  it('renders a single toggle button', () => {
     render(<ThemeToggle />);
-    expect(screen.getByRole('button', { name: 'Light' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Dark' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'System' })).toBeInTheDocument();
+    expect(screen.getAllByRole('button')).toHaveLength(1);
   });
 
-  it('System button has aria-pressed true when theme is system', () => {
-    mockTheme.value = 'system';
+  it('in light mode, offers to switch to dark', () => {
+    mockResolvedTheme.value = 'light';
     render(<ThemeToggle />);
-    expect(screen.getByRole('button', { name: 'System' })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('button', { name: 'Light' })).toHaveAttribute('aria-pressed', 'false');
-    expect(screen.getByRole('button', { name: 'Dark' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('button', { name: 'Switch to dark theme' })).toBeInTheDocument();
   });
 
-  it('Dark button has aria-pressed true when theme is dark', () => {
-    mockTheme.value = 'dark';
+  it('in dark mode, offers to switch to light', () => {
+    mockResolvedTheme.value = 'dark';
     render(<ThemeToggle />);
-    expect(screen.getByRole('button', { name: 'Dark' })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('button', { name: 'Light' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('button', { name: 'Switch to light theme' })).toBeInTheDocument();
   });
 
-  it('clicking Dark calls setTheme("dark")', () => {
+  it('clicking in light mode sets dark', () => {
+    mockResolvedTheme.value = 'light';
     render(<ThemeToggle />);
-    fireEvent.click(screen.getByRole('button', { name: 'Dark' }));
+    fireEvent.click(screen.getByRole('button'));
     expect(mockSetTheme).toHaveBeenCalledWith('dark');
   });
 
-  it('clicking Light calls setTheme("light")', () => {
+  it('clicking in dark mode sets light', () => {
+    mockResolvedTheme.value = 'dark';
     render(<ThemeToggle />);
-    fireEvent.click(screen.getByRole('button', { name: 'Light' }));
+    fireEvent.click(screen.getByRole('button'));
     expect(mockSetTheme).toHaveBeenCalledWith('light');
-  });
-
-  it('clicking System calls setTheme("system")', () => {
-    render(<ThemeToggle />);
-    fireEvent.click(screen.getByRole('button', { name: 'System' }));
-    expect(mockSetTheme).toHaveBeenCalledWith('system');
   });
 });

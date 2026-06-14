@@ -10,11 +10,11 @@ This is the master reference for all technology and architecture decisions. Read
 | Backend | NestJS + TypeScript | Scaffolded |
 | Database | PostgreSQL | Scaffolded (docker-compose) |
 | ORM | Prisma | Scaffolded |
-| Search | Meilisearch | Decided, not set up — see Platform-Engineering-Standard.md |
+| Search | Meilisearch | Decided, not set up — see 10_Platform-Engineering-Standard.md |
 | File storage | MinIO (S3-compatible) | Provider confirmed: MinIO. Not set up. |
-| Rich text editor | Tiptap + JSON AST storage | Decided — see Platform-Engineering-Standard.md |
-| i18n | next-intl | Decided — no URL routing, user preference — see Platform-Engineering-Standard.md |
-| WebSocket | NestJS Gateway + Socket.IO | Decided — see Platform-Engineering-Standard.md |
+| Rich text editor | Tiptap + JSON AST storage | Decided — see 10_Platform-Engineering-Standard.md |
+| i18n | next-intl | Decided — no URL routing, user preference — see 10_Platform-Engineering-Standard.md |
+| WebSocket | NestJS Gateway + Socket.IO | Decided — see 10_Platform-Engineering-Standard.md |
 | Animation | Framer Motion | Decided |
 | Background jobs | @nestjs/schedule (v1), BullMQ path (v2) | Decided |
 | Auth | Custom in NestJS (cookie sessions, OAuth + credentials) | Built (backend + frontend) — see `openspec/specs/auth/spec.md` |
@@ -44,12 +44,12 @@ This is the master reference for all technology and architecture decisions. Read
 ### 5. Cookie-based sessions over JWT
 **Decision**: secure cookie-based sessions stored in PostgreSQL.
 **Why**: server-side session invalidation (logout, password reset), no token refresh complexity, CSRF is manageable. Redis not needed initially.
-**Details**: see `Auth Architecture Decision - v1.md`
+**Details**: see `14_Auth-Architecture-Decision.md`
 
 ### 6. Auth owned by NestJS
 **Decision**: NestJS is the source of truth for authentication. Next.js is only the UI layer.
 **Why**: centralizes auth logic, avoids framework lock-in, clearer security boundary. No Auth.js or Clerk — custom implementation.
-**Details**: see `Auth Architecture Decision - v1.md`
+**Details**: see `14_Auth-Architecture-Decision.md`
 
 ### 7. Google OAuth + email/password
 **Decision**: support Google OAuth and email/password login initially.
@@ -99,12 +99,12 @@ These are acknowledged but not yet decided in detail:
 
 | Area | What's pending |
 |---|---|
-| ~~Background jobs~~ | ✅ Decided — @nestjs/schedule v1, BullMQ v2. See Platform-Engineering-Standard.md |
-| ~~Realtime~~ | ✅ Decided — NestJS Gateway + Socket.IO. See Platform-Engineering-Standard.md |
+| ~~Background jobs~~ | ✅ Decided — @nestjs/schedule v1, BullMQ v2. See 10_Platform-Engineering-Standard.md |
+| ~~Realtime~~ | ✅ Decided — NestJS Gateway + Socket.IO. See 10_Platform-Engineering-Standard.md |
 | ~~Notifications~~ | ✅ Decided — in-app bell + email (Resend). See spec/decisions/25_notifications.md |
-| ~~Testing~~ | ✅ Decided — Vitest + supertest + Playwright. See Testing-Strategy.md |
-| ~~Observability~~ | ✅ Decided — GlitchTip + Pino + structured JSON. See Observability-Standard.md |
-| ~~Security baseline~~ | ✅ CSRF (double-submit cookie), rate limiting, upload rules, brute force. See Platform-Engineering-Standard.md + Auth Architecture v1 (§15-16) |
+| ~~Testing~~ | ✅ Decided — Vitest + supertest + Playwright. See 16_Testing-Strategy.md |
+| ~~Observability~~ | ✅ Decided — GlitchTip + Pino + structured JSON. See 18_Observability-Standard.md |
+| ~~Security baseline~~ | ✅ CSRF (double-submit cookie), rate limiting, upload rules, brute force. See 10_Platform-Engineering-Standard.md + 14_Auth-Architecture-Decision.md (§15-16) |
 | CI/CD | Pipeline setup, required checks, preview environments — Phase deployment |
 | Deployment | Hosting provider, CDN (Cloudflare ✅), scaling strategy — Phase deployment |
 | ~~AI/recommendations~~ | ✅ Deferred to v2 explicitly. See spec/decisions/08_out-of-scope.md |
@@ -112,12 +112,12 @@ These are acknowledged but not yet decided in detail:
 
 ## Convention docs
 
-These define how code should be written:
+These define how code should be written. **See `00_INDEX.md` for the full documentation map.**
 
-- `Auth Architecture Decision - v1.md` — auth ownership, sessions, identity, OAuth, CSRF
-- `Backend Conventions - v1.md` — layering, modules, naming, validation, errors, DB, logging
-- `API Conventions - v1.md` — routes, methods, response shapes, pagination, rate limiting
-- `Frontend Conventions - v1.md` — routing, components, data fetching, forms, styling
+- `14_Auth-Architecture-Decision.md` — auth ownership, sessions, identity, OAuth, CSRF
+- `11_Backend-Conventions.md` — layering, modules, naming, validation, errors, DB, logging
+- `12_API-Conventions.md` — routes, methods, response shapes, pagination, rate limiting
+- `13_Frontend-Conventions.md` — routing, components, data fetching, forms, styling
 
 ## Repo structure
 

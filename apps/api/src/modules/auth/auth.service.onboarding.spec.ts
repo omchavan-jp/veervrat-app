@@ -4,25 +4,33 @@ import { DuplicateEntityException } from '../../common/exceptions/app.exceptions
 
 const dob = new Date('1995-06-15');
 
+const userFixture = {
+  id: 'user-1',
+  email: 'test@example.com',
+  displayName: 'Test User',
+  username: 'test_user',
+  language: 'EN',
+  gender: null,
+  dob: null,
+  avatarUrl: null,
+  roles: [{ role: 'VRATARTHI' }],
+  emailVerifiedAt: new Date(),
+  accountSetupCompletedAt: new Date(),
+  onboardingCompletedAt: null,
+  deletedAt: null,
+};
+
 function makeRepo(overrides: Partial<{
   findUserByUsername: (username: string) => Promise<{ id: string } | null>;
+  markAccountSetupComplete: () => Promise<unknown>;
   markOnboardingComplete: () => Promise<unknown>;
 }> = {}) {
   return {
     findUserByUsername: vi.fn().mockResolvedValue(null),
-    markOnboardingComplete: vi.fn().mockResolvedValue({
-      id: 'user-1',
-      email: 'test@example.com',
-      displayName: 'Test User',
-      username: 'test_user',
-      language: 'EN',
-      gender: null,
-      dob: null,
-      roles: [{ role: 'VRATARTHI' }],
-      emailVerifiedAt: new Date(),
-      onboardingCompletedAt: new Date(),
-      deletedAt: null,
-    }),
+    markAccountSetupComplete: vi.fn().mockResolvedValue(userFixture),
+    markOnboardingComplete: vi
+      .fn()
+      .mockResolvedValue({ ...userFixture, onboardingCompletedAt: new Date() }),
     ...overrides,
   };
 }
@@ -42,7 +50,7 @@ describe('AuthService — completeOnboarding', () => {
 
     await service.completeOnboarding('user-1', 'New Name', 'new_username', 'MR', 'Male', '1995-06-15');
 
-    expect(repo.markOnboardingComplete).toHaveBeenCalledWith('user-1', {
+    expect(repo.markAccountSetupComplete).toHaveBeenCalledWith('user-1', {
       displayName: 'New Name',
       username: 'new_username',
       language: 'MR',
@@ -57,7 +65,7 @@ describe('AuthService — completeOnboarding', () => {
 
     await service.completeOnboarding('user-1', 'New Name', 'new_username', 'EN');
 
-    expect(repo.markOnboardingComplete).toHaveBeenCalledWith('user-1', {
+    expect(repo.markAccountSetupComplete).toHaveBeenCalledWith('user-1', {
       displayName: 'New Name',
       username: 'new_username',
       language: 'EN',
@@ -72,7 +80,7 @@ describe('AuthService — completeOnboarding', () => {
 
     await service.completeOnboarding('user-1', undefined, undefined, 'EN');
 
-    expect(repo.markOnboardingComplete).toHaveBeenCalledWith('user-1', {
+    expect(repo.markAccountSetupComplete).toHaveBeenCalledWith('user-1', {
       displayName: undefined,
       username: undefined,
       language: 'EN',
@@ -101,6 +109,29 @@ describe('AuthService — completeOnboarding', () => {
     await expect(
       service.completeOnboarding('user-1', undefined, 'own_username', undefined),
     ).resolves.not.toThrow();
+  });
+
+  it('completeOnboarding does NOT mark the whole onboarding complete (framework still required)', async () => {
+    const repo = makeRepo();
+    const service = makeService(repo);
+
+    const result = await service.completeOnboarding('user-1', 'New Name', 'new_username', 'EN');
+
+    expect(repo.markOnboardingComplete).not.toHaveBeenCalled();
+    expect(result.onboardingCompletedAt).toBeNull();
+    expect(result.accountSetupCompletedAt).not.toBeNull();
+  });
+});
+
+describe('AuthService — completeFramework', () => {
+  it('marks onboarding complete (grants app access)', async () => {
+    const repo = makeRepo();
+    const service = makeService(repo);
+
+    const result = await service.completeFramework('user-1');
+
+    expect(repo.markOnboardingComplete).toHaveBeenCalledWith('user-1');
+    expect(result.onboardingCompletedAt).not.toBeNull();
   });
 });
 

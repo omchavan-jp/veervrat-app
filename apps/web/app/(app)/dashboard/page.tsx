@@ -1,12 +1,18 @@
 import Link from 'next/link';
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, getLocale } from 'next-intl/server';
 import { DashboardStatsBar } from '@/components/dashboard/dashboard-stats-bar';
 import { DashboardSuggestions } from '@/components/dashboard/dashboard-suggestions';
 import { DashboardGreeting } from '@/components/dashboard/dashboard-greeting';
 
 export default async function DashboardPage() {
   const t = await getTranslations('dashboard');
-  const today = new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const locale = await getLocale();
+  const today = new Date().toLocaleDateString(locale === 'mr' ? 'mr-IN' : 'en-IN', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
 
   return (
     <div>
@@ -34,7 +40,7 @@ export default async function DashboardPage() {
           href="/study"
           className="group rounded-2xl border border-border bg-surface p-6 hover:border-accent transition-colors"
         >
-          <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.14em] text-accent">Path 01 · Study</div>
+          <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.14em] text-accent">{t('pathCard01Eyebrow')}</div>
           <h2 className="mb-1 font-display text-[20px] tracking-tight">{t('pathCard01Title')}</h2>
           <p className="text-[13px] text-muted">{t('pathCard01Subtitle')}</p>
         </Link>
@@ -44,7 +50,7 @@ export default async function DashboardPage() {
           href="/journeys"
           className="group rounded-2xl border border-border bg-surface p-6 hover:border-accent transition-colors"
         >
-          <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.14em] text-accent">Path 02 · Work</div>
+          <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.14em] text-accent">{t('pathCard02Eyebrow')}</div>
           <h2 className="mb-1 font-display text-[20px] tracking-tight">{t('pathCard02Title')}</h2>
           <p className="text-[13px] text-muted">{t('pathCard02Subtitle')}</p>
         </Link>

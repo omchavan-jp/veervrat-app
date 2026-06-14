@@ -18,6 +18,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { ChatsModule } from './modules/chats/chats.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
+import { EntitySearchModule } from './modules/entity-search/entity-search.module';
 import { RedisModule } from './common/redis/redis.module';
 import { AppController } from './app.controller';
 import { Reflector } from '@nestjs/core';
@@ -59,6 +60,7 @@ import { CsrfGuard } from './common/guards/csrf.guard';
     DashboardModule,
     ChatsModule,
     UploadsModule,
+    EntitySearchModule,
   ],
   controllers: [AppController],
   providers: [

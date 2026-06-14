@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { UsersRepository } from './users.repository';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { UpdateVisibilityDto } from './dto/update-visibility.dto';
 import type { OwnProfileDto, PublicProfileDto } from './dto/public-profile.dto';
+import { parseVisibility, isFieldVisible } from './profile-visibility';
 import {
   EntityNotFoundException,
   UserUsernameTakenException,
@@ -51,26 +53,57 @@ export class UsersService {
       throw new EntityNotFoundException('User', username);
     }
 
+    const vis = parseVisibility(user.profileVisibility);
+    const show = (field: Parameters<typeof isFieldVisible>[1]) => isFieldVisible(vis, field);
+
+    // displayName + username are always public (handle/identity). All other fields
+    // are omitted entirely when toggled off (spec/10: hidden, not "—").
     const profile: PublicProfileDto = {
       username: user.username,
       displayName: user.displayName,
-      avatarUrl: user.avatarUrl,
-      memberSince: user.createdAt.toISOString(),
-      journeysCompleted: user.journeysCompleted,
-      journeysActive: user.journeysActive,
-      testsTaken: user.testsTaken,
-      publicExperienceCount: user.publicExperienceCount,
     };
+
+    if (show('avatar')) profile.avatarUrl = user.avatarUrl;
+    if (show('memberSince')) profile.memberSince = user.createdAt.toISOString();
+    if (show('journeysCompleted')) profile.journeysCompleted = user.journeysCompleted;
+    if (show('journeysActive')) profile.journeysActive = user.journeysActive;
+    if (show('testsTaken')) profile.testsTaken = user.testsTaken;
+    if (show('weaknesses')) profile.weaknessesWorkedOn = user.weaknessesWorkedOn;
+    if (show('exposures')) {
+      profile.exposuresActive = user.exposuresActive;
+      profile.exposuresCompleted = user.exposuresCompleted;
+    }
+    if (show('resolutions')) {
+      profile.resolutionsActive = user.resolutionsActive;
+      profile.resolutionsCompleted = user.resolutionsCompleted;
+    }
+    if (show('challenges')) profile.challengesCompleted = user.challengesCompleted;
+    if (show('experiences')) profile.publicExperienceCount = user.publicExperienceCount;
 
     if (user.showLastActive && user.lastActiveAt) {
       profile.lastActiveAt = user.lastActiveAt.toISOString();
     }
-
     if (user.showOnlineIndicator) {
       profile.isOnline = this.computeIsOnline(user.lastActiveAt);
     }
 
     return profile;
+  }
+
+  async updateVisibility(userId: string, dto: UpdateVisibilityDto): Promise<OwnProfileDto> {
+    const existing = await this.usersRepository.findById(userId);
+    if (!existing) throw new EntityNotFoundException('User', userId);
+
+    const user = await this.usersRepository.updateVisibility(userId, {
+      profilePrivate: dto.profilePrivate,
+      showLastActive: dto.showLastActive,
+      showOnlineIndicator: dto.showOnlineIndicator,
+      profileVisibility: dto.profileVisibility
+        ? { ...parseVisibility(existing.profileVisibility), ...parseVisibility(dto.profileVisibility) }
+        : undefined,
+    });
+
+    return this.toOwnProfileDto(user);
   }
 
   async findByEmail(email: string) {
@@ -106,6 +139,7 @@ export class UsersService {
     showLastActive: boolean;
     showOnlineIndicator: boolean;
     profilePrivate: boolean;
+    profileVisibility: unknown;
     createdAt: Date;
     updatedAt: Date;
   }): OwnProfileDto {
@@ -121,6 +155,7 @@ export class UsersService {
       showLastActive: user.showLastActive,
       showOnlineIndicator: user.showOnlineIndicator,
       profilePrivate: user.profilePrivate,
+      profileVisibility: parseVisibility(user.profileVisibility),
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
     };

@@ -13,7 +13,9 @@ const VA_USER: SessionUser = {
   language: 'EN',
   gender: null,
   dob: null,
+  avatarUrl: null,
   emailVerifiedAt: new Date(),
+  accountSetupCompletedAt: new Date(),
   onboardingCompletedAt: new Date(),
 };
 
@@ -26,7 +28,9 @@ const VM_ONLY_USER: SessionUser = {
   language: 'EN',
   gender: null,
   dob: null,
+  avatarUrl: null,
   emailVerifiedAt: new Date(),
+  accountSetupCompletedAt: new Date(),
   onboardingCompletedAt: new Date(),
 };
 

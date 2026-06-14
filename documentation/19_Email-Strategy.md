@@ -148,7 +148,7 @@ Add to `apps/api/package.json`:
 - `@react-email/components` — email component library
 - `react` + `react-dom` — React Email rendering (server-side only)
 
-Add to `documentation/Platform-Engineering-Standard.md`:
+Add to `documentation/10_Platform-Engineering-Standard.md`:
 
 | Concern | Library |
 |---|---|

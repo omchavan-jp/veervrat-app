@@ -9,8 +9,8 @@ export type JourneySummary = {
   title: string;
   state: JourneyState;
   updatedAt: string;
-  sentence: { textEn: string };
-  weaknesses: { weakness: { nameEn: string } }[];
+  sentence: { textEn: string; textMr: string | null };
+  weaknesses: { weakness: { nameEn: string; nameMr: string | null } }[];
 };
 
 export type ErcCounts = { total: number; active: number; approved: number };
@@ -58,6 +58,14 @@ export type JourneyListResponse = {
 export type ErcStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'SUBMITTED' | 'APPROVED' | 'REVISIT';
 export type ErcType = 'exposure' | 'resolution' | 'challenge';
 
+export type VmSidenote = {
+  id: string;
+  vmId: string;
+  text: string;
+  acknowledgedAt: string | null;
+  createdAt: string;
+};
+
 export type JourneyErcItem = {
   id: string;
   journeyId: string;
@@ -67,7 +75,9 @@ export type JourneyErcItem = {
   createdById: string | null;
   reviewStatus: string | null;
   titleEn: string;
+  titleMr: string | null;
   descriptionEn: string | null;
+  descriptionMr: string | null;
   startedAt: string | null;
   submittedAt: string | null;
   approvedAt: string | null;
@@ -82,12 +92,16 @@ export type JourneyErcItem = {
   // Challenge-specific
   durationDays?: number | null;
   poolChallengeId?: string | null;
+  // VM sidenote (active only — null if none/revoked)
+  vmSidenote?: VmSidenote | null;
 };
 
 export type PoolItem = {
   id: string;
   titleEn: string;
+  titleMr: string | null;
   descriptionEn: string | null;
+  descriptionMr: string | null;
   weaknessTags: { weaknessId: string }[];
   // Exposure
   tier?: 'LOCAL' | 'NATIONAL' | 'INTERNATIONAL';
@@ -114,6 +128,26 @@ export type ResolutionCheckin = {
 export type CheckinsResponse = {
   checkins: ResolutionCheckin[];
   streak: number;
+};
+
+// ─── Activity feed ──────────────────────────────────────────────────────────────
+
+export type JourneyActivityEventType =
+  | 'erc_started'
+  | 'erc_submitted'
+  | 'erc_approved'
+  | 'checkin'
+  | 'vm_suggestion';
+
+export type JourneyActivityEvent = {
+  id: string;
+  type: JourneyActivityEventType;
+  at: string;
+  ercType: ErcType;
+  itemId: string;
+  titleEn: string;
+  titleMr: string | null;
+  checkinStatus?: CheckinStatus;
 };
 
 export const checkinsApi = {
@@ -145,6 +179,41 @@ export const ercApi = {
 
   remove: (journeyId: string, type: ErcType, itemId: string) =>
     api.delete<void>(`/journeys/${journeyId}/${type}s/${itemId}`),
+
+  acknowledgeSidenote: (journeyId: string, type: ErcType, itemId: string) =>
+    api
+      .post<Wrapped<VmSidenote>>(`/journeys/${journeyId}/${type}s/${itemId}/sidenote/acknowledge`)
+      .then((r) => r.data),
+
+  // ── VM actions ──
+  approve: (journeyId: string, type: ErcType, itemId: string) =>
+    api.post<Wrapped<JourneyErcItem>>(`/journeys/${journeyId}/${type}s/${itemId}/approve`).then((r) => r.data),
+
+  revisit: (journeyId: string, type: ErcType, itemId: string) =>
+    api.post<Wrapped<JourneyErcItem>>(`/journeys/${journeyId}/${type}s/${itemId}/revisit`).then((r) => r.data),
+
+  suggestSidenote: (journeyId: string, type: ErcType, itemId: string, text: string) =>
+    api.post<Wrapped<VmSidenote>>(`/journeys/${journeyId}/${type}s/${itemId}/suggest`, { text }).then((r) => r.data),
+
+  // ── Custom ERC ──
+  createCustom: (journeyId: string, type: ErcType, data: CustomErcInput) =>
+    api.post<Wrapped<JourneyErcItem>>(`/journeys/${journeyId}/${type}s/custom`, data).then((r) => r.data),
+
+  submitForReview: (journeyId: string, type: ErcType, itemId: string) =>
+    api.post<Wrapped<JourneyErcItem>>(`/journeys/${journeyId}/${type}s/${itemId}/submit-for-review`).then((r) => r.data),
+};
+
+export type CustomErcInput = {
+  titleEn: string;
+  descriptionEn?: string;
+  // exposure
+  tier?: 'LOCAL' | 'NATIONAL' | 'INTERNATIONAL';
+  // resolution
+  durationWeeks?: number;
+  frequencyPerWeek?: number;
+  frequencyLabel?: string;
+  // challenge
+  durationDays?: number;
 };
 
 export const journeysApi = {
@@ -157,9 +226,15 @@ export const journeysApi = {
   detail: (id: string) =>
     api.get<Wrapped<JourneyDetail>>(`/journeys/${id}`).then((r) => r.data),
 
+  activity: (id: string) =>
+    api.get<Wrapped<JourneyActivityEvent[]>>(`/journeys/${id}/activity`).then((r) => r.data),
+
   updateState: (id: string, action: 'pause' | 'resume') =>
     api.patch<Wrapped<{ id: string; state: JourneyState }>>(`/journeys/${id}/state`, { action }).then((r) => r.data),
 
   updateTitle: (id: string, title: string) =>
     api.patch<Wrapped<{ id: string; title: string }>>(`/journeys/${id}/title`, { title }).then((r) => r.data),
+
+  complete: (id: string) =>
+    api.post<Wrapped<{ id: string; state: JourneyState }>>(`/journeys/${id}/complete`).then((r) => r.data),
 };

@@ -1,3 +1,12 @@
+> **Status (2026-06-11):** Core chat is complete and live — transport (WebSocket
+> auth-on-handshake, seqNo, reconnect, optimistic send), room authorization
+> (relationship-verified, hardened in the audit-remediation Batch B and verified via
+> socket probe), Tiptap content sanitization, My Vratmitras page, and the chat
+> thread. **Deliberately deferred to a future chat iteration (NOT items 1–20 core):**
+> image upload to MinIO (needs @aws-sdk/client-s3 — see Batch F), `@`/`#` entity
+> reference chips (needs a Tiptap mention plugin), and frontend/E2E test setup.
+> This change is intentionally kept un-archived to track that remaining scope.
+
 ## 1. Backend Infrastructure
 
 - [x] 1.1 Create Prisma migrations for Chat and ChatMessage tables (id, roomId, senderId, content jsonb, seqNo bigint, createdAt, updatedAt) — ChatMessage table already exists in schema

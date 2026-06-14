@@ -4,11 +4,15 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useJourney, useUpdateJourneyState, useUpdateJourneyTitle } from '@/hooks/use-journeys';
+import { useJourney, useUpdateJourneyState, useUpdateJourneyTitle, useCompleteJourney } from '@/hooks/use-journeys';
 import type { JourneyState, ErcCounts } from '@/lib/api/journeys';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
 import { ExposuresTab } from '@/components/journey/exposures-tab';
 import { ResolutionsTab } from '@/components/journey/resolutions-tab';
 import { ChallengesTab } from '@/components/journey/challenges-tab';
+import { BilingualText } from '@/components/shared/bilingual-text';
+import { JourneyActivityFeed } from '@/components/journey/journey-activity-feed';
 
 const STATE_COLORS: Record<JourneyState, string> = {
   NOT_STARTED: 'text-muted bg-muted/10',
@@ -48,6 +52,9 @@ export default function JourneyDetailPage() {
   const { data: journey, isLoading } = useJourney(id);
   const updateState = useUpdateJourneyState();
   const updateTitle = useUpdateJourneyTitle();
+  const completeJourney = useCompleteJourney();
+  const { toast } = useToast();
+  const { user } = useAuth();
 
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [editingTitle, setEditingTitle] = useState(false);
@@ -77,12 +84,42 @@ export default function JourneyDetailPage() {
     );
   }
 
+  // Viewer is the journey's VM (global or an active journey assignment) and not the owner.
+  const isOwner = !!user && journey.vratarthiId === user.id;
+  const viewerIsVm =
+    !!user &&
+    !isOwner &&
+    (journey.globalVmRelationship?.vmId === user.id ||
+      journey.vmAssignments.some((a) => a.vmId === user.id && a.state === 'ACTIVE'));
+
   const canPause = journey.state === 'ACTIVE';
   const canResume = journey.state === 'PAUSED' || journey.state === 'DORMANT';
   const isEmpty =
     journey.ercCounts.exposures.total === 0 &&
     journey.ercCounts.resolutions.total === 0 &&
     journey.ercCounts.challenges.total === 0;
+
+  // Completion is offered on an active journey that has at least one approved item.
+  const approvedCount =
+    journey.ercCounts.exposures.approved +
+    journey.ercCounts.resolutions.approved +
+    journey.ercCounts.challenges.approved;
+  const canComplete = journey.state === 'ACTIVE' && approvedCount > 0;
+
+  const handleComplete = () => {
+    completeJourney.mutate(
+      { id },
+      {
+        onSuccess: () => toast({ title: t('detail.completeSuccess') }),
+        onError: (e) =>
+          toast({
+            title: t('detail.completeError'),
+            description: e instanceof Error ? e.message : undefined,
+            variant: 'destructive',
+          }),
+      },
+    );
+  };
 
   const tabs: { key: Tab; label: string }[] = [
     { key: 'overview', label: t('detail.tabOverview') },
@@ -128,22 +165,22 @@ export default function JourneyDetailPage() {
           </div>
 
           {/* Sentence context */}
-          <p className="mb-1 text-[15px]">{journey.sentence.textEn}</p>
-          {journey.sentence.textMr && (
-            <p className="mb-2 font-deva text-[14px] text-muted">{journey.sentence.textMr}</p>
-          )}
+          <BilingualText en={journey.sentence.textEn} mr={journey.sentence.textMr} size="md" as="p" className="mb-2" />
           <p className="mb-3 text-[13px] text-accent-2">
             {t('detail.cultivating', {
-              subvirtue: journey.sentence.subvirtue.nameEn,
-              virtue: journey.sentence.subvirtue.virtue.nameEn,
+              subvirtue: journey.sentence.subvirtue.nameMr ?? journey.sentence.subvirtue.nameEn,
+              virtue: journey.sentence.subvirtue.virtue.nameMr ?? journey.sentence.subvirtue.virtue.nameEn,
             })}
           </p>
 
           {/* Weakness tags */}
           <div className="mb-3 flex flex-wrap gap-1.5">
             {journey.weaknesses.map((w) => (
-              <span key={w.id} className="rounded-full border border-border px-2 py-0.5 text-[11px] text-muted">
-                {w.nameEn}
+              <span
+                key={w.id}
+                className={`rounded-full border border-border px-2 py-0.5 text-[11px] text-muted ${w.nameMr ? 'font-deva' : ''}`}
+              >
+                {w.nameMr ?? w.nameEn}
               </span>
             ))}
           </div>
@@ -169,6 +206,15 @@ export default function JourneyDetailPage() {
                 className="rounded-lg bg-accent-2/10 px-3 py-1.5 text-[12px] text-accent-2 hover:bg-accent-2/20 disabled:opacity-40"
               >
                 {t('detail.resume')}
+              </button>
+            )}
+            {canComplete && (
+              <button
+                onClick={handleComplete}
+                disabled={completeJourney.isPending}
+                className="rounded-lg bg-accent px-3 py-1.5 text-[12px] font-medium text-bg transition-transform hover:bg-accent-hover active:scale-95 disabled:opacity-40"
+              >
+                {completeJourney.isPending ? '…' : t('detail.complete')}
               </button>
             )}
           </div>
@@ -216,28 +262,47 @@ export default function JourneyDetailPage() {
               </div>
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-3">
-              <ErcCard label={t('detail.tabExposures')} counts={journey.ercCounts.exposures} />
-              <ErcCard label={t('detail.tabResolutions')} counts={journey.ercCounts.resolutions} />
-              <ErcCard label={t('detail.tabChallenges')} counts={journey.ercCounts.challenges} />
+            <div className="space-y-6">
+              <div className="grid gap-4 sm:grid-cols-3">
+                <ErcCard label={t('detail.tabExposures')} counts={journey.ercCounts.exposures} />
+                <ErcCard label={t('detail.tabResolutions')} counts={journey.ercCounts.resolutions} />
+                <ErcCard label={t('detail.tabChallenges')} counts={journey.ercCounts.challenges} />
+              </div>
+              <JourneyActivityFeed journeyId={journey.id} />
             </div>
           )
         )}
 
         {activeTab === 'exposures' && (
-          <ExposuresTab journeyId={journey.id} hasVm={!!journey.globalVmRelationship} />
+          <ExposuresTab journeyId={journey.id} hasVm={!!journey.globalVmRelationship} viewerIsVm={viewerIsVm} />
         )}
         {activeTab === 'resolutions' && (
-          <ResolutionsTab journeyId={journey.id} hasVm={!!journey.globalVmRelationship} />
+          <ResolutionsTab journeyId={journey.id} hasVm={!!journey.globalVmRelationship} viewerIsVm={viewerIsVm} />
         )}
         {activeTab === 'challenges' && (
-          <ChallengesTab journeyId={journey.id} hasVm={!!journey.globalVmRelationship} />
+          <ChallengesTab journeyId={journey.id} hasVm={!!journey.globalVmRelationship} viewerIsVm={viewerIsVm} />
         )}
-        {activeTab === 'chat' && (
-          <div className="rounded-xl border border-dashed border-border p-12 text-center">
-            <p className="text-[14px] text-muted">Chat coming in a future update.</p>
-          </div>
-        )}
+        {activeTab === 'chat' && (() => {
+          const vmId =
+            journey.globalVmRelationship?.vmId ??
+            journey.vmAssignments.find((a) => a.state === 'ACTIVE')?.vmId ??
+            null;
+          return vmId ? (
+            <div className="rounded-xl border border-border bg-surface p-8 text-center">
+              <p className="mb-4 text-[14px] text-muted">{t('detail.chatBanner', { title: journey.title })}</p>
+              <Link
+                href={`/my-vratmitras/${vmId}/chat`}
+                className="inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-[14px] font-medium text-bg transition-transform hover:bg-accent-hover active:scale-95"
+              >
+                {t('detail.openChat')}
+              </Link>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-dashed border-border p-12 text-center">
+              <p className="text-[14px] text-muted">{t('detail.chatNoVm')}</p>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

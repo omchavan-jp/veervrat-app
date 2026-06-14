@@ -1,7 +1,7 @@
 # Design System Spec
 
 ### Requirement: CSS tokens cover complete light and dark mode
-`apps/web/app/globals.css` SHALL define all design tokens as CSS custom properties. The `:root` block SHALL contain light mode values for: `--bg`, `--fg`, `--accent`, `--accent-hover`, `--accent-2`, `--muted`, `--surface`, `--border`, `--border-strong`, `--success`, `--warning`, `--danger`. The `.dark` block SHALL override all color tokens with dark mode values per `documentation/Design-System.md`. Both blocks SHALL include: `--radius-sm` (4px), `--radius-md` (8px), `--radius-lg` (12px), `--radius-full` (9999px). Both blocks SHALL include: `--shadow-card`, `--shadow-modal`, `--shadow-toast` with mode-appropriate values. The `:root` block SHALL include animation timing tokens: `--anim-micro` (150ms ease-out), `--anim-transition` (250ms ease-out), `--anim-page` (400ms ease-in-out). The `@theme inline` block SHALL map all tokens to Tailwind utility classes.
+`apps/web/app/globals.css` SHALL define all design tokens as CSS custom properties. The `:root` block SHALL contain light mode values for: `--bg`, `--fg`, `--accent`, `--accent-hover`, `--accent-2`, `--muted`, `--surface`, `--border`, `--border-strong`, `--success`, `--warning`, `--danger`. The `.dark` block SHALL override all color tokens with dark mode values per `documentation/15_Design-System.md`. Both blocks SHALL include: `--radius-sm` (4px), `--radius-md` (8px), `--radius-lg` (12px), `--radius-full` (9999px). Both blocks SHALL include: `--shadow-card`, `--shadow-modal`, `--shadow-toast` with mode-appropriate values. The `:root` block SHALL include animation timing tokens: `--anim-micro` (150ms ease-out), `--anim-transition` (250ms ease-out), `--anim-page` (400ms ease-in-out). The `@theme inline` block SHALL map all tokens to Tailwind utility classes.
 
 #### Scenario: Dark mode token overrides light mode
 - **WHEN** the `.dark` class is present on `<html>`
@@ -53,7 +53,7 @@ A `ThemeToggle` component SHALL exist at `apps/web/components/shared/theme-toggl
 - **THEN** it contains no inline `Geist(...)` or `Geist_Mono(...)` calls — only imports from `./fonts`
 
 ### Requirement: framer-motion installed and catalogued
-`framer-motion` SHALL be installed as a dependency in `apps/web/package.json`. `documentation/Platform-Engineering-Standard.md` approved library catalog SHALL include a row for `framer-motion` under Animation (already listed as the approved animation library — verify the package name entry is complete).
+`framer-motion` SHALL be installed as a dependency in `apps/web/package.json`. `documentation/10_Platform-Engineering-Standard.md` approved library catalog SHALL include a row for `framer-motion` under Animation (already listed as the approved animation library — verify the package name entry is complete).
 
 #### Scenario: framer-motion importable
 - **WHEN** a component imports `{ motion } from 'framer-motion'`

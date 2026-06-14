@@ -47,8 +47,8 @@ export default function SignupPage() {
     setUsernameStatus('checking');
     debounceRef.current = setTimeout(async () => {
       try {
-        const available = await authApi.checkUsername(username);
-        setUsernameStatus(available ? 'available' : 'taken');
+        const result = await authApi.checkUsername(username);
+        setUsernameStatus(result.available ? 'available' : 'taken');
       } catch {
         setUsernameStatus('idle');
       }

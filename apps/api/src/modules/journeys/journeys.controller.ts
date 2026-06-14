@@ -39,6 +39,11 @@ export class JourneysController {
     return this.journeysService.getJourney(user, id);
   }
 
+  @Get(':id/activity')
+  async activity(@Param('id') id: string, @CurrentUser() user: SessionUser) {
+    return this.journeysService.getActivity(user, id);
+  }
+
   @Patch(':id/state')
   @HttpCode(HttpStatus.OK)
   async updateState(

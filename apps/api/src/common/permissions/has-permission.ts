@@ -153,7 +153,7 @@ function checkLayerOne(
 
     case 'chat.view': {
       if (resource.type === 'room') {
-        return isRoomParticipant(user, resource.id);
+        return isRoomParticipant(user, resource.id, resource.relationshipVerified);
       }
       if (resource.type !== 'journey') return false;
       const { journey } = resource;
@@ -165,7 +165,7 @@ function checkLayerOne(
 
     case 'chat.send': {
       if (resource.type === 'room') {
-        return isRoomParticipant(user, resource.id);
+        return isRoomParticipant(user, resource.id, resource.relationshipVerified);
       }
       if (resource.type !== 'journey') return false;
       const { journey } = resource;

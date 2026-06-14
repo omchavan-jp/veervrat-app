@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { screen, fireEvent } from '@testing-library/react';
+import { renderWithProviders } from './helpers/render';
 
 const mockLogCheckinMutate = vi.hoisted(() => vi.fn());
 const mockIsPending = vi.hoisted(() => ({ value: false }));
@@ -15,12 +15,7 @@ vi.mock('@/hooks/use-journeys', () => ({
 import { CheckinForm } from '../../components/journey/checkin-form';
 
 function renderForm() {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(
-    <QueryClientProvider client={client}>
-      <CheckinForm journeyId="j-1" resolutionId="r-1" />
-    </QueryClientProvider>,
-  );
+  return renderWithProviders(<CheckinForm journeyId="j-1" resolutionId="r-1" />);
 }
 
 describe('CheckinForm', () => {

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { screen, fireEvent } from '@testing-library/react';
+import { renderWithProviders } from './helpers/render';
 
 const mockUseCheckins = vi.hoisted(() => vi.fn());
 
@@ -23,12 +23,7 @@ function makeCheckin(id: string, status: 'DONE' | 'PARTIAL' | 'MISSED', note: st
 
 function renderHistory(checkins = [] as ReturnType<typeof makeCheckin>[], streak = 0) {
   mockUseCheckins.mockReturnValue({ data: { checkins, streak } });
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(
-    <QueryClientProvider client={client}>
-      <CheckinHistory journeyId="j-1" resolutionId="r-1" />
-    </QueryClientProvider>,
-  );
+  return renderWithProviders(<CheckinHistory journeyId="j-1" resolutionId="r-1" />);
 }
 
 describe('CheckinHistory', () => {

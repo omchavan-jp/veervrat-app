@@ -26,6 +26,12 @@ export type WeaknessListResponse = {
   clusters: WeaknessCluster[];
 };
 
+export type SentenceDetail = {
+  sentenceId: string;
+  textEn: string;
+  textMr: string | null;
+};
+
 export type SubvirtueDetail = {
   id: string;
   nameEn: string;
@@ -33,6 +39,7 @@ export type SubvirtueDetail = {
   description: string | null;
   priority: number;
   virtue: { id: string; nameEn: string; nameMr: string | null };
+  sentences: SentenceDetail[];
 };
 
 export type TestHistoryItem = {

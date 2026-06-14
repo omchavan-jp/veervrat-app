@@ -11,7 +11,9 @@ const userSelect = {
   language: true,
   gender: true,
   dob: true,
+  avatarUrl: true,
   emailVerifiedAt: true,
+  accountSetupCompletedAt: true,
   onboardingCompletedAt: true,
   deletedAt: true,
   roles: { select: { role: true } },
@@ -193,20 +195,33 @@ export class AuthRepository {
     });
   }
 
-  async markOnboardingComplete(
+  // Step 1 of onboarding (account setup): persist profile fields and mark account-setup
+  // complete. Does NOT mark the whole onboarding complete — the framework step (step 2)
+  // does that. Keeps the framework un-skippable (see markOnboardingComplete).
+  async markAccountSetupComplete(
     userId: string,
     fields?: { displayName?: string; username?: string; language?: 'EN' | 'MR'; gender?: string; dob?: Date },
   ) {
     return this.prisma.user.update({
       where: { id: userId },
       data: {
-        onboardingCompletedAt: new Date(),
+        accountSetupCompletedAt: new Date(),
         ...(fields?.displayName ? { displayName: fields.displayName } : {}),
         ...(fields?.username ? { username: fields.username } : {}),
         ...(fields?.language ? { language: fields.language } : {}),
         ...(fields?.gender ? { gender: fields.gender } : {}),
         ...(fields?.dob ? { dob: fields.dob } : {}),
       },
+      select: userSelect,
+    });
+  }
+
+  // Step 2 of onboarding (framework walkthrough complete): mark the whole onboarding done.
+  // The app shell gate keys off onboardingCompletedAt, so this is what grants app access.
+  async markOnboardingComplete(userId: string) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { onboardingCompletedAt: new Date() },
       select: userSelect,
     });
   }

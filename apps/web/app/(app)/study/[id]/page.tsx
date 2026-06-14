@@ -39,11 +39,17 @@ export default function WeaknessDetailPage() {
       </Link>
 
       <div className="mb-8">
-        <h1 className="mb-1 font-display text-[clamp(28px,3vw,40px)] leading-tight tracking-tight">
-          {weakness.nameEn}
-        </h1>
-        {weakness.nameMr && (
-          <p className="mb-3 font-deva text-[18px] text-muted">{weakness.nameMr}</p>
+        {weakness.nameMr ? (
+          <>
+            <h1 className="mb-1 font-deva text-[clamp(28px,3vw,40px)] leading-tight tracking-tight">
+              {weakness.nameMr}
+            </h1>
+            <p className="mb-3 text-[16px] text-muted">{weakness.nameEn}</p>
+          </>
+        ) : (
+          <h1 className="mb-3 font-display text-[clamp(28px,3vw,40px)] leading-tight tracking-tight">
+            {weakness.nameEn}
+          </h1>
         )}
         {weakness.description && (
           <p className="text-[15px] leading-relaxed text-muted">{weakness.description}</p>

@@ -9,6 +9,9 @@ This document is the canonical reference for all library, tooling, and architect
 | Concern | Library | Package | Rationale |
 |---|---|---|---|
 | Rich text editor | Tiptap | `@tiptap/react`, `@tiptap/starter-kit` | ProseMirror-based, App Router compatible, JSON AST native, shadcn-friendly |
+| Rich text — images | Tiptap Image extension | `@tiptap/extension-image` | Inline image nodes (`{type:'image',attrs:{src}}`) for chat/experience uploads. Src restricted to MinIO/CDN domain (see sanitization). |
+| Rich text — entity references | Tiptap Mention extension | `@tiptap/extension-mention`, `@tiptap/suggestion` | Generic `@`/`#` entity-reference system (CONTEXT.md "Entity Reference") rendered as clickable chips. One mention node type with an `entityType` attr — not per-type handlers. |
+| Popup positioning (suggestions) | Tippy.js | `tippy.js` | Positions the `@`/`#` suggestion dropdown at the caret with viewport flipping + collision handling. The positioning lib Tiptap's mention examples use. Scope: editor suggestion popups (not a general tooltip system). |
 | Rich text storage format | Tiptap JSON AST | — | Stored as `jsonb` in PostgreSQL. Structural sanitization. Deterministic rendering. |
 | Rich text sanitization | sanitize-html | `sanitize-html` | Server-side, node-allowlist based. Runs on all user-generated rich text before DB write. |
 | i18n | next-intl | `next-intl` | App Router native, server-component-first, ICU message format, no URL-based locale routing |
@@ -23,6 +26,7 @@ This document is the canonical reference for all library, tooling, and architect
 | Email templates | React Email | `@react-email/components`, `react`, `react-dom` | JSX-based, type-safe, renders HTML + plain text, bilingual support. |
 | Error tracking | GlitchTip (Sentry SDK) | `@sentry/nextjs`, `@sentry/node` | Open-source, self-hostable, Sentry-compatible SDK |
 | Object storage client | AWS SDK S3 compatible | `@aws-sdk/client-s3` | Works with MinIO (S3-compatible API). Provider-agnostic. |
+| HEIC→JPEG conversion | heic-convert | `heic-convert` | Converts iPhone HEIC/HEIF uploads to JPEG server-side (Chrome/Firefox can't render HEIC). Pure-JS (libheif/wasm) — no native/libvips build. |
 | Search | Meilisearch | `meilisearch` | Already decided. See Search Architecture doc. |
 | Validation (backend) | class-validator + class-transformer | `class-validator`, `class-transformer` | Already in stack. All DTOs use this. |
 | Validation (frontend) | Zod | `zod` | Already in stack. All forms use React Hook Form + Zod. |
@@ -189,7 +193,8 @@ apps/web/
 
 ### Upload validation
 - MIME type sniffed server-side (not trusted from client Content-Type header)
-- Allowed MIME types (v1): `image/jpeg`, `image/png`, `image/gif`, `image/webp`
+- Allowed MIME types (v1): `image/jpeg`, `image/png`, `image/gif`, `image/webp`, `image/heic`, `image/heif`
+- **HEIC/HEIF** (iPhone default) is accepted but **converted to JPEG server-side** via `heic-convert` before storage — Chrome/Firefox cannot render HEIC in `<img>`. Stored as `.jpg`.
 - Max file size: 10MB per file
 - Max files per request: 5
 - Files stored in MinIO with randomized path (`uploads/{uuid}.{ext}`) — never the original filename

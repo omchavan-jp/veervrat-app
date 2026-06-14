@@ -276,15 +276,21 @@ export class AuthService {
     return { user: this.toSessionUser(user) };
   }
 
-  async forgotPassword(email: string): Promise<'sent' | 'google_only' | 'not_found'> {
+  // Always resolves to 'sent' regardless of whether the email exists or is Google-only.
+  // Enumeration prevention (spec/27, Auth Architecture): the response must never reveal
+  // whether an account exists. We still do the real work when applicable, but the caller
+  // sees a uniform result.
+  async forgotPassword(email: string): Promise<'sent'> {
     const user = await this.authRepository.findUserByEmail(email);
     if (!user) {
-      return 'not_found';
+      return 'sent';
     }
 
     const emailAccount = await this.authRepository.findEmailAccountByUserId(user.id);
     if (!emailAccount) {
-      return 'google_only';
+      // Google-only account: no password to reset. Stay silent to the API; the real
+      // owner is helped out-of-band (they will simply log in with Google).
+      return 'sent';
     }
 
     await this.authRepository.invalidateTokensByUserAndType(
@@ -360,6 +366,8 @@ export class AuthService {
     return this.toSessionUser(session.user);
   }
 
+  // Step 1: account setup. Persists profile fields and marks account-setup complete.
+  // Does not grant app access — the framework step must still be finished.
   async completeOnboarding(
     userId: string,
     displayName?: string,
@@ -374,13 +382,19 @@ export class AuthService {
         throw new DuplicateEntityException('User', 'username');
       }
     }
-    const user = await this.authRepository.markOnboardingComplete(userId, {
+    const user = await this.authRepository.markAccountSetupComplete(userId, {
       displayName,
       username,
       language: language as 'EN' | 'MR' | undefined,
       gender,
       dob: dob ? new Date(dob) : undefined,
     });
+    return this.toSessionUser(user);
+  }
+
+  // Step 2: framework walkthrough complete → grants app access.
+  async completeFramework(userId: string): Promise<SessionUser> {
+    const user = await this.authRepository.markOnboardingComplete(userId);
     return this.toSessionUser(user);
   }
 
@@ -504,8 +518,10 @@ export class AuthService {
     language: string;
     gender?: string | null;
     dob?: Date | null;
+    avatarUrl?: string | null;
     roles: { role: Role }[];
     emailVerifiedAt: Date | null;
+    accountSetupCompletedAt?: Date | null;
     onboardingCompletedAt: Date | null;
   }): SessionUser {
     return {
@@ -516,8 +532,10 @@ export class AuthService {
       language: user.language,
       gender: user.gender ?? null,
       dob: user.dob ?? null,
+      avatarUrl: user.avatarUrl ?? null,
       roles: user.roles.map((r) => r.role),
       emailVerifiedAt: user.emailVerifiedAt,
+      accountSetupCompletedAt: user.accountSetupCompletedAt ?? null,
       onboardingCompletedAt: user.onboardingCompletedAt,
     };
   }

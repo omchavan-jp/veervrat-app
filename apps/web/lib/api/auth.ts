@@ -8,8 +8,10 @@ export type User = {
   language: string;
   gender: string | null;
   dob: string | null;
+  avatarUrl: string | null;
   roles: string[];
   emailVerifiedAt: string | null;
+  accountSetupCompletedAt: string | null;
   onboardingCompletedAt: string | null;
 };
 
@@ -31,13 +33,16 @@ export const authApi = {
     api.post<Wrapped<AuthResponse>>('/auth/verify-email', { token }).then((r) => r.data),
 
   forgotPassword: (email: string) =>
-    api.post<Wrapped<{ status: 'sent' | 'google_only' | 'not_found' }>>('/auth/forgot-password', { email }).then((r) => r.data),
+    api.post<Wrapped<{ status: 'sent' }>>('/auth/forgot-password', { email }).then((r) => r.data),
 
   resetPassword: (data: { token: string; newPassword: string }) =>
     api.post<Wrapped<{ message: string }>>('/auth/reset-password', data).then((r) => r.data),
 
   completeOnboarding: (data: { displayName?: string; username?: string; language?: string; gender?: string; dob?: string }) =>
     api.post<Wrapped<User>>('/auth/complete-onboarding', data).then((r) => r.data),
+
+  completeFramework: () =>
+    api.post<Wrapped<User>>('/auth/complete-framework').then((r) => r.data),
 
   checkUsername: (username: string) =>
     api.get<Wrapped<{ available: boolean; reason?: 'invalid' | 'taken' }>>(`/auth/check-username?username=${encodeURIComponent(username)}`).then((r) => r.data),

@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: WebSocket Gateway authenticates via session cookie on handshake
-The system SHALL establish a NestJS WebSocket Gateway that validates the user's session cookie during the WebSocket handshake. Unauthenticated connections are rejected immediately. The gateway follows the contract in documentation/Platform-Engineering-Standard.md WebSocket section.
+The system SHALL establish a NestJS WebSocket Gateway that validates the user's session cookie during the WebSocket handshake. Unauthenticated connections are rejected immediately. The gateway follows the contract in documentation/10_Platform-Engineering-Standard.md WebSocket section.
 
 #### Scenario: Authenticated user connects
 - **WHEN** authenticated user initiates WebSocket handshake with valid session cookie

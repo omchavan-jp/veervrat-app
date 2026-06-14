@@ -74,7 +74,7 @@ export class ChatsGateway
     data: {
       type: string;
       roomId: string;
-      content: any;
+      content: unknown;
       tempId: string;
     },
   ) {
@@ -103,7 +103,11 @@ export class ChatsGateway
         data.content,
       );
 
-      this.server.to(data.roomId).emit('message', {
+      // Broadcast to the OTHER sockets in the room — the sender reconciles its own
+      // optimistic message via the `ack` below, so echoing back to it would surface
+      // the message twice. `socket.to` excludes only the sending socket, so the
+      // sender's other tabs/devices still receive the broadcast.
+      socket.to(data.roomId).emit('message', {
         type: 'message',
         id: message.id,
         roomId: message.roomId,

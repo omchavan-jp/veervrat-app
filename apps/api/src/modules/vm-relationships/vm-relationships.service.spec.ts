@@ -3,6 +3,7 @@ import { ForbiddenException } from '@nestjs/common';
 import { VmRelationshipsService } from './vm-relationships.service';
 import { VmRelationshipsRepository } from './vm-relationships.repository';
 import { JourneysRepository } from '../journeys/journeys.repository';
+import { NotificationsRepository } from '../notifications/notifications.repository';
 import type { SessionUser } from '../auth/types/auth.types';
 import { Role, VmRelationshipState } from '@prisma/client';
 
@@ -23,6 +24,10 @@ describe('VmRelationshipsService', () => {
 
   const mockJourneysRepository = {
     findById: vi.fn(),
+  };
+
+  const mockNotificationsRepository = {
+    create: vi.fn(),
   };
 
   const mockVaUser: SessionUser = {
@@ -51,6 +56,7 @@ describe('VmRelationshipsService', () => {
         VmRelationshipsService,
         { provide: VmRelationshipsRepository, useValue: mockRepository },
         { provide: JourneysRepository, useValue: mockJourneysRepository },
+        { provide: NotificationsRepository, useValue: mockNotificationsRepository },
       ],
     }).compile();
 
@@ -88,7 +94,7 @@ describe('VmRelationshipsService', () => {
     });
 
     it('should filter by scope when provided', async () => {
-      const mockVms = [];
+      const mockVms: unknown[] = [];
       mockRepository.getMyVms.mockResolvedValue(mockVms);
 
       await service.getMyVms(mockVaUser, 'GLOBAL');

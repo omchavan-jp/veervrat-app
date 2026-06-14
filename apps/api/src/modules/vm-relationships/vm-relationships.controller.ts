@@ -9,7 +9,7 @@ import type { SessionUser } from '../auth/types/auth.types';
 export class VmRelationshipsController {
   constructor(private readonly vmRelationshipsService: VmRelationshipsService) {}
 
-  @Get('api/v1/vm-relationships/my-vms')
+  @Get('vm-relationships/my-vms')
   async getMyVms(
     @CurrentUser() user: SessionUser,
     @Query('scope') scope?: 'GLOBAL' | 'JOURNEY',

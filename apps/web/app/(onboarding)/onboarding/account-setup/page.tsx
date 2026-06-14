@@ -24,10 +24,15 @@ export default function AccountSetupPage() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    // Guard for direct navigation to account-setup by an already-onboarded user.
-    // Skip when the mutation just succeeded — onSuccess handles the redirect to /onboarding/framework.
-    if (!isLoading && user && user.onboardingCompletedAt !== null && !completeOnboarding.isSuccess) {
+    if (isLoading || completeOnboarding.isSuccess) return;
+    // Fully onboarded → app.
+    if (user && user.onboardingCompletedAt !== null) {
       router.replace('/dashboard');
+      return;
+    }
+    // Account setup already done but framework not → resume at framework (un-skippable).
+    if (user && user.accountSetupCompletedAt !== null) {
+      router.replace('/onboarding/framework');
     }
   }, [isLoading, user, router, completeOnboarding.isSuccess]);
 

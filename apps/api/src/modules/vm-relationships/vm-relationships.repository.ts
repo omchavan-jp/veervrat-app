@@ -98,6 +98,60 @@ export class VmRelationshipsRepository {
     });
   }
 
+  // Aggregates a vratarthi's VM context: their active global VM (if any) and every
+  // active journey VM assignment across their journeys. Shaped for permission checks
+  // that aren't tied to a single journey (e.g. test result viewing — spec/05
+  // test.view_results: owner + their global/journey VMs).
+  async getVratarthiVmContext(vratarthiId: string): Promise<{
+    globalVmRelationship: { vmId: string; vratarthiId: string; state: VmRelationshipState } | null;
+    vmAssignments: { vmId: string; state: VmRelationshipState }[];
+  }> {
+    const globalVm = await this.prisma.vmRelationship.findFirst({
+      where: { vratarthiId, state: VmRelationshipState.ACTIVE, endedAt: null },
+      select: { vmId: true, vratarthiId: true, state: true },
+    });
+
+    const assignments = await this.prisma.journeyVmAssignment.findMany({
+      where: {
+        state: VmRelationshipState.ACTIVE,
+        endedAt: null,
+        journey: { vratarthiId },
+      },
+      distinct: ['vmId'],
+      select: { vmId: true, state: true },
+    });
+
+    return { globalVmRelationship: globalVm, vmAssignments: assignments };
+  }
+
+  // True if userA and userB have ANY active VM relationship (global or journey-scoped),
+  // in either direction (one is VA, the other is VM). Used to authorize 1:1 chat rooms.
+  async hasActiveRelationshipBetween(userA: string, userB: string): Promise<boolean> {
+    const globalCount = await this.prisma.vmRelationship.count({
+      where: {
+        state: VmRelationshipState.ACTIVE,
+        endedAt: null,
+        OR: [
+          { vratarthiId: userA, vmId: userB },
+          { vratarthiId: userB, vmId: userA },
+        ],
+      },
+    });
+    if (globalCount > 0) return true;
+
+    const journeyCount = await this.prisma.journeyVmAssignment.count({
+      where: {
+        state: VmRelationshipState.ACTIVE,
+        endedAt: null,
+        OR: [
+          { vmId: userA, journey: { vratarthiId: userB } },
+          { vmId: userB, journey: { vratarthiId: userA } },
+        ],
+      },
+    });
+    return journeyCount > 0;
+  }
+
   async getMyVms(vratarthiId: string, scope?: 'GLOBAL' | 'JOURNEY') {
     let globalVm = null;
     let journeyVms: any[] = [];

@@ -26,8 +26,10 @@ function makeUser(roles: Role[], overrides: Partial<SessionUser> = {}): SessionU
     language: 'EN',
     gender: null,
     dob: null,
+    avatarUrl: null,
     roles,
     emailVerifiedAt: new Date(),
+    accountSetupCompletedAt: new Date(),
     onboardingCompletedAt: new Date(),
     ...overrides,
   };
@@ -333,6 +335,27 @@ describe('chat.send', () => {
   });
   it('unassigned VM cannot send chat', () => {
     expect(hasPermission(VM, { type: 'journey', journey: ownJourney }, 'chat.send')).toBe(false);
+  });
+});
+
+// ─── Layer 1: Chat room (1:1 thread) — relationship must be verified ───────────
+// The room string alone is never trusted; the service computes relationshipVerified.
+describe('chat room resource', () => {
+  const room = `chat:${['user-1', 'vm-1'].sort().join(':')}`;
+
+  it('POSITIVE: participant with a verified relationship can view', () => {
+    expect(hasPermission(VA, { type: 'room', id: room, relationshipVerified: true }, 'chat.view')).toBe(true);
+  });
+  it('POSITIVE: participant with a verified relationship can send', () => {
+    expect(hasPermission(VM, { type: 'room', id: room, relationshipVerified: true }, 'chat.send')).toBe(true);
+  });
+  it('NEGATIVE: participant in the string but NO verified relationship is denied (forged room)', () => {
+    expect(hasPermission(VA, { type: 'room', id: room, relationshipVerified: false }, 'chat.view')).toBe(false);
+    expect(hasPermission(VM, { type: 'room', id: room, relationshipVerified: false }, 'chat.send')).toBe(false);
+  });
+  it('NEGATIVE: non-participant cannot use a room even if a relationship exists elsewhere', () => {
+    const outsider = makeUser([Role.VRATARTHI], { id: 'outsider-9' });
+    expect(hasPermission(outsider, { type: 'room', id: room, relationshipVerified: true }, 'chat.view')).toBe(false);
   });
 });
 

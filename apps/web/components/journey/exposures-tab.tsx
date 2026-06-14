@@ -1,18 +1,25 @@
 'use client';
 
+import { useState } from 'react';
+import { useTranslations } from 'next-intl';
+import { Plus } from 'lucide-react';
 import { useErcItems } from '@/hooks/use-journeys';
 import { ErcPoolSection } from './erc-pool-section';
 import { ErcItemCard } from './erc-item-card';
+import { CustomErcForm } from './custom-erc-form';
 
-type Props = { journeyId: string; hasVm: boolean };
+type Props = { journeyId: string; hasVm: boolean; viewerIsVm?: boolean };
 
-export function ExposuresTab({ journeyId, hasVm }: Props) {
+export function ExposuresTab({ journeyId, hasVm, viewerIsVm = false }: Props) {
+  const t = useTranslations('journey.erc');
   const { data: items = [], isLoading } = useErcItems(journeyId, 'exposure');
+  const [customOpen, setCustomOpen] = useState(false);
   const hasItems = items.length > 0;
 
   return (
     <div>
-      <ErcPoolSection journeyId={journeyId} ercType="exposure" defaultOpen={!hasItems} />
+      {/* Pool selection is a VA action only */}
+      {!viewerIsVm && <ErcPoolSection journeyId={journeyId} ercType="exposure" defaultOpen={!hasItems} />}
 
       {isLoading ? (
         <div className="flex justify-center py-8">
@@ -23,10 +30,21 @@ export function ExposuresTab({ journeyId, hasVm }: Props) {
       ) : (
         <div className="space-y-3">
           {items.map((item) => (
-            <ErcItemCard key={item.id} item={item} ercType="exposure" journeyId={journeyId} hasVm={hasVm} />
+            <ErcItemCard key={item.id} item={item} ercType="exposure" journeyId={journeyId} hasVm={hasVm} viewerIsVm={viewerIsVm} />
           ))}
         </div>
       )}
+
+      {!viewerIsVm && (
+        <button
+          onClick={() => setCustomOpen(true)}
+          className="mt-4 inline-flex items-center gap-2 rounded-xl border border-border-strong px-4 py-2 text-[13px] text-muted transition-colors hover:border-accent hover:text-fg"
+        >
+          <Plus className="h-4 w-4" />
+          {t('addCustomExposure')}
+        </button>
+      )}
+      <CustomErcForm journeyId={journeyId} ercType="exposure" open={customOpen} onOpenChange={setCustomOpen} />
     </div>
   );
 }

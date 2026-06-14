@@ -2,47 +2,71 @@
 
 import { useRouter } from 'next/navigation';
 import { useLocale } from 'next-intl';
+import { useEffect, useRef, useState } from 'react';
+import { Languages } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { usersApi } from '@/lib/api/users';
 
-export function LanguageToggle() {
+type Display = 'label' | 'icon' | 'reveal';
+
+// Flips EN↔MR. The label shows the CURRENT language (what the app is in).
+//   'label'  — always show current language inline (desktop expanded)
+//   'icon'   — icon only (collapsed rail)
+//   'reveal' — icon only; after a toggle, the current language label expands inline
+//              briefly then collapses back to icon-only — so the user sees what they
+//              switched into. Button width animates; neighbours shift gently.
+export function LanguageToggle({
+  className = '',
+  display = 'label',
+}: {
+  className?: string;
+  display?: Display;
+}) {
   const locale = useLocale();
   const router = useRouter();
   const { isAuthenticated } = useAuth();
+  const [revealed, setRevealed] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
 
   if (!isAuthenticated) return null;
 
-  async function handleToggle(newLocale: string) {
-    if (newLocale === locale) return;
+  const currentLabel = locale === 'mr' ? 'मराठी' : 'EN';
+  const next = locale === 'mr' ? 'en' : 'mr';
+
+  async function handleToggle() {
+    if (display === 'reveal') {
+      setRevealed(true);
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => setRevealed(false), 1500);
+    }
     try {
-      // DB stores 'EN' | 'MR'; middleware reads locale as lowercase 'en' | 'mr'
-      await usersApi.updateMe({ language: newLocale.toUpperCase() });
+      await usersApi.updateMe({ language: next.toUpperCase() });
       router.refresh();
     } catch {
-      // Preference not saved — do not refresh; locale stays as-is
+      // Preference not saved — leave locale as-is.
     }
   }
 
+  const showLabel = display === 'label' || (display === 'reveal' && revealed);
+
   return (
-    <div className="flex items-center gap-1 rounded-lg border border-border p-0.5 text-xs font-mono">
-      <button
-        onClick={() => handleToggle('en')}
-        className={`rounded-md px-2.5 py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-2 ${
-          locale === 'en' ? 'bg-accent text-bg' : 'text-muted hover:text-fg'
-        }`}
-        aria-pressed={locale === 'en'}
+    <button
+      type="button"
+      onClick={handleToggle}
+      title={`Language: ${currentLabel}`}
+      aria-label={`Switch language (currently ${locale === 'mr' ? 'Marathi' : 'English'})`}
+      className={`flex h-9 items-center justify-center rounded-lg border border-border text-[12px] font-medium text-muted transition-colors hover:border-accent hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${className}`}
+    >
+      <Languages className="h-4 w-4 shrink-0" />
+      {/* width + margin animate together so icon stays centred when collapsed */}
+      <span
+        className="overflow-hidden whitespace-nowrap transition-all duration-300 ease-out"
+        style={{ maxWidth: showLabel ? '48px' : '0px', marginLeft: showLabel ? '6px' : '0px' }}
       >
-        EN
-      </button>
-      <button
-        onClick={() => handleToggle('mr')}
-        className={`rounded-md px-2.5 py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-2 ${
-          locale === 'mr' ? 'bg-accent text-bg' : 'text-muted hover:text-fg'
-        }`}
-        aria-pressed={locale === 'mr'}
-      >
-        MR
-      </button>
-    </div>
+        {currentLabel}
+      </span>
+    </button>
   );
 }

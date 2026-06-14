@@ -48,9 +48,13 @@ export default function StudyBrowserPage() {
                       <span className="font-mono text-[11px] text-muted">{String(i + 1).padStart(2, '0')}</span>
                       <span className="font-mono text-[11px] text-muted group-hover:text-accent">→</span>
                     </div>
-                    <h3 className="mb-1 font-display text-[18px] tracking-tight">{w.nameEn}</h3>
-                    {w.nameMr && (
-                      <p className="mb-2 font-deva text-[14px] text-muted">{w.nameMr}</p>
+                    {w.nameMr ? (
+                      <>
+                        <h3 className="mb-0.5 font-deva text-[19px] leading-snug tracking-tight">{w.nameMr}</h3>
+                        <p className="mb-2 text-[13px] text-muted">{w.nameEn}</p>
+                      </>
+                    ) : (
+                      <h3 className="mb-2 font-display text-[18px] tracking-tight">{w.nameEn}</h3>
                     )}
                     {w.description && (
                       <p className="mb-3 line-clamp-2 text-[13px] text-muted">{w.description}</p>

@@ -3,9 +3,10 @@ import { TestsController } from './tests.controller';
 import { TestsService } from './tests.service';
 import { TestsRepository } from './tests.repository';
 import { AuthModule } from '../auth/auth.module';
+import { VmRelationshipsModule } from '../vm-relationships/vm-relationships.module';
 
 @Module({
-  imports: [AuthModule],
+  imports: [AuthModule, VmRelationshipsModule],
   controllers: [TestsController],
   providers: [TestsService, TestsRepository],
   exports: [TestsService],

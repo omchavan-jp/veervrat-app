@@ -1,5 +1,14 @@
 # Design System — v1
 
+> **Superseded in part (2026-06-11):** shell/nav, component language, motion, and screen
+> layouts are now defined in `analysis-output/DESIGN-LANGUAGE.md` (the H-Hybrid direction
+> from the design discussion; prototypes in `analysis-output/design-prototypes/`). This
+> file remains the reference for the foundational tokens below. Where the two differ,
+> DESIGN-LANGUAGE.md wins. The project uses **Tailwind v4 (CSS-first `@theme inline` in
+> `globals.css`)** — there is no `tailwind.config.ts`. Radius scale is now soft & airy
+> (sm 8 / md 12 / lg 16 / xl 22). **Signal colors corrected:** `danger` is now distinct
+> from `accent` (striking red), `warning` is a clearer golden amber — values below reflect this.
+
 ## Color Tokens
 
 ### Light Mode
@@ -15,8 +24,8 @@
   --border: rgba(47, 91, 79, 0.12);
   --border-strong: rgba(28, 26, 23, 0.16);
   --success: #3D8B37;
-  --warning: #C4841D;
-  --danger: #C0512F;
+  --warning: #CA8A04;
+  --danger: #B5261C;
 }
 ```
 
@@ -33,8 +42,8 @@
   --border: rgba(200, 190, 180, 0.12);
   --border-strong: rgba(200, 190, 180, 0.20);
   --success: #4CA644;
-  --warning: #D4943A;
-  --danger: #D4694A;
+  --warning: #E0A722;
+  --danger: #E5594C;
 }
 ```
 

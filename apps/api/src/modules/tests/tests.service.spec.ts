@@ -1,5 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import { Role } from '@prisma/client';
 import { TestsService } from './tests.service';
+import type { SessionUser } from '../auth/types/auth.types';
 import {
   TestAlreadySubmittedException,
   TestNotSubmittedException,
@@ -11,6 +13,18 @@ const WEAKNESS_ID = 'wid-1';
 const USER_ID = 'uid-1';
 const OTHER_USER_ID = 'uid-2';
 const TEST_ID = 'tid-1';
+
+function makeUser(id: string, roles: Role[] = [Role.VRATARTHI]): SessionUser {
+  return {
+    id, email: `${id}@x.com`, displayName: id, username: id,
+    roles, language: 'EN', gender: null, dob: null, avatarUrl: null,
+    emailVerifiedAt: new Date(), accountSetupCompletedAt: new Date(), onboardingCompletedAt: new Date(),
+  };
+}
+
+const OWNER = makeUser(USER_ID);
+const OTHER_USER = makeUser(OTHER_USER_ID);
+const VM_USER = makeUser('vm-1', [Role.VRATMITRA]);
 
 const DRAFT_TEST = { id: TEST_ID, weaknessId: WEAKNESS_ID, isDraft: true };
 const SUBMITTED_TEST = { id: TEST_ID, userId: USER_ID, weaknessId: WEAKNESS_ID, isDraft: false, submittedAt: new Date(), answers: [] };
@@ -57,9 +71,20 @@ function makeRepo(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function makeService(repo: ReturnType<typeof makeRepo>) {
+function makeVmRepo(overrides: Record<string, unknown> = {}) {
+  return {
+    getVratarthiVmContext: vi.fn().mockResolvedValue({
+      globalVmRelationship: null,
+      vmAssignments: [],
+    }),
+    ...overrides,
+  };
+}
+
+function makeService(repo: ReturnType<typeof makeRepo>, vmRepo = makeVmRepo()) {
   const service = Object.create(TestsService.prototype) as TestsService;
   (service as unknown as Record<string, unknown>)['testsRepository'] = repo;
+  (service as unknown as Record<string, unknown>)['vmRelationshipsRepository'] = vmRepo;
   return service;
 }
 
@@ -147,7 +172,7 @@ describe('TestsService — getReport', () => {
   it('POSITIVE: returns flagged sentences sorted Never before Sometimes', async () => {
     const repo = makeRepo();
     const service = makeService(repo);
-    const report = await service.getReport(USER_ID, TEST_ID);
+    const report = await service.getReport(OWNER, TEST_ID);
     expect(report.flaggedSentences).toHaveLength(2);
     expect(report.flaggedSentences[0].score).toBe(1); // Never first
     expect(report.flaggedSentences[1].score).toBe(2); // Sometimes second
@@ -157,7 +182,7 @@ describe('TestsService — getReport', () => {
   it('deduplicates virtues from flagged sentences', async () => {
     const repo = makeRepo();
     const service = makeService(repo);
-    const report = await service.getReport(USER_ID, TEST_ID);
+    const report = await service.getReport(OWNER, TEST_ID);
     // Both flagged sentences share the same virtueId='v-1'
     expect(report.virtuesToExplore).toHaveLength(1);
     expect(report.virtuesToExplore[0].virtueId).toBe('v-1');
@@ -171,18 +196,31 @@ describe('TestsService — getReport', () => {
     };
     const repo = makeRepo({ findReportData: vi.fn().mockResolvedValue(draftData) });
     const service = makeService(repo);
-    await expect(service.getReport(USER_ID, TEST_ID)).rejects.toThrow(TestNotSubmittedException);
+    await expect(service.getReport(OWNER, TEST_ID)).rejects.toThrow(TestNotSubmittedException);
   });
 
-  it('NEGATIVE: throws AccessDeniedException for wrong owner', async () => {
+  it('AUTH MATRIX POSITIVE: active global VM of the owner can view results', async () => {
     const repo = makeRepo();
-    const service = makeService(repo);
-    await expect(service.getReport(OTHER_USER_ID, TEST_ID)).rejects.toThrow(AccessDeniedException);
+    const vmRepo = makeVmRepo({
+      getVratarthiVmContext: vi.fn().mockResolvedValue({
+        globalVmRelationship: { vmId: VM_USER.id, vratarthiId: USER_ID, state: 'ACTIVE' },
+        vmAssignments: [],
+      }),
+    });
+    const service = makeService(repo, vmRepo);
+    const report = await service.getReport(VM_USER, TEST_ID);
+    expect(report.id).toBe(TEST_ID);
+  });
+
+  it('AUTH MATRIX NEGATIVE: unrelated user (no relationship) is denied', async () => {
+    const repo = makeRepo();
+    const service = makeService(repo); // default vmRepo → no relationships
+    await expect(service.getReport(OTHER_USER, TEST_ID)).rejects.toThrow(AccessDeniedException);
   });
 
   it('NEGATIVE: throws EntityNotFoundException for unknown test', async () => {
     const repo = makeRepo({ findReportData: vi.fn().mockResolvedValue(null) });
     const service = makeService(repo);
-    await expect(service.getReport(USER_ID, TEST_ID)).rejects.toThrow(EntityNotFoundException);
+    await expect(service.getReport(OWNER, TEST_ID)).rejects.toThrow(EntityNotFoundException);
   });
 });

@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { journeysApi, ercApi, checkinsApi } from '@/lib/api/journeys';
-import type { ErcType, CheckinStatus } from '@/lib/api/journeys';
+import type { ErcType, CheckinStatus, CustomErcInput } from '@/lib/api/journeys';
 import { queryKeys } from '@/lib/api/query-keys';
 
 export function useJourneys() {
@@ -16,6 +16,14 @@ export function useJourney(id: string) {
   return useQuery({
     queryKey: queryKeys.journeys.detail(id),
     queryFn: () => journeysApi.detail(id),
+    enabled: !!id,
+  });
+}
+
+export function useJourneyActivity(id: string) {
+  return useQuery({
+    queryKey: queryKeys.journeys.activity(id),
+    queryFn: () => journeysApi.activity(id),
     enabled: !!id,
   });
 }
@@ -124,6 +132,66 @@ export function useRemoveErc(journeyId: string, type: ErcType) {
     journeyId,
     type,
   );
+}
+
+export function useAcknowledgeSidenote(journeyId: string, type: ErcType) {
+  return useErcMutation(
+    ({ itemId }: { itemId: string }) => ercApi.acknowledgeSidenote(journeyId, type, itemId),
+    journeyId,
+    type,
+  );
+}
+
+export function useApproveErc(journeyId: string, type: ErcType) {
+  return useErcMutation(
+    ({ itemId }: { itemId: string }) => ercApi.approve(journeyId, type, itemId),
+    journeyId,
+    type,
+  );
+}
+
+export function useRevisitErc(journeyId: string, type: ErcType) {
+  return useErcMutation(
+    ({ itemId }: { itemId: string }) => ercApi.revisit(journeyId, type, itemId),
+    journeyId,
+    type,
+  );
+}
+
+export function useSuggestSidenote(journeyId: string, type: ErcType) {
+  return useErcMutation(
+    ({ itemId, text }: { itemId: string; text: string }) =>
+      ercApi.suggestSidenote(journeyId, type, itemId, text),
+    journeyId,
+    type,
+  );
+}
+
+export function useCreateCustomErc(journeyId: string, type: ErcType) {
+  return useErcMutation(
+    (data: CustomErcInput) => ercApi.createCustom(journeyId, type, data),
+    journeyId,
+    type,
+  );
+}
+
+export function useSubmitCustomForReview(journeyId: string, type: ErcType) {
+  return useErcMutation(
+    ({ itemId }: { itemId: string }) => ercApi.submitForReview(journeyId, type, itemId),
+    journeyId,
+    type,
+  );
+}
+
+export function useCompleteJourney() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id }: { id: string }) => journeysApi.complete(id),
+    onSuccess: (_data, { id }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.journeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.journeys.all });
+    },
+  });
 }
 
 // ─── Checkin hooks ──────────────────────────────────────────────────────────

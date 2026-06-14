@@ -1,10 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, act, fireEvent } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { screen, act, fireEvent } from '@testing-library/react';
+import { renderWithProviders } from './helpers/render';
 
 function renderWithQuery(ui: React.ReactElement) {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(<QueryClientProvider client={qc}>{ui}</QueryClientProvider>);
+  return renderWithProviders(ui);
 }
 
 const mockSaveAnswers = vi.hoisted(() => vi.fn());
@@ -48,13 +47,6 @@ vi.mock('@/hooks/use-tests', () => ({
     data: { id: 'tid-1', userId: 'u1', weaknessId: 'w1', isDraft: true, submittedAt: null, answers: [] },
     isLoading: false,
   }),
-}));
-
-vi.mock('next-intl', () => ({
-  useTranslations: () => (key: string, params?: Record<string, unknown>) => {
-    if (params) return `${key}:${JSON.stringify(params)}`;
-    return key;
-  },
 }));
 
 vi.mock('next/navigation', () => ({
