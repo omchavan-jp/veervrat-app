@@ -17,8 +17,13 @@ const ALLOWED_NODE_TYPES = new Set([
   'listItem',
   'blockquote',
   'image',
-  'mention',
+  // Entity-reference nodes. Tiptap requires a unique extension (node) name per trigger
+  // char, so the @ and # mentions are distinct node types; both validate identically.
+  'entityAt',
+  'entityHash',
 ]);
+
+const ENTITY_MENTION_TYPES = new Set(['entityAt', 'entityHash']);
 
 const ALLOWED_MARK_TYPES = new Set(['bold', 'italic', 'link']);
 
@@ -112,7 +117,7 @@ function sanitizeNode(node: unknown): TiptapNode | null {
     return out;
   }
 
-  if (n.type === 'mention') {
+  if (ENTITY_MENTION_TYPES.has(n.type)) {
     const entityType = n.attrs?.entityType;
     const entityId = n.attrs?.entityId;
     const label = n.attrs?.label;

@@ -42,19 +42,19 @@ describe('sanitizeChatContent — entity-reference (mention) nodes', () => {
     const out = sanitizeChatContent(
       doc(
         para(
-          { type: 'mention', attrs: { entityType: 'weakness', entityId: 'w-1', label: 'आळस', evil: '<script>' } },
+          { type: 'entityHash', attrs: { entityType: 'weakness', entityId: 'w-1', label: 'आळस', evil: '<script>' } },
         ),
       ),
     );
     const mention = out.content[0].content?.[0];
-    expect(mention?.type).toBe('mention');
+    expect(mention?.type).toBe('entityHash');
     expect(mention?.attrs).toEqual({ entityType: 'weakness', entityId: 'w-1', label: 'आळस' });
     expect(mention?.attrs?.evil).toBeUndefined();
   });
 
   it('rejects a mention with an unknown entityType', () => {
     const out = sanitizeChatContent(
-      doc(para(text('hi'), { type: 'mention', attrs: { entityType: 'admin_panel', entityId: 'x', label: 'y' } })),
+      doc(para(text('hi'), { type: 'entityHash', attrs: { entityType: 'admin_panel', entityId: 'x', label: 'y' } })),
     );
     // mention dropped, text kept
     const kinds = out.content[0].content?.map((n) => n.type);
@@ -63,14 +63,14 @@ describe('sanitizeChatContent — entity-reference (mention) nodes', () => {
 
   it('rejects a mention with a missing or oversized entityId', () => {
     const out = sanitizeChatContent(
-      doc(para(text('hi'), { type: 'mention', attrs: { entityType: 'weakness', entityId: 'x'.repeat(65), label: 'y' } })),
+      doc(para(text('hi'), { type: 'entityHash', attrs: { entityType: 'weakness', entityId: 'x'.repeat(65), label: 'y' } })),
     );
     expect(out.content[0].content?.map((n) => n.type)).toEqual(['text']);
   });
 
   it('clamps an over-long label', () => {
     const out = sanitizeChatContent(
-      doc(para({ type: 'mention', attrs: { entityType: 'virtue', entityId: 'v-1', label: 'a'.repeat(500) } })),
+      doc(para({ type: 'entityHash', attrs: { entityType: 'virtue', entityId: 'v-1', label: 'a'.repeat(500) } })),
     );
     const label = out.content[0].content?.[0]?.attrs?.label as string;
     expect(label.length).toBe(120);

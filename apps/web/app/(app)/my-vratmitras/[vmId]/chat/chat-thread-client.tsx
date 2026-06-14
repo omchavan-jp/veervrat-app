@@ -1,20 +1,17 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/hooks/use-auth';
 import { api } from '@/lib/api/client';
 import { io, Socket } from 'socket.io-client';
-import { ArrowLeft, Send, ImageIcon, Loader2 } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-
-// Minimal Tiptap document shape — chat messages are stored as a Tiptap JSON AST.
-type TiptapNode = { type: string; text?: string; content?: TiptapNode[] };
-type TiptapDoc = { type: 'doc'; content: TiptapNode[] };
+import { ChatComposer } from '@/components/chat/chat-composer';
+import { MessageContent, type TiptapDoc } from '@/components/chat/message-content';
 
 interface MessageSender {
   id: string;
@@ -52,13 +49,6 @@ function initialsOf(name: string): string {
     .slice(0, 2);
 }
 
-function renderMessageContent(content: TiptapDoc | undefined): string {
-  if (!content?.content) return '';
-  return content.content
-    .map((block) => (block.content ?? []).map((node) => node.text ?? '').join(''))
-    .join('\n');
-}
-
 // The browser API origin without the REST path suffix — socket.io connects to the
 // server root, not the `/api/v1` namespace (which it would otherwise treat as a
 // Socket.IO namespace and fail to find).
@@ -73,7 +63,6 @@ export function ChatThreadClient({ vmId }: { vmId: string }) {
   const { user } = useAuth();
 
   const [messages, setMessages] = useState<Message[]>([]);
-  const [inputValue, setInputValue] = useState('');
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [lastSeqNo, setLastSeqNo] = useState(0);
@@ -166,46 +155,33 @@ export function ChatThreadClient({ vmId }: { vmId: string }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const sendMessageMutation = useMutation({
-    mutationFn: async (text: string) => {
-      if (!socket || !roomId || !user) throw new Error('Socket not connected');
+  const sendMessage = (content: TiptapDoc) => {
+    if (!socket || !roomId || !user) {
+      toast({ title: t('chat.error'), description: t('chat.connecting'), variant: 'destructive' });
+      return;
+    }
 
-      const tempId = `temp-${Date.now()}-${Math.random()}`;
-      const content: TiptapDoc = {
-        type: 'doc',
-        content: [{ type: 'paragraph', content: [{ type: 'text', text }] }],
-      };
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: tempId,
-          roomId,
-          senderId: user.id,
-          sender: {
-            id: user.id,
-            displayName: user.displayName || user.email,
-            username: user.username,
-            avatarUrl: user.avatarUrl,
-          },
-          content,
-          createdAt: new Date().toISOString(),
-          seqNo: lastSeqNo + 1,
-          tempId,
+    const tempId = `temp-${Date.now()}-${Math.random()}`;
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: tempId,
+        roomId,
+        senderId: user.id,
+        sender: {
+          id: user.id,
+          displayName: user.displayName || user.email,
+          username: user.username,
+          avatarUrl: user.avatarUrl,
         },
-      ]);
+        content,
+        createdAt: new Date().toISOString(),
+        seqNo: lastSeqNo + 1,
+        tempId,
+      },
+    ]);
 
-      socket.emit('message', { type: 'message', roomId, content, tempId });
-      setInputValue('');
-    },
-    onError: (error) => {
-      toast({ title: t('chat.error'), description: error.message, variant: 'destructive' });
-    },
-  });
-
-  const handleSend = () => {
-    if (!inputValue.trim()) return;
-    sendMessageMutation.mutate(inputValue);
+    socket.emit('message', { type: 'message', roomId, content, tempId });
   };
 
   if (!user) {
@@ -274,13 +250,13 @@ export function ChatThreadClient({ vmId }: { vmId: string }) {
                 </Avatar>
                 <div className={`flex max-w-[78%] flex-col gap-1 ${mine ? 'items-end' : 'items-start'}`}>
                   <div
-                    className={`whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-sm ${
+                    className={`break-words rounded-2xl px-3.5 py-2 text-sm ${
                       mine
                         ? 'rounded-br-sm bg-accent text-bg'
                         : 'rounded-bl-sm border border-border bg-bg text-fg'
                     } ${msg.tempId ? 'opacity-60' : ''}`}
                   >
-                    {renderMessageContent(msg.content)}
+                    <MessageContent content={msg.content} />
                   </div>
                   <span className="px-1 font-mono text-[10px] text-muted">
                     {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -294,36 +270,7 @@ export function ChatThreadClient({ vmId }: { vmId: string }) {
       </div>
 
       {/* Composer */}
-      <div className="flex items-center gap-2 border-t border-border px-3 py-3">
-        <Button variant="outline" size="icon" disabled title={t('chat.image_soon')}>
-          <ImageIcon className="h-4 w-4" />
-        </Button>
-        <input
-          type="text"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              handleSend();
-            }
-          }}
-          placeholder={t('chat.type_message')}
-          disabled={!isConnected || sendMessageMutation.isPending}
-          className="h-10 flex-1 rounded-full border border-border bg-bg px-4 text-sm text-fg placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30 disabled:opacity-50"
-        />
-        <Button
-          size="icon"
-          onClick={handleSend}
-          disabled={!inputValue.trim() || !isConnected || sendMessageMutation.isPending}
-        >
-          {sendMessageMutation.isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Send className="h-4 w-4" />
-          )}
-        </Button>
-      </div>
+      <ChatComposer roomId={roomId} disabled={!isConnected} onSend={sendMessage} />
     </div>
   );
 }

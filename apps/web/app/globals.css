@@ -158,3 +158,13 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* Entity-reference chips (@/# mentions) inside the chat editor + rendered messages. */
+.entity-chip {
+  border-radius: 0.375rem;
+  background-color: color-mix(in srgb, var(--accent) 12%, transparent);
+  padding-inline: 0.25rem;
+  font-weight: 500;
+  color: var(--accent);
+  white-space: nowrap;
+}
