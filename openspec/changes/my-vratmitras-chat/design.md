@@ -1,6 +1,6 @@
 ## Context
 
-VAs and VMs need persistent, real-time chat to support mentorship. Currently, no in-app messaging exists. This design establishes a WebSocket-based chat infrastructure following the contract in documentation/Platform-Engineering-Standard.md, integrated with existing NestJS backend and Next.js frontend.
+VAs and VMs need persistent, real-time chat to support mentorship. Currently, no in-app messaging exists. This design establishes a WebSocket-based chat infrastructure following the contract in documentation/10_Platform-Engineering-Standard.md, integrated with existing NestJS backend and Next.js frontend.
 
 ## Goals / Non-Goals
 
@@ -21,7 +21,7 @@ VAs and VMs need persistent, real-time chat to support mentorship. Currently, no
 ## Decisions
 
 ### 1. WebSocket Gateway on NestJS
-**Decision:** Use NestJS Gateway + Socket.IO following documentation/Platform-Engineering-Standard.md WebSocket section.
+**Decision:** Use NestJS Gateway + Socket.IO following documentation/10_Platform-Engineering-Standard.md WebSocket section.
 **Rationale:** Native NestJS integration, cookie-based auth reuse (no separate token), Socket.IO handles reconnect natively, aligns with existing auth layer.
 **Alternatives considered:**
 - Raw WebSocket: more control but loses auth & reconnect helpers
@@ -51,7 +51,7 @@ VAs and VMs need persistent, real-time chat to support mentorship. Currently, no
 
 ### 5. Tiptap JSON for message content
 **Decision:** Rich text stored as Tiptap JSON AST in `content` jsonb column, same as experience logs & blogs.
-**Rationale:** Consistent with codebase (spec/decisions/22, 14, 16), supports images + entity refs natively, sanitized server-side per documentation/Platform-Engineering-Standard.md.
+**Rationale:** Consistent with codebase (spec/decisions/22, 14, 16), supports images + entity refs natively, sanitized server-side per documentation/10_Platform-Engineering-Standard.md.
 **Alternatives considered:**
 - Plain text: loses formatting & entity ref capability
 - Markdown: requires conversion, less type-safe
@@ -65,7 +65,7 @@ VAs and VMs need persistent, real-time chat to support mentorship. Currently, no
 
 ### 7. Session cookie auth on WebSocket handshake
 **Decision:** NestJS Gateway middleware validates session cookie (no separate token).
-**Rationale:** Reuses existing auth, no token management overhead, meets documentation/Platform-Engineering-Standard.md contract.
+**Rationale:** Reuses existing auth, no token management overhead, meets documentation/10_Platform-Engineering-Standard.md contract.
 **Alternatives considered:**
 - JWT token in query param: repeats token logic, security surface
 - Custom header token: loses cookie binding, stateless JWT complexity

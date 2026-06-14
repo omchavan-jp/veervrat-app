@@ -5,14 +5,14 @@ Two tiers:
 - **[FULL]** — OpenSpec full cycle: propose → apply (with tests) → code-review → archive
 - **[DIRECT]** — Direct fix, no propose needed. Under ~20 lines, follows established pattern.
 
-Spec refs use shorthand: `spec/05` = `spec/decisions/05_permissions.md`, `doc/auth` = `documentation/Auth Architecture Decision - v1.md`, etc.
+Spec refs use shorthand: `spec/05` = `spec/decisions/05_permissions.md`, `doc/auth` = `documentation/14_Auth-Architecture-Decision.md`, etc.
 
 **How to use this document in a new session:**
 1. Copy the item's **Session prompt** block below — paste it as your first message
 2. The session prompt already contains the research directive — do not skip it
 3. After implement: `/code-review` → fix → commit → squash merge to dev → `/opsx:archive`
 
-> **Before implementing any item from here on, read `documentation/Implementation-Cautions-and-Principles.md`.**
+> **Before implementing any item from here on, read `documentation/04_Implementation-Cautions-and-Principles.md`.**
 > It defines the feature Definition-of-Done and the verification ladder. An item is not
 > "done" until each applicable Definition-of-Done dimension is *verified* (build + tests +
 > end-to-end), not assumed. This applies to every [FULL] and [DIRECT] item below.
@@ -28,7 +28,7 @@ Branch: `chore/test-setup` (merged to dev)
 **RESEARCH PHASE — do this before anything else:**
 Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
 
-/opsx:propose "Set up Vitest for NestJS backend (unit + integration), Vitest + React Testing Library for Next.js frontend, and Playwright for E2E. Follow documentation/Testing-Strategy.md exactly. Configure: vitest.config.ts for both apps, test DB setup (separate veervrat_test DB via docker-compose), supertest integration, first smoke test verifying the DB connection works."
+/opsx:propose "Set up Vitest for NestJS backend (unit + integration), Vitest + React Testing Library for Next.js frontend, and Playwright for E2E. Follow documentation/16_Testing-Strategy.md exactly. Configure: vitest.config.ts for both apps, test DB setup (separate veervrat_test DB via docker-compose), supertest integration, first smoke test verifying the DB connection works."
 ```
 
 **Implement:** `vitest.config.ts` (api + web), test DB in docker-compose, supertest helper, first passing smoke test.
@@ -43,7 +43,7 @@ Branch: `feat/api-foundation` (merged to dev)
 **RESEARCH PHASE — do this before anything else:**
 Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
 
-/opsx:propose "Set up NestJS app foundation: global exception filter, response interceptor (wrapping all responses in { data }), correlation ID middleware, Pino structured logging, ConfigModule with validation, PrismaModule (global), health check endpoint at GET /api/health. Follow documentation/Backend Conventions - v1.md, documentation/Observability-Standard.md, documentation/API Conventions - v1.md."
+/opsx:propose "Set up NestJS app foundation: global exception filter, response interceptor (wrapping all responses in { data }), correlation ID middleware, Pino structured logging, ConfigModule with validation, PrismaModule (global), health check endpoint at GET /api/health. Follow documentation/11_Backend-Conventions.md, documentation/18_Observability-Standard.md, documentation/12_API-Conventions.md."
 ```
 
 **Implement:** `AppModule`, `PrismaModule`, global filter, interceptor, correlation middleware, Pino logger, health endpoint.
@@ -73,7 +73,7 @@ Branch: `feat/auth-complete`
 **RESEARCH PHASE — do this before anything else:**
 Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
 
-/opsx:propose "Complete the auth module. Backend: (1) CSRF double-submit cookie middleware — on session creation, set non-HttpOnly csrf-token cookie; NestJS guard validates X-CSRF-Token header matches cookie on all state-changing routes. (2) Rate limiting via @nestjs/throttler per the limits in documentation/Platform-Engineering-Standard.md numeric constants table. (3) Account lockout — 10 failed login attempts within 1 hour locks account for 15 minutes, stored in Redis. (4) Fix completeOnboarding endpoint to accept username + displayName + language. (5) Wire Resend email sending — EmailModule with console fallback for dev. Frontend: delete all existing auth pages and reimplement login, signup, forgot-password, reset-password, verify-email per spec/decisions/27_screen-specs.md auth section. All pages use next-intl for strings. Signup collects displayName, username (live uniqueness check), email, password, language. Follow documentation/Auth Architecture Decision - v1.md sections 15-16."
+/opsx:propose "Complete the auth module. Backend: (1) CSRF double-submit cookie middleware — on session creation, set non-HttpOnly csrf-token cookie; NestJS guard validates X-CSRF-Token header matches cookie on all state-changing routes. (2) Rate limiting via @nestjs/throttler per the limits in documentation/10_Platform-Engineering-Standard.md numeric constants table. (3) Account lockout — 10 failed login attempts within 1 hour locks account for 15 minutes, stored in Redis. (4) Fix completeOnboarding endpoint to accept username + displayName + language. (5) Wire Resend email sending — EmailModule with console fallback for dev. Frontend: delete all existing auth pages and reimplement login, signup, forgot-password, reset-password, verify-email per spec/decisions/27_screen-specs.md auth section. All pages use next-intl for strings. Signup collects displayName, username (live uniqueness check), email, password, language. Follow documentation/14_Auth-Architecture-Decision.md sections 15-16."
 ```
 
 **Implement:** CSRF middleware + guard, throttler config, Redis lockout, EmailModule (Resend + console), updated onboarding DTO, all frontend auth pages rebuilt.
@@ -88,7 +88,7 @@ Branch: `feat/i18n-setup`
 **RESEARCH PHASE — do this before anything else:**
 Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
 
-/opsx:propose "Set up next-intl for the Next.js frontend. Follow documentation/Platform-Engineering-Standard.md i18n section. Requirements: middleware.ts for locale detection from user session, getRequestConfig loading messages from apps/web/messages/{locale}.json, no URL-based routing, language applied at layout level via NextIntlClientProvider. Create en.json and mr.json with all auth screen strings as the first set of message keys. Add a language toggle component. Refer to spec/decisions/26_account-settings.md for language setting location."
+/opsx:propose "Set up next-intl for the Next.js frontend. Follow documentation/10_Platform-Engineering-Standard.md i18n section. Requirements: middleware.ts for locale detection from user session, getRequestConfig loading messages from apps/web/messages/{locale}.json, no URL-based routing, language applied at layout level via NextIntlClientProvider. Create en.json and mr.json with all auth screen strings as the first set of message keys. Add a language toggle component. Refer to spec/decisions/26_account-settings.md for language setting location."
 ```
 
 **Implement:** `middleware.ts`, `i18n.ts`, `messages/en.json`, `messages/mr.json` (auth strings), `NextIntlClientProvider` in root layout, language toggle component.
@@ -103,7 +103,7 @@ Branch: `feat/design-system`
 **RESEARCH PHASE — do this before anything else:**
 Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
 
-/opsx:propose "Implement the design system from documentation/Design-System.md. Tasks: (1) Update apps/web/app/globals.css with all CSS custom properties — light mode and dark mode tokens (color, radius, shadow, animation timing). (2) Implement dark mode toggle using next-themes, persisted in localStorage + user preference DB field. (3) Audit existing shadcn/ui components (button, input, card, label, alert, separator) against the component states spec in documentation/Design-System.md — add missing states (error, loading, disabled). (4) Add Geist Sans, Geist Mono, Newsreader, Tiro Devanagari fonts via next/font in apps/web/app/fonts.ts. (5) Add Framer Motion to the project."
+/opsx:propose "Implement the design system from documentation/15_Design-System.md. Tasks: (1) Update apps/web/app/globals.css with all CSS custom properties — light mode and dark mode tokens (color, radius, shadow, animation timing). (2) Implement dark mode toggle using next-themes, persisted in localStorage + user preference DB field. (3) Audit existing shadcn/ui components (button, input, card, label, alert, separator) against the component states spec in documentation/15_Design-System.md — add missing states (error, loading, disabled). (4) Add Geist Sans, Geist Mono, Newsreader, Tiro Devanagari fonts via next/font in apps/web/app/fonts.ts. (5) Add Framer Motion to the project."
 ```
 
 **Implement:** CSS tokens (light + dark), `next-themes` dark mode, font setup, shadcn component state updates, Framer Motion install.
@@ -319,7 +319,7 @@ Branch: `feat/my-vratmitras-chat`
 **RESEARCH PHASE — do this before anything else:**
 Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
 
-/opsx:propose "Implement My Vratmitras page and persistent chat. Backend: GET /api/v1/vm-relationships/my-vms (list of VA's VMs with scope and journey assignments), WebSocket Gateway (NestJS) for chat — authenticate via session cookie on handshake, room per VA-VM pair, message sequencing, missed-message catch-up via GET /api/v1/chats/:roomId/messages?after=seqNo. Image upload endpoint: POST /api/v1/uploads/chat (10MB max, images only, store in MinIO). Follow documentation/Platform-Engineering-Standard.md WebSocket contract. Frontend: My Vratmitras two-panel page per spec/decisions/27_screen-specs.md screen 6, chat thread view, entity reference chips (@/@# inline)."
+/opsx:propose "Implement My Vratmitras page and persistent chat. Backend: GET /api/v1/vm-relationships/my-vms (list of VA's VMs with scope and journey assignments), WebSocket Gateway (NestJS) for chat — authenticate via session cookie on handshake, room per VA-VM pair, message sequencing, missed-message catch-up via GET /api/v1/chats/:roomId/messages?after=seqNo. Image upload endpoint: POST /api/v1/uploads/chat (10MB max, images only, store in MinIO). Follow documentation/10_Platform-Engineering-Standard.md WebSocket contract. Frontend: My Vratmitras two-panel page per spec/decisions/27_screen-specs.md screen 6, chat thread view, entity reference chips (@/@# inline)."
 ```
 
 **Implement:** VM list endpoint, NestJS WebSocket Gateway, chat message persistence, image upload to MinIO, My Vratmitras frontend, chat thread frontend.
@@ -349,7 +349,7 @@ Branch: `feat/experience-logging`
 **RESEARCH PHASE — do this before anything else:**
 Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
 
-/opsx:propose "Implement global experience logging. Backend: POST /api/v1/experience-logs (create — Tiptap JSON body, draft model, visibility tier, entity tags), PATCH /api/v1/experience-logs/:id (edit — visibility, body, tags), DELETE /api/v1/experience-logs/:id (soft delete), GET /api/v1/experience-logs (own list + public pool). Rich text stored as jsonb per documentation/Platform-Engineering-Standard.md. Sanitize with sanitize-html server-side before write. Image uploads via POST /api/v1/uploads/experience (max 5 × 10MB, MinIO). Frontend: experience log editor (Tiptap), draft save model, visibility toggle, entity tag selector, published entry view."
+/opsx:propose "Implement global experience logging. Backend: POST /api/v1/experience-logs (create — Tiptap JSON body, draft model, visibility tier, entity tags), PATCH /api/v1/experience-logs/:id (edit — visibility, body, tags), DELETE /api/v1/experience-logs/:id (soft delete), GET /api/v1/experience-logs (own list + public pool). Rich text stored as jsonb per documentation/10_Platform-Engineering-Standard.md. Sanitize with sanitize-html server-side before write. Image uploads via POST /api/v1/uploads/experience (max 5 × 10MB, MinIO). Frontend: experience log editor (Tiptap), draft save model, visibility toggle, entity tag selector, published entry view."
 ```
 
 **Implement:** `ExperienceLogsModule`, CRUD endpoints, rich text sanitization, image upload, Tiptap editor frontend, draft model.
@@ -424,7 +424,7 @@ Branch: `feat/audit-logging`
 
 ```
 git checkout -b feat/audit-logging dev
-# Implement @Audited() decorator in NestJS following documentation/Audit-Schema.md.
+# Implement @Audited() decorator in NestJS following documentation/17_Audit-Schema.md.
 # Apply to all admin/moderator actions listed in the mandatory events table.
 # Fire-and-forget writes to audit_events table. No OpenSpec needed — pattern is straightforward.
 ```
@@ -548,7 +548,7 @@ Branch: `feat/e2e-tests`
 **RESEARCH PHASE — do this before anything else:**
 Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
 
-/opsx:propose "Implement the 10 critical E2E flows from documentation/Testing-Strategy.md using Playwright. Set up Playwright config, test fixtures (seed test DB before each suite), and implement all 10 flows: (1) signup→onboarding→test→report, (2) journey start→ERC select→check-in, (3) VM invitation→accept→suggest ERC→VA accepts→submit→VM approves, (4) non-platform VM invite→signup via link→accept, (5) global VM swap migration, (6) custom ERC→review→approve, (7) blog create→comment→hide→moderator delete, (8) admin override journey state→verify audit log, (9) guest browse→soft prompt→signup, (10) draft test→resume→complete."
+/opsx:propose "Implement the 10 critical E2E flows from documentation/16_Testing-Strategy.md using Playwright. Set up Playwright config, test fixtures (seed test DB before each suite), and implement all 10 flows: (1) signup→onboarding→test→report, (2) journey start→ERC select→check-in, (3) VM invitation→accept→suggest ERC→VA accepts→submit→VM approves, (4) non-platform VM invite→signup via link→accept, (5) global VM swap migration, (6) custom ERC→review→approve, (7) blog create→comment→hide→moderator delete, (8) admin override journey state→verify audit log, (9) guest browse→soft prompt→signup, (10) draft test→resume→complete."
 ```
 
 **Implement:** Playwright config, test fixtures, all 10 E2E flows.

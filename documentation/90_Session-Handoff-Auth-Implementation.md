@@ -48,7 +48,7 @@ Key files: `apps/api/src/modules/auth/` — follows Controller → Service → R
 
 ### 4. Documentation updates
 - `openspec/specs/auth/spec.md` — full spec covering backend + frontend
-- `documentation/System Decisions & Status.md` — auth status updated
+- `documentation/01_System-Decisions-and-Status.md` — auth status updated
 
 ---
 
@@ -128,12 +128,12 @@ Recommended next steps:
 
 | What | Where |
 |---|---|
-| Master decisions doc | `documentation/System Decisions & Status.md` |
+| Master decisions doc | `documentation/01_System-Decisions-and-Status.md` |
 | Auth spec | `openspec/specs/auth/spec.md` |
-| Auth architecture rationale | `documentation/Auth Architecture Decision - v1.md` |
-| Backend conventions | `documentation/Backend Conventions - v1.md` |
-| Frontend conventions | `documentation/Frontend Conventions - v1.md` |
-| API conventions | `documentation/API Conventions - v1.md` |
+| Auth architecture rationale | `documentation/14_Auth-Architecture-Decision.md` |
+| Backend conventions | `documentation/11_Backend-Conventions.md` |
+| Frontend conventions | `documentation/13_Frontend-Conventions.md` |
+| API conventions | `documentation/12_API-Conventions.md` |
 | Agent context | `CLAUDE.md` (read this first) |
 | Agent memory | `.claude/projects/-Users-omc1-Documents-om-jp-veervrat/memory/` |
 

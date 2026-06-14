@@ -95,5 +95,5 @@ apps/web/
 ```
 
 ## References
-- `documentation/Platform-Engineering-Standard.md` — i18n section (no URL-based routing)
+- `documentation/10_Platform-Engineering-Standard.md` — i18n section (no URL-based routing)
 - `openspec/specs/auth/spec.md` — auth i18n/request.ts dynamic locale requirement

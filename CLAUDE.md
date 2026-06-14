@@ -7,13 +7,13 @@ A platform for self-reliance and personal growth built around the Veervrat frame
 
 ## Read in this order at session start
 1. This file (CLAUDE.md)
-2. `documentation/System Decisions & Status.md` — where things stand
+2. `documentation/01_System-Decisions-and-Status.md` — where things stand
 3. `spec/SPEC_INDEX.md` — every product decision that has been made
 
 **Critical specs to load for any implementation work:**
 - `spec/decisions/02_data-model.md` — entities and relationships (affects every feature)
 - `spec/decisions/05_permissions.md` — permission matrix (affects every route)
-- `documentation/Platform-Engineering-Standard.md` — approved libraries and constants (affects every file you write)
+- `documentation/10_Platform-Engineering-Standard.md` — approved libraries and constants (affects every file you write)
 - `spec/decisions/27_screen-specs.md` — screen-level design for all 74 screens
 
 When unsure about a product decision, read `spec/decisions/` before guessing. If still unclear, stop and ask.
@@ -77,21 +77,21 @@ veervrat-app/
 ## Documentation — READ THESE
 
 ### Start here
-- `documentation/System Decisions & Status.md` — master list of all tech decisions and status
-- `documentation/Local Development Setup.md` — how to run the app locally
-- `documentation/Implementation-Cautions-and-Principles.md` — **read before implementing any item.** Generalized principles, a feature Definition-of-Done, and a verification ladder distilled from a remediation pass on earlier AI-built code. Prevents the recurring failure classes (unverified "done", layer-only features, unmapped tokens, transport misconfig, partial i18n, missing negative tests).
+- `documentation/01_System-Decisions-and-Status.md` — master list of all tech decisions and status
+- `documentation/02_Local-Development-Setup.md` — how to run the app locally
+- `documentation/04_Implementation-Cautions-and-Principles.md` — **read before implementing any item.** Generalized principles, a feature Definition-of-Done, and a verification ladder distilled from a remediation pass on earlier AI-built code. Prevents the recurring failure classes (unverified "done", layer-only features, unmapped tokens, transport misconfig, partial i18n, missing negative tests).
 
 ### Convention docs
-- `documentation/Auth Architecture Decision - v1.md` — auth, sessions, OAuth, CSRF (double-submit cookie), rate limiting, brute force
-- `documentation/Backend Conventions - v1.md` — layering, modules, naming, validation, errors, DB, logging
-- `documentation/API Conventions - v1.md` — routes, methods, response shapes, pagination
-- `documentation/Frontend Conventions - v1.md` — routing, components, data fetching, forms, styling
-- `documentation/Platform-Engineering-Standard.md` — **approved library catalog**, security baseline, numeric constants. If a library is not here, do not use it without updating this doc first.
-- `documentation/Design-System.md` — color tokens, typography, spacing, dark mode, component states
-- `documentation/Audit-Schema.md` — audit event contract, mandatory events, `@Audited` decorator pattern
-- `documentation/Testing-Strategy.md` — what to test, auth matrix tests, E2E flows
-- `documentation/Observability-Standard.md` — structured logging schema, GlitchTip setup, alert thresholds
-- `documentation/Email-Strategy.md` — Resend + React Email, transactional vs notification emails, template structure, bilingual strategy
+- `documentation/14_Auth-Architecture-Decision.md` — auth, sessions, OAuth, CSRF (double-submit cookie), rate limiting, brute force
+- `documentation/11_Backend-Conventions.md` — layering, modules, naming, validation, errors, DB, logging
+- `documentation/12_API-Conventions.md` — routes, methods, response shapes, pagination
+- `documentation/13_Frontend-Conventions.md` — routing, components, data fetching, forms, styling
+- `documentation/10_Platform-Engineering-Standard.md` — **approved library catalog**, security baseline, numeric constants. If a library is not here, do not use it without updating this doc first.
+- `documentation/15_Design-System.md` — color tokens, typography, spacing, dark mode, component states
+- `documentation/17_Audit-Schema.md` — audit event contract, mandatory events, `@Audited` decorator pattern
+- `documentation/16_Testing-Strategy.md` — what to test, auth matrix tests, E2E flows
+- `documentation/18_Observability-Standard.md` — structured logging schema, GlitchTip setup, alert thresholds
+- `documentation/19_Email-Strategy.md` — Resend + React Email, transactional vs notification emails, template structure, bilingual strategy
 
 ## Hard rules — follow exactly
 
@@ -100,7 +100,7 @@ veervrat-app/
 - no `any` — define proper types
 - no `@ts-ignore` or `as any`
 - no comments explaining what code does — only comment the WHY when non-obvious
-- no new dependencies without updating `documentation/Platform-Engineering-Standard.md` first
+- no new dependencies without updating `documentation/10_Platform-Engineering-Standard.md` first
 
 ### Backend
 - **controller → service → repository → Prisma** — never skip layers
@@ -155,7 +155,7 @@ veervrat-app/
 Do all of this before invoking the skill:
 1. Read every document listed under **Refer:** for the item
 2. Read the current state of every source file the change will touch
-3. Check for new dependencies — if any, update `documentation/Platform-Engineering-Standard.md` approved library catalog first (hard rule from above)
+3. Check for new dependencies — if any, update `documentation/10_Platform-Engineering-Standard.md` approved library catalog first (hard rule from above)
 4. Check `CLAUDE.md` hard rules for the affected layers (backend/frontend/API/database) — flag any conflict before proposing
 
 ### Flow for every feature
@@ -218,6 +218,6 @@ Do all of this before invoking the skill:
 
 ## Testing
 - Framework: Vitest + supertest (backend), Vitest + React Testing Library (frontend), Playwright (E2E)
-- Full strategy: `documentation/Testing-Strategy.md`
+- Full strategy: `documentation/16_Testing-Strategy.md`
 - Auth matrix tests are the highest-priority category — one positive + one negative per permission row
 - Tests are not set up yet — do not assume test infrastructure exists until configured
