@@ -8,6 +8,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { randomUUID } from 'crypto';
+import heicConvert from 'heic-convert';
 import { UploadsRepository } from './uploads.repository';
 import type { SessionUser } from '../auth/types/auth.types';
 
@@ -21,13 +22,18 @@ interface UploadRequest {
 const EXT_BY_TYPE: Record<string, string> = {
   'image/jpeg': 'jpg',
   'image/png': 'png',
+  'image/gif': 'gif',
   'image/webp': 'webp',
 };
+
+// HEIC/HEIF (the iPhone default) is accepted on upload but converted to JPEG so it
+// renders in every browser — Chrome and Firefox cannot display HEIC in <img>.
+const HEIC_TYPES = new Set(['image/heic', 'image/heif']);
 
 @Injectable()
 export class UploadsService {
   private readonly logger = new Logger('UploadsService');
-  private readonly ALLOWED_TYPES = Object.keys(EXT_BY_TYPE);
+  private readonly ALLOWED_TYPES = [...Object.keys(EXT_BY_TYPE), ...HEIC_TYPES];
   private readonly MAX_SIZE_MB = 10;
   private readonly s3: S3Client | null;
   private readonly bucket?: string;
@@ -74,8 +80,25 @@ export class UploadsService {
       throw new ServiceUnavailableException('File storage is not configured');
     }
 
+    // HEIC/HEIF → JPEG so the stored image renders in every browser.
+    let body = buffer;
+    let contentType = request.mimeType;
+    if (HEIC_TYPES.has(request.mimeType)) {
+      try {
+        const jpeg = await heicConvert({ buffer, format: 'JPEG', quality: 0.9 });
+        body = Buffer.from(jpeg);
+        contentType = 'image/jpeg';
+      } catch (error) {
+        this.logger.warn({
+          msg: 'HEIC conversion failed',
+          error: error instanceof Error ? error.message : String(error),
+        });
+        throw new BadRequestException('Could not process this HEIC image');
+      }
+    }
+
     // Randomized path — never the original filename (PES §uploads).
-    const ext = EXT_BY_TYPE[request.mimeType];
+    const ext = EXT_BY_TYPE[contentType];
     const key = `uploads/${randomUUID()}.${ext}`;
 
     try {
@@ -83,8 +106,8 @@ export class UploadsService {
         new PutObjectCommand({
           Bucket: this.bucket,
           Key: key,
-          Body: buffer,
-          ContentType: request.mimeType,
+          Body: body,
+          ContentType: contentType,
         }),
       );
     } catch (error) {

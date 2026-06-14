@@ -88,7 +88,7 @@ export function ChatComposer({
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept="image/jpeg,image/png,image/gif,image/webp,image/heic,image/heif,.heic,.heif"
         className="hidden"
         onChange={(e) => handleImagePick(e.target.files?.[0])}
       />

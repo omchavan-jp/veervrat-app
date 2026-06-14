@@ -18,6 +18,10 @@ vi.mock('@aws-sdk/client-s3', () => ({
   },
 }));
 
+// Mock HEIC→JPEG conversion so the test needs no real libheif decode.
+const { heicConvertMock } = vi.hoisted(() => ({ heicConvertMock: vi.fn() }));
+vi.mock('heic-convert', () => ({ default: heicConvertMock }));
+
 const S3_CONFIG: Record<string, string> = {
   S3_ENDPOINT: 'http://localhost:9000',
   S3_REGION: 'us-east-1',
@@ -46,6 +50,7 @@ describe('UploadsService', () => {
 
   beforeEach(async () => {
     sendMock.mockResolvedValue({});
+    heicConvertMock.mockResolvedValue(Buffer.from('converted-jpeg'));
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UploadsService,
@@ -118,13 +123,41 @@ describe('UploadsService', () => {
 
     it('accepts all supported image types', async () => {
       mockRepository.createUploadRecord.mockResolvedValue({ id: 'upload-1' });
-      for (const mimeType of ['image/jpeg', 'image/png', 'image/webp']) {
+      for (const mimeType of ['image/jpeg', 'image/png', 'image/gif', 'image/webp']) {
         const result = await service.uploadChatImage(
           { fileBuffer: Buffer.from('x').toString('base64'), filename: 'f', mimeType },
           mockUser,
         );
         expect(result.url).toBeDefined();
       }
+    });
+
+    it('converts HEIC to JPEG and stores it as .jpg', async () => {
+      mockRepository.createUploadRecord.mockResolvedValue({ id: 'upload-1' });
+      const result = await service.uploadChatImage(
+        {
+          fileBuffer: Buffer.from('fake heic').toString('base64'),
+          filename: 'IMG_0001.heic',
+          mimeType: 'image/heic',
+        },
+        mockUser,
+      );
+      expect(heicConvertMock).toHaveBeenCalledOnce();
+      expect(result.url).toMatch(/uploads\/[0-9a-f-]+\.jpg$/);
+      // Stored object is the converted JPEG with the corrected content type.
+      const putInput = (sendMock.mock.calls[0][0] as { input: { ContentType: string } }).input;
+      expect(putInput.ContentType).toBe('image/jpeg');
+    });
+
+    it('rejects a HEIC file when conversion fails', async () => {
+      heicConvertMock.mockRejectedValue(new Error('bad heic'));
+      await expect(
+        service.uploadChatImage(
+          { fileBuffer: Buffer.from('x').toString('base64'), filename: 'b.heic', mimeType: 'image/heic' },
+          mockUser,
+        ),
+      ).rejects.toThrow(BadRequestException);
+      expect(sendMock).not.toHaveBeenCalled();
     });
   });
 });
