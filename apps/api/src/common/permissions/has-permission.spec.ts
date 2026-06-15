@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ErcStatus, Role, VmRelationshipState } from '@prisma/client';
+import { ErcStatus, Role, VmRelationshipState, ExperienceVisibility } from '@prisma/client';
 import { hasPermission } from './has-permission';
 import {
   JourneySlim,
@@ -362,7 +362,7 @@ describe('chat room resource', () => {
 // ─── Layer 1: Experience log actions ─────────────────────────────────────────
 
 describe('experience_log.create', () => {
-  const log: ExperienceLogSlim = { authorId: 'user-1', journeyId: 'journey-1' };
+  const log: ExperienceLogSlim = { authorId: 'user-1', journeyId: 'journey-1', visibility: ExperienceVisibility.ONLY_ME, isDraft: true };
   it('VA can create an experience log for their own journey', () => {
     const res: PermissionResource = { type: 'experience_log', journey: ownJourney, log };
     expect(hasPermission(VA, res, 'experience_log.create')).toBe(true);
@@ -378,25 +378,46 @@ describe('experience_log.create', () => {
 });
 
 describe('experience_log.view', () => {
-  const ownLog: ExperienceLogSlim = { authorId: 'user-1', journeyId: 'journey-1' };
-  const otherLog: ExperienceLogSlim = { authorId: 'other-user', journeyId: 'journey-1' };
+  const ownLog: ExperienceLogSlim = { authorId: 'user-1', journeyId: 'journey-1', visibility: ExperienceVisibility.ONLY_ME, isDraft: false };
+  const otherPublished = (visibility: ExperienceVisibility, isDraft = false): ExperienceLogSlim => ({ authorId: 'other-user', journeyId: 'journey-1', visibility, isDraft });
   it('author can view their own experience log', () => {
     const res: PermissionResource = { type: 'experience_log', journey: ownJourney, log: ownLog };
     expect(hasPermission(VA, res, 'experience_log.view')).toBe(true);
   });
-  it('assigned VM can view experience log', () => {
-    const res: PermissionResource = { type: 'experience_log', journey: journeyWithVm, log: otherLog };
+  it('author can view their own draft', () => {
+    const draft: ExperienceLogSlim = { ...ownLog, isDraft: true };
+    const res: PermissionResource = { type: 'experience_log', journey: ownJourney, log: draft };
+    expect(hasPermission(VA, res, 'experience_log.view')).toBe(true);
+  });
+  it('anyone can view a PUBLIC published entry', () => {
+    const res: PermissionResource = { type: 'experience_log', journey: ownJourney, log: otherPublished(ExperienceVisibility.PUBLIC) };
+    expect(hasPermission(VA, res, 'experience_log.view')).toBe(true);
+  });
+  it('assigned VM can view a journey-tagged entry', () => {
+    const res: PermissionResource = { type: 'experience_log', journey: journeyWithVm, log: otherPublished(ExperienceVisibility.ONLY_ME) };
     expect(hasPermission(VM, res, 'experience_log.view')).toBe(true);
   });
-  it('unassigned VM cannot view experience log', () => {
-    const res: PermissionResource = { type: 'experience_log', journey: ownJourney, log: otherLog };
+  it('unassigned VM cannot view an ONLY_ME entry', () => {
+    const res: PermissionResource = { type: 'experience_log', journey: ownJourney, log: otherPublished(ExperienceVisibility.ONLY_ME) };
     expect(hasPermission(VM, res, 'experience_log.view')).toBe(false);
+  });
+  it('NEGATIVE: a third party cannot view an ONLY_ME entry', () => {
+    const res: PermissionResource = { type: 'experience_log', journey: ownJourney, log: otherPublished(ExperienceVisibility.ONLY_ME) };
+    expect(hasPermission(VA, res, 'experience_log.view')).toBe(false);
+  });
+  it('NEGATIVE: FRIENDS entry is hidden from third party (pre-follow-system, fail-closed)', () => {
+    const res: PermissionResource = { type: 'experience_log', journey: ownJourney, log: otherPublished(ExperienceVisibility.FRIENDS) };
+    expect(hasPermission(VA, res, 'experience_log.view')).toBe(false);
+  });
+  it('NEGATIVE: a PUBLIC but still-draft entry is not visible to non-authors', () => {
+    const res: PermissionResource = { type: 'experience_log', journey: ownJourney, log: otherPublished(ExperienceVisibility.PUBLIC, true) };
+    expect(hasPermission(VA, res, 'experience_log.view')).toBe(false);
   });
 });
 
 describe('experience_log.edit', () => {
-  const ownLog: ExperienceLogSlim = { authorId: 'user-1', journeyId: 'journey-1' };
-  const otherLog: ExperienceLogSlim = { authorId: 'other-user', journeyId: 'journey-1' };
+  const ownLog: ExperienceLogSlim = { authorId: 'user-1', journeyId: 'journey-1', visibility: ExperienceVisibility.ONLY_ME, isDraft: false };
+  const otherLog: ExperienceLogSlim = { authorId: 'other-user', journeyId: 'journey-1', visibility: ExperienceVisibility.ONLY_ME, isDraft: false };
   it('author can edit their own experience log', () => {
     expect(hasPermission(VA, { type: 'experience_log', journey: ownJourney, log: ownLog }, 'experience_log.edit')).toBe(true);
   });
@@ -406,8 +427,8 @@ describe('experience_log.edit', () => {
 });
 
 describe('experience_log.delete', () => {
-  const ownLog: ExperienceLogSlim = { authorId: 'user-1', journeyId: 'journey-1' };
-  const otherLog: ExperienceLogSlim = { authorId: 'other-user', journeyId: 'journey-1' };
+  const ownLog: ExperienceLogSlim = { authorId: 'user-1', journeyId: 'journey-1', visibility: ExperienceVisibility.ONLY_ME, isDraft: false };
+  const otherLog: ExperienceLogSlim = { authorId: 'other-user', journeyId: 'journey-1', visibility: ExperienceVisibility.ONLY_ME, isDraft: false };
   it('author can delete their own experience log', () => {
     expect(hasPermission(VA, { type: 'experience_log', journey: ownJourney, log: ownLog }, 'experience_log.delete')).toBe(true);
   });
