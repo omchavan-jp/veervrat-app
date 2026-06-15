@@ -14,7 +14,10 @@
       "groupPractice": "Practice",
       "groupGuidance": "Guidance",
       "collapseSidebar": "Collapse sidebar",
-      "expandSidebar": "Expand sidebar"
+      "expandSidebar": "Expand sidebar",
+      "groupVratmitra": "Vratmitra",
+      "vmGuidance": "VM Guidance",
+      "myVratarthis": "My Vratarthis"
     },
     "actions": {
       "save": "Save",
@@ -562,5 +565,63 @@
     "completed": "completed",
     "private": "This profile is private.",
     "notFound": "Profile not found."
+  },
+  "actions": {
+    "title": "Actions",
+    "subtitle": "Everything across your journeys that needs your attention, in one place.",
+    "empty": "All clear — you're on top of it.",
+    "emptyHint": "Approvals, suggestions, and new items from your journeys will show up here.",
+    "error": "Couldn't load your actions",
+    "errorHint": "Something went wrong. Please try again.",
+    "retry": "Try again",
+    "sections": {
+      "ercRevisit": "Returned for revisit",
+      "suggestionsAwaitingDecision": "Suggestions awaiting your decision",
+      "pendingVmApprovals": "Awaiting Vratmitra approval",
+      "newErcAvailable": "New items available",
+      "journeyClosurePending": "Journey closure pending"
+    },
+    "accept": "Accept",
+    "dismiss": "Dismiss",
+    "view": "View",
+    "open": "Open journey",
+    "inJourney": "in {journey}",
+    "ercType": {
+      "exposure": "Exposure",
+      "resolution": "Resolution",
+      "challenge": "Challenge"
+    }
+  },
+  "vm_guidance": {
+    "title": "Vratmitra Guidance",
+    "subtitle": "What your vratarthis need from you, grouped by urgency.",
+    "empty": "No pending actions from your vratarthis.",
+    "emptyHint": "Closure requests and completion requests will appear here.",
+    "error": "Couldn't load your guidance queue",
+    "errorHint": "Something went wrong. Please try again.",
+    "retry": "Try again",
+    "sections": {
+      "closureRequests": "Closure requests awaiting approval",
+      "journeyCompletionRequests": "Journey completion requests",
+      "suggestionStatusUpdates": "Your suggestions",
+      "customErcReviewStatus": "Custom item review status"
+    },
+    "approve": "Approve",
+    "return": "Return",
+    "notePlaceholder": "Add a note (optional)",
+    "approveJourney": "Approve completion",
+    "from": "from {va}",
+    "acknowledged": "Accepted by vratarthi",
+    "awaiting": "Awaiting vratarthi",
+    "reviewStatus": {
+      "pending": "Pending review",
+      "approved": "Approved",
+      "rejected": "Returned"
+    },
+    "ercType": {
+      "exposure": "Exposure",
+      "resolution": "Resolution",
+      "challenge": "Challenge"
+    }
   }
 }

@@ -4,16 +4,20 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { useQuery } from '@tanstack/react-query';
 import {
   LayoutDashboard,
   Search,
   BookOpen,
   Activity,
   Users,
+  Compass,
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
 } from 'lucide-react';
+import { actionsApi } from '@/lib/api/actions';
+import { queryKeys } from '@/lib/api/query-keys';
 import { useAuth, useLogout } from '@/hooks/use-auth';
 import { Logo } from '@/components/auth/logo';
 import { LanguageToggle } from '@/components/shared/language-toggle';
@@ -33,13 +37,34 @@ const PRACTICE: NavItem[] = [
   { href: '/journeys', labelKey: 'journeys', icon: BookOpen },
 ];
 
-const GUIDANCE: NavItem[] = [
-  { href: '/actions', labelKey: 'actions', icon: Activity },
-  { href: '/my-vratmitras', labelKey: 'myVratmitras', icon: Users },
-];
+// Computes the Guidance + Vratmitra nav groups with live pending-count badges. VM nav
+// items appear only when the user holds an active VM assignment (spec/22). Each item
+// carries its own independent badge — VA Guidance vs. VM Guidance, never a combined one.
+function useNavGroups() {
+  const { data: va } = useQuery({
+    queryKey: queryKeys.actions.va,
+    queryFn: () => actionsApi.getVaActions(),
+    staleTime: 30_000,
+  });
+  const { data: vm } = useQuery({
+    queryKey: queryKeys.actions.vm,
+    queryFn: () => actionsApi.getVmActions(),
+    staleTime: 30_000,
+  });
 
-// The five destinations surfaced in the mobile floating pill nav.
-const PILL: NavItem[] = [...PRACTICE, ...GUIDANCE];
+  const guidance: NavItem[] = [
+    { href: '/actions', labelKey: 'actions', icon: Activity, badge: va?.counts.total || undefined },
+    { href: '/my-vratmitras', labelKey: 'myVratmitras', icon: Users },
+  ];
+
+  // My Vratarthis page is deferred (see actions-guidance design Non-Goals); its nav
+  // item lands when that page is built. Only VM Guidance is wired here.
+  const vratmitra: NavItem[] = vm?.hasAssignments
+    ? [{ href: '/vratmitra/guidance', labelKey: 'vmGuidance', icon: Compass, badge: vm?.counts.total || undefined }]
+    : [];
+
+  return { guidance, vratmitra, pill: [...PRACTICE, ...guidance, ...vratmitra] };
+}
 
 function isActive(pathname: string, href: string): boolean {
   return pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
@@ -64,6 +89,7 @@ function LeftRail({
   const pathname = usePathname();
   const logout = useLogout();
   const initials = initialsOf(user);
+  const { guidance, vratmitra } = useNavGroups();
 
   const renderItem = ({ href, labelKey, icon: Icon, badge }: NavItem) => {
     const active = isActive(pathname, href);
@@ -152,7 +178,19 @@ function LeftRail({
           </div>
         )}
         {collapsed && <div className="my-3 h-px bg-border" />}
-        {GUIDANCE.map(renderItem)}
+        {guidance.map(renderItem)}
+
+        {vratmitra.length > 0 && (
+          <>
+            {!collapsed && (
+              <div className="mb-1.5 mt-5 px-2 font-mono text-[9px] uppercase tracking-[0.14em] text-muted">
+                {t('groupVratmitra')}
+              </div>
+            )}
+            {collapsed && <div className="my-3 h-px bg-border" />}
+            {vratmitra.map(renderItem)}
+          </>
+        )}
       </nav>
 
       {/* Footer: controls + user + sign-out */}
@@ -216,9 +254,10 @@ function LeftRail({
 function PillNav() {
   const t = useTranslations('common.nav');
   const pathname = usePathname();
+  const { pill } = useNavGroups();
   return (
     <nav className="fixed bottom-5 left-1/2 z-40 flex -translate-x-1/2 gap-1 rounded-full border border-border-strong bg-surface/90 p-1.5 shadow-raised backdrop-blur-md md:hidden">
-      {PILL.map(({ href, labelKey, icon: Icon, badge }) => {
+      {pill.map(({ href, labelKey, icon: Icon, badge }) => {
         const active = isActive(pathname, href);
         return (
           <Link

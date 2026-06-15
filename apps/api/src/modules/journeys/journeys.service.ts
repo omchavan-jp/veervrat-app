@@ -120,6 +120,7 @@ export class JourneysService {
     }
 
     const vmId = activeAssignment.vmId;
+    await this.journeysRepository.markCompletionSubmitted(journeyId);
     await this.notificationsRepository.create(
       vmId,
       user.id,

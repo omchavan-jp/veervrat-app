@@ -237,4 +237,7 @@ export const journeysApi = {
 
   complete: (id: string) =>
     api.post<Wrapped<{ id: string; state: JourneyState }>>(`/journeys/${id}/complete`).then((r) => r.data),
+
+  completeApprove: (id: string) =>
+    api.post<Wrapped<{ id: string; state: JourneyState }>>(`/journeys/${id}/complete/approve`).then((r) => r.data),
 };

@@ -86,6 +86,7 @@ function makeRepo(overrides: Record<string, unknown> = {}) {
     updateState: vi.fn().mockResolvedValue({ id: JOURNEY_ID, state: JourneyState.PAUSED }),
     updateTitle: vi.fn().mockResolvedValue({ id: JOURNEY_ID, title: 'New Title' }),
     setCompleted: vi.fn().mockResolvedValue({ id: JOURNEY_ID, state: JourneyState.COMPLETED, completedAt: new Date() }),
+    markCompletionSubmitted: vi.fn().mockResolvedValue({ id: JOURNEY_ID, completionSubmittedAt: new Date() }),
     buildJourneySlim: vi.fn().mockReturnValue(ACTIVE_JOURNEY_SLIM),
     getActivity: vi.fn().mockResolvedValue([]),
     ...overrides,
@@ -235,14 +236,17 @@ describe('JourneysService — submitCompletion', () => {
     const service = makeService(repo, notifRepo);
     const result = await service.submitCompletion(VA_USER, JOURNEY_ID);
     expect(repo.setCompleted).toHaveBeenCalledWith(JOURNEY_ID);
+    // Self-approve completes immediately — no completion-pending flag is left set.
+    expect(repo.markCompletionSubmitted).not.toHaveBeenCalled();
     expect((result as { state: JourneyState }).state).toBe(JourneyState.COMPLETED);
   });
 
-  it('AUTH MATRIX POSITIVE: VA submits when VM assigned → notification to VM, returns pending_vm_approval', async () => {
+  it('AUTH MATRIX POSITIVE: VA submits when VM assigned → marks completion pending, notifies VM, returns pending_vm_approval', async () => {
     const notifRepo = makeNotificationsRepo();
-    const { service } = makeServiceWithVm(notifRepo);
+    const { service, repo } = makeServiceWithVm(notifRepo);
     const result = await service.submitCompletion(VA_USER, JOURNEY_ID);
     expect((result as { status: string }).status).toBe('pending_vm_approval');
+    expect(repo.markCompletionSubmitted).toHaveBeenCalledWith(JOURNEY_ID);
     expect(notifRepo.create).toHaveBeenCalledWith(VM_USER.id, VA_USER.id, 'JOURNEY_COMPLETION_SUBMITTED', 'journey', JOURNEY_ID);
   });
 
