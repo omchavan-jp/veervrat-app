@@ -1,9 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { UsersRepository } from './users.repository';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateVisibilityDto } from './dto/update-visibility.dto';
 import type { OwnProfileDto, PublicProfileDto } from './dto/public-profile.dto';
 import { parseVisibility, isFieldVisible } from './profile-visibility';
+import { FollowsService } from '../follows/follows.service';
+import { ExperienceLogsService } from '../experience-logs/experience-logs.service';
 import {
   EntityNotFoundException,
   UserUsernameTakenException,
@@ -14,12 +16,18 @@ const ONLINE_THRESHOLD_MINUTES = 5;
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly usersRepository: UsersRepository) {}
+  constructor(
+    private readonly usersRepository: UsersRepository,
+    @Inject(forwardRef(() => FollowsService))
+    private readonly followsService: FollowsService,
+    private readonly experienceLogsService: ExperienceLogsService,
+  ) {}
 
   async getOwnProfile(userId: string): Promise<OwnProfileDto> {
     const user = await this.usersRepository.findById(userId);
     if (!user) throw new EntityNotFoundException('User', userId);
-    return this.toOwnProfileDto(user);
+    const counts = await this.followsService.getCounts(userId);
+    return { ...this.toOwnProfileDto(user), followerCount: counts.followers, followingCount: counts.following };
   }
 
   async updateOwnProfile(userId: string, dto: UpdateProfileDto): Promise<OwnProfileDto> {
@@ -45,7 +53,7 @@ export class UsersService {
 
   async getPublicProfile(
     username: string,
-    _requestingUserId?: string,
+    requestingUserId?: string,
   ): Promise<PublicProfileDto> {
     const user = await this.usersRepository.findByUsername(username);
 
@@ -56,12 +64,28 @@ export class UsersService {
     const vis = parseVisibility(user.profileVisibility);
     const show = (field: Parameters<typeof isFieldVisible>[1]) => isFieldVisible(vis, field);
 
+    const counts = await this.followsService.getCounts(user.id);
+
     // displayName + username are always public (handle/identity). All other fields
     // are omitted entirely when toggled off (spec/10: hidden, not "—").
     const profile: PublicProfileDto = {
       username: user.username,
       displayName: user.displayName,
+      followerCount: counts.followers,
+      followingCount: counts.following,
     };
+
+    // Follow status only for an authenticated viewer who isn't the profile owner.
+    if (requestingUserId && requestingUserId !== user.id) {
+      const status = await this.followsService.getStatus(requestingUserId, user.id);
+      profile.isFollowing = status.isFollowing;
+      profile.followsYou = status.followsYou;
+    }
+
+    // VM credibility — shown only when the user has guided a journey to completion.
+    if (user.guidedJourneysCompleted > 0) {
+      profile.guidedJourneysCompleted = user.guidedJourneysCompleted;
+    }
 
     if (show('avatar')) profile.avatarUrl = user.avatarUrl;
     if (show('memberSince')) profile.memberSince = user.createdAt.toISOString();
@@ -90,6 +114,12 @@ export class UsersService {
     return profile;
   }
 
+  async getPublicExperiences(username: string, cursor?: string) {
+    const user = await this.usersRepository.findIdByUsername(username);
+    if (!user) throw new EntityNotFoundException('User', username);
+    return this.experienceLogsService.getPublicByAuthor(user.id, cursor);
+  }
+
   async updateVisibility(userId: string, dto: UpdateVisibilityDto): Promise<OwnProfileDto> {
     const existing = await this.usersRepository.findById(userId);
     if (!existing) throw new EntityNotFoundException('User', userId);
@@ -108,6 +138,10 @@ export class UsersService {
 
   async findByEmail(email: string) {
     return this.usersRepository.findByEmail(email);
+  }
+
+  async findByUsername(username: string) {
+    return this.usersRepository.findIdByUsername(username);
   }
 
   async findById(id: string) {

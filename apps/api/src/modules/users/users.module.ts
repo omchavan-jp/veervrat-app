@@ -1,11 +1,13 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { UsersRepository } from './users.repository';
 import { AuthModule } from '../auth/auth.module';
+import { FollowsModule } from '../follows/follows.module';
+import { ExperienceLogsModule } from '../experience-logs/experience-logs.module';
 
 @Module({
-  imports: [AuthModule],
+  imports: [AuthModule, forwardRef(() => FollowsModule), forwardRef(() => ExperienceLogsModule)],
   controllers: [UsersController],
   providers: [UsersService, UsersRepository],
   exports: [UsersService],
