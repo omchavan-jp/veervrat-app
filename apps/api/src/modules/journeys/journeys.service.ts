@@ -5,7 +5,7 @@ import { NotificationsRepository } from '../notifications/notifications.reposito
 import { CreateJourneyDto } from './dto/create-journey.dto';
 import type { SessionUser } from '../auth/types/auth.types';
 import { hasPermission } from '../../common/permissions/has-permission';
-import { isVa, isVm } from '../../common/permissions/types';
+import { isVa, isVm, type JourneySlim } from '../../common/permissions/types';
 import {
   EntityNotFoundException,
   AccessDeniedException,
@@ -62,6 +62,14 @@ export class JourneysService {
     }
 
     return journey;
+  }
+
+  // Cross-module helper: the permission-slim for a journey (or null if absent).
+  // Lets other modules (e.g. experience-logs) authorize journey-scoped resources
+  // without reaching into the journeys repository directly.
+  async getJourneySlim(id: string): Promise<JourneySlim | null> {
+    const journey = await this.journeysRepository.findById(id);
+    return journey ? this.journeysRepository.buildJourneySlim(journey) : null;
   }
 
   async getActivity(user: SessionUser, id: string) {
