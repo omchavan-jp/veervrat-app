@@ -4,10 +4,10 @@ import { VmRelationshipsRepository } from '../vm-relationships/vm-relationships.
 import { hasPermission } from '../../common/permissions/has-permission';
 import type { SessionUser } from '../auth/types/auth.types';
 import {
-  sanitizeChatContent,
-  InvalidChatContentError,
+  sanitizeTiptapDoc,
+  InvalidTiptapContentError,
   type TiptapDoc,
-} from './tiptap-content';
+} from '../../common/tiptap/sanitize';
 
 @Injectable()
 export class ChatsService {
@@ -26,9 +26,9 @@ export class ChatsService {
 
     let sanitized: TiptapDoc;
     try {
-      sanitized = sanitizeChatContent(content);
+      sanitized = sanitizeTiptapDoc(content);
     } catch (err) {
-      if (err instanceof InvalidChatContentError) {
+      if (err instanceof InvalidTiptapContentError) {
         throw new BadRequestException(err.message);
       }
       throw err;

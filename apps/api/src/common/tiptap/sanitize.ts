@@ -1,6 +1,7 @@
-// Tiptap JSON AST validation + structural sanitization for chat messages.
+// Tiptap JSON AST validation + structural sanitization for all user-generated rich
+// text (chat messages, experience logs, blogs).
 //
-// Chat content is stored as a Tiptap JSON document (jsonb), NEVER as HTML. Per the
+// Content is stored as a Tiptap JSON document (jsonb), NEVER as HTML. Per the
 // Platform Engineering Standard, all user-generated rich text is structurally
 // sanitized server-side before DB write: only allowlisted node/mark types survive,
 // and link/image URLs are validated. This is the JSON-AST analogue of an HTML
@@ -139,19 +140,19 @@ function sanitizeNode(node: unknown): TiptapNode | null {
   return out;
 }
 
-export class InvalidChatContentError extends Error {
-  constructor(message = 'Invalid chat message content') {
+export class InvalidTiptapContentError extends Error {
+  constructor(message = 'Invalid rich-text content') {
     super(message);
-    this.name = 'InvalidChatContentError';
+    this.name = 'InvalidTiptapContentError';
   }
 }
 
 // Validates the top-level shape is a Tiptap doc, then returns a structurally
-// sanitized copy. Throws InvalidChatContentError if the payload is not a doc or
+// sanitized copy. Throws InvalidTiptapContentError if the payload is not a doc or
 // reduces to empty (e.g. an entirely-disallowed payload).
-export function sanitizeChatContent(input: unknown): TiptapDoc {
+export function sanitizeTiptapDoc(input: unknown): TiptapDoc {
   if (!input || typeof input !== 'object' || (input as TiptapNode).type !== 'doc') {
-    throw new InvalidChatContentError('Message content must be a Tiptap document');
+    throw new InvalidTiptapContentError('Content must be a Tiptap document');
   }
   const doc = input as TiptapNode;
   const content = Array.isArray(doc.content)
@@ -159,7 +160,7 @@ export function sanitizeChatContent(input: unknown): TiptapDoc {
     : [];
 
   if (content.length === 0) {
-    throw new InvalidChatContentError('Message content is empty after sanitization');
+    throw new InvalidTiptapContentError('Content is empty after sanitization');
   }
 
   return { type: 'doc', content };

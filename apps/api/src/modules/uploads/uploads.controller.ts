@@ -42,4 +42,19 @@ export class UploadsController {
     );
     return { data: result };
   }
+
+  @Post('experience')
+  async uploadExperienceImage(
+    @Body() request: UploadChatImageRequest,
+    @CurrentUser() user: SessionUser,
+  ) {
+    if (!request.fileBuffer || !request.filename || !request.mimeType) {
+      throw new BadRequestException(
+        'Missing required fields: fileBuffer, filename, mimeType',
+      );
+    }
+
+    const result = await this.uploadsService.uploadImage(request, user, 'experience');
+    return { data: result };
+  }
 }

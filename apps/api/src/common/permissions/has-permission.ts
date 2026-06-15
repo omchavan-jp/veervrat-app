@@ -1,4 +1,4 @@
-import { ErcStatus } from '@prisma/client';
+import { ErcStatus, ExperienceVisibility } from '@prisma/client';
 import { SessionUser } from '../../modules/auth/types/auth.types';
 import {
   PermissionAction,
@@ -187,9 +187,17 @@ function checkLayerOne(
     case 'experience_log.view': {
       if (resource.type !== 'experience_log') return false;
       const { log, journey } = resource;
+      // Author always sees their own entries (incl. drafts).
       if (log.authorId === user.id) return true;
+      // Drafts are never visible to anyone but the author.
+      if (log.isDraft) return false;
+      // Public, published entries are visible to anyone (incl. guests).
+      if (log.visibility === ExperienceVisibility.PUBLIC) return true;
+      // A VM assigned to (or global VM for) the entry's journey can view it (spec/14).
       if (isVm(user) && journey !== null && isActiveJourneyVm(user, journey)) return true;
       if (isVm(user) && journey !== null && isGlobalVmForJourney(user, journey)) return true;
+      // FRIENDS tier depends on the mutual-follow system (Item 23) — until that exists,
+      // fail closed: a friends entry is private to non-author/non-VM viewers.
       return false;
     }
 

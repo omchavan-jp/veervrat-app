@@ -1,4 +1,4 @@
-import { Role, ErcStatus, VmRelationshipState } from '@prisma/client';
+import { Role, ErcStatus, VmRelationshipState, ExperienceVisibility } from '@prisma/client';
 import { SessionUser } from '../../modules/auth/types/auth.types';
 
 // Re-export for convenience
@@ -124,6 +124,8 @@ export type ErcSlim = {
 export type ExperienceLogSlim = {
   authorId: string;
   journeyId: string | null;
+  visibility: ExperienceVisibility;
+  isDraft: boolean;
 };
 
 export type BlogSlim = {

@@ -19,6 +19,8 @@ interface UploadRequest {
   roomId?: string;
 }
 
+export type UploadPurpose = 'chat' | 'experience';
+
 const EXT_BY_TYPE: Record<string, string> = {
   'image/jpeg': 'jpg',
   'image/png': 'png',
@@ -66,6 +68,14 @@ export class UploadsService {
   }
 
   async uploadChatImage(request: UploadRequest, user: SessionUser): Promise<{ url: string }> {
+    return this.uploadImage(request, user, 'chat');
+  }
+
+  async uploadImage(
+    request: UploadRequest,
+    user: SessionUser,
+    _purpose: UploadPurpose,
+  ): Promise<{ url: string }> {
     if (!this.ALLOWED_TYPES.includes(request.mimeType)) {
       throw new BadRequestException('File type not supported');
     }

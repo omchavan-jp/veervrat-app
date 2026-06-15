@@ -38,4 +38,9 @@ export const queryKeys = {
     va: ['actions', 'va'] as const,
     vm: ['actions', 'vm'] as const,
   },
+  experiences: {
+    mine: ['experiences', 'mine'] as const,
+    public: ['experiences', 'public'] as const,
+    detail: (id: string) => ['experiences', id] as const,
+  },
 } as const;

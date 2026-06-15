@@ -269,6 +269,14 @@ export default function JourneyDetailPage() {
                 <ErcCard label={t('detail.tabChallenges')} counts={journey.ercCounts.challenges} />
               </div>
               <JourneyActivityFeed journeyId={journey.id} />
+              <div className="flex justify-center">
+                <Link
+                  href={`/experiences/new?journeyId=${journey.id}`}
+                  className="rounded-full border border-border-strong px-4 py-2 text-[13px] text-muted transition-colors hover:border-accent hover:text-fg"
+                >
+                  {t('detail.logExperience')}
+                </Link>
+              </div>
             </div>
           )
         )}

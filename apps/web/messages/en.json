@@ -17,7 +17,9 @@
       "expandSidebar": "Expand sidebar",
       "groupVratmitra": "Vratmitra",
       "vmGuidance": "VM Guidance",
-      "myVratarthis": "My Vratarthis"
+      "myVratarthis": "My Vratarthis",
+      "myExperiences": "My Experiences",
+      "logIn": "Log in"
     },
     "actions": {
       "save": "Save",
@@ -405,7 +407,8 @@
       "completeError": "Could not complete this journey yet.",
       "chatBanner": "Chat with your Vratmitra about “{title}”.",
       "openChat": "Open chat",
-      "chatNoVm": "Invite a Vratmitra to start a conversation."
+      "chatNoVm": "Invite a Vratmitra to start a conversation.",
+      "logExperience": "Log experience"
     },
     "activity": {
       "title": "Recent activity",
@@ -623,5 +626,44 @@
       "resolution": "Resolution",
       "challenge": "Challenge"
     }
+  },
+  "experiences": {
+    "newTitle": "Log your experience",
+    "editTitle": "Edit experience",
+    "journeyScoped": "This reflection is tied to your journey.",
+    "addImage": "Add image",
+    "tags": "Tags (optional)",
+    "tagSearchPlaceholder": "Search weaknesses, virtues, journeys…",
+    "removeTag": "Remove tag",
+    "visibility": "Visibility",
+    "visibilityOption": {
+      "ONLY_ME": "Only me",
+      "FRIENDS": "Friends",
+      "PUBLIC": "Public"
+    },
+    "saveDraft": "Save as draft",
+    "publish": "Publish",
+    "savedDraft": "Saved as draft",
+    "published": "Published",
+    "saveError": "Couldn't save your entry",
+    "imageError": "Couldn't upload that image",
+    "myTitle": "My Experiences",
+    "mySubtitle": "Your reflections — drafts and published.",
+    "newCta": "New entry",
+    "draft": "Draft",
+    "untitled": "(empty)",
+    "edit": "Edit",
+    "delete": "Delete",
+    "emptyTitle": "No experiences yet",
+    "emptyHint": "Write your first reflection — it's just for you until you choose to share.",
+    "loadError": "Couldn't load your experiences",
+    "loadErrorHint": "Something went wrong. Please try again.",
+    "retry": "Try again",
+    "poolTitle": "Community experiences",
+    "poolSubtitle": "Public reflections shared by the community.",
+    "poolEmpty": "No public experiences yet",
+    "poolEmptyHint": "Be the first to share a reflection publicly.",
+    "loading": "Loading…",
+    "loadMore": "Load more"
   }
 }
