@@ -1,5 +1,6 @@
 import { api } from './client';
 import type { User } from './auth';
+import type { ExperienceListResponse } from './experience-logs';
 
 type Wrapped<T> = { data: T };
 
@@ -32,6 +33,8 @@ export type OwnProfile = {
   profileVisibility: ProfileVisibility;
   createdAt: string;
   updatedAt: string;
+  followerCount?: number;
+  followingCount?: number;
 };
 
 // All stat fields are optional — a field toggled off by the VA is absent (spec/10).
@@ -52,6 +55,11 @@ export type PublicProfile = {
   publicExperienceCount?: number;
   lastActiveAt?: string;
   isOnline?: boolean;
+  followerCount: number;
+  followingCount: number;
+  isFollowing?: boolean;
+  followsYou?: boolean;
+  guidedJourneysCompleted?: number;
 };
 
 export type UpdateVisibilityInput = {
@@ -77,4 +85,17 @@ export const usersApi = {
 
   getPublicProfile: (username: string) =>
     api.get<Wrapped<PublicProfile>>(`/users/${encodeURIComponent(username)}`).then((r) => r.data),
+
+  getPublicExperiences: (username: string, cursor?: string) =>
+    api
+      .get<Wrapped<ExperienceListResponse>>(
+        `/users/${encodeURIComponent(username)}/experience-logs${cursor ? `?cursor=${cursor}` : ''}`,
+      )
+      .then((r) => r.data),
+
+  follow: (username: string) =>
+    api.post<Wrapped<{ following: boolean }>>(`/users/${encodeURIComponent(username)}/follow`).then((r) => r.data),
+
+  unfollow: (username: string) =>
+    api.delete<Wrapped<{ following: boolean }>>(`/users/${encodeURIComponent(username)}/follow`).then((r) => r.data),
 };
