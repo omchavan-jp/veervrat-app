@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
-import type { TiptapDoc } from './tiptap-content';
+import type { TiptapDoc } from '../../common/tiptap/sanitize';
 
 @Injectable()
 export class ChatsRepository {
