@@ -1,140 +1,226 @@
 'use client';
 
-import { useState } from 'react';
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { Inbox, Check, RotateCcw, Lightbulb, Plus, MessageSquare } from 'lucide-react';
-import { notificationsApi, type NotificationItem } from '@/lib/api/notifications';
+import { RotateCcw, Lightbulb, Clock, Plus, Flag, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { actionsApi, type VaActions } from '@/lib/api/actions';
+import { ercApi, type ErcType } from '@/lib/api/journeys';
 import { queryKeys } from '@/lib/api/query-keys';
+import { BilingualText } from '@/components/shared/bilingual-text';
 import { EmptyState } from '@/components/ui/empty-state';
 
-type Filter = 'all' | 'response' | 'suggestions' | 'updates';
+function SectionShell({
+  icon,
+  tint,
+  title,
+  count,
+  children,
+}: {
+  icon: React.ReactNode;
+  tint: string;
+  title: string;
+  count: number;
+  children: React.ReactNode;
+}) {
+  if (count === 0) return null;
+  return (
+    <section className="mb-7">
+      <div className="mb-3 flex items-center gap-2.5">
+        <span className={`flex h-7 w-7 items-center justify-center rounded-lg ${tint}`}>{icon}</span>
+        <h2 className="text-[15px] font-medium">{title}</h2>
+        <span className="font-mono text-[11px] text-muted">{count}</span>
+      </div>
+      <div className="space-y-2.5">{children}</div>
+    </section>
+  );
+}
 
-// Maps notification event types → the visual + grouping treatment for the Actions inbox.
-const EVENT_META: Record<
-  string,
-  { icon: typeof Check; tint: string; group: 'response' | 'suggestions' | 'updates' }
-> = {
-  ERC_RETURNED_FOR_REVISIT: { icon: RotateCcw, tint: 'bg-accent/12 text-accent', group: 'response' },
-  VM_SUGGESTION_NEW: { icon: Lightbulb, tint: 'bg-accent-2/12 text-accent-2', group: 'suggestions' },
-  NEW_ERC_AVAILABLE: { icon: Plus, tint: 'bg-warning/16 text-warning', group: 'response' },
-  ERC_CLOSURE_APPROVED: { icon: Check, tint: 'bg-success/13 text-success', group: 'updates' },
-  ERC_CLOSURE_SUBMITTED: { icon: Inbox, tint: 'bg-warning/16 text-warning', group: 'updates' },
-  JOURNEY_COMPLETION_APPROVED: { icon: Check, tint: 'bg-success/13 text-success', group: 'updates' },
-  CUSTOM_ERC_APPROVED: { icon: Check, tint: 'bg-success/13 text-success', group: 'updates' },
-  CUSTOM_ERC_REJECTED: { icon: RotateCcw, tint: 'bg-accent/12 text-accent', group: 'response' },
-  CHAT_MESSAGE_RECEIVED: { icon: MessageSquare, tint: 'bg-accent-2/12 text-accent-2', group: 'updates' },
-  VM_WITHDREW: { icon: RotateCcw, tint: 'bg-muted/15 text-muted', group: 'updates' },
-};
-
-function relativeTime(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const m = Math.floor(diff / 60000);
-  if (m < 1) return 'now';
-  if (m < 60) return `${m}m`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h`;
-  const d = Math.floor(h / 24);
-  if (d < 7) return `${d}d`;
-  return new Date(iso).toLocaleDateString();
+function Row({
+  href,
+  titleEn,
+  titleMr,
+  meta,
+  action,
+}: {
+  href?: string;
+  titleEn: string;
+  titleMr?: string | null;
+  meta?: string;
+  action?: React.ReactNode;
+}) {
+  const inner = (
+    <>
+      <div className="min-w-0 flex-1">
+        <BilingualText en={titleEn} mr={titleMr} size="sm" />
+        {meta && <div className="mt-1 text-[12px] text-muted">{meta}</div>}
+      </div>
+      {action ?? (href ? <ChevronRight className="h-4 w-4 shrink-0 text-muted" /> : null)}
+    </>
+  );
+  const cls =
+    'flex w-full items-center gap-3 rounded-2xl border border-border bg-surface p-4 text-left shadow-card transition-colors hover:border-accent/25';
+  return href ? (
+    <Link href={href} className={cls}>
+      {inner}
+    </Link>
+  ) : (
+    <div className={cls}>{inner}</div>
+  );
 }
 
 export default function ActionsPage() {
-  const t = useTranslations('actions_inbox');
-  const tn = useTranslations('notifications');
+  const t = useTranslations('actions');
   const queryClient = useQueryClient();
-  const [filter, setFilter] = useState<Filter>('all');
 
-  const { data, isLoading } = useQuery({
-    queryKey: queryKeys.notifications.list,
-    queryFn: () => notificationsApi.list(),
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: queryKeys.actions.va,
+    queryFn: () => actionsApi.getVaActions(),
   });
 
-  const markRead = useMutation({
-    mutationFn: (id: string) => notificationsApi.markRead(id),
+  const acknowledge = useMutation({
+    mutationFn: ({ journeyId, type, itemId }: { journeyId: string; type: ErcType; itemId: string }) =>
+      ercApi.acknowledgeSidenote(journeyId, type, itemId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.list });
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount });
+      queryClient.invalidateQueries({ queryKey: queryKeys.actions.va });
     },
   });
 
-  const items = (data?.items ?? []).filter((n) => EVENT_META[n.eventType] && !n.dismissedAt);
-  const filtered =
-    filter === 'all' ? items : items.filter((n) => EVENT_META[n.eventType].group === filter);
-
-  const counts = {
-    all: items.length,
-    response: items.filter((n) => EVENT_META[n.eventType].group === 'response').length,
-    suggestions: items.filter((n) => EVENT_META[n.eventType].group === 'suggestions').length,
-    updates: items.filter((n) => EVENT_META[n.eventType].group === 'updates').length,
-  };
-
-  const filters: { key: Filter; label: string; count: number }[] = [
-    { key: 'all', label: t('filterAll'), count: counts.all },
-    { key: 'response', label: t('filterResponse'), count: counts.response },
-    { key: 'suggestions', label: t('filterSuggestions'), count: counts.suggestions },
-    { key: 'updates', label: t('filterUpdates'), count: counts.updates },
-  ];
-
-  const renderItem = (n: NotificationItem) => {
-    const meta = EVENT_META[n.eventType];
-    const Icon = meta.icon;
-    const unread = !n.readAt;
+  if (isLoading) {
     return (
-      <button
-        key={n.id}
-        onClick={() => unread && markRead.mutate(n.id)}
-        className="relative flex w-full items-start gap-3.5 rounded-2xl border border-border bg-surface p-4 text-left shadow-card transition-colors hover:border-accent/25"
-      >
-        {unread && <span className="absolute -left-2 top-5 h-[7px] w-[7px] rounded-full bg-accent" />}
-        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${meta.tint}`}>
-          <Icon className="h-[18px] w-[18px]" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="mb-0.5 font-mono text-[9px] uppercase tracking-[0.1em] text-muted">
-            {t(`event.${n.eventType}`)}
-          </div>
-          <div className="text-[14px] leading-snug">
-            {n.actor && <span className="font-semibold">{n.actor.displayName} </span>}
-            {tn(`message.${n.eventType}`)}
-          </div>
-        </div>
-        <span className="shrink-0 text-[11px] text-muted">{relativeTime(n.createdAt)}</span>
-      </button>
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+      </div>
     );
-  };
+  }
+
+  if (isError || !data) {
+    return (
+      <div className="mx-auto max-w-[680px]">
+        <h1 className="font-display text-[30px] font-medium tracking-tight">{t('title')}</h1>
+        <EmptyState
+          icon={<RotateCcw className="h-5 w-5" />}
+          title={t('error')}
+          description={t('errorHint')}
+          action={
+            <button
+              onClick={() => refetch()}
+              className="rounded-full border border-border-strong px-4 py-1.5 text-[13px] hover:border-accent"
+            >
+              {t('retry')}
+            </button>
+          }
+        />
+      </div>
+    );
+  }
+
+  const d: VaActions = data;
+  const meta = (journey: string) => t('inJourney', { journey });
 
   return (
     <div className="mx-auto max-w-[680px]">
       <h1 className="font-display text-[30px] font-medium tracking-tight">{t('title')}</h1>
       <p className="mt-1 text-[14px] text-muted">{t('subtitle')}</p>
 
-      <div className="my-5 flex flex-wrap gap-2">
-        {filters.map((f) => (
-          <button
-            key={f.key}
-            onClick={() => setFilter(f.key)}
-            className={`rounded-full border px-3.5 py-1.5 text-[13px] transition-colors ${
-              filter === f.key
-                ? 'border-accent bg-accent text-bg'
-                : 'border-border-strong text-muted hover:border-accent'
-            }`}
-          >
-            {f.label}
-            <span className="ml-1.5 font-mono text-[10px] opacity-80">{f.count}</span>
-          </button>
-        ))}
-      </div>
+      <div className="mt-7">
+        {d.counts.total === 0 ? (
+          <EmptyState icon={<CheckCircle2 className="h-5 w-5" />} title={t('empty')} description={t('emptyHint')} />
+        ) : (
+          <>
+            <SectionShell
+              icon={<RotateCcw className="h-[15px] w-[15px]" />}
+              tint="bg-accent/12 text-accent"
+              title={t('sections.ercRevisit')}
+              count={d.ercRevisit.length}
+            >
+              {d.ercRevisit.map((it) => (
+                <Row
+                  key={it.id}
+                  href={`/journeys/${it.journeyId}`}
+                  titleEn={it.titleEn}
+                  titleMr={it.titleMr}
+                  meta={`${t(`ercType.${it.ercType}`)} · ${meta(it.journeyTitle)}`}
+                />
+              ))}
+            </SectionShell>
 
-      {isLoading ? (
-        <div className="flex min-h-[30vh] items-center justify-center">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-        </div>
-      ) : filtered.length === 0 ? (
-        <EmptyState icon={<Inbox className="h-5 w-5" />} title={t('empty')} description={t('emptyHint')} />
-      ) : (
-        <div className="space-y-3">{filtered.map(renderItem)}</div>
-      )}
+            <SectionShell
+              icon={<Lightbulb className="h-[15px] w-[15px]" />}
+              tint="bg-accent-2/12 text-accent-2"
+              title={t('sections.suggestionsAwaitingDecision')}
+              count={d.suggestionsAwaitingDecision.length}
+            >
+              {d.suggestionsAwaitingDecision.map((s) => (
+                <Row
+                  key={s.id}
+                  titleEn={s.itemTitleEn}
+                  titleMr={s.itemTitleMr}
+                  meta={`${t(`ercType.${s.ercType}`)} · ${meta(s.journeyTitle)}`}
+                  action={
+                    <div className="flex shrink-0 gap-2">
+                      <Link
+                        href={`/journeys/${s.journeyId}`}
+                        className="rounded-full border border-border-strong px-3 py-1.5 text-[12px] text-muted hover:border-accent"
+                      >
+                        {t('view')}
+                      </Link>
+                      <button
+                        onClick={() =>
+                          acknowledge.mutate({ journeyId: s.journeyId, type: s.ercType, itemId: s.itemId })
+                        }
+                        disabled={acknowledge.isPending}
+                        className="rounded-full bg-accent px-3 py-1.5 text-[12px] text-bg disabled:opacity-50"
+                      >
+                        {t('accept')}
+                      </button>
+                    </div>
+                  }
+                />
+              ))}
+            </SectionShell>
+
+            <SectionShell
+              icon={<Clock className="h-[15px] w-[15px]" />}
+              tint="bg-warning/16 text-warning"
+              title={t('sections.pendingVmApprovals')}
+              count={d.pendingVmApprovals.length}
+            >
+              {d.pendingVmApprovals.map((it) => (
+                <Row
+                  key={it.id}
+                  href={`/journeys/${it.journeyId}`}
+                  titleEn={it.titleEn}
+                  titleMr={it.titleMr}
+                  meta={`${t(`ercType.${it.ercType}`)} · ${meta(it.journeyTitle)}`}
+                />
+              ))}
+            </SectionShell>
+
+            <SectionShell
+              icon={<Plus className="h-[15px] w-[15px]" />}
+              tint="bg-success/13 text-success"
+              title={t('sections.newErcAvailable')}
+              count={d.newErcAvailable.length}
+            >
+              {d.newErcAvailable.map((j) => (
+                <Row key={j.journeyId} href={`/journeys/${j.journeyId}`} titleEn={j.journeyTitle} />
+              ))}
+            </SectionShell>
+
+            <SectionShell
+              icon={<Flag className="h-[15px] w-[15px]" />}
+              tint="bg-accent/12 text-accent"
+              title={t('sections.journeyClosurePending')}
+              count={d.journeyClosurePending.length}
+            >
+              {d.journeyClosurePending.map((j) => (
+                <Row key={j.id} href={`/journeys/${j.id}`} titleEn={j.title} />
+              ))}
+            </SectionShell>
+          </>
+        )}
+      </div>
     </div>
   );
 }

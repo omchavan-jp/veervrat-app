@@ -34,4 +34,8 @@ export const queryKeys = {
     suggestions: ['dashboard', 'suggestions'] as const,
     platformStats: ['dashboard', 'platform-stats'] as const,
   },
+  actions: {
+    va: ['actions', 'va'] as const,
+    vm: ['actions', 'vm'] as const,
+  },
 } as const;
