@@ -287,8 +287,16 @@ export class JourneysRepository {
   async setCompleted(id: string) {
     return this.prisma.journey.update({
       where: { id },
-      data: { state: JourneyState.COMPLETED, completedAt: new Date() },
+      data: { state: JourneyState.COMPLETED, completedAt: new Date(), completionSubmittedAt: null },
       select: { id: true, state: true, completedAt: true, updatedAt: true },
+    });
+  }
+
+  async markCompletionSubmitted(id: string) {
+    return this.prisma.journey.update({
+      where: { id },
+      data: { completionSubmittedAt: new Date() },
+      select: { id: true, completionSubmittedAt: true, updatedAt: true },
     });
   }
 

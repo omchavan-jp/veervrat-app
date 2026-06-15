@@ -79,4 +79,15 @@ export class VmRelationshipsService {
     if (!isVa(user)) throw new AccessDeniedException();
     return this.vmRelationshipsRepository.getMyVms(user.id, scope);
   }
+
+  // Journeys this user is the assigned journey VM for — the actionable scope of the VM
+  // guidance queue. Global-VM relationships are deliberately excluded (view-only).
+  async getVmAssignedJourneys(vmId: string): Promise<{ journeyId: string; vratarthiId: string }[]> {
+    return this.vmRelationshipsRepository.getVmAssignedJourneys(vmId);
+  }
+
+  // Whether the user holds any active VM assignment (global or journey) — for nav gating.
+  async hasAnyVmAssignment(vmId: string): Promise<boolean> {
+    return this.vmRelationshipsRepository.hasAnyVmAssignment(vmId);
+  }
 }

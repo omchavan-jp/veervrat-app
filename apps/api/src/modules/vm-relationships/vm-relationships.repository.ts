@@ -124,6 +124,34 @@ export class VmRelationshipsRepository {
     return { globalVmRelationship: globalVm, vmAssignments: assignments };
   }
 
+  // Journeys this user is the assigned *journey* VM for. This is the scope of the VM
+  // guidance/approval queue — strictly per-journey assignment, NOT global VM (spec/22
+  // flag: "scope the approval queue strictly to journeys this VM is assigned to — not
+  // all VAs"). A global VM views VA data elsewhere; approval requires journey assignment
+  // (erc.approve_closure / journey.complete are "assigned journey VM" in spec/05).
+  async getVmAssignedJourneys(vmId: string): Promise<{ journeyId: string; vratarthiId: string }[]> {
+    const rows = await this.prisma.journeyVmAssignment.findMany({
+      where: { vmId, state: VmRelationshipState.ACTIVE, endedAt: null, journey: { deletedAt: null } },
+      select: { journeyId: true, journey: { select: { vratarthiId: true } } },
+    });
+    return rows.map((r) => ({ journeyId: r.journeyId, vratarthiId: r.journey.vratarthiId }));
+  }
+
+  // True if the user holds ANY active VM assignment — global or journey-level. Drives
+  // VM nav visibility (spec/22: nav items show for users with active VM assignments,
+  // global or journey-level), independent of whether the guidance queue has items.
+  async hasAnyVmAssignment(vmId: string): Promise<boolean> {
+    const [journeyCount, globalCount] = await Promise.all([
+      this.prisma.journeyVmAssignment.count({
+        where: { vmId, state: VmRelationshipState.ACTIVE, endedAt: null },
+      }),
+      this.prisma.vmRelationship.count({
+        where: { vmId, state: VmRelationshipState.ACTIVE, endedAt: null },
+      }),
+    ]);
+    return journeyCount + globalCount > 0;
+  }
+
   // True if userA and userB have ANY active VM relationship (global or journey-scoped),
   // in either direction (one is VA, the other is VM). Used to authorize 1:1 chat rooms.
   async hasActiveRelationshipBetween(userA: string, userB: string): Promise<boolean> {
