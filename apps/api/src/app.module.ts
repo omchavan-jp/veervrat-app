@@ -21,6 +21,7 @@ import { UploadsModule } from './modules/uploads/uploads.module';
 import { EntitySearchModule } from './modules/entity-search/entity-search.module';
 import { ActionsModule } from './modules/actions/actions.module';
 import { ExperienceLogsModule } from './modules/experience-logs/experience-logs.module';
+import { FollowsModule } from './modules/follows/follows.module';
 import { RedisModule } from './common/redis/redis.module';
 import { AppController } from './app.controller';
 import { Reflector } from '@nestjs/core';
@@ -65,6 +66,7 @@ import { CsrfGuard } from './common/guards/csrf.guard';
     EntitySearchModule,
     ActionsModule,
     ExperienceLogsModule,
+    FollowsModule,
   ],
   controllers: [AppController],
   providers: [
