@@ -2,6 +2,7 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { ExperienceVisibility } from '@prisma/client';
 import { ExperienceLogsRepository, type ExperienceTagInput } from './experience-logs.repository';
 import { JourneysService } from '../journeys/journeys.service';
+import { FollowsService } from '../follows/follows.service';
 import { sanitizeTiptapDoc, InvalidTiptapContentError } from '../../common/tiptap/sanitize';
 import { hasPermission } from '../../common/permissions/has-permission';
 import { isVa } from '../../common/permissions/types';
@@ -19,6 +20,7 @@ export class ExperienceLogsService {
   constructor(
     private readonly repository: ExperienceLogsRepository,
     private readonly journeysService: JourneysService,
+    private readonly followsService: FollowsService,
   ) {}
 
   private sanitizeBody(body: unknown) {
@@ -105,7 +107,13 @@ export class ExperienceLogsService {
       visibility: log.visibility,
       isDraft: log.isDraft,
     };
-    if (!hasPermission(user, this.resource(journey, slim), 'experience_log.view')) {
+    // Resolve mutual-follow only when it could matter (FRIENDS, not the author).
+    const viewerIsFriend =
+      log.visibility === ExperienceVisibility.FRIENDS && log.authorId !== user.id
+        ? await this.followsService.areMutualFollows(user.id, log.authorId)
+        : false;
+
+    if (!hasPermission(user, this.resource(journey, slim, viewerIsFriend), 'experience_log.view')) {
       // Don't leak existence of private entries.
       throw new EntityNotFoundException('ExperienceLog', id);
     }
@@ -116,8 +124,12 @@ export class ExperienceLogsService {
     return this.repository.findPublicPool(cursor);
   }
 
-  private resource(journey: JourneySlim | null, log: ExperienceLogSlim) {
-    return { type: 'experience_log' as const, journey, log };
+  async getPublicByAuthor(authorId: string, cursor?: string) {
+    return this.repository.findPublicByAuthor(authorId, cursor);
+  }
+
+  private resource(journey: JourneySlim | null, log: ExperienceLogSlim, viewerIsFriend = false) {
+    return { type: 'experience_log' as const, journey, log, viewerIsFriend };
   }
 
   private toTags(tags?: { entityType: ExperienceTagInput['entityType']; entityId: string }[]): ExperienceTagInput[] {

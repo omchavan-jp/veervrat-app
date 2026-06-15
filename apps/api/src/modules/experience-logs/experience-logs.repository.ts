@@ -125,4 +125,16 @@ export class ExperienceLogsRepository {
     const nextCursor = items.length === 20 ? items[items.length - 1].id : null;
     return { items, nextCursor };
   }
+
+  async findPublicByAuthor(authorId: string, cursor?: string) {
+    const items = await this.prisma.experienceLog.findMany({
+      where: { authorId, visibility: ExperienceVisibility.PUBLIC, isDraft: false, deletedAt: null },
+      select: LOG_SELECT,
+      orderBy: { publishedAt: 'desc' },
+      take: 20,
+      ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+    });
+    const nextCursor = items.length === 20 ? items[items.length - 1].id : null;
+    return { items, nextCursor };
+  }
 }
