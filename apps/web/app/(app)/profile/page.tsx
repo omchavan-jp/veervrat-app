@@ -90,9 +90,15 @@ export default function ProfilePage() {
           <span className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-2 text-[15px] font-semibold text-bg">
             {(p.displayName || p.email).slice(0, 2).toUpperCase()}
           </span>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="truncate text-[15px] font-medium">{p.displayName}</div>
             <div className="truncate text-[13px] text-muted">@{p.username}</div>
+            {(p.followerCount !== undefined || p.followingCount !== undefined) && (
+              <div className="mt-1 flex gap-4 text-[12px]">
+                <span><span className="font-semibold">{p.followerCount ?? 0}</span> <span className="text-muted">{t('followers')}</span></span>
+                <span><span className="font-semibold">{p.followingCount ?? 0}</span> <span className="text-muted">{t('following')}</span></span>
+              </div>
+            )}
           </div>
         </div>
       </section>

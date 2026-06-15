@@ -196,8 +196,9 @@ function checkLayerOne(
       // A VM assigned to (or global VM for) the entry's journey can view it (spec/14).
       if (isVm(user) && journey !== null && isActiveJourneyVm(user, journey)) return true;
       if (isVm(user) && journey !== null && isGlobalVmForJourney(user, journey)) return true;
-      // FRIENDS tier depends on the mutual-follow system (Item 23) — until that exists,
-      // fail closed: a friends entry is private to non-author/non-VM viewers.
+      // FRIENDS tier = mutual follow (spec/10). The service resolves friendship and
+      // passes viewerIsFriend; the permission function stays pure/synchronous.
+      if (log.visibility === ExperienceVisibility.FRIENDS && resource.viewerIsFriend === true) return true;
       return false;
     }
 

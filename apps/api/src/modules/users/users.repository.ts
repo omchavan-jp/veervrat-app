@@ -94,6 +94,11 @@ export class UsersRepository {
       this.prisma.journeyChallenge.count({ where: { ...journeyOwner, status: 'APPROVED' } }),
     ]);
 
+    // VM credibility: completed journeys this user was the assigned VM for (spec/22).
+    const guidedJourneysCompleted = await this.prisma.journeyVmAssignment.count({
+      where: { vmId: user.id, journey: { state: 'COMPLETED', deletedAt: null } },
+    });
+
     return {
       ...user,
       journeysCompleted,
@@ -106,6 +111,7 @@ export class UsersRepository {
       resolutionsCompleted,
       challengesCompleted,
       publicExperienceCount: user._count.experienceLogs,
+      guidedJourneysCompleted,
     };
   }
 
@@ -161,6 +167,14 @@ export class UsersRepository {
     return this.prisma.user.findFirst({
       where: { email, deletedAt: null },
       select: { id: true, email: true, displayName: true, language: true },
+    });
+  }
+
+  // Slim username → identity lookup (no profile aggregation). For follow targets etc.
+  async findIdByUsername(username: string) {
+    return this.prisma.user.findFirst({
+      where: { username: username.toLowerCase(), deletedAt: null },
+      select: { id: true, username: true, displayName: true },
     });
   }
 

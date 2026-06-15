@@ -405,8 +405,12 @@ describe('experience_log.view', () => {
     const res: PermissionResource = { type: 'experience_log', journey: ownJourney, log: otherPublished(ExperienceVisibility.ONLY_ME) };
     expect(hasPermission(VA, res, 'experience_log.view')).toBe(false);
   });
-  it('NEGATIVE: FRIENDS entry is hidden from third party (pre-follow-system, fail-closed)', () => {
-    const res: PermissionResource = { type: 'experience_log', journey: ownJourney, log: otherPublished(ExperienceVisibility.FRIENDS) };
+  it('mutual follower (viewerIsFriend) can view a FRIENDS entry', () => {
+    const res: PermissionResource = { type: 'experience_log', journey: ownJourney, log: otherPublished(ExperienceVisibility.FRIENDS), viewerIsFriend: true };
+    expect(hasPermission(VA, res, 'experience_log.view')).toBe(true);
+  });
+  it('NEGATIVE: FRIENDS entry hidden when not a mutual follower', () => {
+    const res: PermissionResource = { type: 'experience_log', journey: ownJourney, log: otherPublished(ExperienceVisibility.FRIENDS), viewerIsFriend: false };
     expect(hasPermission(VA, res, 'experience_log.view')).toBe(false);
   });
   it('NEGATIVE: a PUBLIC but still-draft entry is not visible to non-authors', () => {

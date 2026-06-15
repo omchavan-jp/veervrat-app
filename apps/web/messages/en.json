@@ -534,7 +534,9 @@
     "fieldExposures": "Exposures",
     "fieldResolutions": "Resolutions",
     "fieldChallenges": "Challenges",
-    "fieldExperiences": "Public experiences"
+    "fieldExperiences": "Public experiences",
+    "followers": "followers",
+    "following": "following"
   },
   "invitation": {
     "title": "Vratmitra invitation",
@@ -567,7 +569,12 @@
     "active": "active",
     "completed": "completed",
     "private": "This profile is private.",
-    "notFound": "Profile not found."
+    "notFound": "Profile not found.",
+    "follow": "Follow",
+    "following": "Following",
+    "followers": "followers",
+    "guidedJourneys": "Guided {count} {count, plural, one {journey} other {journeys}} to completion",
+    "publicExperiences": "Public experiences"
   },
   "actions": {
     "title": "Actions",

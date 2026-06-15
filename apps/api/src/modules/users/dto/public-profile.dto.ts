@@ -20,6 +20,13 @@ export interface PublicProfileDto {
   /** ISO 8601 timestamp — frontend formats for the user's locale */
   lastActiveAt?: string;
   isOnline?: boolean;
+  // Social graph (spec/10). Counts always present; status only for authenticated viewers.
+  followerCount: number;
+  followingCount: number;
+  isFollowing?: boolean;
+  followsYou?: boolean;
+  // VM credibility — present only when > 0 (spec/22).
+  guidedJourneysCompleted?: number;
 }
 
 export interface OwnProfileDto {
@@ -37,4 +44,6 @@ export interface OwnProfileDto {
   profileVisibility: ProfileVisibility;
   createdAt: string;
   updatedAt: string;
+  followerCount?: number;
+  followingCount?: number;
 }

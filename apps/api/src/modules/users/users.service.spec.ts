@@ -51,9 +51,19 @@ function makeRepo(overrides: Partial<{
   };
 }
 
-function makeService(repo: ReturnType<typeof makeRepo>) {
+function makeFollows() {
+  return {
+    getCounts: vi.fn().mockResolvedValue({ followers: 0, following: 0 }),
+    getStatus: vi.fn().mockResolvedValue({ isFollowing: false, followsYou: false }),
+    areMutualFollows: vi.fn().mockResolvedValue(false),
+  };
+}
+
+function makeService(repo: ReturnType<typeof makeRepo>, follows = makeFollows()) {
   const service = Object.create(UsersService.prototype) as UsersService;
-  (service as unknown as Record<string, unknown>)['usersRepository'] = repo;
+  const s = service as unknown as Record<string, unknown>;
+  s['usersRepository'] = repo;
+  s['followsService'] = follows;
   return service;
 }
 
