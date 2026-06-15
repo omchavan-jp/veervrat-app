@@ -30,4 +30,14 @@ export const uploadsApi = {
     });
     return res.data;
   },
+
+  uploadExperienceImage: async (file: File): Promise<ChatImageUploadResult> => {
+    const fileBuffer = await fileToBase64(file);
+    const res = await api.post<Wrapped<ChatImageUploadResult>>('/uploads/experience', {
+      fileBuffer,
+      filename: file.name,
+      mimeType: file.type,
+    });
+    return res.data;
+  },
 };

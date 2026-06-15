@@ -12,6 +12,7 @@ import {
   Activity,
   Users,
   Compass,
+  PenLine,
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
@@ -35,6 +36,7 @@ const PRACTICE: NavItem[] = [
   { href: '/dashboard', labelKey: 'dashboard', icon: LayoutDashboard },
   { href: '/study', labelKey: 'studyFlow', icon: Search },
   { href: '/journeys', labelKey: 'journeys', icon: BookOpen },
+  { href: '/experiences', labelKey: 'myExperiences', icon: PenLine },
 ];
 
 // Computes the Guidance + Vratmitra nav groups with live pending-count badges. VM nav

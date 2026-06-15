@@ -22,12 +22,12 @@ export default async function DashboardPage() {
           <div className="mb-1 text-[12px] text-muted">{t('sakaPlaceholder')} · {today}</div>
           <DashboardGreeting />
         </div>
-        <button
-          disabled
-          className="shrink-0 rounded-full border border-border px-4 py-2 text-[13px] text-muted opacity-50 cursor-not-allowed"
+        <Link
+          href="/experiences/new"
+          className="shrink-0 rounded-full border border-border px-4 py-2 text-[13px] text-fg transition-colors hover:border-accent hover:bg-accent hover:text-bg"
         >
           {t('logExperience')}
-        </button>
+        </Link>
       </div>
 
       {/* Stats bar */}
