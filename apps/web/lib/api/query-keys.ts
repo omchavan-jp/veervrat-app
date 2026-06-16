@@ -58,4 +58,8 @@ export const queryKeys = {
     subvirtue: (id: string) => ['subvirtues', id] as const,
     sentence: (id: string) => ['sentences', id] as const,
   },
+  moderation: {
+    customErcQueue: ['moderation', 'custom-erc'] as const,
+    customErcDetail: (id: string) => ['moderation', 'custom-erc', id] as const,
+  },
 } as const;

@@ -21,7 +21,8 @@
       "myExperiences": "My Experiences",
       "logIn": "Log in",
       "community": "Community",
-      "virtues": "Virtues & Weaknesses"
+      "virtues": "Virtues & Weaknesses",
+      "moderation": "Moderation"
     },
     "actions": {
       "save": "Save",
@@ -779,5 +780,25 @@
     "takeTestForWeakness": "Take the test for this weakness",
     "loginToTest": "Log in to take a test.",
     "login": "Log in"
+  },
+  "moderation": {
+    "title": "Moderation",
+    "subtitle": "Review submissions and manage community content.",
+    "customErcTitle": "Custom ERC review",
+    "customErcDesc": "Approve or reject member-submitted exposures, resolutions, and challenges.",
+    "reportedTitle": "Reported comments",
+    "comingSoon": "Coming soon",
+    "emptyQueue": "No custom ERC submissions pending review.",
+    "selectSubmission": "Select a submission to review.",
+    "context": "Context",
+    "submittedBy": "Submitted by {name}",
+    "approve": "Approve",
+    "reject": "Reject",
+    "confirmReject": "Confirm reject",
+    "cancel": "Cancel",
+    "rejectReasonPlaceholder": "Reason for rejection (required)…",
+    "approved": "Approved and added to the pool",
+    "rejected": "Submission rejected",
+    "actionError": "Something went wrong"
   }
 }
