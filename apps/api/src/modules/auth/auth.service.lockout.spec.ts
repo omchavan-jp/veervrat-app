@@ -22,6 +22,7 @@ function makeService(redis: ReturnType<typeof makeRedis>) {
   const service = Object.create(AuthService.prototype) as AuthService;
   (service as unknown as Record<string, unknown>)['redis'] = redis;
   (service as unknown as Record<string, unknown>)['logger'] = { warn: vi.fn(), log: vi.fn() };
+  (service as unknown as Record<string, unknown>)['auditService'] = { record: vi.fn() };
   return service;
 }
 

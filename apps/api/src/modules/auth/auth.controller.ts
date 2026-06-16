@@ -24,6 +24,7 @@ import { SessionGuard } from './guards/session.guard';
 import { GoogleOAuthGuard } from './guards/google-oauth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { SkipCsrf } from '../../common/guards/csrf.guard';
+import { Audited } from '../audit/audited.decorator';
 import { LinkGoogleDto } from './dto/link-google.dto';
 import type { SessionUser, GoogleProfile } from './types/auth.types';
 
@@ -77,6 +78,7 @@ export class AuthController {
   @Post('logout')
   @UseGuards(SessionGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
+  @Audited({ action: 'auth.logout', resourceType: 'user', resourceId: (ctx) => (ctx.req.user as SessionUser | undefined)?.id ?? null })
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const token = req.cookies?.[this.cookieName] as string | undefined;
     if (token) {
@@ -88,6 +90,7 @@ export class AuthController {
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { ttl: 3600000, limit: 5 } })
+  @Audited({ action: 'auth.password_reset_request', metadata: (ctx) => ({ email: (ctx.body as { email?: string })?.email }) })
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     const status = await this.authService.forgotPassword(dto.email);
     return { status };
@@ -95,6 +98,7 @@ export class AuthController {
 
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
+  @Audited({ action: 'auth.password_change', resourceType: 'user' })
   async resetPassword(@Body() dto: ResetPasswordDto) {
     await this.authService.resetPassword(dto.token, dto.newPassword);
     return {

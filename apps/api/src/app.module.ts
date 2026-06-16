@@ -1,5 +1,5 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { ScheduleModule } from '@nestjs/schedule';
 import { LoggerModule } from 'nestjs-pino';
@@ -25,6 +25,9 @@ import { FollowsModule } from './modules/follows/follows.module';
 import { SearchModule } from './modules/search/search.module';
 import { BlogsModule } from './modules/blogs/blogs.module';
 import { VirtuesModule } from './modules/virtues/virtues.module';
+import { AuditModule } from './modules/audit/audit.module';
+import { AuditInterceptor } from './modules/audit/audit.interceptor';
+import { AuditService } from './modules/audit/audit.service';
 import { RedisModule } from './common/redis/redis.module';
 import { AppController } from './app.controller';
 import { Reflector } from '@nestjs/core';
@@ -73,6 +76,7 @@ import { CsrfGuard } from './common/guards/csrf.guard';
     SearchModule,
     BlogsModule,
     VirtuesModule,
+    AuditModule,
   ],
   controllers: [AppController],
   providers: [
@@ -81,6 +85,11 @@ import { CsrfGuard } from './common/guards/csrf.guard';
       provide: APP_GUARD,
       useFactory: (reflector: Reflector) => new CsrfGuard(reflector),
       inject: [Reflector],
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useFactory: (reflector: Reflector, audit: AuditService) => new AuditInterceptor(reflector, audit),
+      inject: [Reflector, AuditService],
     },
   ],
 })

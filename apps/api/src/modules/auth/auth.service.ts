@@ -18,6 +18,7 @@ import { REDIS_CLIENT } from '../../common/redis/redis.provider';
 import { SessionUser, AuthResult, LinkPendingResult, GoogleProfile, CreateSessionParams } from './types/auth.types';
 import { EmailService } from '../email/email.service';
 import { UsersIndexService } from '../search/users-index.service';
+import { AuditService } from '../audit/audit.service';
 import { VerifyEmailEmail, getSubject as getVerifySubject } from '../email/templates/VerifyEmailEmail';
 import { PasswordResetEmail, getSubject as getResetSubject } from '../email/templates/PasswordResetEmail';
 import { createElement } from 'react';
@@ -42,6 +43,7 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly emailService: EmailService,
     private readonly usersIndex: UsersIndexService,
+    private readonly auditService: AuditService,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {
     this.sessionTtlDays = this.configService.get<number>('SESSION_TTL_DAYS', 30);
@@ -95,24 +97,25 @@ export class AuthService {
   ): Promise<AuthResult> {
     const lockout = await this.checkLockout(email);
     if (lockout.locked) {
+      this.auditService.record({ action: 'auth.account_lockout', metadata: { email, duration_minutes: LOCKOUT_DURATION_SECONDS / 60 }, ipAddress, userAgent });
       throw new AccountLockedException(lockout.secondsRemaining);
     }
 
     const user = await this.authRepository.findUserByEmail(email);
     if (!user) {
-      await this.recordFailedLogin(email);
+      await this.recordFailedLogin(email, ipAddress, userAgent, 'no_account');
       throw new InvalidCredentialsException();
     }
 
     const emailAccount = await this.authRepository.findEmailAccountByUserId(user.id);
     if (!emailAccount?.passwordHash) {
-      await this.recordFailedLogin(email);
+      await this.recordFailedLogin(email, ipAddress, userAgent, 'no_password');
       throw new InvalidCredentialsException();
     }
 
     const passwordValid = await bcrypt.compare(password, emailAccount.passwordHash);
     if (!passwordValid) {
-      await this.recordFailedLogin(email);
+      await this.recordFailedLogin(email, ipAddress, userAgent, 'bad_password');
       throw new InvalidCredentialsException();
     }
 
@@ -128,6 +131,8 @@ export class AuthService {
       userAgent,
       ttlDays: this.sessionTtlDays,
     });
+
+    this.auditService.record({ actorId: user.id, action: 'auth.login_success', resourceType: 'user', resourceId: user.id, metadata: { method: 'credentials' }, ipAddress, userAgent });
 
     return { user: this.toSessionUser(user), sessionToken };
   }
@@ -449,7 +454,13 @@ export class AuthService {
     }
   }
 
-  async recordFailedLogin(email: string): Promise<void> {
+  async recordFailedLogin(
+    email: string,
+    ipAddress: string | null = null,
+    userAgent: string | null = null,
+    reason = 'bad_password',
+  ): Promise<void> {
+    this.auditService.record({ action: 'auth.login_failure', metadata: { email, reason }, ipAddress, userAgent });
     try {
       const key = `lockout:${email}`;
       const failures = await this.redis.hincrby(key, 'failures', 1);
@@ -458,6 +469,7 @@ export class AuthService {
         const lockedUntilMs = Date.now() + LOCKOUT_DURATION_SECONDS * 1000;
         await this.redis.hset(key, 'locked_until', lockedUntilMs.toString());
         await this.redis.expire(key, LOCKOUT_DURATION_SECONDS);
+        this.auditService.record({ action: 'auth.account_lockout', metadata: { email, duration_minutes: LOCKOUT_DURATION_SECONDS / 60 }, ipAddress, userAgent });
       }
     } catch (err) {
       this.logger.warn({ msg: 'Redis error recording failed login', error: (err as Error).message });
