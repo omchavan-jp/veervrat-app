@@ -26,6 +26,7 @@ import { SearchModule } from './modules/search/search.module';
 import { BlogsModule } from './modules/blogs/blogs.module';
 import { VirtuesModule } from './modules/virtues/virtues.module';
 import { AuditModule } from './modules/audit/audit.module';
+import { ModerationModule } from './modules/moderation/moderation.module';
 import { AuditInterceptor } from './modules/audit/audit.interceptor';
 import { AuditService } from './modules/audit/audit.service';
 import { RedisModule } from './common/redis/redis.module';
@@ -77,6 +78,7 @@ import { CsrfGuard } from './common/guards/csrf.guard';
     BlogsModule,
     VirtuesModule,
     AuditModule,
+    ModerationModule,
   ],
   controllers: [AppController],
   providers: [

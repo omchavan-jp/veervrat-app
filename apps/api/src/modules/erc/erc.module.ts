@@ -14,6 +14,6 @@ import { NotificationsModule } from '../notifications/notifications.module';
   imports: [AuthModule, JourneysModule, NotificationsModule],
   controllers: [ExposuresController, ResolutionsController, ChallengesController, ResolutionCheckinsController],
   providers: [ErcService, ErcRepository, CustomErcReviewsRepository, ResolutionCheckinsService, ResolutionCheckinsRepository],
-  exports: [ErcService],
+  exports: [ErcService, ErcRepository],
 })
 export class ErcModule {}
