@@ -4,6 +4,11 @@ import { randomBytes } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 
 const VM_INVITE_EXPIRY_DAYS = 7;
+const PLATFORM_INVITE_EXPIRY_DAYS = 30;
+
+function expiryDaysFor(type: InvitationType): number {
+  return type === InvitationType.PLATFORM ? PLATFORM_INVITE_EXPIRY_DAYS : VM_INVITE_EXPIRY_DAYS;
+}
 
 export type InvitationSlimResult = {
   id: string;
@@ -17,6 +22,7 @@ export type InvitationSlimResult = {
   channel: InvitationChannel;
   expiresAt: Date;
   acceptedAt: Date | null;
+  reminderSentAt: Date | null;
   createdAt: Date;
 };
 
@@ -33,7 +39,7 @@ export class InvitationsRepository {
     channel?: InvitationChannel;
   }): Promise<InvitationSlimResult> {
     const token = randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + VM_INVITE_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
+    const expiresAt = new Date(Date.now() + expiryDaysFor(data.type) * 24 * 60 * 60 * 1000);
     return this.prisma.invitation.create({
       data: {
         inviterId: data.inviterId,
@@ -70,6 +76,13 @@ export class InvitationsRepository {
     return this.prisma.invitation.update({
       where: { id },
       data: { status, ...(extra ?? {}) },
+    });
+  }
+
+  async markReminderSent(id: string): Promise<InvitationSlimResult> {
+    return this.prisma.invitation.update({
+      where: { id },
+      data: { reminderSentAt: new Date() },
     });
   }
 

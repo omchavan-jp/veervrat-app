@@ -176,6 +176,12 @@ export class InvitationNotPendingException extends ConflictException {
   }
 }
 
+export class InvitationReminderAlreadySentException extends ConflictException {
+  constructor() {
+    super({ error: 'INVITATION_REMINDER_ALREADY_SENT', message: 'A reminder has already been sent for this invitation.' });
+  }
+}
+
 export class InvitationNotCancellableException extends ConflictException {
   constructor() {
     super({ error: 'INVITATION_NOT_CANCELLABLE', message: 'Only pending invitations can be cancelled.' });
