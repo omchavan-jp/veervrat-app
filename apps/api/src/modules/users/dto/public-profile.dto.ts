@@ -29,6 +29,18 @@ export interface PublicProfileDto {
   guidedJourneysCompleted?: number;
 }
 
+// A single user-search hit. Identity + presence + the requester's follow status.
+// Never includes email or private-profile users.
+export interface UserSearchResultDto {
+  username: string;
+  displayName: string;
+  avatarUrl?: string | null;
+  lastActiveAt?: string;
+  isOnline?: boolean;
+  isFollowing: boolean;
+  followsYou: boolean;
+}
+
 export interface OwnProfileDto {
   id: string;
   email: string;

@@ -33,6 +33,13 @@ export class UsersController {
     return { available };
   }
 
+  // Before /:username so "search" isn't swallowed as a username param.
+  @Get('search')
+  @UseGuards(SessionGuard)
+  async search(@Query('q') q: string, @CurrentUser() user: SessionUser) {
+    return this.usersService.searchUsers(user, q ?? '');
+  }
+
   @Get('me')
   @UseGuards(SessionGuard)
   async getOwnProfile(@CurrentUser() user: SessionUser) {

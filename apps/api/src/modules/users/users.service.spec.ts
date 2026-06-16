@@ -59,11 +59,16 @@ function makeFollows() {
   };
 }
 
-function makeService(repo: ReturnType<typeof makeRepo>, follows = makeFollows()) {
+function makeIndex() {
+  return { upsert: vi.fn().mockResolvedValue(undefined), remove: vi.fn(), search: vi.fn().mockResolvedValue([]) };
+}
+
+function makeService(repo: ReturnType<typeof makeRepo>, follows = makeFollows(), index = makeIndex()) {
   const service = Object.create(UsersService.prototype) as UsersService;
   const s = service as unknown as Record<string, unknown>;
   s['usersRepository'] = repo;
   s['followsService'] = follows;
+  s['usersIndex'] = index;
   return service;
 }
 
@@ -258,5 +263,60 @@ describe('UsersService — lastActiveAt field', () => {
 
     const result = await svc.getPublicProfile('testuser');
     expect('lastActiveAt' in result).toBe(false);
+  });
+});
+
+describe('UsersService — searchUsers', () => {
+  const REQUESTER = { id: 'req-1' } as Parameters<UsersService['searchUsers']>[0];
+
+  function makeSearchService(opts: {
+    indexIds?: string[];
+    byEmail?: { id: string } | null;
+    many?: Array<Record<string, unknown>>;
+  }) {
+    const service = Object.create(UsersService.prototype) as UsersService;
+    const s = service as unknown as Record<string, unknown>;
+    s['usersRepository'] = {
+      findByEmail: vi.fn().mockResolvedValue(opts.byEmail ?? null),
+      findManyByIds: vi.fn().mockResolvedValue(opts.many ?? []),
+    };
+    s['usersIndex'] = { search: vi.fn().mockResolvedValue(opts.indexIds ?? []) };
+    s['followsService'] = { getStatus: vi.fn().mockResolvedValue({ isFollowing: false, followsYou: false }) };
+    return service;
+  }
+
+  it('returns empty for a query shorter than 2 chars', async () => {
+    const svc = makeSearchService({});
+    expect(await svc.searchUsers(REQUESTER, 'a')).toEqual([]);
+  });
+
+  it('matches an exact full email (DB), prepended before index hits', async () => {
+    const svc = makeSearchService({
+      byEmail: { id: 'email-hit' },
+      indexIds: ['fuzzy-hit'],
+      many: [
+        { id: 'email-hit', username: 'om', displayName: 'Om', avatarUrl: null, profilePrivate: false, showLastActive: false, showOnlineIndicator: false, lastActiveAt: null },
+        { id: 'fuzzy-hit', username: 'omkar', displayName: 'Omkar', avatarUrl: null, profilePrivate: false, showLastActive: false, showOnlineIndicator: false, lastActiveAt: null },
+      ],
+    });
+    const res = await svc.searchUsers(REQUESTER, 'om@example.com');
+    expect(res.map((r) => r.username)).toEqual(['om', 'omkar']);
+  });
+
+  it('excludes private profiles from hydrated results', async () => {
+    const svc = makeSearchService({
+      indexIds: ['pub', 'priv'],
+      many: [
+        { id: 'pub', username: 'pub', displayName: 'Pub', avatarUrl: null, profilePrivate: false, showLastActive: false, showOnlineIndicator: false, lastActiveAt: null },
+        { id: 'priv', username: 'priv', displayName: 'Priv', avatarUrl: null, profilePrivate: true, showLastActive: false, showOnlineIndicator: false, lastActiveAt: null },
+      ],
+    });
+    const res = await svc.searchUsers(REQUESTER, 'pu');
+    expect(res.map((r) => r.username)).toEqual(['pub']);
+  });
+
+  it('returns empty when the index yields nothing and no email match', async () => {
+    const svc = makeSearchService({ indexIds: [], byEmail: null });
+    expect(await svc.searchUsers(REQUESTER, 'zzz')).toEqual([]);
   });
 });

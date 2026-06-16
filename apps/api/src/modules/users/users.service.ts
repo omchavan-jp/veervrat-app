@@ -1,8 +1,10 @@
-import { Injectable, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, Inject, forwardRef, Logger, type OnModuleInit } from '@nestjs/common';
 import { UsersRepository } from './users.repository';
+import { UsersIndexService } from '../search/users-index.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateVisibilityDto } from './dto/update-visibility.dto';
-import type { OwnProfileDto, PublicProfileDto } from './dto/public-profile.dto';
+import type { OwnProfileDto, PublicProfileDto, UserSearchResultDto } from './dto/public-profile.dto';
+import type { SessionUser } from '../auth/types/auth.types';
 import { parseVisibility, isFieldVisible } from './profile-visibility';
 import { FollowsService } from '../follows/follows.service';
 import { ExperienceLogsService } from '../experience-logs/experience-logs.service';
@@ -15,13 +17,36 @@ const USERNAME_REGEX = /^[a-z0-9_]{3,30}$/;
 const ONLINE_THRESHOLD_MINUTES = 5;
 
 @Injectable()
-export class UsersService {
+export class UsersService implements OnModuleInit {
+  private readonly logger = new Logger('UsersService');
+
   constructor(
     private readonly usersRepository: UsersRepository,
     @Inject(forwardRef(() => FollowsService))
     private readonly followsService: FollowsService,
     private readonly experienceLogsService: ExperienceLogsService,
+    private readonly usersIndex: UsersIndexService,
   ) {}
+
+  // One-shot seed so search works without a manual reindex (bounded; fine at scale).
+  async onModuleInit(): Promise<void> {
+    try {
+      const users = await this.usersRepository.listForIndex();
+      await Promise.all(users.map((u) => this.usersIndex.upsert(u)));
+    } catch (error) {
+      this.logger.warn({ msg: 'user index seed failed', error: error instanceof Error ? error.message : String(error) });
+    }
+  }
+
+  // Fire-after-write index sync. Best-effort (the index service swallows failures).
+  syncToIndex(user: { id: string; username: string; displayName: string; profilePrivate: boolean }): void {
+    void this.usersIndex.upsert({
+      id: user.id,
+      username: user.username,
+      displayName: user.displayName,
+      isPublic: !user.profilePrivate,
+    });
+  }
 
   async getOwnProfile(userId: string): Promise<OwnProfileDto> {
     const user = await this.usersRepository.findById(userId);
@@ -48,6 +73,7 @@ export class UsersService {
       language: dto.language,
     });
 
+    this.syncToIndex(user);
     return this.toOwnProfileDto(user);
   }
 
@@ -120,6 +146,47 @@ export class UsersService {
     return this.experienceLogsService.getPublicByAuthor(user.id, cursor);
   }
 
+  // Auth'd user search: typo-tolerant name/username via Meili + exact full-email via DB
+  // (email never indexed). Excludes private profiles + self. Returns presence + follow
+  // status. <2 chars → empty; backend down → empty (degrade, never error).
+  async searchUsers(requester: SessionUser, query: string): Promise<UserSearchResultDto[]> {
+    const q = query.trim();
+    if (q.length < 2) return [];
+
+    const ids: string[] = [];
+
+    // Exact full-email match (strongly consistent, never via the index).
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(q)) {
+      const byEmail = await this.usersRepository.findByEmail(q.toLowerCase());
+      if (byEmail && byEmail.id !== requester.id) ids.push(byEmail.id);
+    }
+
+    for (const id of await this.usersIndex.search(q, requester.id)) {
+      if (!ids.includes(id)) ids.push(id);
+    }
+    if (ids.length === 0) return [];
+
+    const users = await this.usersRepository.findManyByIds(ids);
+    // Preserve relevance order (exact-email first, then Meili), drop private profiles.
+    const byId = new Map(users.map((u) => [u.id, u]));
+    const ordered = ids.map((id) => byId.get(id)).filter((u): u is NonNullable<typeof u> => !!u && !u.profilePrivate);
+
+    const statuses = await Promise.all(ordered.map((u) => this.followsService.getStatus(requester.id, u.id)));
+
+    return ordered.map((u, i) => {
+      const result: UserSearchResultDto = {
+        username: u.username,
+        displayName: u.displayName,
+        avatarUrl: u.avatarUrl,
+        isFollowing: statuses[i].isFollowing,
+        followsYou: statuses[i].followsYou,
+      };
+      if (u.showLastActive && u.lastActiveAt) result.lastActiveAt = u.lastActiveAt.toISOString();
+      if (u.showOnlineIndicator) result.isOnline = this.computeIsOnline(u.lastActiveAt);
+      return result;
+    });
+  }
+
   async updateVisibility(userId: string, dto: UpdateVisibilityDto): Promise<OwnProfileDto> {
     const existing = await this.usersRepository.findById(userId);
     if (!existing) throw new EntityNotFoundException('User', userId);
@@ -133,6 +200,8 @@ export class UsersService {
         : undefined,
     });
 
+    // Privacy change flips index visibility — re-sync.
+    this.syncToIndex(user);
     return this.toOwnProfileDto(user);
   }
 
@@ -142,6 +211,12 @@ export class UsersService {
 
   async findByUsername(username: string) {
     return this.usersRepository.findIdByUsername(username);
+  }
+
+  // Username → identity incl. email. For server-side flows that need the email of a
+  // user the client found by username (e.g. sending a VM invite). Not exposed via API.
+  async findByUsernameWithEmail(username: string) {
+    return this.usersRepository.findByUsernameWithEmail(username);
   }
 
   async findById(id: string) {

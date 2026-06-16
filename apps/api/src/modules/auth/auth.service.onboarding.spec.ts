@@ -40,6 +40,7 @@ function makeService(repo: ReturnType<typeof makeRepo>) {
   (service as unknown as Record<string, unknown>)['authRepository'] = repo;
   (service as unknown as Record<string, unknown>)['redis'] = { del: vi.fn() };
   (service as unknown as Record<string, unknown>)['logger'] = { warn: vi.fn() };
+  (service as unknown as Record<string, unknown>)['usersIndex'] = { upsert: vi.fn().mockResolvedValue(undefined) };
   return service;
 }
 

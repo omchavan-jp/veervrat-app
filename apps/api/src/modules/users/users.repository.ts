@@ -178,6 +178,45 @@ export class UsersRepository {
     });
   }
 
+  async findByUsernameWithEmail(username: string) {
+    return this.prisma.user.findFirst({
+      where: { username: username.toLowerCase(), deletedAt: null },
+      select: { id: true, username: true, email: true },
+    });
+  }
+
+  // All non-deleted users, shaped for the search index seed.
+  async listForIndex() {
+    const users = await this.prisma.user.findMany({
+      where: { deletedAt: null },
+      select: { id: true, username: true, displayName: true, profilePrivate: true },
+    });
+    return users.map((u) => ({
+      id: u.id,
+      username: u.username,
+      displayName: u.displayName,
+      isPublic: !u.profilePrivate,
+    }));
+  }
+
+  // Hydrate search hits — identity, avatar, presence, and privacy flags.
+  async findManyByIds(ids: string[]) {
+    if (ids.length === 0) return [];
+    return this.prisma.user.findMany({
+      where: { id: { in: ids }, deletedAt: null },
+      select: {
+        id: true,
+        username: true,
+        displayName: true,
+        avatarUrl: true,
+        profilePrivate: true,
+        showLastActive: true,
+        showOnlineIndicator: true,
+        lastActiveAt: true,
+      },
+    });
+  }
+
   async isUsernameTaken(username: string, excludeUserId: string): Promise<boolean> {
     const existing = await this.prisma.user.findFirst({
       where: {
