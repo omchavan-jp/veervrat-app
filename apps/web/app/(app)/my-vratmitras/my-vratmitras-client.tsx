@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { api } from '@/lib/api/client';
-import { MessageSquare, Users } from 'lucide-react';
+import { MessageSquare, Users, UserPlus } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { EmptyState } from '@/components/ui/empty-state';
 
@@ -42,13 +42,22 @@ export function MyVratmitrasClient() {
 
   return (
     <div className="mx-auto w-full max-w-4xl">
-      <header className="mb-6">
-        <div className="mb-1 font-mono text-[11px] uppercase tracking-[0.14em] text-accent">
-          {t('common.nav.groupGuidance')}
+      <header className="mb-6 flex items-end justify-between gap-4">
+        <div>
+          <div className="mb-1 font-mono text-[11px] uppercase tracking-[0.14em] text-accent">
+            {t('common.nav.groupGuidance')}
+          </div>
+          <h1 className="font-display text-[clamp(28px,3vw,40px)] leading-tight tracking-tight">
+            {t('my_vratmitras.title')}
+          </h1>
         </div>
-        <h1 className="font-display text-[clamp(28px,3vw,40px)] leading-tight tracking-tight">
-          {t('my_vratmitras.title')}
-        </h1>
+        <Link
+          href="/invitations"
+          className="inline-flex shrink-0 items-center gap-2 rounded-full bg-accent px-4 py-2 text-[13px] font-medium text-bg transition-colors hover:bg-accent-hover"
+        >
+          <UserPlus className="h-4 w-4" />
+          {t('invitations_flow.inviteCta')}
+        </Link>
       </header>
 
       {isLoading && (

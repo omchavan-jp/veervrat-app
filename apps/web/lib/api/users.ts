@@ -62,6 +62,16 @@ export type PublicProfile = {
   guidedJourneysCompleted?: number;
 };
 
+export type UserSearchResult = {
+  username: string;
+  displayName: string;
+  avatarUrl?: string | null;
+  lastActiveAt?: string;
+  isOnline?: boolean;
+  isFollowing: boolean;
+  followsYou: boolean;
+};
+
 export type UpdateVisibilityInput = {
   profilePrivate?: boolean;
   showLastActive?: boolean;
@@ -92,6 +102,9 @@ export const usersApi = {
         `/users/${encodeURIComponent(username)}/experience-logs${cursor ? `?cursor=${cursor}` : ''}`,
       )
       .then((r) => r.data),
+
+  search: (q: string) =>
+    api.get<Wrapped<UserSearchResult[]>>(`/users/search?q=${encodeURIComponent(q)}`).then((r) => r.data),
 
   follow: (username: string) =>
     api.post<Wrapped<{ following: boolean }>>(`/users/${encodeURIComponent(username)}/follow`).then((r) => r.data),
