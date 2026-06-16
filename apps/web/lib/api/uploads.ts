@@ -40,4 +40,14 @@ export const uploadsApi = {
     });
     return res.data;
   },
+
+  uploadBlogImage: async (file: File): Promise<ChatImageUploadResult> => {
+    const fileBuffer = await fileToBase64(file);
+    const res = await api.post<Wrapped<ChatImageUploadResult>>('/uploads/blog', {
+      fileBuffer,
+      filename: file.name,
+      mimeType: file.type,
+    });
+    return res.data;
+  },
 };
