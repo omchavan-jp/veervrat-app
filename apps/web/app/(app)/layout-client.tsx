@@ -14,6 +14,7 @@ import {
   Compass,
   PenLine,
   Newspaper,
+  Sparkles,
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
@@ -37,6 +38,7 @@ const PRACTICE: NavItem[] = [
   { href: '/dashboard', labelKey: 'dashboard', icon: LayoutDashboard },
   { href: '/study', labelKey: 'studyFlow', icon: Search },
   { href: '/journeys', labelKey: 'journeys', icon: BookOpen },
+  { href: '/virtues', labelKey: 'virtues', icon: Sparkles },
   { href: '/experiences', labelKey: 'myExperiences', icon: PenLine },
   { href: '/community/blogs', labelKey: 'community', icon: Newspaper },
 ];

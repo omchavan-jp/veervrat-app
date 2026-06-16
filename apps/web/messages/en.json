@@ -20,7 +20,8 @@
       "myVratarthis": "My Vratarthis",
       "myExperiences": "My Experiences",
       "logIn": "Log in",
-      "community": "Community"
+      "community": "Community",
+      "virtues": "Virtues & Weaknesses"
     },
     "actions": {
       "save": "Save",
@@ -756,5 +757,27 @@
     "delete": "Delete",
     "report": "Report",
     "reported": "Reported for review"
+  },
+  "virtues": {
+    "title": "Virtues & Weaknesses",
+    "subtitle": "Explore the virtues to cultivate and the weaknesses that reveal them.",
+    "virtuesSection": "Virtues",
+    "weaknessesSection": "Weaknesses",
+    "subvirtueCount": "{count, plural, one {# subvirtue} other {# subvirtues}}",
+    "subvirtues": "Subvirtues",
+    "sentences": "Sentences",
+    "notFound": "Not found",
+    "loadError": "Couldn't load content",
+    "backToBrowser": "Virtues & Weaknesses",
+    "partOf": "Part of {virtue}",
+    "tacklesWeaknesses": "Helps tackle these weaknesses",
+    "cultivateToTackle": "Cultivate these virtues",
+    "cultivateHint": "Cultivating the following can help you tackle this weakness.",
+    "activeJourney": "You have an active journey for this sentence",
+    "sentenceCtaHint": "This is informational. To work on this, take a test for a related weakness.",
+    "takeTest": "Take a test",
+    "takeTestForWeakness": "Take the test for this weakness",
+    "loginToTest": "Log in to take a test.",
+    "login": "Log in"
   }
 }

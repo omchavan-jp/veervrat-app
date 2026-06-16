@@ -20,7 +20,8 @@
       "myVratarthis": "माझे व्रतार्थी",
       "myExperiences": "माझे अनुभव",
       "logIn": "लॉग इन करा",
-      "community": "समुदाय"
+      "community": "समुदाय",
+      "virtues": "सद्गुण व दुर्गुण"
     },
     "actions": {
       "save": "जतन करा",
@@ -756,5 +757,27 @@
     "delete": "हटवा",
     "report": "तक्रार करा",
     "reported": "पुनरावलोकनासाठी कळवले"
+  },
+  "virtues": {
+    "title": "सद्गुण व दुर्गुण",
+    "subtitle": "जोपासायचे सद्गुण आणि ते उघड करणारे दुर्गुण एक्सप्लोर करा.",
+    "virtuesSection": "सद्गुण",
+    "weaknessesSection": "दुर्गुण",
+    "subvirtueCount": "{count, plural, one {# उपगुण} other {# उपगुण}}",
+    "subvirtues": "उपगुण",
+    "sentences": "वाक्ये",
+    "notFound": "सापडले नाही",
+    "loadError": "सामग्री लोड करता आली नाही",
+    "backToBrowser": "सद्गुण व दुर्गुण",
+    "partOf": "{virtue} चा भाग",
+    "tacklesWeaknesses": "हे दुर्गुण हाताळण्यास मदत करते",
+    "cultivateToTackle": "हे सद्गुण जोपासा",
+    "cultivateHint": "पुढील गोष्टी जोपासल्याने हा दुर्गुण हाताळण्यास मदत होऊ शकते.",
+    "activeJourney": "या वाक्यासाठी तुमचा सक्रिय प्रवास आहे",
+    "sentenceCtaHint": "ही केवळ माहिती आहे. यावर काम करण्यासाठी, संबंधित दुर्गुणाची चाचणी द्या.",
+    "takeTest": "चाचणी द्या",
+    "takeTestForWeakness": "या दुर्गुणाची चाचणी द्या",
+    "loginToTest": "चाचणी देण्यासाठी लॉग इन करा.",
+    "login": "लॉग इन करा"
   }
 }
