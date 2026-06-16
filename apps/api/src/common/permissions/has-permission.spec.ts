@@ -488,8 +488,11 @@ describe('comment.delete', () => {
   it('comment author can delete their own comment', () => {
     expect(hasPermission(VA, { type: 'blog_comment', blog: otherBlog, comment: ownComment }, 'comment.delete')).toBe(true);
   });
-  it('blog author cannot delete another user\'s comment (use comment.hide instead)', () => {
-    expect(hasPermission(VA, { type: 'blog_comment', blog: ownBlog, comment: otherComment }, 'comment.delete')).toBe(false);
+  it('blog author can delete a comment on their own blog (spec/16)', () => {
+    expect(hasPermission(VA, { type: 'blog_comment', blog: ownBlog, comment: otherComment }, 'comment.delete')).toBe(true);
+  });
+  it('moderator can delete any comment on any blog', () => {
+    expect(hasPermission(MOD, { type: 'blog_comment', blog: otherBlog, comment: otherComment }, 'comment.delete')).toBe(true);
   });
   it('random user cannot delete an unrelated comment', () => {
     expect(hasPermission(VA, { type: 'blog_comment', blog: otherBlog, comment: otherComment }, 'comment.delete')).toBe(false);
@@ -499,6 +502,9 @@ describe('comment.delete', () => {
 describe('comment.hide', () => {
   it('blog author can hide a comment on their own blog', () => {
     expect(hasPermission(VA, { type: 'blog_comment', blog: ownBlog, comment: otherComment }, 'comment.hide')).toBe(true);
+  });
+  it('moderator can hide any comment on any blog', () => {
+    expect(hasPermission(MOD, { type: 'blog_comment', blog: otherBlog, comment: otherComment }, 'comment.hide')).toBe(true);
   });
   it('random user cannot hide a comment on another blog', () => {
     expect(hasPermission(VA, { type: 'blog_comment', blog: otherBlog, comment: otherComment }, 'comment.hide')).toBe(false);

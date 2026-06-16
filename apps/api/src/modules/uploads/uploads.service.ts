@@ -19,7 +19,7 @@ interface UploadRequest {
   roomId?: string;
 }
 
-export type UploadPurpose = 'chat' | 'experience';
+export type UploadPurpose = 'chat' | 'experience' | 'blog';
 
 const EXT_BY_TYPE: Record<string, string> = {
   'image/jpeg': 'jpg',

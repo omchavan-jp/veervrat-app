@@ -234,13 +234,17 @@ function checkLayerOne(
 
     case 'comment.delete': {
       if (resource.type !== 'blog_comment') return false;
-      return resource.comment.authorId === user.id;
+      // Comment author, the blog author, or a moderator (spec/16 + spec/05 Layer 2).
+      if (resource.comment.authorId === user.id) return true;
+      if (resource.blog.authorId === user.id) return true;
+      return isAdminOrModerator(user);
     }
 
     case 'comment.hide': {
       if (resource.type !== 'blog_comment') return false;
-      // Blog author can hide any comment on their own blog
-      return resource.blog.authorId === user.id;
+      // Blog author can hide any comment on their own blog; moderators on any blog.
+      if (resource.blog.authorId === user.id) return true;
+      return isAdminOrModerator(user);
     }
 
     case 'comment.report':

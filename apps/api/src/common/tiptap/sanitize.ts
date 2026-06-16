@@ -165,3 +165,17 @@ export function sanitizeTiptapDoc(input: unknown): TiptapDoc {
 
   return { type: 'doc', content };
 }
+
+// Flattens a Tiptap doc to plain text for search indexing / excerpts. Walks the AST
+// and concatenates text nodes, space-joining block boundaries.
+export function tiptapToPlainText(doc: unknown): string {
+  const parts: string[] = [];
+  const walk = (node: unknown): void => {
+    if (!node || typeof node !== 'object') return;
+    const n = node as TiptapNode;
+    if (n.type === 'text' && typeof n.text === 'string') parts.push(n.text);
+    if (Array.isArray(n.content)) n.content.forEach(walk);
+  };
+  walk(doc);
+  return parts.join(' ').replace(/\s+/g, ' ').trim();
+}

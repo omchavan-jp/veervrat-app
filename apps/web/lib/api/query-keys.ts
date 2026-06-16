@@ -46,4 +46,10 @@ export const queryKeys = {
   invitations: {
     list: ['invitations', 'list'] as const,
   },
+  blogs: {
+    list: ['blogs', 'list'] as const,
+    mine: ['blogs', 'mine'] as const,
+    detail: (id: string) => ['blogs', id] as const,
+    search: (q: string) => ['blogs', 'search', q] as const,
+  },
 } as const;
