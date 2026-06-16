@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { sanitizeTiptapDoc, InvalidTiptapContentError } from './sanitize';
+import { sanitizeTiptapDoc, InvalidTiptapContentError, tiptapToPlainText } from './sanitize';
 
 const doc = (...content: unknown[]) => ({ type: 'doc', content });
 const para = (...content: unknown[]) => ({ type: 'paragraph', content });
@@ -74,5 +74,23 @@ describe('sanitizeTiptapDoc — entity-reference (mention) nodes', () => {
     );
     const label = out.content[0].content?.[0]?.attrs?.label as string;
     expect(label.length).toBe(120);
+  });
+});
+
+describe('tiptapToPlainText', () => {
+  it('flattens text nodes across blocks', () => {
+    const doc = {
+      type: 'doc',
+      content: [
+        { type: 'paragraph', content: [{ type: 'text', text: 'Hello' }] },
+        { type: 'paragraph', content: [{ type: 'text', text: 'world' }] },
+      ],
+    };
+    expect(tiptapToPlainText(doc)).toBe('Hello world');
+  });
+
+  it('returns empty string for empty/invalid input', () => {
+    expect(tiptapToPlainText(null)).toBe('');
+    expect(tiptapToPlainText({ type: 'doc', content: [] })).toBe('');
   });
 });
