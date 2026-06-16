@@ -16,6 +16,7 @@ import { SessionGuard } from '../auth/guards/session.guard';
 import { OptionalSessionGuard } from '../auth/guards/optional-session.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { SessionUser } from '../auth/types/auth.types';
+import { Audited } from '../audit/audited.decorator';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
@@ -82,6 +83,12 @@ export class BlogsController {
   @Delete(':id/comments/:cid')
   @UseGuards(SessionGuard)
   @HttpCode(HttpStatus.OK)
+  @Audited({
+    action: 'moderator.delete_comment',
+    resourceType: 'blog_comment',
+    resourceIdParam: 'cid',
+    metadata: (ctx) => ({ blog_id: ctx.params.id }),
+  })
   deleteComment(@CurrentUser() user: SessionUser, @Param('id') id: string, @Param('cid') cid: string) {
     return this.blogsService.deleteComment(user, id, cid);
   }
@@ -89,6 +96,12 @@ export class BlogsController {
   @Post(':id/comments/:cid/hide')
   @UseGuards(SessionGuard)
   @HttpCode(HttpStatus.OK)
+  @Audited({
+    action: 'moderator.hide_comment',
+    resourceType: 'blog_comment',
+    resourceIdParam: 'cid',
+    metadata: (ctx) => ({ blog_id: ctx.params.id }),
+  })
   hideComment(@CurrentUser() user: SessionUser, @Param('id') id: string, @Param('cid') cid: string) {
     return this.blogsService.hideComment(user, id, cid);
   }
