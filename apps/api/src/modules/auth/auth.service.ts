@@ -17,6 +17,7 @@ import {
 import { REDIS_CLIENT } from '../../common/redis/redis.provider';
 import { SessionUser, AuthResult, LinkPendingResult, GoogleProfile, CreateSessionParams } from './types/auth.types';
 import { EmailService } from '../email/email.service';
+import { UsersIndexService } from '../search/users-index.service';
 import { VerifyEmailEmail, getSubject as getVerifySubject } from '../email/templates/VerifyEmailEmail';
 import { PasswordResetEmail, getSubject as getResetSubject } from '../email/templates/PasswordResetEmail';
 import { createElement } from 'react';
@@ -40,6 +41,7 @@ export class AuthService {
     private readonly authRepository: AuthRepository,
     private readonly configService: ConfigService,
     private readonly emailService: EmailService,
+    private readonly usersIndex: UsersIndexService,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {
     this.sessionTtlDays = this.configService.get<number>('SESSION_TTL_DAYS', 30);
@@ -388,6 +390,14 @@ export class AuthService {
       language: language as 'EN' | 'MR' | undefined,
       gender,
       dob: dob ? new Date(dob) : undefined,
+    });
+    // Username/displayName are first set here — index the user for search. A freshly
+    // set-up account is public by default; a later privacy toggle re-syncs via UsersService.
+    void this.usersIndex.upsert({
+      id: user.id,
+      username: user.username,
+      displayName: user.displayName,
+      isPublic: true,
     });
     return this.toSessionUser(user);
   }

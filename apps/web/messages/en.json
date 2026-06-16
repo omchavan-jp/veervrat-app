@@ -672,5 +672,48 @@
     "poolEmptyHint": "Be the first to share a reflection publicly.",
     "loading": "Loading…",
     "loadMore": "Load more"
+  },
+  "invitations_flow": {
+    "title": "Invite a Vratmitra",
+    "subtitle": "Search for someone on Veervrat, or invite anyone by email.",
+    "inviteCta": "Invite",
+    "searchPlaceholder": "Search by name, username, or email…",
+    "searching": "Searching…",
+    "noResults": "No one found. Enter a full email to invite them to the platform.",
+    "inviteByEmail": "Invite {email} to join Veervrat",
+    "online": "online",
+    "following": "Following",
+    "scope": "Invite as",
+    "scopeOption": {
+      "VM_GLOBAL": "Global Vratmitra",
+      "PLATFORM": "Platform invite"
+    },
+    "sendInvite": "Send invitation",
+    "clear": "Clear selection",
+    "sent": "Invitation sent",
+    "sendError": "Couldn't send the invitation",
+    "yourInvitations": "Your invitations",
+    "noInvitations": "No invitations yet",
+    "noInvitationsHint": "People you invite will appear here with their status.",
+    "type": {
+      "PLATFORM": "Platform invite",
+      "VM_GLOBAL": "Global Vratmitra",
+      "VM_JOURNEY": "Journey Vratmitra"
+    },
+    "status": {
+      "PENDING": "Pending",
+      "ACCEPTED": "Accepted",
+      "DECLINED": "Declined",
+      "EXPIRED": "Expired",
+      "CANCELLED": "Cancelled"
+    },
+    "sendReminder": "Send reminder",
+    "reminderAlreadySent": "Reminder sent",
+    "reminderSent": "Reminder sent",
+    "reminderError": "Couldn't send the reminder",
+    "share": "Share message",
+    "cancel": "Cancel",
+    "copy": "Copy",
+    "copied": "Copied"
   }
 }

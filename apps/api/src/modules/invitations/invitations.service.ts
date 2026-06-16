@@ -15,6 +15,7 @@ import {
   InvitationExpiredException,
   InvitationNotPendingException,
   InvitationNotCancellableException,
+  InvitationReminderAlreadySentException,
   PendingGlobalVmInviteException,
 } from '../../common/exceptions/app.exceptions';
 import type { SessionUser } from '../auth/types/auth.types';
@@ -22,6 +23,7 @@ import { isVa } from '../../common/permissions/types';
 import { SendInvitationDto } from './dto/send-invitation.dto';
 import { VmInvitationEmail, getSubject as getVmInviteSubject } from '../email/templates/VmInvitationEmail';
 import { VmInvitationDeclinedEmail, getSubject as getDeclinedSubject } from '../email/templates/VmInvitationDeclinedEmail';
+import { PlatformInvitationEmail, getSubject as getPlatformInviteSubject } from '../email/templates/PlatformInvitationEmail';
 
 @Injectable()
 export class InvitationsService {
@@ -40,9 +42,14 @@ export class InvitationsService {
   }
 
   async sendVmInvitation(user: SessionUser, dto: SendInvitationDto) {
-    if (!hasPermission(user, { type: 'platform' }, 'vm_invitation.send')) {
+    // Platform invites: any authenticated user (spec/13). VM invites: VA-only.
+    if (dto.type !== InvitationType.PLATFORM && !hasPermission(user, { type: 'platform' }, 'vm_invitation.send')) {
       throw new AccessDeniedException();
     }
+
+    // Resolve the invitee email: from a username (existing user, email not exposed to
+    // the client) or directly from a supplied email. One is required.
+    const inviteeEmail = await this.resolveInviteeEmail(dto);
 
     if (dto.type === InvitationType.VM_GLOBAL) {
       const existing = await this.invitationsRepository.findPendingGlobalVmByInviter(user.id);
@@ -57,29 +64,22 @@ export class InvitationsService {
       }
     }
 
-    const invitee = await this.usersService.findByEmail(dto.inviteeEmail);
+    const invitee = await this.usersService.findByEmail(inviteeEmail);
 
     const invitation = await this.invitationsRepository.create({
       inviterId: user.id,
-      inviteeEmail: dto.inviteeEmail,
+      inviteeEmail,
       inviteeId: invitee?.id ?? null,
       type: dto.type,
-      scopeId: dto.scopeId ?? null,
+      scopeId: dto.type === InvitationType.PLATFORM ? null : dto.scopeId ?? null,
     });
 
-    const acceptUrl = `${this.frontendUrl}/invitations/${invitation.token}/accept`;
     const lang = (invitee?.language ?? 'EN') as 'EN' | 'MR';
-    const { html, text } = await this.emailService.renderTemplate(
-      createElement(VmInvitationEmail, {
-        vaDisplayName: user.displayName,
-        scope: dto.type === InvitationType.VM_GLOBAL ? 'global' : 'journey',
-        acceptUrl,
-        language: lang,
-      }),
-    );
-    this.emailService.sendNotification(dto.inviteeEmail, getVmInviteSubject(lang), html, text);
+    await this.sendInvitationEmail(invitation, user.displayName, lang);
 
-    if (invitee) {
+    // Only an existing platform user gets an in-app notification; a VM invite to a
+    // non-user is delivered purely by email until they sign up.
+    if (invitee && dto.type !== InvitationType.PLATFORM) {
       void this.notificationsService.create(
         invitee.id,
         user.id,
@@ -89,7 +89,70 @@ export class InvitationsService {
       );
     }
 
-    return invitation;
+    return { ...invitation, shareMessage: this.buildShareMessage(invitation, user.displayName) };
+  }
+
+  // A search-found user is invited by username (email not exposed client-side); anyone
+  // else by email. Exactly one path must yield an email.
+  private async resolveInviteeEmail(dto: SendInvitationDto): Promise<string> {
+    if (dto.inviteeUsername) {
+      const target = await this.usersService.findByUsernameWithEmail(dto.inviteeUsername);
+      if (!target) throw new EntityNotFoundException('User', dto.inviteeUsername);
+      return target.email;
+    }
+    if (dto.inviteeEmail) return dto.inviteeEmail.toLowerCase();
+    throw new AccessDeniedException();
+  }
+
+  // Re-sends a pending invitation's email — once only (spec/13). Inviter-only.
+  async sendReminder(user: SessionUser, id: string) {
+    const invitation = await this.invitationsRepository.findById(id);
+    if (!invitation) throw new EntityNotFoundException('Invitation', id);
+    if (invitation.inviterId !== user.id) throw new AccessDeniedException();
+    if (invitation.status !== InvitationStatus.PENDING) throw new InvitationNotPendingException();
+    if (invitation.reminderSentAt) throw new InvitationReminderAlreadySentException();
+
+    const invitee = await this.usersService.findByEmail(invitation.inviteeEmail);
+    const lang = (invitee?.language ?? 'EN') as 'EN' | 'MR';
+    await this.sendInvitationEmail(invitation, user.displayName, lang);
+    return this.invitationsRepository.markReminderSent(id);
+  }
+
+  // Sends the type-appropriate invitation email (VM accept-link or platform signup-link).
+  private async sendInvitationEmail(
+    invitation: { token: string; type: InvitationType; inviteeEmail: string },
+    inviterDisplayName: string,
+    lang: 'EN' | 'MR',
+  ) {
+    if (invitation.type === InvitationType.PLATFORM) {
+      const signupUrl = `${this.frontendUrl}/signup?invite=${invitation.token}`;
+      const { html, text } = await this.emailService.renderTemplate(
+        createElement(PlatformInvitationEmail, { inviterDisplayName, signupUrl, language: lang }),
+      );
+      this.emailService.sendNotification(invitation.inviteeEmail, getPlatformInviteSubject(lang), html, text);
+      return;
+    }
+    const acceptUrl = `${this.frontendUrl}/invitations/${invitation.token}/accept`;
+    const { html, text } = await this.emailService.renderTemplate(
+      createElement(VmInvitationEmail, {
+        vaDisplayName: inviterDisplayName,
+        scope: invitation.type === InvitationType.VM_GLOBAL ? 'global' : 'journey',
+        acceptUrl,
+        language: lang,
+      }),
+    );
+    this.emailService.sendNotification(invitation.inviteeEmail, getVmInviteSubject(lang), html, text);
+  }
+
+  // Auto-generated, copy/paste shareable message (spec/13) — editable client-side.
+  private buildShareMessage(invitation: { token: string; type: InvitationType }, inviterDisplayName: string): string {
+    const url =
+      invitation.type === InvitationType.PLATFORM
+        ? `${this.frontendUrl}/signup?invite=${invitation.token}`
+        : `${this.frontendUrl}/invitations/${invitation.token}/accept`;
+    return invitation.type === InvitationType.PLATFORM
+      ? `${inviterDisplayName} has invited you to join Veervrat — a companion for self-development. Join here: ${url}`
+      : `${inviterDisplayName} has invited you to be their vratmitra (mentor) on Veervrat. Accept here: ${url}`;
   }
 
   async acceptInvitation(user: SessionUser, token: string) {
@@ -172,6 +235,10 @@ export class InvitationsService {
   }
 
   async listInvitations(user: SessionUser) {
-    return this.invitationsRepository.listByInviter(user.id);
+    const invitations = await this.invitationsRepository.listByInviter(user.id);
+    return invitations.map((inv) => ({
+      ...inv,
+      shareMessage: this.buildShareMessage(inv, user.displayName),
+    }));
   }
 }

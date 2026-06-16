@@ -25,6 +25,8 @@ import * as Joi from 'joi';
         S3_ACCESS_KEY: Joi.string().optional(),
         S3_SECRET_KEY: Joi.string().optional(),
         S3_PUBLIC_URL: Joi.string().optional(),
+        MEILI_HOST: Joi.string().optional(),
+        MEILI_MASTER_KEY: Joi.string().optional(),
       }),
       validationOptions: {
         abortEarly: false,

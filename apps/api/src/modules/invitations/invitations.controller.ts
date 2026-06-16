@@ -46,6 +46,15 @@ export class InvitationsController {
     return this.invitationsService.declineInvitation(user, token);
   }
 
+  @Post(':id/reminder')
+  @HttpCode(200)
+  sendReminder(
+    @CurrentUser() user: SessionUser,
+    @Param('id') id: string,
+  ) {
+    return this.invitationsService.sendReminder(user, id);
+  }
+
   @Delete(':id')
   @HttpCode(200)
   cancelInvitation(

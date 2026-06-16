@@ -7,6 +7,7 @@ import {
   InvitationExpiredException,
   InvitationNotPendingException,
   InvitationNotCancellableException,
+  InvitationReminderAlreadySentException,
   PendingGlobalVmInviteException,
 } from '../../common/exceptions/app.exceptions';
 import type { SessionUser } from '../auth/types/auth.types';
@@ -55,6 +56,7 @@ function makeInvitationsRepo(overrides: Record<string, unknown> = {}) {
     findById: vi.fn().mockResolvedValue(PENDING_INVITE),
     findPendingGlobalVmByInviter: vi.fn().mockResolvedValue(null),
     updateStatus: vi.fn().mockImplementation((id, status) => Promise.resolve({ ...PENDING_INVITE, status })),
+    markReminderSent: vi.fn().mockResolvedValue({ ...PENDING_INVITE, reminderSentAt: new Date() }),
     listByInviter: vi.fn().mockResolvedValue([PENDING_INVITE]),
     ...overrides,
   };
@@ -72,6 +74,7 @@ function makeUsersService(overrides: Record<string, unknown> = {}) {
   return {
     findByEmail: vi.fn().mockResolvedValue({ id: VM.id, email: VM.email, displayName: VM.displayName, language: 'EN' }),
     findById: vi.fn().mockResolvedValue({ id: VA.id, email: VA.email, displayName: VA.displayName, language: 'EN' }),
+    findByUsernameWithEmail: vi.fn().mockResolvedValue({ id: VM.id, username: 'vm', email: VM.email }),
     ...overrides,
   };
 }
@@ -146,6 +149,66 @@ describe('InvitationsService — sendVmInvitation', () => {
     const svc = makeService(makeInvitationsRepo(), makeVmRelationshipsService(), makeUsersService(), journeysRepo);
     await expect(svc.sendVmInvitation(VA, { type: InvitationType.VM_JOURNEY, inviteeEmail: VM.email, scopeId: 'j-1' }))
       .rejects.toThrow(AccessDeniedException);
+  });
+
+  it('resolves a username to the user email (search-found invitee, email not client-exposed)', async () => {
+    const repo = makeInvitationsRepo();
+    const usersSvc = makeUsersService({
+      findByUsernameWithEmail: vi.fn().mockResolvedValue({ id: VM.id, username: 'veer', email: VM.email }),
+      findByEmail: vi.fn().mockResolvedValue({ id: VM.id, email: VM.email, displayName: VM.displayName, language: 'EN' }),
+    });
+    const svc = makeService(repo, makeVmRelationshipsService(), usersSvc);
+    await svc.sendVmInvitation(VA, { type: InvitationType.VM_GLOBAL, inviteeUsername: 'veer' });
+    expect(usersSvc.findByUsernameWithEmail).toHaveBeenCalledWith('veer');
+    expect(repo.create).toHaveBeenCalledWith(expect.objectContaining({ inviteeEmail: VM.email }));
+  });
+
+  it('PLATFORM: any authenticated user (even VM-only) can send a platform invite', async () => {
+    const repo = makeInvitationsRepo({
+      create: vi.fn().mockResolvedValue({ ...PENDING_INVITE, type: InvitationType.PLATFORM, scopeId: null }),
+    });
+    const svc = makeService(repo);
+    const result = await svc.sendVmInvitation(VM, { type: InvitationType.PLATFORM, inviteeEmail: 'newcomer@x.com' });
+    expect(repo.create).toHaveBeenCalledWith(expect.objectContaining({ type: InvitationType.PLATFORM, scopeId: null }));
+    expect(result.shareMessage).toContain('http://localhost:3000/signup?invite=');
+  });
+});
+
+// ─── sendReminder ─────────────────────────────────────────────────────────────
+
+describe('InvitationsService — sendReminder', () => {
+  it('sends the one allowed reminder and stamps reminderSentAt', async () => {
+    const repo = makeInvitationsRepo({
+      findById: vi.fn().mockResolvedValue({ ...PENDING_INVITE, inviterId: VA.id, reminderSentAt: null }),
+      markReminderSent: vi.fn().mockResolvedValue({ ...PENDING_INVITE, reminderSentAt: new Date() }),
+    });
+    const svc = makeService(repo);
+    await svc.sendReminder(VA, PENDING_INVITE.id);
+    expect(repo.markReminderSent).toHaveBeenCalledWith(PENDING_INVITE.id);
+  });
+
+  it('NEGATIVE: second reminder rejected', async () => {
+    const repo = makeInvitationsRepo({
+      findById: vi.fn().mockResolvedValue({ ...PENDING_INVITE, inviterId: VA.id, reminderSentAt: new Date() }),
+    });
+    const svc = makeService(repo);
+    await expect(svc.sendReminder(VA, PENDING_INVITE.id)).rejects.toThrow(InvitationReminderAlreadySentException);
+  });
+
+  it('NEGATIVE: non-inviter cannot remind (403)', async () => {
+    const repo = makeInvitationsRepo({
+      findById: vi.fn().mockResolvedValue({ ...PENDING_INVITE, inviterId: VA.id, reminderSentAt: null }),
+    });
+    const svc = makeService(repo);
+    await expect(svc.sendReminder(OTHER_VA, PENDING_INVITE.id)).rejects.toThrow(AccessDeniedException);
+  });
+
+  it('NEGATIVE: reminder on a non-pending invitation rejected', async () => {
+    const repo = makeInvitationsRepo({
+      findById: vi.fn().mockResolvedValue({ ...PENDING_INVITE, inviterId: VA.id, status: InvitationStatus.ACCEPTED, reminderSentAt: null }),
+    });
+    const svc = makeService(repo);
+    await expect(svc.sendReminder(VA, PENDING_INVITE.id)).rejects.toThrow(InvitationNotPendingException);
   });
 });
 

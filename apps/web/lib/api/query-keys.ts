@@ -43,4 +43,7 @@ export const queryKeys = {
     public: ['experiences', 'public'] as const,
     detail: (id: string) => ['experiences', id] as const,
   },
+  invitations: {
+    list: ['invitations', 'list'] as const,
+  },
 } as const;

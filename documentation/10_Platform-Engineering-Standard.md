@@ -173,6 +173,12 @@ apps/web/
 - Fuzzy match on display_name and username
 - Exact match on full email (separate DB query — email not indexed in Meilisearch for privacy)
 
+### Client & sync conventions (implementation)
+- SDK: official `meilisearch` JS client. Wrapped by a global `SearchModule` exposing `MeiliService` (typed client from `MEILI_HOST` + `MEILI_MASTER_KEY` config). No module touches the raw client directly — each index has an `<Entity>IndexService` (e.g. `UsersIndexService`) owning `ensureIndex`/`upsert`/`remove`/`search`.
+- **Config:** `MEILI_HOST` and `MEILI_MASTER_KEY` validated at startup (Joi). If unset/unreachable, `MeiliService` no-ops with a warning and `search` returns empty — the app still runs (mirrors how `UploadsService` degrades without MinIO). Never let a search dependency fail a core write.
+- **Sync:** fire **after** the DB commit, best-effort — sync failures are logged, never thrown into the write path (search is eventually consistent). `ensureIndex` runs at boot; a bounded idempotent seed of existing rows keeps the index warm without a manual reindex.
+- **Never index PII or private content:** emails are never indexed (exact-email is a DB lookup); private/friends-tier content is never indexed; `is_public`-style flags are filterable attributes applied on every query.
+
 ---
 
 ## Background Jobs
