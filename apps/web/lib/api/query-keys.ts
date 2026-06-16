@@ -52,4 +52,10 @@ export const queryKeys = {
     detail: (id: string) => ['blogs', id] as const,
     search: (q: string) => ['blogs', 'search', q] as const,
   },
+  virtues: {
+    list: ['virtues', 'list'] as const,
+    virtue: (id: string) => ['virtues', id] as const,
+    subvirtue: (id: string) => ['subvirtues', id] as const,
+    sentence: (id: string) => ['sentences', id] as const,
+  },
 } as const;

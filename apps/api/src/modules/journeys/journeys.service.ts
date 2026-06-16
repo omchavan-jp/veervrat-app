@@ -72,6 +72,13 @@ export class JourneysService {
     return journey ? this.journeysRepository.buildJourneySlim(journey) : null;
   }
 
+  // Cross-module helper: does this VA have an active (non-completed) journey for the
+  // given sentence? For the virtues browser's sentence-info active-journey indicator.
+  async hasActiveJourneyForSentence(userId: string, sentenceId: string): Promise<boolean> {
+    const journey = await this.journeysRepository.findActiveForSentence(userId, sentenceId);
+    return journey !== null;
+  }
+
   async getActivity(user: SessionUser, id: string) {
     const journey = await this.journeysRepository.findById(id);
     if (!journey) throw new EntityNotFoundException('Journey', id);

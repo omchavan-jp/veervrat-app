@@ -1,0 +1,57 @@
+'use client';
+
+import { use } from 'react';
+import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { useQuery } from '@tanstack/react-query';
+import { virtuesApi } from '@/lib/api/virtues';
+import { weaknessesApi } from '@/lib/api/weaknesses';
+import { queryKeys } from '@/lib/api/query-keys';
+import { useAuth } from '@/hooks/use-auth';
+import { BilingualText } from '@/components/shared/bilingual-text';
+import { Button } from '@/components/ui/button';
+
+export default function WeaknessBrowseDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  const t = useTranslations('virtues');
+  const { isAuthenticated } = useAuth();
+  const { data, isLoading, isError } = useQuery({
+    queryKey: queryKeys.weaknesses.detail(id),
+    queryFn: () => weaknessesApi.detail(id),
+  });
+
+  if (isLoading) return <div className="flex min-h-[40vh] items-center justify-center"><div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" /></div>;
+  if (isError || !data) return <div className="text-muted">{t('notFound')}</div>;
+
+  return (
+    <div>
+      <Link href="/virtues" className="text-[13px] text-muted hover:text-accent">← {t('backToBrowser')}</Link>
+      <div className="mt-3"><BilingualText en={data.nameEn} mr={data.nameMr} size="xl" /></div>
+      {data.description && <p className="mt-3 text-[15px] leading-relaxed text-muted">{data.description}</p>}
+
+      {data.subvirtues.length > 0 && (
+        <section className="mt-8">
+          <h2 className="mb-1 text-[16px] font-medium">{t('cultivateToTackle')}</h2>
+          <p className="mb-3 text-[13px] text-muted">{t('cultivateHint')}</p>
+          <div className="flex flex-wrap gap-2">
+            {data.subvirtues.map((s) => (
+              <Link key={s.id} href={`/subvirtues/${s.id}`} className="rounded-full border border-border-strong px-3.5 py-1.5 text-[13px] transition-colors hover:border-accent">
+                {s.nameMr ?? s.nameEn}
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <div className="mt-8">
+        {isAuthenticated ? (
+          <Link href={`/study/${data.id}`}><Button size="sm">{t('takeTestForWeakness')}</Button></Link>
+        ) : (
+          <div className="rounded-xl border border-dashed border-border-strong p-4 text-center text-[13px] text-muted">
+            {t('loginToTest')} <Link href="/login" className="text-accent">{t('login')}</Link>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
