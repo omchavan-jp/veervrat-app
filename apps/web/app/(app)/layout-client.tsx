@@ -15,6 +15,7 @@ import {
   PenLine,
   Newspaper,
   Sparkles,
+  ShieldCheck,
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
@@ -47,6 +48,7 @@ const PRACTICE: NavItem[] = [
 // items appear only when the user holds an active VM assignment (spec/22). Each item
 // carries its own independent badge — VA Guidance vs. VM Guidance, never a combined one.
 function useNavGroups() {
+  const { user } = useAuth();
   const { data: va } = useQuery({
     queryKey: queryKeys.actions.va,
     queryFn: () => actionsApi.getVaActions(),
@@ -68,6 +70,10 @@ function useNavGroups() {
   const vratmitra: NavItem[] = vm?.hasAssignments
     ? [{ href: '/vratmitra/guidance', labelKey: 'vmGuidance', icon: Compass, badge: vm?.counts.total || undefined }]
     : [];
+
+  // Moderation nav — moderators/admins only (spec/27).
+  const isMod = (user?.roles ?? []).some((r) => r === 'MODERATOR' || r === 'ADMIN');
+  if (isMod) vratmitra.push({ href: '/moderation', labelKey: 'moderation', icon: ShieldCheck });
 
   return { guidance, vratmitra, pill: [...PRACTICE, ...guidance, ...vratmitra] };
 }
