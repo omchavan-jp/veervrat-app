@@ -23,6 +23,7 @@ audit_event
 - No `updated_at` or `deleted_at` — audit events are **append-only, never modified or deleted**
 - Separate table from application data — never soft-deleted, never truncated
 - Not a Prisma soft-delete entity — hard retention
+- **`resource_id` is a `uuid` column.** Only set it (via `@Audited({ resourceIdParam })` or `resourceId`) when the identifier is an actual UUID. For entities keyed by a slug/date/other non-UUID (e.g. `CmsPage.key`, a schedule date), leave `resource_id` null and put the identifier in `metadata` instead — otherwise the fire-and-forget insert throws `invalid input syntax for type uuid` and the event is **silently dropped**.
 
 ---
 

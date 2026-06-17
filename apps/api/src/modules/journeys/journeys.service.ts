@@ -113,6 +113,17 @@ export class JourneysService {
     return this.journeysRepository.updateState(id, newState);
   }
 
+  // Admin emergency override — bypasses the normal transition rules (the audit log is the
+  // safeguard). Permission is checked by the admin caller; returns prior + new state so the
+  // caller can record from/to in audit metadata.
+  async adminOverrideState(id: string, newState: JourneyState): Promise<{ from: JourneyState; to: JourneyState }> {
+    const journey = await this.journeysRepository.findById(id);
+    if (!journey) throw new EntityNotFoundException('Journey', id);
+    const from = journey.state;
+    await this.journeysRepository.updateState(id, newState);
+    return { from, to: newState };
+  }
+
   async submitCompletion(user: SessionUser, journeyId: string) {
     const journey = await this.journeysRepository.findById(journeyId);
     if (!journey) throw new EntityNotFoundException('Journey', journeyId);

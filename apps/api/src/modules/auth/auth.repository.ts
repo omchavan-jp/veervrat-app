@@ -15,6 +15,7 @@ const userSelect = {
   emailVerifiedAt: true,
   accountSetupCompletedAt: true,
   onboardingCompletedAt: true,
+  suspendedAt: true,
   deletedAt: true,
   roles: { select: { role: true } },
 } as const;

@@ -903,6 +903,47 @@
     "shlokaCount": "{count} shloka(s)",
     "blogs": "Blogs",
     "experiences": "Experiences",
-    "untitled": "(untitled)"
+    "untitled": "(untitled)",
+    "usersTitle": "Users",
+    "usersDesc": "Accounts, roles, and account actions.",
+    "auditTitle": "Audit log",
+    "auditDesc": "Browse all admin/moderator actions."
+  },
+  "adminUsers": {
+    "title": "Users",
+    "subtitle": "Manage accounts, roles, and account actions.",
+    "searchPlaceholder": "Search by name, username, or email…",
+    "noUsers": "No users found",
+    "suspended": "Suspended",
+    "anonymised": "Anonymised",
+    "notFound": "User not found",
+    "backToUsers": "Back to users",
+    "suspendedNotice": "This account is suspended — the user cannot sign in.",
+    "anonymisedNotice": "This account has been anonymised.",
+    "roles": "Roles",
+    "accountActions": "Account actions",
+    "suspend": "Suspend",
+    "unsuspend": "Unsuspend",
+    "forceLogout": "Force logout",
+    "anonymise": "Anonymise",
+    "anonymiseReasonPrompt": "Reason for anonymising this account (audit-logged):",
+    "journeys": "Journeys",
+    "overrideState": "Override state…",
+    "overrideReasonPrompt": "Reason for overriding journey state (audit-logged):",
+    "noJourneys": "No journeys.",
+    "tests": "Tests",
+    "noTests": "No tests.",
+    "experiences": "Experiences",
+    "noExperiences": "No experiences.",
+    "submitted": "submitted",
+    "draft": "draft"
+  },
+  "audit": {
+    "title": "Audit log",
+    "subtitle": "All admin and moderator actions, most recent first.",
+    "filterAction": "Filter by action (e.g. admin.suspend_user)",
+    "filterActor": "Filter by actor id",
+    "noEvents": "No audit events",
+    "actor": "Actor"
   }
 }

@@ -197,6 +197,8 @@ model User {
   // Per-field public-profile visibility (spec/10). Empty/missing key = visible
   // (all fields public by default). Only `false` entries hide a field.
   profileVisibility     Json      @default("{}") @map("profile_visibility")
+  suspendedAt           DateTime? @map("suspended_at")
+  anonymisedAt          DateTime? @map("anonymised_at")
   deletedAt             DateTime? @map("deleted_at")
   createdAt             DateTime  @default(now()) @map("created_at")
   updatedAt             DateTime  @updatedAt @map("updated_at")

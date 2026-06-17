@@ -28,8 +28,8 @@ Status: ⬜ Open · ✅ Done · 🔁 Recurring (re-evaluate each relevant item)
 | 14 | Sentence-info "Take a test / Choose a weakness" deep CTA wiring (currently links to /study) | Item 26 | When the weakness-selection-from-sentence flow is built | ⬜ Open |
 | 15 | Custom-ERC duplicate detection / side-by-side comparison | Item 28 (spec/27) | Future moderation polish | ⬜ Open |
 | 16 | Moderator "save edits without deciding" draft action | Item 28 (spec/27) | Future moderation polish | ⬜ Open |
-| 17 | Admin audit dashboard UI (backend `GET /admin/audit-events` exists) | Item 27 | Item 31 (admin user management) | ⬜ Open |
-| 18 | `@Audited` annotations on admin/content actions (most spec/17 mandatory events) | Item 27 | Items 30 & 31 (annotate as built) | 🔁 Recurring (all Item 30 admin/content writes annotated; remaining: Item 31 admin user-management events) |
+| 17 | ~~Admin audit dashboard UI (backend `GET /admin/audit-events` exists)~~ | Item 27 | Item 31 (admin user management) | ✅ Done (Item 31 — `/admin/audit` dashboard with action/actor filters) |
+| 18 | `@Audited` annotations on admin/content/user actions (most spec/17 mandatory events) | Item 27 | Items 30 & 31 (annotate as built) | ✅ Done for spec/17 v1 events (Item 30 content + Item 31 user-mgmt: manage_user_role, suspend, force_logout, anonymise, override_journey_state all annotated). Re-open if new privileged actions are added. |
 | 19 | ~~Shloka management / scheduling / queue, Pothi/resources admin CRUD~~ | Item 28 | Item 30 (read side done by Item 29) | ✅ Done (Item 30) |
 | 20 | Resource OG-thumbnail auto-fetch for links (chat-link-preview/integrations system) | Item 29 | When link-preview/integrations built; admin sets thumbnailUrl manually (now via Item 30 resource panel) | ⬜ Open |
 | 21 | ~~"Why we study shlokas" / "What is the Pothi?" modal CMS copy (placeholder shells shipped)~~ | Item 29 | Item 30 (admin display content) | ✅ Done (Item 30 — `why-shlokas`/`what-is-pothi` CmsInfoModal with static fallback) |
@@ -39,6 +39,8 @@ Status: ⬜ Open · ✅ Done · 🔁 Recurring (re-evaluate each relevant item)
 | 25 | Admin **UI** for shloka formal-tag editing + Pothi section shloka-assignment ordering + drag-reorder of the shloka queue (backend supports all: formalTags, shlokaIds[], queue replace; panels expose the simple fields) | Item 30 | Admin-panel polish follow-up | ⬜ Open |
 | 26 | Rich-text (Tiptap) editor for CMS bodies + resource descriptions (admin panels use a plain-text↔doc shim `lib/tiptap-text.ts`; backend stores/sanitizes full Tiptap) | Item 30 | When a shared Tiptap editor component lands | ⬜ Open |
 | 27 | Featured rails/carousels on the public blogs/experiences pages (read side now returns `featured` + `?featured=true`; curation UI shipped; consuming UI not yet built) | Item 30 | Community-page polish | ⬜ Open |
+| 28 | Deep body-level scrub of chat/sidenote content on anonymise (v1 anonymises identity only → renders as "[Deleted user]"; bodies retained as-is per spec/06) | Item 31 | When privacy policy / legal detail is finalised (spec/06 §30 "TBD") | ⬜ Open |
+| 29 | Platform Stats dashboard (`/admin` → Stats; spec/27) — user growth, test volume, completion rate, ERC usage, active VMs, search volume | Items 30/31 | A dedicated stats item | ⬜ Open |
 
 ## Notes
 - Each deferral is also recorded in its originating change's archived `tasks.md` (`openspec/changes/archive/`) — this table is the cross-item index, not a replacement.

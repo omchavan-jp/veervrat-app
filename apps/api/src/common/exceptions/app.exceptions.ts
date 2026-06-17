@@ -51,6 +51,15 @@ export class EmailNotVerifiedException extends ForbiddenException {
   }
 }
 
+export class AccountSuspendedException extends ForbiddenException {
+  constructor() {
+    super({
+      error: 'ACCOUNT_SUSPENDED',
+      message: 'This account has been suspended. Please contact an administrator.',
+    });
+  }
+}
+
 export class SessionExpiredException extends UnauthorizedException {
   constructor() {
     super({

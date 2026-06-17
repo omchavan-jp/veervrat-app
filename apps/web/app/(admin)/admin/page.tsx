@@ -2,16 +2,18 @@
 
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { Sparkles, ScrollText, BookOpen, Library, FileText, Star, ChevronRight } from 'lucide-react';
+import { Sparkles, ScrollText, BookOpen, Library, FileText, Star, Users, ClipboardList, ChevronRight } from 'lucide-react';
 import { useAdminGuard } from '@/hooks/use-admin-guard';
 
 const CARDS = [
+  { href: '/admin/users', labelKey: 'usersTitle', descKey: 'usersDesc', icon: Users },
   { href: '/admin/taxonomy', labelKey: 'taxonomyTitle', descKey: 'taxonomyDesc', icon: Sparkles },
   { href: '/admin/shlokas', labelKey: 'shlokasTitle', descKey: 'shlokasDesc', icon: ScrollText },
   { href: '/admin/pothi', labelKey: 'pothiTitle', descKey: 'pothiDesc', icon: BookOpen },
   { href: '/admin/resources', labelKey: 'resourcesTitle', descKey: 'resourcesDesc', icon: Library },
   { href: '/admin/cms', labelKey: 'cmsTitle', descKey: 'cmsDesc', icon: FileText },
   { href: '/admin/featured', labelKey: 'featuredTitle', descKey: 'featuredDesc', icon: Star },
+  { href: '/admin/audit', labelKey: 'auditTitle', descKey: 'auditDesc', icon: ClipboardList },
 ] as const;
 
 export default function AdminDashboardPage() {

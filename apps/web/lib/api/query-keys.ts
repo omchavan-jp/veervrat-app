@@ -66,6 +66,13 @@ export const queryKeys = {
     schedule: ['admin', 'shlokas', 'schedule'] as const,
     queue: ['admin', 'shlokas', 'queue'] as const,
   },
+  adminUsers: {
+    list: (q?: string) => ['admin', 'users', q ?? ''] as const,
+    detail: (id: string) => ['admin', 'users', id] as const,
+  },
+  audit: {
+    list: (action?: string, actorId?: string) => ['admin', 'audit', action ?? '', actorId ?? ''] as const,
+  },
   cms: {
     list: ['cms', 'list'] as const,
     page: (key: string) => ['cms', 'page', key] as const,

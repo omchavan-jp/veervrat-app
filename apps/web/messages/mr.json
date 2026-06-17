@@ -903,6 +903,47 @@
     "shlokaCount": "{count} श्लोक",
     "blogs": "ब्लॉग",
     "experiences": "अनुभव",
-    "untitled": "(शीर्षकरहित)"
+    "untitled": "(शीर्षकरहित)",
+    "usersTitle": "वापरकर्ते",
+    "usersDesc": "खाती, भूमिका व खाते कृती.",
+    "auditTitle": "लेखापरीक्षण नोंद",
+    "auditDesc": "सर्व प्रशासक/नियंत्रक कृती पहा."
+  },
+  "adminUsers": {
+    "title": "वापरकर्ते",
+    "subtitle": "खाती, भूमिका व खाते कृती व्यवस्थापित करा.",
+    "searchPlaceholder": "नाव, वापरकर्तानाव किंवा ईमेलने शोधा…",
+    "noUsers": "वापरकर्ते आढळले नाहीत",
+    "suspended": "निलंबित",
+    "anonymised": "अनामिकीकृत",
+    "notFound": "वापरकर्ता आढळला नाही",
+    "backToUsers": "वापरकर्त्यांकडे परत",
+    "suspendedNotice": "हे खाते निलंबित आहे — वापरकर्ता साइन इन करू शकत नाही.",
+    "anonymisedNotice": "हे खाते अनामिक करण्यात आले आहे.",
+    "roles": "भूमिका",
+    "accountActions": "खाते कृती",
+    "suspend": "निलंबित करा",
+    "unsuspend": "निलंबन रद्द करा",
+    "forceLogout": "सक्तीने बाहेर काढा",
+    "anonymise": "अनामिक करा",
+    "anonymiseReasonPrompt": "हे खाते अनामिक करण्याचे कारण (लेखापरीक्षणात नोंदले जाते):",
+    "journeys": "प्रवास",
+    "overrideState": "स्थिती बदला…",
+    "overrideReasonPrompt": "प्रवास स्थिती बदलण्याचे कारण (लेखापरीक्षणात नोंदले जाते):",
+    "noJourneys": "प्रवास नाहीत.",
+    "tests": "चाचण्या",
+    "noTests": "चाचण्या नाहीत.",
+    "experiences": "अनुभव",
+    "noExperiences": "अनुभव नाहीत.",
+    "submitted": "सादर",
+    "draft": "मसुदा"
+  },
+  "audit": {
+    "title": "लेखापरीक्षण नोंद",
+    "subtitle": "सर्व प्रशासक व नियंत्रक कृती, अलीकडील प्रथम.",
+    "filterAction": "कृतीनुसार गाळा (उदा. admin.suspend_user)",
+    "filterActor": "कर्ता आयडीनुसार गाळा",
+    "noEvents": "लेखापरीक्षण घटना नाहीत",
+    "actor": "कर्ता"
   }
 }

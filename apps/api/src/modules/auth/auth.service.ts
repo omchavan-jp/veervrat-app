@@ -9,6 +9,7 @@ import {
   DuplicateEntityException,
   InvalidCredentialsException,
   EmailNotVerifiedException,
+  AccountSuspendedException,
   TokenExpiredException,
   TokenInvalidException,
   EntityNotFoundException,
@@ -121,6 +122,10 @@ export class AuthService {
 
     if (!user.emailVerifiedAt) {
       throw new EmailNotVerifiedException();
+    }
+
+    if (user.suspendedAt) {
+      throw new AccountSuspendedException();
     }
 
     await this.clearLockout(email);
@@ -263,6 +268,12 @@ export class AuthService {
     await this.authRepository.deleteSession(sessionToken);
   }
 
+  // Admin force-logout: invalidate every session a user holds. Used by suspend/anonymise
+  // and the standalone force-logout admin action.
+  async forceLogout(userId: string): Promise<void> {
+    await this.authRepository.deleteAllUserSessions(userId);
+  }
+
   async verifyEmail(token: string): Promise<{ user: SessionUser }> {
     const verificationToken = await this.authRepository.findVerificationToken(
       token,
@@ -362,7 +373,7 @@ export class AuthService {
       return null;
     }
 
-    if (session.user.deletedAt) {
+    if (session.user.deletedAt || session.user.suspendedAt) {
       await this.authRepository.deleteSession(token);
       return null;
     }

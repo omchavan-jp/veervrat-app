@@ -27,7 +27,14 @@ export class AuditInterceptor implements NestInterceptor {
     const req = context.switchToHttp().getRequest<Request>();
 
     return next.handle().pipe(
-      tap((result) => {
+      tap((raw) => {
+        // The global ResponseInterceptor wraps handler returns as `{ data: ... }` before this
+        // (APP_INTERCEPTOR) interceptor's tap runs. Unwrap so resourceId/metadata functions
+        // see the handler's actual return value, not the envelope.
+        const result =
+          raw && typeof raw === 'object' && 'data' in (raw as Record<string, unknown>)
+            ? (raw as { data: unknown }).data
+            : raw;
         const ctx: AuditContext = {
           req,
           params: (req.params ?? {}) as Record<string, string>,
