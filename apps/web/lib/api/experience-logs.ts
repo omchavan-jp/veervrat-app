@@ -35,6 +35,7 @@ export type ExperienceLog = {
   body: TiptapDoc;
   visibility: ExperienceVisibility;
   isDraft: boolean;
+  featured: boolean;
   publishedAt: string | null;
   createdAt: string;
   updatedAt: string;

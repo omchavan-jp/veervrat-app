@@ -41,8 +41,8 @@ export class ExperienceLogsController {
   @Get('public')
   @UseGuards(OptionalSessionGuard)
   @HttpCode(HttpStatus.OK)
-  async getPublicPool(@Query('cursor') cursor?: string) {
-    return this.service.getPublicPool(cursor);
+  async getPublicPool(@Query('cursor') cursor?: string, @Query('featured') featured?: string) {
+    return this.service.getPublicPool(cursor, featured === 'true');
   }
 
   @Get(':id')

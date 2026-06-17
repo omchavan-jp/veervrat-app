@@ -34,8 +34,8 @@ export class BlogsController {
 
   @Get()
   @UseGuards(OptionalSessionGuard)
-  list(@Query('cursor') cursor?: string) {
-    return this.blogsService.list(cursor);
+  list(@Query('cursor') cursor?: string, @Query('featured') featured?: string) {
+    return this.blogsService.list(cursor, featured === 'true');
   }
 
   @Get('mine')

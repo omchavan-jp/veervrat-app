@@ -16,6 +16,7 @@ const LOG_SELECT = {
   body: true,
   visibility: true,
   isDraft: true,
+  featured: true,
   publishedAt: true,
   createdAt: true,
   updatedAt: true,
@@ -114,9 +115,14 @@ export class ExperienceLogsRepository {
     return { items, nextCursor };
   }
 
-  async findPublicPool(cursor?: string) {
+  async findPublicPool(cursor?: string, featured?: boolean) {
     const items = await this.prisma.experienceLog.findMany({
-      where: { visibility: ExperienceVisibility.PUBLIC, isDraft: false, deletedAt: null },
+      where: {
+        visibility: ExperienceVisibility.PUBLIC,
+        isDraft: false,
+        deletedAt: null,
+        ...(featured ? { featured: true } : {}),
+      },
       select: LOG_SELECT,
       orderBy: { publishedAt: 'desc' },
       take: 20,

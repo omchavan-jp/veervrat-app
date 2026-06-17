@@ -17,6 +17,7 @@ import {
   Sparkles,
   ScrollText,
   ShieldCheck,
+  SlidersHorizontal,
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
@@ -77,7 +78,11 @@ function useNavGroups() {
   const isMod = (user?.roles ?? []).some((r) => r === 'MODERATOR' || r === 'ADMIN');
   if (isMod) vratmitra.push({ href: '/moderation', labelKey: 'moderation', icon: ShieldCheck });
 
-  return { guidance, vratmitra, pill: [...PRACTICE, ...guidance, ...vratmitra] };
+  // Admin nav — admins only (spec/27).
+  const isAdmin = (user?.roles ?? []).some((r) => r === 'ADMIN');
+  const admin: NavItem[] = isAdmin ? [{ href: '/admin', labelKey: 'admin', icon: SlidersHorizontal }] : [];
+
+  return { guidance, vratmitra, admin, pill: [...PRACTICE, ...guidance, ...vratmitra, ...admin] };
 }
 
 function isActive(pathname: string, href: string): boolean {
@@ -103,7 +108,7 @@ function LeftRail({
   const pathname = usePathname();
   const logout = useLogout();
   const initials = initialsOf(user);
-  const { guidance, vratmitra } = useNavGroups();
+  const { guidance, vratmitra, admin } = useNavGroups();
 
   const renderItem = ({ href, labelKey, icon: Icon, badge }: NavItem) => {
     const active = isActive(pathname, href);
@@ -203,6 +208,18 @@ function LeftRail({
             )}
             {collapsed && <div className="my-3 h-px bg-border" />}
             {vratmitra.map(renderItem)}
+          </>
+        )}
+
+        {admin.length > 0 && (
+          <>
+            {!collapsed && (
+              <div className="mb-1.5 mt-5 px-2 font-mono text-[9px] uppercase tracking-[0.14em] text-muted">
+                {t('groupAdmin')}
+              </div>
+            )}
+            {collapsed && <div className="my-3 h-px bg-border" />}
+            {admin.map(renderItem)}
           </>
         )}
       </nav>

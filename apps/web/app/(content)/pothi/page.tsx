@@ -8,6 +8,7 @@ import { contentApi, type Shloka } from '@/lib/api/content';
 import { queryKeys } from '@/lib/api/query-keys';
 import { BilingualText } from '@/components/shared/bilingual-text';
 import { EmptyState } from '@/components/ui/empty-state';
+import { CmsInfoModal } from '@/components/shared/cms-info-modal';
 
 function ShlokaBlock({ s }: { s: Shloka }) {
   return (
@@ -30,6 +31,9 @@ export default function PothiPage() {
         <div>
           <h1 className="font-display text-[30px] font-medium tracking-tight">{t('pothiTitle')}</h1>
           <p className="mt-1 text-[14px] text-muted">{t('pothiSubtitle')}</p>
+          <div className="mt-2">
+            <CmsInfoModal cmsKey="what-is-pothi" linkLabel={t('whatIsPothiLink')} fallbackTitle={t('whatIsPothiTitle')} fallbackBody={t('whatIsPothiBody')} />
+          </div>
         </div>
         <div className="flex gap-3 text-[13px]">
           <Link href="/shlokas" className="text-accent hover:underline">{t('seeMoreShlokas')}</Link>

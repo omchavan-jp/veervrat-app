@@ -23,6 +23,27 @@ function reviewItemId(review: {
 export class ModerationRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  // ─── Featured content curation ───────────────────────────────────────────────
+  findBlog(id: string) {
+    return this.prisma.blog.findFirst({ where: { id, deletedAt: null }, select: { id: true } });
+  }
+
+  setBlogFeatured(id: string, featured: boolean) {
+    return this.prisma.blog.update({ where: { id }, data: { featured }, select: { id: true, featured: true } });
+  }
+
+  findExperienceLog(id: string) {
+    return this.prisma.experienceLog.findFirst({ where: { id, deletedAt: null }, select: { id: true } });
+  }
+
+  setExperienceLogFeatured(id: string, featured: boolean) {
+    return this.prisma.experienceLog.update({
+      where: { id },
+      data: { featured },
+      select: { id: true, featured: true },
+    });
+  }
+
   async findReviewById(id: string) {
     return this.prisma.customErcReview.findUnique({
       where: { id },

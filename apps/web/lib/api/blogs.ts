@@ -27,6 +27,7 @@ export type Blog = {
   title: string;
   body: TiptapDoc;
   isDraft: boolean;
+  featured: boolean;
   publishedAt: string | null;
   createdAt: string;
   updatedAt: string;

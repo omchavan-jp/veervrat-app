@@ -120,8 +120,8 @@ export class ExperienceLogsService {
     return log;
   }
 
-  async getPublicPool(cursor?: string) {
-    return this.repository.findPublicPool(cursor);
+  async getPublicPool(cursor?: string, featured?: boolean) {
+    return this.repository.findPublicPool(cursor, featured);
   }
 
   async getPublicByAuthor(authorId: string, cursor?: string) {

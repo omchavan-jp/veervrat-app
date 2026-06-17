@@ -8,6 +8,7 @@ import { contentApi, type Shloka, type ShlokaDetail } from '@/lib/api/content';
 import { queryKeys } from '@/lib/api/query-keys';
 import { useDebounce } from '@/hooks/use-debounce';
 import { EmptyState } from '@/components/ui/empty-state';
+import { CmsInfoModal } from '@/components/shared/cms-info-modal';
 
 function ShlokaCard({ s, onOpen }: { s: Shloka; onOpen: () => void }) {
   return (
@@ -79,6 +80,9 @@ export default function ShlokasPage() {
     <div>
       <h1 className="font-display text-[30px] font-medium tracking-tight">{t('shlokasTitle')}</h1>
       <p className="mt-1 text-[14px] text-muted">{t('shlokasSubtitle')}</p>
+      <div className="mt-2">
+        <CmsInfoModal cmsKey="why-shlokas" linkLabel={t('whyShlokasLink')} fallbackTitle={t('whyShlokasTitle')} fallbackBody={t('whyShlokasBody')} />
+      </div>
 
       <div className="relative mt-5">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />

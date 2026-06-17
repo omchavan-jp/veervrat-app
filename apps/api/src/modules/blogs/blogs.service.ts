@@ -95,8 +95,8 @@ export class BlogsService implements OnModuleInit {
     return { id };
   }
 
-  async list(cursor?: string) {
-    return this.repository.findPublishedList(cursor);
+  async list(cursor?: string, featured?: boolean) {
+    return this.repository.findPublishedList(cursor, featured);
   }
 
   async listMine(user: SessionUser, cursor?: string) {

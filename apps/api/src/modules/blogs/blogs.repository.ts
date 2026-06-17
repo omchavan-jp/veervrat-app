@@ -13,6 +13,7 @@ const BLOG_SELECT = {
   title: true,
   body: true,
   isDraft: true,
+  featured: true,
   publishedAt: true,
   createdAt: true,
   updatedAt: true,
@@ -67,9 +68,9 @@ export class BlogsRepository {
     return this.prisma.blog.update({ where: { id }, data: { deletedAt: new Date() }, select: { id: true } });
   }
 
-  async findPublishedList(cursor?: string) {
+  async findPublishedList(cursor?: string, featured?: boolean) {
     const items = await this.prisma.blog.findMany({
-      where: { isDraft: false, deletedAt: null },
+      where: { isDraft: false, deletedAt: null, ...(featured ? { featured: true } : {}) },
       select: BLOG_SELECT,
       orderBy: { publishedAt: 'desc' },
       take: 20,

@@ -28,6 +28,8 @@ import { VirtuesModule } from './modules/virtues/virtues.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { ModerationModule } from './modules/moderation/moderation.module';
 import { ContentModule } from './modules/content/content.module';
+import { AdminModule } from './modules/admin/admin.module';
+import { CmsModule } from './modules/cms/cms.module';
 import { AuditInterceptor } from './modules/audit/audit.interceptor';
 import { AuditService } from './modules/audit/audit.service';
 import { RedisModule } from './common/redis/redis.module';
@@ -81,6 +83,8 @@ import { CsrfGuard } from './common/guards/csrf.guard';
     AuditModule,
     ModerationModule,
     ContentModule,
+    AdminModule,
+    CmsModule,
   ],
   controllers: [AppController],
   providers: [

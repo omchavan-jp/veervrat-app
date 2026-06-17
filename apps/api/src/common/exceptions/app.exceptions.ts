@@ -205,3 +205,13 @@ export class CustomErcAlreadyPendingException extends ConflictException {
     });
   }
 }
+
+export class EntityInUseException extends ConflictException {
+  constructor(entity: string, reason: string) {
+    super({
+      error: 'ENTITY_IN_USE',
+      message: `${entity} cannot be deleted: ${reason}`,
+      details: { reason },
+    });
+  }
+}
