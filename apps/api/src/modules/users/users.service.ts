@@ -229,6 +229,15 @@ export class UsersService implements OnModuleInit {
     return this.toOwnProfileDto(user);
   }
 
+  // Restart tour (spec/26 §5): flag the contextual walkthrough to replay. Does not reset
+  // onboardingCompletedAt — the user is not sent back through signup onboarding.
+  async restartTour(userId: string): Promise<OwnProfileDto> {
+    const existing = await this.usersRepository.findById(userId);
+    if (!existing) throw new EntityNotFoundException('User', userId);
+    const user = await this.usersRepository.setTourReset(userId, new Date());
+    return this.toOwnProfileDto(user);
+  }
+
   // Single source of truth for "anonymise an account" (spec/06). Used by both admin
   // anonymisation (Item 31) and self-delete (Item 32): replace PII with a deterministic
   // pseudonym, soft-delete + suspend, kill sessions, cancel pending invitations. Content
@@ -303,6 +312,7 @@ export class UsersService implements OnModuleInit {
     profileVisibility: unknown;
     notificationPrefs?: unknown;
     pendingEmail?: string | null;
+    tourResetAt?: Date | null;
     createdAt: Date;
     updatedAt: Date;
   }): OwnProfileDto {
@@ -321,6 +331,7 @@ export class UsersService implements OnModuleInit {
       profileVisibility: parseVisibility(user.profileVisibility),
       notificationPrefs: parseNotificationPrefs(user.notificationPrefs),
       pendingEmail: user.pendingEmail ?? null,
+      tourResetAt: user.tourResetAt ? user.tourResetAt.toISOString() : null,
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
     };

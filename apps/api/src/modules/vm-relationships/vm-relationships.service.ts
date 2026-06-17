@@ -3,6 +3,7 @@ import { NotificationEventType } from '@prisma/client';
 import { VmRelationshipsRepository } from './vm-relationships.repository';
 import { JourneysRepository } from '../journeys/journeys.repository';
 import { NotificationsRepository } from '../notifications/notifications.repository';
+import { NotificationsService } from '../notifications/notifications.service';
 import { hasPermission } from '../../common/permissions/has-permission';
 import {
   EntityNotFoundException,
@@ -10,6 +11,7 @@ import {
 } from '../../common/exceptions/app.exceptions';
 import type { SessionUser } from '../auth/types/auth.types';
 import { isVa } from '../../common/permissions/types';
+import type { GlobalVmCascade } from './dto/remove-global-vm.dto';
 
 @Injectable()
 export class VmRelationshipsService {
@@ -17,9 +19,13 @@ export class VmRelationshipsService {
     private readonly vmRelationshipsRepository: VmRelationshipsRepository,
     private readonly journeysRepository: JourneysRepository,
     private readonly notificationsRepository: NotificationsRepository,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
-  async removeGlobalVm(user: SessionUser) {
+  // Remove (or, as the first half of a "change", clear) the VA's active global VM.
+  // `cascade` controls the outgoing VM's journey assignments (spec/26 R2): `keep` leaves
+  // them, `unassign` also ends them. Pending approvals are never auto-resolved (spec/04).
+  async removeGlobalVm(user: SessionUser, cascade: GlobalVmCascade = 'keep') {
     if (!isVa(user)) throw new AccessDeniedException();
 
     const relationship = await this.vmRelationshipsRepository.findActiveGlobalVm(user.id);
@@ -28,9 +34,23 @@ export class VmRelationshipsService {
     const affectedJourneys = await this.vmRelationshipsRepository.findActiveJourneyAssignmentsForVm(relationship.vmId, user.id);
     await this.vmRelationshipsRepository.endGlobalVm(relationship.id);
 
+    if (cascade === 'unassign') {
+      await this.vmRelationshipsRepository.endJourneyAssignmentsForVm(relationship.vmId, user.id);
+    }
+
+    // Notify the outgoing VM (emailable VM_WITHDREW via the centralized notification path).
+    void this.notificationsService.create(
+      relationship.vmId,
+      user.id,
+      NotificationEventType.VM_WITHDREW,
+      'user',
+      user.id,
+    );
+
     return {
       removedVmId: relationship.vmId,
       affectedJourneys,
+      cascade,
     };
   }
 

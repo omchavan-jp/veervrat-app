@@ -190,6 +190,9 @@ model User {
   emailVerifiedAt       DateTime? @map("email_verified_at")
   accountSetupCompletedAt DateTime? @map("account_setup_completed_at")
   onboardingCompletedAt DateTime? @map("onboarding_completed_at")
+  // Set when the user asks to replay the contextual UI walkthrough ("Restart tour", spec/26
+  // §5). Does NOT reset onboardingCompletedAt — the account-setup gate stays satisfied.
+  tourResetAt           DateTime? @map("tour_reset_at")
   lastActiveAt          DateTime? @map("last_active_at")
   showLastActive        Boolean   @default(true) @map("show_last_active")
   showOnlineIndicator   Boolean   @default(true) @map("show_online_indicator")

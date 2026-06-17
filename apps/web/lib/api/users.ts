@@ -33,6 +33,7 @@ export type OwnProfile = {
   profileVisibility: ProfileVisibility;
   notificationPrefs: Record<string, boolean>;
   pendingEmail?: string | null;
+  tourResetAt: string | null;
   createdAt: string;
   updatedAt: string;
   followerCount?: number;
@@ -107,6 +108,8 @@ export const usersApi = {
 
   updateSettings: (data: UpdateSettingsInput) =>
     api.patch<Wrapped<OwnProfile>>('/users/me/settings', data).then((r) => r.data),
+
+  restartTour: () => api.post<Wrapped<OwnProfile>>('/users/me/restart-tour').then((r) => r.data),
 
   changePassword: (currentPassword: string, newPassword: string) =>
     api.patch<Wrapped<{ success: boolean }>>('/users/me/password', { currentPassword, newPassword }).then((r) => r.data),

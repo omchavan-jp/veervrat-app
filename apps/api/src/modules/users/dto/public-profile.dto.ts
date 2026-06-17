@@ -57,6 +57,7 @@ export interface OwnProfileDto {
   profileVisibility: ProfileVisibility;
   notificationPrefs: NotificationPrefs;
   pendingEmail?: string | null;
+  tourResetAt: string | null;
   createdAt: string;
   updatedAt: string;
   followerCount?: number;

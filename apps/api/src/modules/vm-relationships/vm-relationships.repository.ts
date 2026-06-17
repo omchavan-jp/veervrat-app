@@ -98,6 +98,22 @@ export class VmRelationshipsRepository {
     });
   }
 
+  // Ends every active journey assignment held by `vmId` on `vratarthiId`'s journeys — the
+  // `unassign` cascade of a global VM removal (spec/26 R2). Pending approvals are left
+  // untouched (no ERC mutation here). Returns the number of assignments ended.
+  async endJourneyAssignmentsForVm(vmId: string, vratarthiId: string): Promise<number> {
+    const result = await this.prisma.journeyVmAssignment.updateMany({
+      where: {
+        vmId,
+        state: VmRelationshipState.ACTIVE,
+        endedAt: null,
+        journey: { vratarthiId },
+      },
+      data: { endedAt: new Date() },
+    });
+    return result.count;
+  }
+
   // Aggregates a vratarthi's VM context: their active global VM (if any) and every
   // active journey VM assignment across their journeys. Shaped for permission checks
   // that aren't tied to a single journey (e.g. test result viewing — spec/05

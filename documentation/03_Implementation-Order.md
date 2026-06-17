@@ -581,7 +581,7 @@ git checkout -b feat/notification-email dev
 
 ---
 
-### 37. Global VM change/migration + Restart tour [FULL]
+### 37. Global VM change/migration + Restart tour [FULL] ✅ DONE
 Branch: `feat/global-vm-migration`
 Pays back: Deferral Ledger #31 (Account-settings Section 5 — spec/26 §5; cascade rules now pinned in spec/26 R2).
 

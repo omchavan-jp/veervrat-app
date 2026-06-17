@@ -1,8 +1,9 @@
-import { Controller, Delete, Get, HttpCode, Param, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Query, UseGuards } from '@nestjs/common';
 import { VmRelationshipsService } from './vm-relationships.service';
 import { SessionGuard } from '../auth/guards/session.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { SessionUser } from '../auth/types/auth.types';
+import { RemoveGlobalVmDto } from './dto/remove-global-vm.dto';
 
 @Controller()
 @UseGuards(SessionGuard)
@@ -20,8 +21,8 @@ export class VmRelationshipsController {
 
   @Delete('vm-relationships/global')
   @HttpCode(200)
-  removeGlobalVm(@CurrentUser() user: SessionUser) {
-    return this.vmRelationshipsService.removeGlobalVm(user);
+  removeGlobalVm(@CurrentUser() user: SessionUser, @Body() body: RemoveGlobalVmDto) {
+    return this.vmRelationshipsService.removeGlobalVm(user, body.cascade ?? 'keep');
   }
 
   @Delete('journeys/:journeyId/vm')

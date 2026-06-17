@@ -16,6 +16,7 @@ const ownProfileSelect = {
   profilePrivate: true,
   profileVisibility: true,
   notificationPrefs: true,
+  tourResetAt: true,
   lastActiveAt: true,
   createdAt: true,
   updatedAt: true,
@@ -165,6 +166,16 @@ export class UsersRepository {
           ? { notificationPrefs: fields.notificationPrefs }
           : {}),
       },
+      select: ownProfileSelect,
+    });
+  }
+
+  // Restart tour (spec/26 §5): set the contextual-walkthrough reset flag. Deliberately does
+  // NOT touch onboardingCompletedAt — the account-setup gate stays satisfied.
+  async setTourReset(id: string, when: Date) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { tourResetAt: when },
       select: ownProfileSelect,
     });
   }

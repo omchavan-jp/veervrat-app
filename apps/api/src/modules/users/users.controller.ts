@@ -87,6 +87,13 @@ export class UsersController {
     return this.usersService.updateSettings(user.id, dto);
   }
 
+  @Post('me/restart-tour')
+  @UseGuards(SessionGuard)
+  @HttpCode(HttpStatus.OK)
+  async restartTour(@CurrentUser() user: SessionUser) {
+    return this.usersService.restartTour(user.id);
+  }
+
   @Patch('me/password')
   @UseGuards(SessionGuard)
   @HttpCode(HttpStatus.OK)

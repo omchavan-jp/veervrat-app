@@ -1,0 +1,33 @@
+import { api } from './client';
+
+type Wrapped<T> = { data: T };
+
+export type MyVm = {
+  id: string;
+  displayName: string;
+  username: string;
+  avatarUrl: string | null;
+  scope: 'GLOBAL' | 'JOURNEY';
+  assignedJourneys: string[];
+};
+
+export type GlobalVmCascade = 'keep' | 'unassign';
+
+export type RemoveGlobalVmResult = {
+  removedVmId: string;
+  affectedJourneys: { journeyId: string; journeyTitle: string }[];
+  cascade: GlobalVmCascade;
+};
+
+export const vmRelationshipsApi = {
+  getMyVms: (scope?: 'GLOBAL' | 'JOURNEY') =>
+    api
+      .get<Wrapped<MyVm[]>>(`/vm-relationships/my-vms${scope ? `?scope=${scope}` : ''}`)
+      .then((r) => r.data),
+
+  // Remove the active global VM. cascade controls the outgoing VM's journey assignments
+  // (keep = leave them; unassign = also end them). Used for both "remove" and the first
+  // half of "change" (then send a fresh global invite via the invitations flow).
+  removeGlobalVm: (cascade: GlobalVmCascade) =>
+    api.delete<Wrapped<RemoveGlobalVmResult>>('/vm-relationships/global', { cascade }).then((r) => r.data),
+};

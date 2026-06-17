@@ -4,8 +4,9 @@ import { VmRelationshipsService } from './vm-relationships.service';
 import { VmRelationshipsRepository } from './vm-relationships.repository';
 import { JourneysRepository } from '../journeys/journeys.repository';
 import { NotificationsRepository } from '../notifications/notifications.repository';
+import { NotificationsService } from '../notifications/notifications.service';
 import type { SessionUser } from '../auth/types/auth.types';
-import { Role, VmRelationshipState } from '@prisma/client';
+import { NotificationEventType, Role, VmRelationshipState } from '@prisma/client';
 
 describe('VmRelationshipsService', () => {
   let service: VmRelationshipsService;
@@ -15,6 +16,7 @@ describe('VmRelationshipsService', () => {
     findActiveGlobalVm: vi.fn(),
     findActiveJourneyAssignmentsForVm: vi.fn(),
     endGlobalVm: vi.fn(),
+    endJourneyAssignmentsForVm: vi.fn(),
     findActiveJourneyAssignment: vi.fn(),
     endJourneyAssignment: vi.fn(),
     createGlobalRelationship: vi.fn(),
@@ -27,6 +29,10 @@ describe('VmRelationshipsService', () => {
   };
 
   const mockNotificationsRepository = {
+    create: vi.fn(),
+  };
+
+  const mockNotificationsService = {
     create: vi.fn(),
   };
 
@@ -57,6 +63,7 @@ describe('VmRelationshipsService', () => {
         { provide: VmRelationshipsRepository, useValue: mockRepository },
         { provide: JourneysRepository, useValue: mockJourneysRepository },
         { provide: NotificationsRepository, useValue: mockNotificationsRepository },
+        { provide: NotificationsService, useValue: mockNotificationsService },
       ],
     }).compile();
 
@@ -100,6 +107,58 @@ describe('VmRelationshipsService', () => {
       await service.getMyVms(mockVaUser, 'GLOBAL');
 
       expect(mockRepository.getMyVms).toHaveBeenCalledWith(mockVaUser.id, 'GLOBAL');
+    });
+  });
+
+  describe('removeGlobalVm', () => {
+    const activeGlobal = { id: 'rel-1', vmId: 'vm-9', vratarthiId: 'va-1' };
+
+    beforeEach(() => {
+      mockRepository.findActiveGlobalVm.mockResolvedValue(activeGlobal);
+      mockRepository.findActiveJourneyAssignmentsForVm.mockResolvedValue([
+        { journeyId: 'j-1', journeyTitle: 'Journey 1' },
+      ]);
+      mockRepository.endGlobalVm.mockResolvedValue({ ...activeGlobal, endedAt: new Date() });
+      mockRepository.endJourneyAssignmentsForVm.mockResolvedValue(1);
+    });
+
+    it('keep (default): ends only the global relationship, not journey assignments', async () => {
+      const result = await service.removeGlobalVm(mockVaUser);
+      expect(mockRepository.endGlobalVm).toHaveBeenCalledWith('rel-1');
+      expect(mockRepository.endJourneyAssignmentsForVm).not.toHaveBeenCalled();
+      expect(result).toEqual({
+        removedVmId: 'vm-9',
+        affectedJourneys: [{ journeyId: 'j-1', journeyTitle: 'Journey 1' }],
+        cascade: 'keep',
+      });
+    });
+
+    it('unassign: also ends the outgoing VM journey assignments', async () => {
+      const result = await service.removeGlobalVm(mockVaUser, 'unassign');
+      expect(mockRepository.endGlobalVm).toHaveBeenCalledWith('rel-1');
+      expect(mockRepository.endJourneyAssignmentsForVm).toHaveBeenCalledWith('vm-9', 'va-1');
+      expect(result.cascade).toBe('unassign');
+    });
+
+    it('notifies the outgoing VM with VM_WITHDREW', async () => {
+      await service.removeGlobalVm(mockVaUser, 'keep');
+      expect(mockNotificationsService.create).toHaveBeenCalledWith(
+        'vm-9',
+        'va-1',
+        NotificationEventType.VM_WITHDREW,
+        'user',
+        'va-1',
+      );
+    });
+
+    it('404s when there is no active global VM', async () => {
+      mockRepository.findActiveGlobalVm.mockResolvedValue(null);
+      await expect(service.removeGlobalVm(mockVaUser)).rejects.toThrow();
+      expect(mockRepository.endGlobalVm).not.toHaveBeenCalled();
+    });
+
+    it('rejects a non-VA caller (403)', async () => {
+      await expect(service.removeGlobalVm(mockVmUser)).rejects.toThrow(ForbiddenException);
     });
   });
 });

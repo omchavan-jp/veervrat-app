@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { User as UserIcon, ShieldCheck, Languages, Bell, KeyRound } from 'lucide-react';
+import { User as UserIcon, ShieldCheck, Languages, Bell, KeyRound, Users as UsersIcon, RotateCcw } from 'lucide-react';
 import { usersApi, type OwnProfile } from '@/lib/api/users';
+import { vmRelationshipsApi, type MyVm, type GlobalVmCascade } from '@/lib/api/vm-relationships';
 import { authApi } from '@/lib/api/auth';
 import { queryKeys } from '@/lib/api/query-keys';
 import { useAuth, useLogout } from '@/hooks/use-auth';
@@ -65,6 +66,7 @@ export default function SettingsPage() {
         <PrivacySection profile={profile.data} />
         <LanguageSection profile={profile.data} />
         <NotificationsSection profile={profile.data} />
+        <VratmitraSection profile={profile.data} />
         <AccountSection profile={profile.data} />
       </div>
     </div>
@@ -150,6 +152,91 @@ function NotificationsSection({ profile }: { profile: OwnProfile }) {
           onChange={(v) => m.mutate({ [event]: v })}
         />
       ))}
+    </Section>
+  );
+}
+
+function VratmitraSection({ profile }: { profile: OwnProfile }) {
+  const t = useTranslations('settings');
+  const router = useRouter();
+  const qc = useQueryClient();
+  const [cascade, setCascade] = useState<GlobalVmCascade>('keep');
+  const [confirming, setConfirming] = useState<null | 'remove' | 'change'>(null);
+  const [tourDone, setTourDone] = useState(false);
+
+  const vms = useQuery({ queryKey: ['my-vms', 'GLOBAL'], queryFn: () => vmRelationshipsApi.getMyVms('GLOBAL') });
+  const globalVm: MyVm | undefined = vms.data?.find((v) => v.scope === 'GLOBAL');
+
+  const remove = useMutation({
+    mutationFn: () => vmRelationshipsApi.removeGlobalVm(cascade),
+    onSuccess: (_res, _vars, ctx) => {
+      qc.invalidateQueries({ queryKey: ['my-vms'] });
+      const action = confirming;
+      setConfirming(null);
+      // "Change" = remove then send a fresh global invite via the invitations flow.
+      if (action === 'change') router.push('/invitations');
+    },
+  });
+
+  const restart = useMutation({
+    mutationFn: () => usersApi.restartTour(),
+    onSuccess: () => { setTourDone(true); qc.invalidateQueries({ queryKey: queryKeys.auth.me }); },
+  });
+
+  return (
+    <Section icon={<UsersIcon className="h-4 w-4" />} title={t('vratmitraTitle')} desc={t('vratmitraDesc')}>
+      <div className="grid gap-4">
+        <div>
+          <div className="text-[12px] text-muted">{t('vratmitraGlobal')}</div>
+          {globalVm ? (
+            <div className="mt-1 flex items-center justify-between rounded-xl border border-border bg-bg px-3 py-2">
+              <span className="text-[14px] text-fg">{globalVm.displayName} <span className="text-muted">@{globalVm.username}</span></span>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setConfirming('change')} disabled={remove.isPending}>{t('vratmitraChange')}</Button>
+                <Button variant="outline" onClick={() => setConfirming('remove')} disabled={remove.isPending}>{t('vratmitraRemove')}</Button>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-1 flex items-center justify-between rounded-xl border border-border bg-bg px-3 py-2">
+              <span className="text-[14px] text-muted">{t('vratmitraNone')}</span>
+              <Button variant="outline" onClick={() => router.push('/invitations')}>{t('vratmitraInvite')}</Button>
+            </div>
+          )}
+        </div>
+
+        {confirming && (
+          <div className="rounded-xl border border-border bg-surface p-3">
+            <p className="text-[13px] text-fg">{confirming === 'change' ? t('vratmitraChangeConfirm') : t('vratmitraRemoveConfirm')}</p>
+            <div className="mt-2 grid gap-1.5">
+              <label className="flex cursor-pointer items-center gap-2 text-[13px]">
+                <input type="radio" name="cascade" checked={cascade === 'keep'} onChange={() => setCascade('keep')} />
+                {t('vratmitraCascadeKeep')}
+              </label>
+              <label className="flex cursor-pointer items-center gap-2 text-[13px]">
+                <input type="radio" name="cascade" checked={cascade === 'unassign'} onChange={() => setCascade('unassign')} />
+                {t('vratmitraCascadeUnassign')}
+              </label>
+            </div>
+            <div className="mt-3 flex gap-2">
+              <Button onClick={() => remove.mutate()} disabled={remove.isPending}>{remove.isPending ? '…' : t('vratmitraConfirm')}</Button>
+              <Button variant="outline" onClick={() => setConfirming(null)} disabled={remove.isPending}>{t('cancel')}</Button>
+            </div>
+          </div>
+        )}
+
+        <div className="border-t border-border pt-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-[14px] text-fg">{t('vratmitraTour')}</div>
+              <div className="text-[12px] text-muted">{t('vratmitraTourDesc')}</div>
+            </div>
+            <Button variant="outline" onClick={() => restart.mutate()} disabled={restart.isPending}>
+              <RotateCcw className="mr-1 h-3.5 w-3.5" />{restart.isPending ? '…' : t('vratmitraRestartTour')}
+            </Button>
+          </div>
+          {tourDone && <p className="mt-1 text-[12px] text-accent-2">{t('vratmitraTourReset')}</p>}
+        </div>
+      </div>
     </Section>
   );
 }

@@ -20,6 +20,12 @@ function makeService(parts: {
     }),
     anonymise: vi.fn().mockResolvedValue({ id: 'u1', anonymisedAt: new Date() }),
     cancelPendingInvitations: vi.fn().mockResolvedValue({ count: 0 }),
+    setTourReset: vi.fn().mockResolvedValue({
+      id: 'u1', email: 'u@x.com', displayName: 'U', username: 'u', avatarUrl: null, gender: null, dob: null,
+      language: 'EN', showLastActive: true, showOnlineIndicator: true, profilePrivate: false,
+      profileVisibility: {}, notificationPrefs: {}, tourResetAt: new Date(),
+      createdAt: new Date(), updatedAt: new Date(),
+    }),
     ...parts.repo,
   };
   s['usersIndex'] = { upsert: vi.fn(), remove: vi.fn(), search: vi.fn() };
@@ -65,6 +71,18 @@ describe('UsersService — selfDelete', () => {
     const { service, s } = makeService({ auth: { verifyPassword: vi.fn().mockResolvedValue(false) } });
     await expect(service.selfDelete('u1', 'wrong')).rejects.toBeInstanceOf(InvalidCredentialsException);
     expect((s['usersRepository'] as Record<string, ReturnType<typeof vi.fn>>)['anonymise']).not.toHaveBeenCalled();
+  });
+});
+
+describe('UsersService — restartTour', () => {
+  it('sets tourResetAt without resetting onboarding', async () => {
+    const { service, s } = makeService({});
+    const result = await service.restartTour('u1');
+    expect((s['usersRepository'] as Record<string, ReturnType<typeof vi.fn>>)['setTourReset']).toHaveBeenCalledWith(
+      'u1',
+      expect.any(Date),
+    );
+    expect(result.tourResetAt).not.toBeNull();
   });
 });
 
