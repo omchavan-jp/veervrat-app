@@ -38,7 +38,6 @@ function makeService() {
   return {
     getStats: vi.fn().mockResolvedValue({ virtues: { count: 0 } }),
     getSuggestions: vi.fn().mockResolvedValue({ suggestions: [] }),
-    getPlatformStats: vi.fn().mockResolvedValue({ vratarthis: 0, vratmitras: 0, testsSolved: 0, practiceDaysCompleted: 0 }),
   };
 }
 
@@ -70,14 +69,6 @@ describe('DashboardController — auth matrix', () => {
     it('negative: VM-only role is rejected with 403', async () => {
       const { ctrl } = makeController();
       await expect(ctrl.getSuggestions(VM_ONLY_USER)).rejects.toThrow(AccessDeniedException);
-    });
-  });
-
-  describe('GET /dashboard/platform-stats', () => {
-    it('positive: any authenticated user gets platform stats', async () => {
-      const { ctrl, svc } = makeController();
-      await ctrl.getPlatformStats();
-      expect(svc.getPlatformStats).toHaveBeenCalledOnce();
     });
   });
 });

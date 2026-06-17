@@ -510,7 +510,7 @@ Read every file listed under "Read first" below, then inspect current state of f
 
 ---
 
-### 33. Platform stats (cached) [DIRECT]
+### 33. Platform stats (cached) [DIRECT] ✅ DONE
 Branch: `feat/platform-stats`
 
 ```

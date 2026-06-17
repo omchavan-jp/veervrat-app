@@ -3,6 +3,7 @@ import { getTranslations, getLocale } from 'next-intl/server';
 import { DashboardStatsBar } from '@/components/dashboard/dashboard-stats-bar';
 import { DashboardSuggestions } from '@/components/dashboard/dashboard-suggestions';
 import { DashboardGreeting } from '@/components/dashboard/dashboard-greeting';
+import { DashboardPlatformStats } from '@/components/dashboard/dashboard-platform-stats';
 
 export default async function DashboardPage() {
   const t = await getTranslations('dashboard');
@@ -15,7 +16,8 @@ export default async function DashboardPage() {
   });
 
   return (
-    <div>
+    <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
+      <div className="min-w-0 flex-1">
       {/* Header row */}
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
@@ -58,6 +60,12 @@ export default async function DashboardPage() {
 
       {/* Sentence suggestions */}
       <DashboardSuggestions />
+      </div>
+
+      {/* Right rail — platform-wide stats (guest-accessible, cached) */}
+      <aside className="w-full shrink-0 lg:sticky lg:top-12 lg:w-72">
+        <DashboardPlatformStats />
+      </aside>
     </div>
   );
 }

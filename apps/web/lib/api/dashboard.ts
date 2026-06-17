@@ -46,6 +46,7 @@ export const dashboardApi = {
   getSuggestions: (): Promise<DashboardSuggestions> =>
     api.get<Wrapped<DashboardSuggestions>>('/dashboard/suggestions').then((r) => r.data),
 
+  // Guest-accessible, Redis-cached 60-min (spec/decisions/11_platform-stats.md).
   getPlatformStats: (): Promise<PlatformStats> =>
-    api.get<Wrapped<PlatformStats>>('/dashboard/platform-stats').then((r) => r.data),
+    api.get<Wrapped<PlatformStats>>('/stats/platform').then((r) => r.data),
 };

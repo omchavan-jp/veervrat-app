@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ErcStatus, JourneyState, Role } from '@prisma/client';
+import { ErcStatus, JourneyState } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 
 export type DashboardStats = {
@@ -26,13 +26,6 @@ export type SuggestionItem = {
   virtueNameMr: string | null;
   weaknessId: string;
   weaknessNameEn: string;
-};
-
-export type PlatformStats = {
-  vratarthis: number;
-  vratmitras: number;
-  testsSolved: number;
-  practiceDaysCompleted: number;
 };
 
 const ACTIVE_JOURNEY_STATES = [JourneyState.ACTIVE, JourneyState.NOT_STARTED] as const;
@@ -214,23 +207,5 @@ export class DashboardRepository {
         },
       ];
     });
-  }
-
-  async getPlatformStats(): Promise<PlatformStats> {
-    const [vratarthisCount, vmIds, testsSolved] = await Promise.all([
-      this.prisma.userRole.count({ where: { role: Role.VRATARTHI } }),
-      this.prisma.vmRelationship.findMany({
-        select: { vmId: true },
-        distinct: ['vmId'],
-      }),
-      this.prisma.testAttempt.count({ where: { isDraft: false } }),
-    ]);
-
-    return {
-      vratarthis: vratarthisCount,
-      vratmitras: vmIds.length,
-      testsSolved,
-      practiceDaysCompleted: 0,
-    };
   }
 }

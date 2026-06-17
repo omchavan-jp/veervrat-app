@@ -31,6 +31,7 @@ import { ContentModule } from './modules/content/content.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { AdminUsersModule } from './modules/admin-users/admin-users.module';
 import { CmsModule } from './modules/cms/cms.module';
+import { StatsModule } from './modules/stats/stats.module';
 import { AuditInterceptor } from './modules/audit/audit.interceptor';
 import { AuditService } from './modules/audit/audit.service';
 import { RedisModule } from './common/redis/redis.module';
@@ -87,6 +88,7 @@ import { CsrfGuard } from './common/guards/csrf.guard';
     AdminModule,
     AdminUsersModule,
     CmsModule,
+    StatsModule,
   ],
   controllers: [AppController],
   providers: [

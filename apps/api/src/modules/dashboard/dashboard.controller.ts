@@ -24,10 +24,4 @@ export class DashboardController {
     if (!isVa(user)) throw new AccessDeniedException();
     return this.dashboardService.getSuggestions(user.id);
   }
-
-  @Get('platform-stats')
-  @HttpCode(HttpStatus.OK)
-  async getPlatformStats() {
-    return this.dashboardService.getPlatformStats();
-  }
 }
