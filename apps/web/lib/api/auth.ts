@@ -38,6 +38,12 @@ export const authApi = {
   resetPassword: (data: { token: string; newPassword: string }) =>
     api.post<Wrapped<{ message: string }>>('/auth/reset-password', data).then((r) => r.data),
 
+  requestEmailChange: (data: { newEmail: string; currentPassword: string }) =>
+    api.post<Wrapped<{ message: string }>>('/auth/request-email-change', data).then((r) => r.data),
+
+  confirmEmailChange: (token: string) =>
+    api.post<Wrapped<{ message: string }>>('/auth/confirm-email-change', { token }).then((r) => r.data),
+
   completeOnboarding: (data: { displayName?: string; username?: string; language?: string; gender?: string; dob?: string }) =>
     api.post<Wrapped<User>>('/auth/complete-onboarding', data).then((r) => r.data),
 

@@ -40,8 +40,17 @@ Status: ⬜ Open · ✅ Done · 🔁 Recurring (re-evaluate each relevant item)
 | 26 | Rich-text (Tiptap) editor for CMS bodies + resource descriptions (admin panels use a plain-text↔doc shim `lib/tiptap-text.ts`; backend stores/sanitizes full Tiptap) | Item 30 | When a shared Tiptap editor component lands | ⬜ Open |
 | 27 | Featured rails/carousels on the public blogs/experiences pages (read side now returns `featured` + `?featured=true`; curation UI shipped; consuming UI not yet built) | Item 30 | Community-page polish | ⬜ Open |
 | 28 | Deep body-level scrub of chat/sidenote content on anonymise (v1 anonymises identity only → renders as "[Deleted user]"; bodies retained as-is per spec/06) | Item 31 | When privacy policy / legal detail is finalised (spec/06 §30 "TBD") | ⬜ Open |
-| 29 | Platform Stats dashboard (`/admin` → Stats; spec/27) — user growth, test volume, completion rate, ERC usage, active VMs, search volume | Items 30/31 | A dedicated stats item | ⬜ Open |
+| 29 | Platform Stats dashboard (`/admin` → Stats; spec/27) — user growth, test volume, completion rate, ERC usage, active VMs, search volume | Items 30/31 | A dedicated stats item | ⬜ Open · **NOTE: Item 33 covers the lighter guest/dashboard platform-stats endpoint (4 counts), NOT this full admin stats dashboard — this remains unscheduled.** |
+| 30 | **Notification EMAIL delivery** — spec/25 specs per-event email + opt-out, but Item 18 built notifications **in-app only** (`EmailModule.sendNotification` is never called). Item 32 stores the opt-out prefs (`User.notificationPrefs`); nothing reads them yet. | Item 18 (gap found at Item 32) | **NOT in `03_Implementation-Order.md` — needs a new item.** Wire NotificationService to send email (respecting prefs) for the ✅ events in spec/25. | ⬜ Open |
+| 31 | **Account-settings Section 5 — Vratmitra settings**: global-VM **change/migration** (cascade rules undecided — `spec/04`/`spec/26` reference a "migration UI"; Item 14 left "decide what to cascade" open) + **"Restart tour"** walkthrough replay (no infra; onboarding is a one-time flag). | Item 32 (spec/26 §5) | **NOT in `03_Implementation-Order.md` — needs a spec decision (cascade rules) THEN a new order item.** E2E flow #5 (Item 35) assumes global-VM swap exists. | ⬜ Open |
+| 32 | Google-only-account self-delete path (Item 32 `DELETE /users/me` requires password re-auth; OAuth-only accounts have no password → can't self-delete via that path; admin-anonymise still works) | Item 32 | When OAuth re-auth (or alternate confirm) is designed | ⬜ Open |
 
 ## Notes
 - Each deferral is also recorded in its originating change's archived `tasks.md` (`openspec/changes/archive/`) — this table is the cross-item index, not a replacement.
 - "v2" rows are explicitly out of v1 scope per their spec decision; listed so they aren't mistaken for gaps.
+
+### ⚠️ Spec'd / expected but NOT in `documentation/03_Implementation-Order.md` (need new items)
+These are not covered by any remaining ordered item (32–35). Before building them, add an order-file item (and, where noted, a spec decision) — do not fold them silently into another item:
+- **#30 Notification email delivery** — spec/25 expects it; Item 18 shipped in-app only. New item needed.
+- **#31 Global-VM change/migration + Restart tour** — spec/26 §5; cascade rules undecided. Needs a spec decision THEN a new item.
+- **#29 (full) Admin Platform Stats dashboard** — spec/27; Item 33 only does the 4-count guest endpoint.

@@ -3,14 +3,18 @@ import { UsersRepository } from './users.repository';
 import { UsersIndexService } from '../search/users-index.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateVisibilityDto } from './dto/update-visibility.dto';
+import { UpdateSettingsDto } from './dto/update-settings.dto';
 import type { OwnProfileDto, PublicProfileDto, UserSearchResultDto } from './dto/public-profile.dto';
 import type { SessionUser } from '../auth/types/auth.types';
 import { parseVisibility, isFieldVisible } from './profile-visibility';
+import { parseNotificationPrefs } from './notification-prefs';
 import { FollowsService } from '../follows/follows.service';
 import { ExperienceLogsService } from '../experience-logs/experience-logs.service';
+import { AuthService } from '../auth/auth.service';
 import {
   EntityNotFoundException,
   UserUsernameTakenException,
+  InvalidCredentialsException,
 } from '../../common/exceptions/app.exceptions';
 
 const USERNAME_REGEX = /^[a-z0-9_]{3,30}$/;
@@ -26,6 +30,7 @@ export class UsersService implements OnModuleInit {
     private readonly followsService: FollowsService,
     private readonly experienceLogsService: ExperienceLogsService,
     private readonly usersIndex: UsersIndexService,
+    private readonly authService: AuthService,
   ) {}
 
   // One-shot seed so search works without a manual reindex (bounded; fine at scale).
@@ -205,6 +210,53 @@ export class UsersService implements OnModuleInit {
     return this.toOwnProfileDto(user);
   }
 
+  async updateSettings(userId: string, dto: UpdateSettingsDto): Promise<OwnProfileDto> {
+    const existing = await this.usersRepository.findById(userId);
+    if (!existing) throw new EntityNotFoundException('User', userId);
+
+    const user = await this.usersRepository.updateSettings(userId, {
+      language: dto.language,
+      profilePrivate: dto.profilePrivate,
+      showLastActive: dto.showLastActive,
+      showOnlineIndicator: dto.showOnlineIndicator,
+      notificationPrefs: dto.notificationPrefs
+        ? { ...parseNotificationPrefs(existing.notificationPrefs), ...parseNotificationPrefs(dto.notificationPrefs) }
+        : undefined,
+    });
+
+    // Privacy may have changed → re-sync the search index.
+    this.syncToIndex(user);
+    return this.toOwnProfileDto(user);
+  }
+
+  // Single source of truth for "anonymise an account" (spec/06). Used by both admin
+  // anonymisation (Item 31) and self-delete (Item 32): replace PII with a deterministic
+  // pseudonym, soft-delete + suspend, kill sessions, cancel pending invitations. Content
+  // (journeys, ERC, tests, logs) is retained under the pseudonym.
+  async anonymiseAccount(userId: string): Promise<{ id: string; anonymisedAt: Date }> {
+    const shortId = userId.replace(/-/g, '').slice(0, 12);
+    const now = new Date();
+    const user = await this.usersRepository.anonymise(
+      userId,
+      { displayName: '[Deleted user]', email: `anon-${shortId}@deleted.invalid`, username: `deleted_${shortId}` },
+      now,
+    );
+    await this.authService.forceLogout(userId);
+    await this.usersRepository.cancelPendingInvitations(userId);
+    // Drop from the search index — an anonymised account is no longer discoverable.
+    void this.usersIndex.remove(userId);
+    return { id: user.id, anonymisedAt: now };
+  }
+
+  // Self-service account deletion. Re-authenticates with the current password, then routes
+  // through the shared anonymisation primitive (spec/06: anonymise, don't hard-delete).
+  async selfDelete(userId: string, currentPassword: string): Promise<{ id: string }> {
+    const ok = await this.authService.verifyPassword(userId, currentPassword);
+    if (!ok) throw new InvalidCredentialsException();
+    await this.anonymiseAccount(userId);
+    return { id: userId };
+  }
+
   async findByEmail(email: string) {
     return this.usersRepository.findByEmail(email);
   }
@@ -249,6 +301,8 @@ export class UsersService implements OnModuleInit {
     showOnlineIndicator: boolean;
     profilePrivate: boolean;
     profileVisibility: unknown;
+    notificationPrefs?: unknown;
+    pendingEmail?: string | null;
     createdAt: Date;
     updatedAt: Date;
   }): OwnProfileDto {
@@ -265,6 +319,8 @@ export class UsersService implements OnModuleInit {
       showOnlineIndicator: user.showOnlineIndicator,
       profilePrivate: user.profilePrivate,
       profileVisibility: parseVisibility(user.profileVisibility),
+      notificationPrefs: parseNotificationPrefs(user.notificationPrefs),
+      pendingEmail: user.pendingEmail ?? null,
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
     };

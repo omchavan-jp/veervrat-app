@@ -125,6 +125,41 @@ export class AuthRepository {
     });
   }
 
+  // ─── Email change ──────────────────────────────────────────────────────────
+  async emailInUse(email: string): Promise<boolean> {
+    const existing = await this.prisma.user.findFirst({ where: { email }, select: { id: true } });
+    return existing !== null;
+  }
+
+  async setPendingEmail(userId: string, pendingEmail: string | null) {
+    return this.prisma.user.update({ where: { id: userId }, data: { pendingEmail }, select: { id: true } });
+  }
+
+  async getPendingEmail(userId: string): Promise<string | null> {
+    const u = await this.prisma.user.findUnique({ where: { id: userId }, select: { pendingEmail: true } });
+    return u?.pendingEmail ?? null;
+  }
+
+  async applyEmailChange(userId: string, newEmail: string) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { email: newEmail, pendingEmail: null },
+      select: userSelect,
+    });
+  }
+
+  // ─── Connected accounts ────────────────────────────────────────────────────
+  async listAuthAccounts(userId: string) {
+    return this.prisma.authAccount.findMany({
+      where: { userId },
+      select: { id: true, provider: true, passwordHash: true, createdAt: true },
+    });
+  }
+
+  async deleteAuthAccount(id: string) {
+    return this.prisma.authAccount.delete({ where: { id }, select: { id: true } });
+  }
+
   async createSession(params: {
     userId: string;
     token: string;

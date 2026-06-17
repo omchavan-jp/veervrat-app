@@ -3,6 +3,7 @@ import { JourneyState, Role } from '@prisma/client';
 import { AdminUsersRepository } from './admin-users.repository';
 import { AuthService } from '../auth/auth.service';
 import { JourneysService } from '../journeys/journeys.service';
+import { UsersService } from '../users/users.service';
 import { hasPermission } from '../../common/permissions/has-permission';
 import type { SessionUser } from '../auth/types/auth.types';
 import {
@@ -18,6 +19,7 @@ export class AdminUsersService {
     private readonly repo: AdminUsersRepository,
     private readonly auth: AuthService,
     private readonly journeys: JourneysService,
+    private readonly users: UsersService,
   ) {}
 
   private assertManage(user: SessionUser): void {
@@ -84,17 +86,8 @@ export class AdminUsersService {
     if (!target) throw new EntityNotFoundException('User', id);
     if (target.anonymisedAt) throw new EntityInUseException('Account', 'this account is already anonymised');
 
-    // Deterministic pseudonym from the (stable, unique) user id — no Math.random/Date.now.
-    const shortId = id.replace(/-/g, '').slice(0, 12);
-    const now = new Date();
-    const result = await this.repo.anonymise(
-      id,
-      { displayName: '[Deleted user]', email: `anon-${shortId}@deleted.invalid`, username: `deleted_${shortId}` },
-      now,
-    );
-    await this.auth.forceLogout(id);
-    await this.repo.cancelPendingInvitations(id);
-    return result;
+    // Single anonymisation implementation lives in UsersService (shared with self-delete).
+    return this.users.anonymiseAccount(id);
   }
 
   async overrideJourneyState(user: SessionUser, journeyId: string, dto: OverrideJourneyStateDto) {

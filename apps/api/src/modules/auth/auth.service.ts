@@ -13,6 +13,7 @@ import {
   TokenExpiredException,
   TokenInvalidException,
   EntityNotFoundException,
+  EntityInUseException,
   AccountLockedException,
 } from '../../common/exceptions/app.exceptions';
 import { REDIS_CLIENT } from '../../common/redis/redis.provider';
@@ -22,6 +23,7 @@ import { UsersIndexService } from '../search/users-index.service';
 import { AuditService } from '../audit/audit.service';
 import { VerifyEmailEmail, getSubject as getVerifySubject } from '../email/templates/VerifyEmailEmail';
 import { PasswordResetEmail, getSubject as getResetSubject } from '../email/templates/PasswordResetEmail';
+import { EmailChangeEmail, getEmailChangeSubject } from '../email/templates/EmailChangeEmail';
 import { createElement } from 'react';
 
 const BCRYPT_ROUNDS = 12;
@@ -359,6 +361,108 @@ export class AuthService {
     await this.authRepository.updatePasswordHash(emailAccount.id, passwordHash);
     await this.authRepository.markTokenUsed(verificationToken.id);
     await this.authRepository.deleteAllUserSessions(verificationToken.userId);
+  }
+
+  // Authenticated password change — requires the current password. Returns a fresh session
+  // token so the caller stays logged in while all prior sessions are invalidated.
+  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<{ sessionToken: string }> {
+    const emailAccount = await this.authRepository.findEmailAccountByUserId(userId);
+    if (!emailAccount?.passwordHash) {
+      // Google-only account — no password to change.
+      throw new EntityNotFoundException('AuthAccount', userId);
+    }
+    const valid = await bcrypt.compare(currentPassword, emailAccount.passwordHash);
+    if (!valid) throw new InvalidCredentialsException();
+
+    const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+    await this.authRepository.updatePasswordHash(emailAccount.id, passwordHash);
+    // Invalidate every existing session, then mint a new one for this caller.
+    await this.authRepository.deleteAllUserSessions(userId);
+    const sessionToken = await this.createSession({ userId, ipAddress: null, userAgent: null, ttlDays: this.sessionTtlDays });
+    return { sessionToken };
+  }
+
+  // Verify a user's password (re-auth gate for sensitive self-service actions like delete).
+  async verifyPassword(userId: string, password: string): Promise<boolean> {
+    const emailAccount = await this.authRepository.findEmailAccountByUserId(userId);
+    if (!emailAccount?.passwordHash) return false;
+    return bcrypt.compare(password, emailAccount.passwordHash);
+  }
+
+  // ─── Connected accounts ──────────────────────────────────────────────────────
+  async listConnectedAccounts(userId: string): Promise<{ provider: AuthProvider; connectedAt: Date }[]> {
+    const accounts = await this.authRepository.listAuthAccounts(userId);
+    return accounts.map((a) => ({ provider: a.provider, connectedAt: a.createdAt }));
+  }
+
+  async disconnectAccount(userId: string, provider: AuthProvider): Promise<{ provider: AuthProvider }> {
+    const accounts = await this.authRepository.listAuthAccounts(userId);
+    const target = accounts.find((a) => a.provider === provider);
+    if (!target) throw new EntityNotFoundException('AuthAccount', provider);
+
+    // A login method counts if it can authenticate: an EMAIL account with a password, or any
+    // OAuth provider. Block removing the last one (would orphan the account).
+    const remainingLoginMethods = accounts.filter(
+      (a) => a.id !== target.id && (a.provider !== AuthProvider.EMAIL || !!a.passwordHash),
+    ).length;
+    if (remainingLoginMethods === 0) {
+      throw new EntityInUseException('Login method', 'you cannot remove your only way to sign in');
+    }
+
+    await this.authRepository.deleteAuthAccount(target.id);
+    return { provider };
+  }
+
+  async requestEmailChange(userId: string, newEmail: string, currentPassword: string): Promise<'sent'> {
+    const normalized = newEmail.trim().toLowerCase();
+    const user = await this.authRepository.findUserById(userId);
+    if (!user) throw new EntityNotFoundException('User', userId);
+
+    const emailAccount = await this.authRepository.findEmailAccountByUserId(userId);
+    if (!emailAccount?.passwordHash) throw new EntityNotFoundException('AuthAccount', userId);
+    const valid = await bcrypt.compare(currentPassword, emailAccount.passwordHash);
+    if (!valid) throw new InvalidCredentialsException();
+
+    if (normalized === user.email.toLowerCase()) throw new DuplicateEntityException('User', 'email');
+    if (await this.authRepository.emailInUse(normalized)) throw new DuplicateEntityException('User', 'email');
+
+    await this.authRepository.setPendingEmail(userId, normalized);
+    await this.authRepository.invalidateTokensByUserAndType(userId, VerificationType.EMAIL_CHANGE);
+    const token = this.generateToken();
+    await this.authRepository.createVerificationToken({
+      userId,
+      token,
+      type: VerificationType.EMAIL_CHANGE,
+      expiresAt: this.hoursFromNow(PASSWORD_RESET_TOKEN_EXPIRY_HOURS),
+      metadata: { newEmail: normalized },
+    });
+
+    const confirmUrl = `${this.configService.get<string>('FRONTEND_URL', 'http://localhost:3000')}/confirm-email-change?token=${token}`;
+    const lang = (user.language as 'EN' | 'MR') ?? 'EN';
+    const { html, text } = await this.emailService.renderTemplate(
+      createElement(EmailChangeEmail, { displayName: user.displayName, confirmUrl, language: lang }),
+    );
+    await this.emailService.sendTransactional(normalized, getEmailChangeSubject(lang), html, text);
+    return 'sent';
+  }
+
+  async confirmEmailChange(token: string): Promise<{ user: SessionUser }> {
+    const verificationToken = await this.authRepository.findVerificationToken(token, VerificationType.EMAIL_CHANGE);
+    if (!verificationToken) throw new TokenInvalidException();
+    if (verificationToken.expiresAt < new Date()) throw new TokenExpiredException('email change');
+
+    const pending = await this.authRepository.getPendingEmail(verificationToken.userId);
+    const intended = (verificationToken.metadata as { newEmail?: string } | null)?.newEmail;
+    if (!pending || !intended || pending.toLowerCase() !== intended.toLowerCase()) {
+      // Pending email was cleared or superseded — token no longer valid.
+      throw new TokenInvalidException();
+    }
+    // Guard against the address being taken between request and confirm.
+    if (await this.authRepository.emailInUse(pending)) throw new DuplicateEntityException('User', 'email');
+
+    const user = await this.authRepository.applyEmailChange(verificationToken.userId, pending);
+    await this.authRepository.markTokenUsed(verificationToken.id);
+    return { user: this.toSessionUser(user) };
   }
 
   async validateSession(token: string): Promise<SessionUser | null> {

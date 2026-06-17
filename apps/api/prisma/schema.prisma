@@ -197,6 +197,11 @@ model User {
   // Per-field public-profile visibility (spec/10). Empty/missing key = visible
   // (all fields public by default). Only `false` entries hide a field.
   profileVisibility     Json      @default("{}") @map("profile_visibility")
+  // Per-event email opt-out map (spec/25). Missing key = email enabled; only explicit
+  // `false` opts out. Storage-only until notification email delivery is built.
+  notificationPrefs     Json      @default("{}") @map("notification_prefs")
+  // Address awaiting confirmation during an email-change flow (null when none pending).
+  pendingEmail          String?   @map("pending_email")
   suspendedAt           DateTime? @map("suspended_at")
   anonymisedAt          DateTime? @map("anonymised_at")
   deletedAt             DateTime? @map("deleted_at")

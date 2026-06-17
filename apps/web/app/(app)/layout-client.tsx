@@ -18,6 +18,7 @@ import {
   ScrollText,
   ShieldCheck,
   SlidersHorizontal,
+  Settings,
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
@@ -248,6 +249,14 @@ function LeftRail({
                 <span className="block truncate text-[13px]">{user.displayName ?? user.email}</span>
                 <span className="block text-[10px] text-muted">Vratarthi</span>
               </span>
+            </Link>
+            <Link
+              href="/settings"
+              title={t('settings')}
+              className="flex items-center gap-2.5 rounded-lg border border-border bg-transparent px-3.5 py-2.5 text-left text-[13px] text-fg transition-colors hover:border-accent hover:bg-fg/[0.04]"
+            >
+              <Settings className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">{t('settings')}</span>
             </Link>
             <button
               onClick={() => logout.mutate()}

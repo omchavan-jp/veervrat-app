@@ -1,4 +1,5 @@
 import type { ProfileVisibility } from '../profile-visibility';
+import type { NotificationPrefs } from '../notification-prefs';
 
 // Public profile — only fields the VA has left visible are present. A field toggled
 // off is absent entirely (not "—"), per spec/10.
@@ -54,6 +55,8 @@ export interface OwnProfileDto {
   showOnlineIndicator: boolean;
   profilePrivate: boolean;
   profileVisibility: ProfileVisibility;
+  notificationPrefs: NotificationPrefs;
+  pendingEmail?: string | null;
   createdAt: string;
   updatedAt: string;
   followerCount?: number;

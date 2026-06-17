@@ -31,10 +31,22 @@ export type OwnProfile = {
   showOnlineIndicator: boolean;
   profilePrivate: boolean;
   profileVisibility: ProfileVisibility;
+  notificationPrefs: Record<string, boolean>;
+  pendingEmail?: string | null;
   createdAt: string;
   updatedAt: string;
   followerCount?: number;
   followingCount?: number;
+};
+
+export type ConnectedAccount = { provider: 'EMAIL' | 'GOOGLE'; connectedAt: string };
+
+export type UpdateSettingsInput = {
+  language?: string;
+  profilePrivate?: boolean;
+  showLastActive?: boolean;
+  showOnlineIndicator?: boolean;
+  notificationPrefs?: Record<string, boolean>;
 };
 
 // All stat fields are optional — a field toggled off by the VA is absent (spec/10).
@@ -92,6 +104,21 @@ export const usersApi = {
 
   updateVisibility: (data: UpdateVisibilityInput) =>
     api.patch<Wrapped<OwnProfile>>('/users/me/visibility', data).then((r) => r.data),
+
+  updateSettings: (data: UpdateSettingsInput) =>
+    api.patch<Wrapped<OwnProfile>>('/users/me/settings', data).then((r) => r.data),
+
+  changePassword: (currentPassword: string, newPassword: string) =>
+    api.patch<Wrapped<{ success: boolean }>>('/users/me/password', { currentPassword, newPassword }).then((r) => r.data),
+
+  listConnectedAccounts: () =>
+    api.get<Wrapped<ConnectedAccount[]>>('/users/me/connected-accounts').then((r) => r.data),
+
+  disconnectAccount: (provider: string) =>
+    api.delete<Wrapped<{ provider: string }>>(`/users/me/connected-accounts/${provider}`).then((r) => r.data),
+
+  deleteAccount: (currentPassword: string) =>
+    api.delete<Wrapped<{ id: string }>>('/users/me', { currentPassword }).then((r) => r.data),
 
   getPublicProfile: (username: string) =>
     api.get<Wrapped<PublicProfile>>(`/users/${encodeURIComponent(username)}`).then((r) => r.data),

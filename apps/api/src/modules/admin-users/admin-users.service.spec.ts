@@ -30,7 +30,8 @@ function make(overrides: Record<string, any> = {}, authOverrides: Record<string,
   } as any;
   const auth = { forceLogout: vi.fn().mockResolvedValue(undefined), ...authOverrides } as any;
   const journeys = { adminOverrideState: vi.fn().mockResolvedValue({ from: JourneyState.ACTIVE, to: JourneyState.PAUSED }), ...journeyOverrides } as any;
-  return { service: new AdminUsersService(repo, auth, journeys), repo, auth, journeys };
+  const users = { anonymiseAccount: vi.fn().mockResolvedValue({ id: 'u9', anonymisedAt: new Date() }) } as any;
+  return { service: new AdminUsersService(repo, auth, journeys, users), repo, auth, journeys, users };
 }
 
 describe('AdminUsersService', () => {
@@ -87,16 +88,10 @@ describe('AdminUsersService', () => {
     await expect(service.setSuspended(ADMIN, 'admin-1', true)).rejects.toBeInstanceOf(EntityInUseException);
   });
 
-  it('anonymise replaces PII, kills sessions, cancels invites', async () => {
-    const { service, repo, auth } = make();
+  it('anonymise delegates to the shared UsersService.anonymiseAccount seam', async () => {
+    const { service, users } = make();
     await service.anonymise(ADMIN, 'u9', { reason: 'gdpr request' });
-    expect(repo.anonymise).toHaveBeenCalledWith(
-      'u9',
-      expect.objectContaining({ displayName: '[Deleted user]' }),
-      expect.any(Date),
-    );
-    expect(auth.forceLogout).toHaveBeenCalledWith('u9');
-    expect(repo.cancelPendingInvitations).toHaveBeenCalledWith('u9');
+    expect(users.anonymiseAccount).toHaveBeenCalledWith('u9');
   });
 
   it('anonymise rejects already-anonymised', async () => {

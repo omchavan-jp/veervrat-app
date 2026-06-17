@@ -20,6 +20,7 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { CompleteOnboardingDto } from './dto/complete-onboarding.dto';
+import { RequestEmailChangeDto, ConfirmEmailChangeDto } from './dto/email-change.dto';
 import { SessionGuard } from './guards/session.guard';
 import { GoogleOAuthGuard } from './guards/google-oauth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
@@ -115,6 +116,23 @@ export class AuthController {
       ...result.user,
       message: 'Email verified successfully. You can now log in.',
     };
+  }
+
+  @Post('request-email-change')
+  @UseGuards(SessionGuard)
+  @HttpCode(HttpStatus.OK)
+  @Audited({ action: 'auth.email_change_requested', resourceType: 'user', resourceId: (c) => (c.req.user as SessionUser)?.id })
+  async requestEmailChange(@Body() dto: RequestEmailChangeDto, @CurrentUser() user: SessionUser) {
+    await this.authService.requestEmailChange(user.id, dto.newEmail, dto.currentPassword);
+    return { message: 'A confirmation link has been sent to the new email address.' };
+  }
+
+  @Post('confirm-email-change')
+  @HttpCode(HttpStatus.OK)
+  @Audited({ action: 'auth.email_change_confirmed', resourceType: 'user' })
+  async confirmEmailChange(@Body() dto: ConfirmEmailChangeDto) {
+    const result = await this.authService.confirmEmailChange(dto.token);
+    return { ...result.user, message: 'Your email address has been updated.' };
   }
 
   @Get('google')

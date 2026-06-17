@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { InvitationStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 
 const ownProfileSelect = {
@@ -14,6 +15,7 @@ const ownProfileSelect = {
   showOnlineIndicator: true,
   profilePrivate: true,
   profileVisibility: true,
+  notificationPrefs: true,
   lastActiveAt: true,
   createdAt: true,
   updatedAt: true,
@@ -137,6 +139,61 @@ export class UsersRepository {
           : {}),
       },
       select: ownProfileSelect,
+    });
+  }
+
+  async updateSettings(
+    id: string,
+    fields: {
+      language?: string;
+      profilePrivate?: boolean;
+      showLastActive?: boolean;
+      showOnlineIndicator?: boolean;
+      notificationPrefs?: Record<string, boolean>;
+    },
+  ) {
+    return this.prisma.user.update({
+      where: { id },
+      data: {
+        ...(fields.language !== undefined ? { language: fields.language as 'EN' | 'MR' } : {}),
+        ...(fields.profilePrivate !== undefined ? { profilePrivate: fields.profilePrivate } : {}),
+        ...(fields.showLastActive !== undefined ? { showLastActive: fields.showLastActive } : {}),
+        ...(fields.showOnlineIndicator !== undefined
+          ? { showOnlineIndicator: fields.showOnlineIndicator }
+          : {}),
+        ...(fields.notificationPrefs !== undefined
+          ? { notificationPrefs: fields.notificationPrefs }
+          : {}),
+      },
+      select: ownProfileSelect,
+    });
+  }
+
+  // Replace PII with a pseudonym and soft-delete + suspend. Content keyed by id is retained.
+  anonymise(
+    id: string,
+    pseudonym: { displayName: string; email: string; username: string },
+    at: Date,
+  ) {
+    return this.prisma.user.update({
+      where: { id },
+      data: {
+        displayName: pseudonym.displayName,
+        email: pseudonym.email,
+        username: pseudonym.username,
+        avatarUrl: null,
+        anonymisedAt: at,
+        deletedAt: at,
+        suspendedAt: at,
+      },
+      select: { id: true, anonymisedAt: true },
+    });
+  }
+
+  cancelPendingInvitations(inviterId: string) {
+    return this.prisma.invitation.updateMany({
+      where: { inviterId, status: InvitationStatus.PENDING },
+      data: { status: InvitationStatus.CANCELLED },
     });
   }
 
