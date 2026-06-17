@@ -553,6 +553,47 @@ Read every file listed under "Read first" below, then inspect current state of f
 
 **Implement:** Playwright config, test fixtures, all 10 E2E flows.
 **Read first:** `doc/Testing-Strategy`, `spec/27` (all relevant screens), `doc/Platform-Engineering-Standard`
+**Depends on:** Items 36 & 37 must be built first — E2E flow (5) "global VM swap migration" exercises Item 37, and flows assert email/notification side-effects covered by Item 36.
+
+---
+
+> **Items 36–37 were added 2026-06-18** to pay back deferral-ledger rows #30 and #31 (spec'd but originally absent from this order file). **Build order:** 36 → 37 → 34 → 35. They are numbered after 35 only because this list is append-only; their dependency note above governs sequencing.
+
+### 36. Notification email delivery [DIRECT]
+Branch: `feat/notification-email`
+Pays back: Deferral Ledger #30 (spec/25 specs per-event email; Item 18 built notifications in-app only — `EmailService.sendNotification` is never called; Item 32 stored opt-out prefs but nothing reads them).
+
+```
+git checkout -b feat/notification-email dev
+# Centralize email delivery in NotificationsService.create: for the emailable events (the ✅
+#   rows in spec/25 = the EMAILABLE_EVENTS allowlist already in users/notification-prefs.ts),
+#   after writing the in-app notification, look up the recipient (email, language,
+#   notificationPrefs) and — if isEmailEnabled(prefs, event) and the recipient is active
+#   (not deleted/suspended) — fire EmailService.sendNotification (fire-and-forget, never
+#   blocks the request).
+# One bilingual NotificationEmail template (EN/MR per recipient.language) parameterised by
+#   event → subject + body + a deep link (FRONTEND_URL + resource path). In-app-only events
+#   (❌ rows) and chat (per-VM, spec/18) are never emailed.
+# Direct — one template + delivery seam in the notifications service; no schema change.
+```
+
+**Read first:** `spec/25` (email-default column = the ✅ events), `doc/19_Email-Strategy`, `apps/api/src/modules/users/notification-prefs.ts`, existing `apps/api/src/modules/email/` templates + `EmailService.sendNotification`
+
+---
+
+### 37. Global VM change/migration + Restart tour [FULL]
+Branch: `feat/global-vm-migration`
+Pays back: Deferral Ledger #31 (Account-settings Section 5 — spec/26 §5; cascade rules now pinned in spec/26 R2).
+
+```
+**RESEARCH PHASE — do this before anything else:**
+Read every file listed under "Read first", then inspect vm-relationships + journeys modules and the settings page. Only then propose.
+
+/opsx:propose "Implement Account Settings Section 5 (Vratmitra settings) per spec/26 R2. Backend: extend global-VM removal into a change/migration flow with an explicit cascade choice (keep | unassign) over the outgoing VM's journey assignments (spec/04: pending approvals left pending); 'change' = remove + send a fresh global invite (explicit acceptance, no silent reassignment); notify outgoing VM + VA via VM_WITHDREW. Add a 'Restart tour' reset (clears the contextual-walkthrough seen-flag without resetting onboardingCompletedAt). Frontend: Section 5 in /settings — view current global VM, change (migration UI with cascade choice), remove, and Restart tour."
+```
+
+**Implement:** global-VM change/migration endpoint(s) + cascade, restart-tour reset, settings Section 5 UI, tests (auth matrix + cascade branches).
+**Read first:** `spec/26` (§5 + R2 cascade rules), `spec/04` (VM removal mid-journey / global self-withdrawal), `spec/05` (vm_relationship perms), `spec/22` (VM dashboard), existing `apps/api/src/modules/vm-relationships/`
 
 ---
 
