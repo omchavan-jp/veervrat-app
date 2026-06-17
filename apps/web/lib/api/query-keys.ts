@@ -62,4 +62,13 @@ export const queryKeys = {
     customErcQueue: ['moderation', 'custom-erc'] as const,
     customErcDetail: (id: string) => ['moderation', 'custom-erc', id] as const,
   },
+  content: {
+    pothi: ['content', 'pothi'] as const,
+    shlokas: (source?: string) => ['content', 'shlokas', source ?? 'all'] as const,
+    shlokaSearch: (q: string) => ['content', 'shlokas', 'search', q] as const,
+    shloka: (id: string) => ['content', 'shloka', id] as const,
+    today: ['content', 'shloka-today'] as const,
+    resources: (type?: string) => ['content', 'resources', type ?? 'all'] as const,
+    resource: (id: string) => ['content', 'resource', id] as const,
+  },
 } as const;
