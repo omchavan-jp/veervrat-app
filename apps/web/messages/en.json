@@ -800,5 +800,31 @@
     "approved": "Approved and added to the pool",
     "rejected": "Submission rejected",
     "actionError": "Something went wrong"
+  },
+  "content": {
+    "pothiTitle": "Pothi",
+    "pothiSubtitle": "The Veervrat ceremonial guide.",
+    "section": "Section {n}",
+    "seeMoreShlokas": "Shlokas",
+    "resources": "Resources",
+    "pothiEmpty": "The Pothi is being prepared",
+    "pothiEmptyHint": "Sections will appear here once published.",
+    "shlokasTitle": "Shlokas",
+    "shlokasSubtitle": "A reference collection of shlokas for Veervrat.",
+    "shlokaSearchPlaceholder": "Search shlokas by text or meaning…",
+    "shlokasEmpty": "No shlokas yet",
+    "shlokasEmptyHint": "The shloka library will appear here once published.",
+    "noResults": "No shlokas found",
+    "tags": "Tags",
+    "close": "Close",
+    "resourcesTitle": "Resources",
+    "resourcesSubtitle": "Materials that support study and practice.",
+    "all": "All",
+    "links": "Links",
+    "files": "Files",
+    "openLink": "Open link",
+    "resourcesEmpty": "No resources yet",
+    "resourcesEmptyHint": "Reference materials will appear here once published.",
+    "loadError": "Couldn't load content"
   }
 }

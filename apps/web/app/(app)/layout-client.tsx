@@ -15,6 +15,7 @@ import {
   PenLine,
   Newspaper,
   Sparkles,
+  ScrollText,
   ShieldCheck,
   LogOut,
   PanelLeftClose,
@@ -40,6 +41,7 @@ const PRACTICE: NavItem[] = [
   { href: '/study', labelKey: 'studyFlow', icon: Search },
   { href: '/journeys', labelKey: 'journeys', icon: BookOpen },
   { href: '/virtues', labelKey: 'virtues', icon: Sparkles },
+  { href: '/pothi', labelKey: 'pothi', icon: ScrollText },
   { href: '/experiences', labelKey: 'myExperiences', icon: PenLine },
   { href: '/community/blogs', labelKey: 'community', icon: Newspaper },
 ];

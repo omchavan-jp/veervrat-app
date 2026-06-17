@@ -800,5 +800,31 @@
     "approved": "मंजूर करून पूलमध्ये जोडले",
     "rejected": "सबमिशन नाकारले",
     "actionError": "काहीतरी चूक झाली"
+  },
+  "content": {
+    "pothiTitle": "पोथी",
+    "pothiSubtitle": "वीरव्रत समारंभ मार्गदर्शिका.",
+    "section": "विभाग {n}",
+    "seeMoreShlokas": "श्लोक",
+    "resources": "संसाधने",
+    "pothiEmpty": "पोथी तयार होत आहे",
+    "pothiEmptyHint": "प्रकाशित झाल्यावर विभाग येथे दिसतील.",
+    "shlokasTitle": "श्लोक",
+    "shlokasSubtitle": "वीरव्रतासाठी श्लोकांचा संदर्भ संग्रह.",
+    "shlokaSearchPlaceholder": "मजकूर किंवा अर्थाने श्लोक शोधा…",
+    "shlokasEmpty": "अद्याप श्लोक नाहीत",
+    "shlokasEmptyHint": "प्रकाशित झाल्यावर श्लोक संग्रह येथे दिसेल.",
+    "noResults": "कोणतेही श्लोक सापडले नाहीत",
+    "tags": "टॅग",
+    "close": "बंद करा",
+    "resourcesTitle": "संसाधने",
+    "resourcesSubtitle": "अभ्यास व सरावाला आधार देणारी सामग्री.",
+    "all": "सर्व",
+    "links": "दुवे",
+    "files": "फायली",
+    "openLink": "दुवा उघडा",
+    "resourcesEmpty": "अद्याप संसाधने नाहीत",
+    "resourcesEmptyHint": "प्रकाशित झाल्यावर संदर्भ सामग्री येथे दिसेल.",
+    "loadError": "सामग्री लोड करता आली नाही"
   }
 }
