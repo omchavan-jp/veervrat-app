@@ -3,7 +3,7 @@
 Engineering decisions, standards, and conventions for the Veervrat app. Files are
 numbered by purpose so the reading order is obvious:
 
-- **00–04 — Orientation & roadmap:** where things stand, how to run it, what to build next, how to build it well.
+- **00–05 — Orientation & roadmap:** where things stand, how to run it, what to build next, how to build it well.
 - **10–19 — Standards & conventions:** the rules every implementation must follow.
 - **90+ — Historical handoffs:** point-in-time session notes, kept for context.
 
@@ -12,7 +12,7 @@ numbered by purpose so the reading order is obvious:
 
 ---
 
-## 00–04 · Orientation & roadmap
+## 00–05 · Orientation & roadmap
 
 | # | Document | What it's for |
 |---|---|---|
@@ -21,6 +21,7 @@ numbered by purpose so the reading order is obvious:
 | 02 | [Local Development Setup](02_Local-Development-Setup.md) | How to run the app, services, and databases locally. |
 | 03 | [Implementation Order](03_Implementation-Order.md) | The build sequence — per-item research directives and session prompts. |
 | 04 | [Implementation Cautions & Principles](04_Implementation-Cautions-and-Principles.md) | Definition-of-Done, verification ladder, and generalized cautions. **Read before implementing any item.** |
+| 05 | [Deferral Ledger](05_Deferral-Ledger.md) | Cross-item index of intentionally-deferred work + which item pays it back. **Scan for your item number before starting.** |
 
 ## 10–19 · Standards & conventions
 
@@ -50,7 +51,7 @@ numbered by purpose so the reading order is obvious:
 - **Agent context:** `../CLAUDE.md` — hard rules, project layout, session discipline.
 - **Active changes:** `../openspec/changes/` — in-flight spec-driven work.
 
-> **Renaming convention:** when adding a doc, slot it into the right band (00–04 / 10–19 / 90+),
+> **Renaming convention:** when adding a doc, slot it into the right band (00–05 / 10–19 / 90+),
 > drop version suffixes from the filename, use `Hyphenated-Title-Case.md`, and add a row here.
 > Numbers are stable references — don't renumber an existing file without updating inbound links
 > (`CLAUDE.md`, `03_Implementation-Order.md`, and any `openspec/` specs that cite it).
