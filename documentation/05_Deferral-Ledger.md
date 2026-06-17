@@ -30,7 +30,11 @@ Status: ⬜ Open · ✅ Done · 🔁 Recurring (re-evaluate each relevant item)
 | 16 | Moderator "save edits without deciding" draft action | Item 28 (spec/27) | Future moderation polish | ⬜ Open |
 | 17 | Admin audit dashboard UI (backend `GET /admin/audit-events` exists) | Item 27 | Item 31 (admin user management) | ⬜ Open |
 | 18 | `@Audited` annotations on admin/content actions (most spec/17 mandatory events) | Item 27 | Items 30 & 31 (annotate as built) | 🔁 Recurring |
-| 19 | Shloka management / scheduling / queue, Pothi/resources admin CRUD | Item 28 | Items 29 (read) / 30 (admin) | ⬜ Open |
+| 19 | Shloka management / scheduling / queue, Pothi/resources admin CRUD | Item 28 | Item 30 (read side done by Item 29) | ⬜ Open |
+| 20 | Resource OG-thumbnail auto-fetch for links (chat-link-preview/integrations system) | Item 29 | When link-preview/integrations built; admin sets thumbnailUrl meanwhile (Item 30) | ⬜ Open |
+| 21 | "Why we study shlokas" / "What is the Pothi?" modal CMS copy (placeholder shells shipped) | Item 29 | Item 30 (admin display content) | ⬜ Open |
+| 22 | "Coming soon" shloka source sections (Stotras/Upanishads/etc. placeholders) | Item 29 (spec/27) | Future content expansion | ⬜ Open |
+| 23 | Shlokas index sync wired into admin shloka CRUD (seam exposed: ContentService.syncShlokaToIndex/removeShlokaFromIndex) | Item 29 | Item 30 | ⬜ Open |
 
 ## Notes
 - Each deferral is also recorded in its originating change's archived `tasks.md` (`openspec/changes/archive/`) — this table is the cross-item index, not a replacement.
