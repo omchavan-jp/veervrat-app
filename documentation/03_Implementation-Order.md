@@ -559,7 +559,7 @@ Read every file listed under "Read first" below, then inspect current state of f
 
 > **Items 36–37 were added 2026-06-18** to pay back deferral-ledger rows #30 and #31 (spec'd but originally absent from this order file). **Build order:** 36 → 37 → 34 → 35. They are numbered after 35 only because this list is append-only; their dependency note above governs sequencing.
 
-### 36. Notification email delivery [DIRECT]
+### 36. Notification email delivery [DIRECT] ✅ DONE
 Branch: `feat/notification-email`
 Pays back: Deferral Ledger #30 (spec/25 specs per-event email; Item 18 built notifications in-app only — `EmailService.sendNotification` is never called; Item 32 stored opt-out prefs but nothing reads them).
 

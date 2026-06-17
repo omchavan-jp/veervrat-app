@@ -26,6 +26,7 @@ function makeNotif(overrides: Record<string, unknown> = {}) {
 function makeRepo(overrides: Record<string, unknown> = {}) {
   return {
     create: vi.fn().mockResolvedValue({ id: NOTIF_ID }),
+    findEmailRecipient: vi.fn().mockResolvedValue({ email: 'r@test.com', language: 'EN', notificationPrefs: {} }),
     listForUser: vi.fn().mockResolvedValue({ items: [], nextCursor: null }),
     countUnread: vi.fn().mockResolvedValue(0),
     findById: vi.fn().mockResolvedValue(makeNotif()),
@@ -36,14 +37,101 @@ function makeRepo(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function makeService(repoOverrides: Record<string, unknown> = {}) {
-  const repo = makeRepo(repoOverrides);
-  const service = Object.create(NotificationsService.prototype) as NotificationsService;
-  (service as unknown as Record<string, unknown>)['notificationsRepository'] = repo;
-  return { service, repo };
+function makeEmail(overrides: Record<string, unknown> = {}) {
+  return {
+    renderTemplate: vi.fn().mockResolvedValue({ html: '<p>x</p>', text: 'x' }),
+    sendNotification: vi.fn(),
+    ...overrides,
+  };
 }
 
+function makeService(repoOverrides: Record<string, unknown> = {}, emailOverrides: Record<string, unknown> = {}) {
+  const repo = makeRepo(repoOverrides);
+  const email = makeEmail(emailOverrides);
+  const service = Object.create(NotificationsService.prototype) as NotificationsService;
+  (service as unknown as Record<string, unknown>)['notificationsRepository'] = repo;
+  (service as unknown as Record<string, unknown>)['emailService'] = email;
+  (service as unknown as Record<string, unknown>)['frontendUrl'] = 'http://localhost:3000';
+  (service as unknown as Record<string, unknown>)['logger'] = { warn: vi.fn(), log: vi.fn() };
+  return { service, repo, email };
+}
+
+// Lets fire-and-forget email dispatch (void promise inside create) settle before assertions.
+const flush = () => new Promise((r) => setTimeout(r, 0));
+
 describe('NotificationsService', () => {
+  describe('create — email delivery', () => {
+    it('sends an email for an emailable event when the recipient is active and not opted out', async () => {
+      const { service, repo, email } = makeService();
+      await service.create(USER_A, USER_B, NotificationEventType.ERC_CLOSURE_APPROVED, 'exposure', 'item-1');
+      await flush();
+      expect(repo.create).toHaveBeenCalledOnce();
+      expect(repo.findEmailRecipient).toHaveBeenCalledWith(USER_A);
+      expect(email.sendNotification).toHaveBeenCalledOnce();
+    });
+
+    it('does NOT email an in-app-only event', async () => {
+      const { service, email } = makeService();
+      await service.create(USER_A, USER_B, NotificationEventType.NEW_FOLLOWER, 'user', USER_B);
+      await flush();
+      expect(email.sendNotification).not.toHaveBeenCalled();
+    });
+
+    it('does NOT email when the recipient opted out of that event', async () => {
+      const { service, email } = makeService({
+        findEmailRecipient: vi.fn().mockResolvedValue({
+          email: 'r@test.com',
+          language: 'EN',
+          notificationPrefs: { ERC_CLOSURE_APPROVED: false },
+        }),
+      });
+      await service.create(USER_A, USER_B, NotificationEventType.ERC_CLOSURE_APPROVED, 'exposure', 'item-1');
+      await flush();
+      expect(email.sendNotification).not.toHaveBeenCalled();
+    });
+
+    it('does NOT email an inactive (deleted/suspended) recipient', async () => {
+      const { service, email } = makeService({ findEmailRecipient: vi.fn().mockResolvedValue(null) });
+      await service.create(USER_A, USER_B, NotificationEventType.ERC_CLOSURE_APPROVED, 'exposure', 'item-1');
+      await flush();
+      expect(email.sendNotification).not.toHaveBeenCalled();
+    });
+
+    it('skips email when skipEmail is set (caller sends its own bespoke email)', async () => {
+      const { service, repo, email } = makeService();
+      await service.create(USER_A, USER_B, NotificationEventType.VM_INVITATION_RECEIVED, 'invitation', 'inv-1', {
+        skipEmail: true,
+      });
+      await flush();
+      expect(repo.create).toHaveBeenCalledOnce();
+      expect(repo.findEmailRecipient).not.toHaveBeenCalled();
+      expect(email.sendNotification).not.toHaveBeenCalled();
+    });
+
+    it('renders in Marathi when the recipient language is mr', async () => {
+      const { service, email } = makeService({
+        findEmailRecipient: vi.fn().mockResolvedValue({ email: 'r@test.com', language: 'mr', notificationPrefs: {} }),
+      });
+      await service.create(USER_A, USER_B, NotificationEventType.JOURNEY_COMPLETION_APPROVED, 'journey', 'j-1');
+      await flush();
+      expect(email.sendNotification).toHaveBeenCalledOnce();
+      // subject is the MR subject for this event
+      const subjectArg = (email.sendNotification as ReturnType<typeof vi.fn>).mock.calls[0][1];
+      expect(subjectArg).toContain('मंजूर');
+    });
+
+    it('still creates the in-app notification when email rendering throws', async () => {
+      const { service, repo, email } = makeService({}, {
+        renderTemplate: vi.fn().mockRejectedValue(new Error('render boom')),
+      });
+      const result = await service.create(USER_A, USER_B, NotificationEventType.ERC_CLOSURE_APPROVED, 'exposure', 'i');
+      await flush();
+      expect(repo.create).toHaveBeenCalledOnce();
+      expect(result).toEqual({ id: NOTIF_ID });
+      expect(email.sendNotification).not.toHaveBeenCalled();
+    });
+  });
+
   describe('listForUser', () => {
     it('returns paginated notifications for the given user', async () => {
       const items = [makeNotif()];

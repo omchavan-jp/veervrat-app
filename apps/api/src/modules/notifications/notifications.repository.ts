@@ -57,6 +57,18 @@ export class NotificationsRepository {
     });
   }
 
+  // Recipient fields needed to decide + send a notification email. Returns null for an
+  // inactive account (deleted/suspended) so the caller skips email for them.
+  async findEmailRecipient(
+    userId: string,
+  ): Promise<{ email: string; language: string; notificationPrefs: unknown } | null> {
+    const user = await this.prisma.user.findFirst({
+      where: { id: userId, deletedAt: null, suspendedAt: null },
+      select: { email: true, language: true, notificationPrefs: true },
+    });
+    return user ?? null;
+  }
+
   async listForUser(
     userId: string,
     cursor?: string,

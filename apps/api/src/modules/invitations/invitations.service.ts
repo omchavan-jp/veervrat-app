@@ -80,12 +80,14 @@ export class InvitationsService {
     // Only an existing platform user gets an in-app notification; a VM invite to a
     // non-user is delivered purely by email until they sign up.
     if (invitee && dto.type !== InvitationType.PLATFORM) {
+      // skipEmail: the bespoke VmInvitationEmail (with accept link) was already sent above.
       void this.notificationsService.create(
         invitee.id,
         user.id,
         NotificationEventType.VM_INVITATION_RECEIVED,
         'invitation',
         invitation.id,
+        { skipEmail: true },
       );
     }
 
@@ -210,12 +212,14 @@ export class InvitationsService {
       this.emailService.sendNotification(inviter.email, getDeclinedSubject(lang), html, text);
     }
 
+    // skipEmail: the bespoke VmInvitationDeclinedEmail was already sent above.
     void this.notificationsService.create(
       invitation.inviterId,
       user.id,
       NotificationEventType.VM_INVITATION_DECLINED,
       'invitation',
       invitation.id,
+      { skipEmail: true },
     );
 
     return updated;
