@@ -525,7 +525,7 @@ git checkout -b feat/platform-stats dev
 
 ---
 
-### 34. Dormant journey detection [DIRECT]
+### 34. Dormant journey detection [DIRECT] ✅ DONE
 Branch: `feat/dormant-detection`
 
 ```

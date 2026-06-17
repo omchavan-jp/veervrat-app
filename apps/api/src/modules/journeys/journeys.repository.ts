@@ -320,6 +320,41 @@ export class JourneysRepository {
     });
   }
 
+  // ACTIVE, non-deleted journeys untouched since `cutoff` (spec/04: dormant after 30 days of
+  // no views or updates — `updatedAt` is the available signal). Returns each journey's VA and
+  // its active journey-VM ids so the cron can notify both (spec/04 dormant nudge).
+  async findStaleActiveJourneys(cutoff: Date): Promise<
+    { id: string; vratarthiId: string; vmIds: string[] }[]
+  > {
+    const rows = await this.prisma.journey.findMany({
+      where: {
+        state: JourneyState.ACTIVE,
+        deletedAt: null,
+        updatedAt: { lt: cutoff },
+      },
+      select: {
+        id: true,
+        vratarthiId: true,
+        vmAssignments: {
+          where: { state: VmRelationshipState.ACTIVE, endedAt: null },
+          select: { vmId: true },
+        },
+      },
+    });
+    return rows.map((r) => ({
+      id: r.id,
+      vratarthiId: r.vratarthiId,
+      vmIds: r.vmAssignments.map((a) => a.vmId),
+    }));
+  }
+
+  async markDormant(id: string, when: Date): Promise<void> {
+    await this.prisma.journey.update({
+      where: { id },
+      data: { state: JourneyState.DORMANT, dormantSince: when },
+    });
+  }
+
   buildJourneySlim(journey: {
     id: string;
     vratarthiId: string;
