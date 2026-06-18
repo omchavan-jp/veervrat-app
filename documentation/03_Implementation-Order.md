@@ -541,7 +541,7 @@ git checkout -b feat/dormant-detection dev
 
 ---
 
-### 35. E2E test suite [FULL]
+### 35. E2E test suite [FULL] ✅ DONE
 Branch: `feat/e2e-tests`
 
 ```
