@@ -9,16 +9,38 @@ import { adminUsersApi, type AdminRole } from '@/lib/api/admin-users';
 import { queryKeys } from '@/lib/api/query-keys';
 import { useAdminGuard } from '@/hooks/use-admin-guard';
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Dialog } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 
 const ALL_ROLES: AdminRole[] = ['VRATARTHI', 'VRATMITRA', 'MODERATOR', 'ADMIN'];
 const JOURNEY_STATES = ['NOT_STARTED', 'ACTIVE', 'PAUSED', 'DORMANT', 'COMPLETED'];
+
+// Grapheme-safe initials: Array.from splits on full code points so a Devanagari
+// display name is not cut mid-cluster into a broken glyph.
+function userInitials(name: string): string {
+  return Array.from(name.trim()).slice(0, 2).join('').toUpperCase();
+}
+
+// A reason-collecting confirmation: anonymising the account, or overriding a
+// journey's state. Both are irreversible/audited and need a typed reason, so they
+// share one accessible Dialog instead of native window.prompt.
+type PendingReason =
+  | { kind: 'anonymise' }
+  | { kind: 'override'; journeyId: string; state: string };
 
 export default function AdminUserDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const t = useTranslations('adminUsers');
   const qc = useQueryClient();
-  const { isAdmin } = useAdminGuard();
+  const { isAdmin, ready } = useAdminGuard();
   const [error, setError] = useState<string | null>(null);
+  const [pendingReason, setPendingReason] = useState<PendingReason | null>(null);
+  const [reasonInput, setReasonInput] = useState('');
 
   const detail = useQuery({ queryKey: queryKeys.adminUsers.detail(id), queryFn: () => adminUsersApi.detail(id), enabled: isAdmin });
   const invalidate = () => {
@@ -39,30 +61,47 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
     onError: onErr,
   });
   const forceLogout = useMutation({ mutationFn: () => adminUsersApi.forceLogout(id), onError: onErr });
+  const closeReason = () => { setPendingReason(null); setReasonInput(''); };
   const anonymise = useMutation({
     mutationFn: (reason: string) => adminUsersApi.anonymise(id, reason),
-    onSuccess: () => { setError(null); invalidate(); },
+    onSuccess: () => { setError(null); closeReason(); invalidate(); },
     onError: onErr,
   });
   const override = useMutation({
     mutationFn: ({ journeyId, state, reason }: { journeyId: string; state: string; reason: string }) =>
       adminUsersApi.overrideJourneyState(journeyId, state, reason),
-    onSuccess: () => { setError(null); invalidate(); },
+    onSuccess: () => { setError(null); closeReason(); invalidate(); },
     onError: onErr,
   });
 
-  if (!isAdmin) return null;
-  if (detail.isLoading) return <div className="flex min-h-[40vh] items-center justify-center"><div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" /></div>;
+  if (ready && !isAdmin) return null;
+  if (!ready || detail.isLoading) return <div className="flex min-h-[40vh] items-center justify-center"><Spinner size="lg" label={t('loading')} /></div>;
+  if (detail.isError)
+    return (
+      <Alert variant="destructive" className="border-destructive/40 bg-destructive/10">
+        <AlertDescription className="text-destructive">{t('loadError')}</AlertDescription>
+      </Alert>
+    );
   if (!detail.data) return <p className="text-[13px] text-danger">{t('notFound')}</p>;
   const u = detail.data;
   const roleSet = new Set(u.roles.map((r) => r.role));
+  const reasonValid = reasonInput.trim().length >= 3;
+  const reasonPending = anonymise.isPending || override.isPending;
+  const submitReason = () => {
+    if (!pendingReason || !reasonValid) return;
+    const reason = reasonInput.trim();
+    if (pendingReason.kind === 'anonymise') anonymise.mutate(reason);
+    else override.mutate({ journeyId: pendingReason.journeyId, state: pendingReason.state, reason });
+  };
 
   return (
     <div className="mx-auto max-w-[760px]">
-      <Link href="/admin/users" className="mb-4 inline-flex items-center gap-1.5 text-[13px] text-muted hover:text-fg"><ArrowLeft className="h-4 w-4" /> {t('backToUsers')}</Link>
+      <Link href="/admin/users" className="mb-4 inline-flex items-center gap-1.5 text-[13px] text-muted hover:text-fg"><ArrowLeft aria-hidden="true" className="h-4 w-4" /> {t('backToUsers')}</Link>
 
       <div className="flex items-center gap-3">
-        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-2/15 text-[16px] font-medium text-accent-2">{u.displayName.slice(0, 2).toUpperCase()}</span>
+        <Avatar className="h-12 w-12 border-0">
+          <AvatarFallback className="bg-accent-2/15 text-[16px] text-accent-2">{userInitials(u.displayName)}</AvatarFallback>
+        </Avatar>
         <div className="min-w-0">
           <h1 className="font-display text-[26px] font-medium tracking-tight">{u.displayName}</h1>
           <div className="text-[13px] text-muted">@{u.username} · {u.email}</div>
@@ -70,11 +109,17 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
       </div>
 
       {(u.suspendedAt || u.anonymisedAt) && (
-        <div className="mt-3 rounded-lg bg-danger/10 px-3 py-2 text-[13px] text-danger">
-          {u.anonymisedAt ? t('anonymisedNotice') : t('suspendedNotice')}
-        </div>
+        <Alert variant="destructive" className="mt-3 border-destructive/40 bg-destructive/10">
+          <AlertDescription className="text-destructive">
+            {u.anonymisedAt ? t('anonymisedNotice') : t('suspendedNotice')}
+          </AlertDescription>
+        </Alert>
       )}
-      {error && <p className="mt-3 rounded-lg bg-danger/10 px-3 py-2 text-[13px] text-danger">{error}</p>}
+      {error && (
+        <Alert variant="destructive" className="mt-3 border-destructive/40 bg-destructive/10">
+          <AlertDescription className="text-destructive">{error}</AlertDescription>
+        </Alert>
+      )}
 
       {/* Roles */}
       <section className="mt-6">
@@ -87,9 +132,10 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
                 key={role}
                 onClick={() => toggleRole.mutate({ role, has })}
                 disabled={toggleRole.isPending}
+                aria-pressed={has}
                 className={`rounded-full border px-3 py-1 text-[12px] transition-colors disabled:opacity-50 ${has ? 'border-accent bg-accent/12 text-accent' : 'border-border text-muted hover:border-fg/30'}`}
               >
-                {role}
+                {t(`role.${role}`)}
               </button>
             );
           })}
@@ -101,20 +147,17 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
         <h2 className="mb-2 font-mono text-[10px] uppercase tracking-[0.14em] text-muted">{t('accountActions')}</h2>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={() => suspend.mutate(!u.suspendedAt)} disabled={suspend.isPending || !!u.anonymisedAt}>
-            <ShieldOff className="h-4 w-4" /> {u.suspendedAt ? t('unsuspend') : t('suspend')}
+            <ShieldOff aria-hidden="true" className="h-4 w-4" /> {u.suspendedAt ? t('unsuspend') : t('suspend')}
           </Button>
           <Button variant="outline" onClick={() => forceLogout.mutate()} disabled={forceLogout.isPending}>
-            <LogOut className="h-4 w-4" /> {t('forceLogout')}
+            <LogOut aria-hidden="true" className="h-4 w-4" /> {t('forceLogout')}
           </Button>
           <Button
             variant="destructive"
             disabled={anonymise.isPending || !!u.anonymisedAt}
-            onClick={() => {
-              const reason = window.prompt(t('anonymiseReasonPrompt') ?? '');
-              if (reason && reason.trim().length >= 3) anonymise.mutate(reason.trim());
-            }}
+            onClick={() => { setReasonInput(''); setPendingReason({ kind: 'anonymise' }); }}
           >
-            <UserX className="h-4 w-4" /> {t('anonymise')}
+            <UserX aria-hidden="true" className="h-4 w-4" /> {t('anonymise')}
           </Button>
         </div>
       </section>
@@ -128,22 +171,25 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
               <div className="flex items-center justify-between gap-2">
                 <div className="min-w-0">
                   <div className="truncate text-[14px]">{j.title}</div>
-                  <div className="font-mono text-[10px] uppercase tracking-[0.08em] text-muted">{j.state}</div>
+                  <div className="font-mono text-[10px] uppercase tracking-[0.08em] text-muted">{t(`journeyState.${j.state}`)}</div>
                 </div>
-                <select
-                  defaultValue=""
-                  onChange={(e) => {
-                    const state = e.target.value;
-                    e.target.value = '';
+                <Select
+                  value=""
+                  onValueChange={(state) => {
                     if (!state) return;
-                    const reason = window.prompt(t('overrideReasonPrompt') ?? '');
-                    if (reason && reason.trim().length >= 3) override.mutate({ journeyId: j.id, state, reason: reason.trim() });
+                    setReasonInput('');
+                    setPendingReason({ kind: 'override', journeyId: j.id, state });
                   }}
-                  className="rounded-lg border border-border bg-bg px-2 py-1 text-[12px] outline-none focus:border-accent"
                 >
-                  <option value="">{t('overrideState')}</option>
-                  {JOURNEY_STATES.filter((s) => s !== j.state).map((s) => <option key={s} value={s}>{s}</option>)}
-                </select>
+                  <SelectTrigger aria-label={t('overrideState')} className="w-auto shrink-0 rounded-lg border-border bg-bg px-2 py-1 text-[12px]">
+                    <SelectValue placeholder={t('overrideState')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {JOURNEY_STATES.filter((s) => s !== j.state).map((s) => (
+                      <SelectItem key={s} value={s}>{t(`journeyState.${s}`)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           ))}
@@ -170,7 +216,7 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
           <div className="space-y-1.5">
             {u.experienceLogs.slice(0, 8).map((el) => (
               <div key={el.id} className="rounded-lg border border-border bg-surface px-3 py-2 text-[13px]">
-                <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-muted">{el.visibility}</span>
+                <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-muted">{t(`visibility.${el.visibility}`)}</span>
                 {el.isDraft && <span className="ml-1 text-[11px] text-muted">· {t('draft')}</span>}
               </div>
             ))}
@@ -178,6 +224,38 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
           </div>
         </div>
       </section>
+
+      <Dialog
+        open={pendingReason !== null}
+        onOpenChange={(open) => { if (!open) closeReason(); }}
+        title={pendingReason?.kind === 'anonymise' ? t('anonymise') : t('overrideStateTitle')}
+        description={pendingReason?.kind === 'anonymise' ? t('anonymiseReasonPrompt') : t('overrideReasonPrompt')}
+        footer={
+          <>
+            <Button variant="ghost" onClick={closeReason}>{t('cancel')}</Button>
+            <Button
+              variant={pendingReason?.kind === 'anonymise' ? 'destructive' : 'default'}
+              loading={reasonPending}
+              disabled={!reasonValid || reasonPending}
+              onClick={submitReason}
+            >
+              {t('confirm')}
+            </Button>
+          </>
+        }
+      >
+        <div>
+          <Label htmlFor="reason-input" className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.1em] text-muted">{t('reasonLabel')}</Label>
+          <Input
+            id="reason-input"
+            autoFocus
+            value={reasonInput}
+            onChange={(e) => setReasonInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') submitReason(); }}
+            placeholder={t('reasonPlaceholder')}
+          />
+        </div>
+      </Dialog>
     </div>
   );
 }

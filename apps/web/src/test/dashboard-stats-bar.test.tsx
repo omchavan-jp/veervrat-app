@@ -46,9 +46,11 @@ describe('DashboardStatsBar', () => {
   it('renders virtue and subvirtue counts from API', async () => {
     mockDashboardApi.getStats.mockResolvedValue(makeStats());
     renderBar();
+    // Counts are interpolated into the translated label (one source of truth per
+    // metric — no standalone number spans). The test i18n mock renders params inline.
     await waitFor(() => {
-      expect(screen.getByText('2')).toBeInTheDocument();
-      expect(screen.getByText('3')).toBeInTheDocument();
+      expect(screen.getByText('statsVirtues:{"count":2}')).toBeInTheDocument();
+      expect(screen.getByText('statsSubvirtues:{"count":3}')).toBeInTheDocument();
     });
   });
 
@@ -65,9 +67,8 @@ describe('DashboardStatsBar', () => {
     );
     renderBar();
     await waitFor(() => {
-      // Two 0s rendered (virtues + subvirtues)
-      const zeros = screen.getAllByText('0');
-      expect(zeros.length).toBeGreaterThanOrEqual(2);
+      expect(screen.getByText('statsVirtues:{"count":0}')).toBeInTheDocument();
+      expect(screen.getByText('statsSubvirtues:{"count":0}')).toBeInTheDocument();
     });
   });
 });

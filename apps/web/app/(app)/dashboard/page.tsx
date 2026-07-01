@@ -1,71 +1,56 @@
-import Link from 'next/link';
 import { getTranslations, getLocale } from 'next-intl/server';
 import { DashboardStatsBar } from '@/components/dashboard/dashboard-stats-bar';
 import { DashboardSuggestions } from '@/components/dashboard/dashboard-suggestions';
 import { DashboardGreeting } from '@/components/dashboard/dashboard-greeting';
+import { DashboardHero } from '@/components/dashboard/dashboard-hero';
 import { DashboardPlatformStats } from '@/components/dashboard/dashboard-platform-stats';
 
 export default async function DashboardPage() {
   const t = await getTranslations('dashboard');
   const locale = await getLocale();
-  const today = new Date().toLocaleDateString(locale === 'mr' ? 'mr-IN' : 'en-IN', {
-    weekday: 'long',
+  const isMr = locale === 'mr';
+  const now = new Date();
+  const today = now.toLocaleDateString(isMr ? 'mr-IN' : 'en-IN', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   });
+  // Saka (Rashtriya Saur / Indian National) calendar. Intl computes the `indian`
+  // calendar parts natively (no hand-rolled conversion); the "Saur"/"Saka" wrapper
+  // labels are translated, so we assemble from parts via the `sakaDate` template.
+  // EN keeps Latin numerals; MR uses Devanagari (nu-deva) per spec/20.
+  const sakaParts = new Intl.DateTimeFormat(
+    isMr ? 'mr-IN-u-ca-indian-nu-deva' : 'en-IN-u-ca-indian',
+    { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' },
+  ).formatToParts(now);
+  const sakaPart = (type: Intl.DateTimeFormatPartTypes) =>
+    sakaParts.find((p) => p.type === type)?.value ?? '';
+  const sakaDate = t('sakaDate', {
+    weekday: sakaPart('weekday'),
+    month: sakaPart('month'),
+    day: sakaPart('day'),
+    year: sakaPart('year'),
+  });
 
   return (
-    <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
-      <div className="min-w-0 flex-1">
-      {/* Header row */}
-      <div className="mb-6 flex items-start justify-between gap-4">
-        <div>
-          <div className="mb-1 text-[12px] text-muted">{t('sakaPlaceholder')} · {today}</div>
-          <DashboardGreeting />
-        </div>
-        <Link
-          href="/experiences/new"
-          className="shrink-0 rounded-full border border-border px-4 py-2 text-[13px] text-fg transition-colors hover:border-accent hover:bg-accent hover:text-bg"
-        >
-          {t('logExperience')}
-        </Link>
-      </div>
+    <div className="mx-auto max-w-3xl">
+      {/* Zone A — Header · compact chrome */}
+      <header className="mb-6">
+        <div className="mb-1 text-[12px] text-muted">{sakaDate} · {today}</div>
+        <DashboardGreeting />
+      </header>
 
-      {/* Stats bar */}
+      {/* Zone B — Status · one dense personal-counts row */}
       <DashboardStatsBar />
 
-      {/* Path cards */}
-      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {/* Path card 01 — Study */}
-        <Link
-          href="/study"
-          className="group rounded-2xl border border-border bg-surface p-6 hover:border-accent transition-colors"
-        >
-          <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.14em] text-accent">{t('pathCard01Eyebrow')}</div>
-          <h2 className="mb-1 font-display text-[20px] tracking-tight">{t('pathCard01Title')}</h2>
-          <p className="text-[13px] text-muted">{t('pathCard01Subtitle')}</p>
-        </Link>
+      {/* Zone C — Act now · the one dominant raised region */}
+      <DashboardHero />
 
-        {/* Path card 02 — Work */}
-        <Link
-          href="/journeys"
-          className="group rounded-2xl border border-border bg-surface p-6 hover:border-accent transition-colors"
-        >
-          <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.14em] text-accent">{t('pathCard02Eyebrow')}</div>
-          <h2 className="mb-1 font-display text-[20px] tracking-tight">{t('pathCard02Title')}</h2>
-          <p className="text-[13px] text-muted">{t('pathCard02Subtitle')}</p>
-        </Link>
-      </div>
-
-      {/* Sentence suggestions */}
+      {/* Zone D — Suggestions · low-density scannable list */}
       <DashboardSuggestions />
-      </div>
 
-      {/* Right rail — platform-wide stats (guest-accessible, cached) */}
-      <aside className="w-full shrink-0 lg:sticky lg:top-12 lg:w-72">
-        <DashboardPlatformStats />
-      </aside>
+      {/* Zone E — Platform stats · quiet demoted bottom strip */}
+      <DashboardPlatformStats />
     </div>
   );
 }

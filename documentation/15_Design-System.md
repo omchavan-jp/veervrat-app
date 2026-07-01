@@ -69,16 +69,18 @@ Dark mode: same hue family as light, inverted. Warm, not cold/blue-black.
 
 ### Scale
 
+> **The exact, enforceable scale (with Tailwind classes) and the rules for using it live in `15a_UI-Consistency-Rules.md` §1–2.** That doc is canonical for *what to type*; this table is the conceptual overview. Where they ever differ, 15a wins. Note headings are **`font-normal` (400)** — the serif carries emphasis, not weight (see 15a §2).
+
 | Level | Size | Weight | Line height | Font | Usage |
 |---|---|---|---|---|---|
-| display | 32px | 500 | 1.2 | display | Hero headings, page titles |
-| h1 | 24px | 600 | 1.3 | display | Section headings |
-| h2 | 20px | 600 | 1.4 | display | Sub-section headings |
-| h3 | 16px | 600 | 1.5 | sans | Card titles |
-| h4 | 14px | 600 | 1.5 | sans | Small section labels |
+| page title | `clamp(26px,3vw,36px)` | 400 | 1.2 | display | The one `<h1>` per page (responsive) |
+| h2 | 20px | 400 | 1.4 | display | Section headings |
+| h3 | 16px | 500 | 1.5 | sans | Card / sub-section titles |
+| eyebrow | 11px | 400 | 1.4 | mono | Uppercase `tracking-[0.12em]` section labels |
 | body | 14px | 400 | 1.6 | sans | Default text |
-| small | 12px | 400 | 1.5 | sans | Captions, metadata |
-| mono | 12px | 400 | 1.4 | mono | Stats, IDs |
+| small | 13px | 400 | 1.5 | sans | Supporting copy, list subtitles |
+| caption | 12px | 400 | 1.5 | sans | Captions, metadata, timestamps |
+| mono | 12px–30px | 500 | 1.4 | mono | Stats, counts, IDs |
 
 ### Devanagari
 - Follows the same scale but rendered 10-15% larger for equivalent visual weight
@@ -144,10 +146,16 @@ All interactive components (button, input, textarea, select, card, badge, toggle
 
 ## Bilingual Content Rendering
 
-### Layout: stacked (primary approach)
-- Devanagari text above, English below
-- Devanagari: `font-deva`, slightly larger, `--fg` color
-- English: `font-sans`, `--muted` color
+> **Revised 2026-06-30** — content rendering is **toggle-ordered**, not fixed Devanagari-first. See `spec/decisions/20_design-philosophy.md` §8. Use the shared components below rather than hand-rolling `mr ?? en` or conditional `font-deva`.
+
+### Components
+- **`BilingualText`** (`components/shared/bilingual-text.tsx`) — stacked two-line content (card primary sentence, page headings). Shows **both** scripts, ordered by the active locale: selected language is the primary line (foreground, larger), the other is the muted secondary line below. Falls back to a single line when only one script exists.
+- **`ContentText`** — single-language content for **compact contexts** (chips, metadata rows, breadcrumbs). Shows only the active-locale value (falling back to the other script when missing); applies `font-deva` automatically for Devanagari.
+
+### Layout: stacked (primary approach, via `BilingualText`)
+- Active-locale line above (primary), other script below (secondary)
+- Devanagari (whichever role): `font-deva`
+- Secondary line: `--muted` color, smaller
 - Clear vertical rhythm between the two scripts
 
 ### When side-by-side is needed (shlokas, long content)

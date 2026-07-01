@@ -1,15 +1,17 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useFormatter } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Lock, Award, UserPlus, UserCheck } from 'lucide-react';
+import { Lock, Award, UserPlus, UserCheck, RotateCcw } from 'lucide-react';
 import { usersApi, type PublicProfile } from '@/lib/api/users';
 import { ApiError } from '@/lib/api/client';
 import { useAuth } from '@/hooks/use-auth';
 import { excerptFromDoc } from '@/components/experience/experience-excerpt';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Spinner } from '@/components/ui/spinner';
 
 function StatCard({ label, value, sub }: { label: string; value: number | string; sub?: string }) {
   return (
@@ -24,11 +26,12 @@ function StatCard({ label, value, sub }: { label: string; value: number | string
 export default function PublicProfilePage() {
   const { username } = useParams<{ username: string }>();
   const t = useTranslations('publicProfile');
+  const format = useFormatter();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user, isAuthenticated } = useAuth();
 
-  const { data, isLoading, error } = useQuery<PublicProfile>({
+  const { data, isLoading, error, refetch } = useQuery<PublicProfile>({
     queryKey: ['public-profile', username],
     queryFn: () => usersApi.getPublicProfile(username),
     retry: false,
@@ -51,19 +54,34 @@ export default function PublicProfilePage() {
   if (isLoading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+        <Spinner size="lg" label={t('loading')} />
       </div>
     );
   }
 
   // Private or non-existent profiles both return 404 (privacy: don't reveal existence).
+  // Transient 5xx/network errors are distinct — offer a retry rather than masking them
+  // as a permanent "not found".
   if (error) {
-    const isPrivate = error instanceof ApiError && error.statusCode === 404;
+    const is404 = error instanceof ApiError && error.statusCode === 404;
+    if (is404) {
+      return (
+        <div className="mx-auto max-w-[680px]">
+          <EmptyState icon={<Lock className="h-5 w-5" />} title={t('private')} />
+        </div>
+      );
+    }
     return (
       <div className="mx-auto max-w-[680px]">
         <EmptyState
-          icon={<Lock className="h-5 w-5" />}
-          title={isPrivate ? t('private') : t('notFound')}
+          icon={<RotateCcw className="h-5 w-5" />}
+          title={t('loadError')}
+          description={t('loadErrorHint')}
+          action={
+            <Button variant="outline" onClick={() => refetch()}>
+              {t('retry')}
+            </Button>
+          }
         />
       </div>
     );
@@ -72,23 +90,29 @@ export default function PublicProfilePage() {
   if (!data) return null;
 
   const memberSince = data.memberSince
-    ? new Date(data.memberSince).toLocaleDateString(undefined, { year: 'numeric', month: 'long' })
+    ? format.dateTime(new Date(data.memberSince), { year: 'numeric', month: 'long' })
     : null;
 
   return (
     <div className="mx-auto max-w-[680px]">
       {/* Header */}
       <div className="mb-6 flex items-start gap-4">
-        <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-accent-2 text-[20px] font-semibold text-bg">
-          {data.displayName.slice(0, 2).toUpperCase()}
-        </span>
+        <Avatar className="h-16 w-16 border-0">
+          <AvatarFallback className="bg-accent-2 text-[20px] font-semibold text-bg">
+            {data.displayName.slice(0, 2).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
         <div className="min-w-0 flex-1">
           <h1 className="font-display text-[28px] font-medium tracking-tight">{data.displayName}</h1>
           <div className="text-[14px] text-muted">@{data.username}</div>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-muted">
-            {data.isOnline && <span className="text-success">● {t('online')}</span>}
+            {data.isOnline && (
+              <span className="text-success">
+                <span aria-hidden="true">● </span>{t('online')}
+              </span>
+            )}
             {!data.isOnline && data.lastActiveAt && (
-              <span>{t('lastActive', { time: new Date(data.lastActiveAt).toLocaleDateString() })}</span>
+              <span>{t('lastActive', { time: format.dateTime(new Date(data.lastActiveAt), { year: 'numeric', month: 'short', day: 'numeric' }) })}</span>
             )}
             {memberSince && <span>{t('memberSince', { date: memberSince })}</span>}
           </div>
@@ -156,19 +180,37 @@ export default function PublicProfilePage() {
       </div>
 
       {/* Public experience entries */}
-      {(experiences.data?.items.length ?? 0) > 0 && (
+      {(experiences.isLoading || experiences.isError || (experiences.data?.items.length ?? 0) > 0) && (
         <div className="mt-8">
           <h2 className="mb-3 text-[15px] font-medium">{t('publicExperiences')}</h2>
-          <div className="space-y-3">
-            {experiences.data!.items.map((e) => (
-              <article key={e.id} className="rounded-2xl border border-border bg-surface p-4 shadow-card">
-                <div className="mb-1 text-[12px] text-muted">
-                  {new Date(e.publishedAt ?? e.createdAt).toLocaleDateString()}
-                </div>
-                <p className="text-[14px] leading-relaxed">{excerptFromDoc(e.body)}</p>
-              </article>
-            ))}
-          </div>
+          {experiences.isLoading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <div key={i} className="h-20 animate-pulse rounded-2xl bg-border" />
+              ))}
+            </div>
+          ) : experiences.isError ? (
+            <EmptyState
+              icon={<RotateCcw className="h-5 w-5" />}
+              title={t('experiencesError')}
+              action={
+                <Button variant="outline" onClick={() => experiences.refetch()}>
+                  {t('retry')}
+                </Button>
+              }
+            />
+          ) : (
+            <div className="space-y-3">
+              {(experiences.data?.items ?? []).map((e) => (
+                <article key={e.id} className="rounded-2xl border border-border bg-surface p-4 shadow-card">
+                  <div className="mb-1 text-[12px] text-muted">
+                    {format.dateTime(new Date(e.publishedAt ?? e.createdAt), { year: 'numeric', month: 'short', day: 'numeric' })}
+                  </div>
+                  <p className="text-[14px] leading-relaxed">{excerptFromDoc(e.body)}</p>
+                </article>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

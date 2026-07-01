@@ -7,8 +7,9 @@ import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import { useTranslations } from 'next-intl';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ImageIcon, Loader2, X } from 'lucide-react';
+import { ImageIcon, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { uploadsApi } from '@/lib/api/uploads';
 import { useToast } from '@/hooks/use-toast';
 import { queryKeys } from '@/lib/api/query-keys';
@@ -39,6 +40,9 @@ export function ExperienceEditor({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [visibility, setVisibility] = useState<ExperienceVisibility>(existing?.visibility ?? 'ONLY_ME');
+  // Reactive emptiness flag so the submit guard re-evaluates as the user types
+  // (editor.isEmpty alone does not trigger re-renders).
+  const [isEmpty, setIsEmpty] = useState(true);
   const [tags, setTags] = useState<SelectedTag[]>(
     (existing?.tags ?? []).map((tg) => ({ entityType: tg.entityType, entityId: tg.entityId, label: tg.entityId })),
   );
@@ -47,10 +51,12 @@ export function ExperienceEditor({
     immediatelyRender: false,
     extensions: [StarterKit, Image.configure({ inline: false })],
     content: existing?.body as object | undefined,
+    onCreate: ({ editor: e }) => setIsEmpty(e.isEmpty),
+    onUpdate: ({ editor: e }) => setIsEmpty(e.isEmpty),
     editorProps: {
       attributes: {
         class:
-          'min-h-[240px] rounded-2xl border border-border bg-surface px-5 py-4 text-[15px] leading-relaxed focus:outline-none focus:border-accent [&_h2]:text-xl [&_h2]:font-display [&_h2]:mt-4 [&_img]:max-h-80 [&_img]:rounded-xl [&_img]:my-3',
+          'min-h-[240px] rounded-2xl border border-border bg-surface px-5 py-4 text-[15px] leading-relaxed outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 [&_h2]:text-xl [&_h2]:font-display [&_h2]:mt-4 [&_img]:max-h-80 [&_img]:rounded-xl [&_img]:my-3',
       },
     },
   });
@@ -110,6 +116,7 @@ export function ExperienceEditor({
   };
 
   const busy = saveDraft.isPending || publish.isPending;
+  const canSave = !!editor && !isEmpty;
 
   return (
     <div className="mx-auto max-w-[720px]">
@@ -119,15 +126,22 @@ export function ExperienceEditor({
       {journeyId && <p className="mt-1 text-[13px] text-muted">{t('journeyScoped')}</p>}
 
       <div className="mt-5">
-        <EditorContent editor={editor} />
+        {editor ? (
+          <EditorContent editor={editor} />
+        ) : (
+          <div
+            className="min-h-[240px] animate-pulse rounded-2xl border border-border bg-surface motion-reduce:animate-none"
+            aria-hidden="true"
+          />
+        )}
       </div>
 
       {/* Toolbar */}
       <div className="mt-3 flex items-center gap-2">
         <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/heic,image/heif,.heic,.heif" hidden onChange={onPickImage} />
-        <Button variant="outline" size="sm" type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+        <Button variant="outline" size="sm" type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} aria-busy={uploading}>
           {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
-          <span className="ml-1.5">{t('addImage')}</span>
+          <span className="ml-1.5">{uploading ? t('uploading') : t('addImage')}</span>
         </Button>
       </div>
 
@@ -140,27 +154,29 @@ export function ExperienceEditor({
       {/* Visibility + actions */}
       <div className="mt-7 flex flex-col gap-4 border-t border-border pt-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <div className="mb-2 text-[13px] font-medium">{t('visibility')}</div>
-          <div className="flex gap-2">
+          <div className="mb-2 text-[13px] font-medium" id="visibility-label">{t('visibility')}</div>
+          <ToggleGroup
+            value={[visibility]}
+            onValueChange={(value) => {
+              // multiple=false; ignore deselection so visibility is never empty.
+              const next = value[0] as ExperienceVisibility | undefined;
+              if (next) setVisibility(next);
+            }}
+            aria-labelledby="visibility-label"
+            className="gap-2"
+          >
             {VISIBILITIES.map((v) => (
-              <button
-                key={v}
-                type="button"
-                onClick={() => setVisibility(v)}
-                className={`rounded-full border px-3.5 py-1.5 text-[13px] transition-colors ${
-                  visibility === v ? 'border-accent bg-accent text-bg' : 'border-border-strong text-muted hover:border-accent'
-                }`}
-              >
+              <ToggleGroupItem key={v} value={v} size="sm" className="rounded-full px-3.5 py-1.5 text-[13px]">
                 {t(`visibilityOption.${v}`)}
-              </button>
+              </ToggleGroupItem>
             ))}
-          </div>
+          </ToggleGroup>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" type="button" onClick={() => saveDraft.mutate()} disabled={busy}>
+          <Button variant="outline" type="button" onClick={() => saveDraft.mutate()} disabled={busy || !canSave}>
             {saveDraft.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : t('saveDraft')}
           </Button>
-          <Button type="button" onClick={() => publish.mutate()} disabled={busy}>
+          <Button type="button" onClick={() => publish.mutate()} disabled={busy || !canSave}>
             {publish.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : t('publish')}
           </Button>
         </div>

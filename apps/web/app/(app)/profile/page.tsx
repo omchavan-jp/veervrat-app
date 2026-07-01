@@ -3,9 +3,14 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, RotateCcw } from 'lucide-react';
 import { usersApi, type OwnProfile, type ProfileField, type UpdateVisibilityInput } from '@/lib/api/users';
 import { useToast } from '@/hooks/use-toast';
+import { Switch } from '@/components/ui/switch';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Spinner } from '@/components/ui/spinner';
+import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 
 const FIELDS: { key: ProfileField; labelKey: string }[] = [
   { key: 'avatar', labelKey: 'fieldAvatar' },
@@ -20,29 +25,12 @@ const FIELDS: { key: ProfileField; labelKey: string }[] = [
   { key: 'experiences', labelKey: 'fieldExperiences' },
 ];
 
-function Toggle({ on, onChange, disabled }: { on: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      disabled={disabled}
-      onClick={() => onChange(!on)}
-      className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50 ${on ? 'bg-accent' : 'bg-border-strong'}`}
-    >
-      <span
-        className={`absolute left-0.5 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-surface shadow-sm transition-transform ${on ? 'translate-x-5' : 'translate-x-0'}`}
-      />
-    </button>
-  );
-}
-
 export default function ProfilePage() {
   const t = useTranslations('profile');
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const { data: profile, isLoading } = useQuery({
+  const { data: profile, isLoading, isError, refetch } = useQuery({
     queryKey: ['profile', 'me'],
     queryFn: usersApi.getMyProfile,
   });
@@ -56,10 +44,28 @@ export default function ProfilePage() {
     onError: () => toast({ title: t('saveError'), variant: 'destructive' }),
   });
 
-  if (isLoading || !profile) {
+  if (isLoading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+        <Spinner size="lg" label={t('loading')} />
+      </div>
+    );
+  }
+
+  if (isError || !profile) {
+    return (
+      <div className="mx-auto max-w-[680px]">
+        <h1 className="font-display text-[30px] font-medium tracking-tight">{t('title')}</h1>
+        <EmptyState
+          icon={<RotateCcw className="h-5 w-5" />}
+          title={t('loadError')}
+          description={t('loadErrorHint')}
+          action={
+            <Button variant="outline" onClick={() => refetch()}>
+              {t('retry')}
+            </Button>
+          }
+        />
       </div>
     );
   }
@@ -87,9 +93,11 @@ export default function ProfilePage() {
       <section className="mb-8">
         <h2 className="mb-3 font-mono text-[10px] uppercase tracking-[0.14em] text-muted">{t('sectionAccount')}</h2>
         <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-card">
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-2 text-[15px] font-semibold text-bg">
-            {(p.displayName || p.email).slice(0, 2).toUpperCase()}
-          </span>
+          <Avatar className="h-12 w-12 border-0">
+            <AvatarFallback className="bg-accent-2 text-[15px] font-semibold text-bg">
+              {(p.displayName || p.email).slice(0, 2).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
           <div className="min-w-0 flex-1">
             <div className="truncate text-[15px] font-medium">{p.displayName}</div>
             <div className="truncate text-[13px] text-muted">@{p.username}</div>
@@ -112,19 +120,20 @@ export default function ProfilePage() {
               <div className="text-[14px] font-medium text-danger">{t('fullPrivate')}</div>
               <div className="mt-0.5 text-[12px] text-muted">{t('fullPrivateHint')}</div>
             </div>
-            <Toggle
-              on={p.profilePrivate}
+            <Switch
+              aria-label={t('fullPrivate')}
+              checked={p.profilePrivate}
               disabled={mutation.isPending}
-              onChange={(v) => mutation.mutate({ profilePrivate: v })}
+              onCheckedChange={(v) => mutation.mutate({ profilePrivate: v })}
             />
           </div>
           <div className="flex items-center justify-between gap-4 p-4">
             <div className="text-[14px]">{t('showLastActive')}</div>
-            <Toggle on={p.showLastActive} disabled={mutation.isPending} onChange={(v) => mutation.mutate({ showLastActive: v })} />
+            <Switch aria-label={t('showLastActive')} checked={p.showLastActive} disabled={mutation.isPending} onCheckedChange={(v) => mutation.mutate({ showLastActive: v })} />
           </div>
           <div className="flex items-center justify-between gap-4 p-4">
             <div className="text-[14px]">{t('showOnline')}</div>
-            <Toggle on={p.showOnlineIndicator} disabled={mutation.isPending} onChange={(v) => mutation.mutate({ showOnlineIndicator: v })} />
+            <Switch aria-label={t('showOnline')} checked={p.showOnlineIndicator} disabled={mutation.isPending} onCheckedChange={(v) => mutation.mutate({ showOnlineIndicator: v })} />
           </div>
         </div>
       </section>
@@ -137,10 +146,11 @@ export default function ProfilePage() {
           {FIELDS.map(({ key, labelKey }) => (
             <div key={key} className="flex items-center justify-between gap-4 p-4">
               <div className="text-[14px]">{t(labelKey)}</div>
-              <Toggle
-                on={fieldVisible(key)}
+              <Switch
+                aria-label={t(labelKey)}
+                checked={fieldVisible(key)}
                 disabled={p.profilePrivate || mutation.isPending}
-                onChange={(v) => mutation.mutate({ profileVisibility: { [key]: v } })}
+                onCheckedChange={(v) => mutation.mutate({ profileVisibility: { [key]: v } })}
               />
             </div>
           ))}

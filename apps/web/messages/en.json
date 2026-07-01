@@ -44,7 +44,28 @@
     "error_loading": "Error loading data",
     "auth_required": "Authentication required",
     "back": "Back",
-    "close": "Close"
+    "close": "Close",
+    "pendingCount": "{count, plural, one {# pending} other {# pending}}",
+    "logoutError": "Couldn't log out. Please try again.",
+    "loggingOut": "Logging out…",
+    "primaryNav": "Primary navigation",
+    "role": {
+      "vratarthi": "Vratarthi",
+      "vratmitra": "Vratmitra",
+      "moderator": "Moderator",
+      "admin": "Admin"
+    },
+    "theme": {
+      "switchToLight": "Switch to light theme",
+      "switchToDark": "Switch to dark theme",
+      "toggle": "Toggle theme"
+    },
+    "language": {
+      "switchTo": "Switch language (currently {current})",
+      "current": "Language: {current}",
+      "en": "EN",
+      "mr": "मराठी"
+    }
   },
   "auth": {
     "login": {
@@ -59,7 +80,12 @@
       "submitting": "Logging in...",
       "googleCta": "Continue with Google",
       "noAccount": "New here?",
-      "signupLink": "Create an account"
+      "signupLink": "Create an account",
+      "heroEyebrow": "Return",
+      "heroHeading": "Welcome back. Pick up where you left.",
+      "heroDevanagari": "दिवसातून एक पाऊल — पुरेसे आहे.",
+      "heroGloss": "One step a day is enough. The discipline is the destination.",
+      "orDivider": "or"
     },
     "signup": {
       "title": "Create your account",
@@ -90,7 +116,13 @@
       "backToLogin": "Back to login",
       "passwordWeak": "Weak",
       "passwordOk": "OK",
-      "passwordStrong": "Strong"
+      "passwordStrong": "Strong",
+      "heroEyebrow": "Begin",
+      "heroHeading": "A practice of becoming, one weakness at a time.",
+      "heroDevanagari": "वीरव्रत — स्वतःशी प्रामाणिक राहण्याचा संकल्प.",
+      "heroGloss": "Veervrat — the vow to be honest with oneself. Identify what holds you back. Work on it daily. Track the shift.",
+      "orDivider": "or",
+      "usernameError": "Couldn't check availability. Try again."
     },
     "forgotPassword": {
       "title": "Reset your password",
@@ -102,7 +134,11 @@
       "sentTitle": "Check your email",
       "sentDescription": "If an account exists for that address, we've sent a password reset link. It expires in 1 hour.",
       "backToLogin": "Back to login",
-      "rememberedIt": "Remembered it?"
+      "rememberedIt": "Remembered it?",
+      "heroEyebrow": "Recover",
+      "heroHeading": "Forgot how to come back in?",
+      "heroDevanagari": "हरकत नाही. नवीन सुरुवात नेहमीच शक्य आहे.",
+      "heroGloss": "No matter. A fresh start is always possible."
     },
     "resetPassword": {
       "title": "Set a new password",
@@ -124,7 +160,21 @@
       "sendingNewLink": "Sending...",
       "newLinkSentTitle": "Reset link sent",
       "newLinkSentDescription": "Check your email for a new reset link. It expires in 30 minutes.",
-      "wrongAccount": "Wrong account?"
+      "wrongAccount": "Wrong account?",
+      "heroFormEyebrow": "Reset",
+      "heroFormHeading": "A new key for the same door.",
+      "heroFormDevanagari": "अनायासेन मरणं विना दैन्येन जीवनम्।",
+      "heroFormGloss": "Begin again, simply. Pick a passphrase you'll honour.",
+      "heroSuccessEyebrow": "Done",
+      "heroSuccessHeading": "A door reopened.",
+      "heroSuccessDevanagari": "पुनश्च हरि ॐ — सुरुवात पुन्हा.",
+      "heroExpiredEyebrow": "Try again",
+      "heroExpiredHeading": "This link has gone quiet.",
+      "heroExpiredDevanagari": "कालः सर्वं भक्षयति।",
+      "heroExpiredGloss": "Time consumes everything — including reset links. Ask for another.",
+      "accountEmailLabel": "Account email",
+      "accountEmailPlaceholder": "you@example.com",
+      "loginLink": "Login"
     },
     "verifyEmail": {
       "title": "Confirming your identity.",
@@ -135,7 +185,12 @@
       "invalidLink": "This verification link is missing or invalid.",
       "failedTitle": "Verification failed",
       "backToLogin": "Back to login",
-      "continueToLogin": "Continue to login"
+      "continueToLogin": "Continue to login",
+      "heroEyebrow": "Verify",
+      "heroDevanagari": "प्रमाणं हि प्रथमं पदम्।",
+      "heroGloss": "Proof is the first step.",
+      "genericError": "Verification failed.",
+      "networkError": "Could not reach the server. Please try again."
     },
     "errors": {
       "invalidCredentials": "Invalid email or password.",
@@ -153,7 +208,12 @@
       "submitting": "Linking...",
       "expiredError": "This link has expired. Please try signing in with Google again.",
       "wrongPasswordError": "Incorrect password. Please try again.",
-      "noToken": "Invalid or missing link. Please try signing in with Google again."
+      "noToken": "Invalid or missing link. Please try signing in with Google again.",
+      "heroEyebrow": "Link",
+      "heroDevanagari": "एकता हेच बल।",
+      "heroGloss": "Unity is strength.",
+      "backToLogin": "Back to login",
+      "changedMind": "Changed your mind?"
     }
   },
   "onboarding": {
@@ -188,7 +248,11 @@
         "usernameTaken": "Username already taken. Please choose another.",
         "languageRequired": "Please select a language.",
         "dobInvalid": "Please enter a valid date in YYYY-MM-DD format."
-      }
+      },
+      "stepIndicator": "Step {current} of {total}",
+      "loading": "Loading...",
+      "genderMale": "Male",
+      "genderFemale": "Female"
     },
     "framework": {
       "section1Title": "What is Veervrat",
@@ -213,7 +277,10 @@
       "ctaTakeTest": "Take a test now",
       "ctaExplore": "Explore the app first",
       "next": "Next",
-      "back": "Back"
+      "back": "Back",
+      "stepIndicator": "Step {current} of {total}",
+      "loading": "Loading...",
+      "submitting": "Saving..."
     }
   },
   "study": {
@@ -232,7 +299,13 @@
         "title": "Why study weaknesses?",
         "body": "In Veervrat, weaknesses are not flaws to be ashamed of — they are the diagnostic lens that reveals where virtues need to be cultivated. Studying a weakness helps you identify which virtues to work on. This is the path of \"sadgunachi upasana\" — the pursuit and worship of virtues. The test shows you which sentences (practices) you struggle with, and each sentence is connected to a subvirtue and virtue you can work on. Understanding where you fall short is the first act of self-reliance.",
         "close": "Understood"
-      }
+      },
+      "loadError": "Couldn't load weaknesses.",
+      "retry": "Retry",
+      "emptyTitle": "No weaknesses to explore yet",
+      "emptyBody": "Weaknesses will appear here once they are available.",
+      "notExplored": "Not explored yet",
+      "journeyActive": "Journey active"
     },
     "detail": {
       "subvirtuesTitle": "Cultivating these virtues can help",
@@ -240,7 +313,12 @@
       "testPill": "Test {n} · {date}",
       "takeTest": "Take test",
       "resumeDraft": "Resume draft",
-      "noTests": "You haven't taken this test yet."
+      "noTests": "You haven't taken this test yet.",
+      "backToWeaknesses": "Back to weaknesses",
+      "notFound": "Weakness not found.",
+      "loading": "Loading",
+      "loadError": "Couldn't load this weakness.",
+      "retry": "Retry"
     },
     "test": {
       "progress": "{answered}/{total} answered",
@@ -268,14 +346,36 @@
       "exitTitle": "Leave the test?",
       "exitBody": "Your responses so far are saved. You can resume this test any time from the weakness page.",
       "saveLeave": "Save & leave",
-      "continueReflecting": "Continue reflecting"
+      "continueReflecting": "Continue reflecting",
+      "loading": "Loading",
+      "loadError": "Couldn't load the test.",
+      "retry": "Retry",
+      "createError": "Couldn't start the test. Please try again.",
+      "creating": "Preparing your test",
+      "saveError": "Couldn't save your answers. They may not be stored.",
+      "focusSentence": "Focus sentence {n}",
+      "scoreGroupLabel": "Select a score"
     },
     "preview": {
       "title": "Review your answers",
       "subtitle": "Confirm your answers before submitting.",
       "unanswered": "—",
       "confirmSubmit": "Confirm submission",
-      "goBack": "Go back to review"
+      "goBack": "Go back to review",
+      "loading": "Loading",
+      "loadError": "Couldn't load your responses.",
+      "retry": "Retry",
+      "submitError": "Couldn't complete the reflection. Please try again.",
+      "editAnswers": "Edit answers",
+      "editAnswersShort": "Edit answers",
+      "reviewTitle": "Review your responses",
+      "reflectedCount": "{answered} of {total} reflected on.",
+      "blankCount": "{count, plural, one {# left blank.} other {# left blank.}}",
+      "reflectedSection": "Reflected on ({count})",
+      "blankSection": "Left blank ({count})",
+      "hide": "Hide",
+      "show": "Show",
+      "completeReflection": "Complete reflection"
     },
     "report": {
       "flaggedTitle": "Sentences to work on",
@@ -291,7 +391,11 @@
         "2": "Sometimes",
         "3": "Often",
         "4": "Always"
-      }
+      },
+      "loading": "Loading",
+      "loadError": "Couldn't load your report.",
+      "retry": "Retry",
+      "reflectedMeta": "{answered}/{total} reflected on · {date}"
     },
     "dashboard": {
       "pathCard01Title": "Study your weakness",
@@ -303,6 +407,11 @@
       "suggestionsSubtitle": "Sentences from your latest tests that scored Sometimes or Never.",
       "noSuggestions": "Take your first test to see personalized suggestions.",
       "startJourney": "Start journey"
+    },
+    "why": {
+      "title": "Why study weaknesses?",
+      "body": "In Veervrat, weaknesses are not flaws to be ashamed of — they are the diagnostic lens that reveals where virtues need to be cultivated. Studying a weakness helps you identify which virtues to work on. This is the path of \"sadgunachi upasana\" — the pursuit and worship of virtues. The test shows you which sentences (practices) you struggle with, and each sentence is connected to a subvirtue and virtue you can work on. Understanding where you fall short is the first act of self-reliance.",
+      "link": "Why study weaknesses?"
     }
   },
   "notifications": {
@@ -327,7 +436,35 @@
       "VM_INVITATION_RECEIVED": "invited you.",
       "VM_INVITATION_ACCEPTED": "accepted your invitation.",
       "VM_INVITATION_DECLINED": "declined your invitation."
-    }
+    },
+    "system": "System",
+    "open": "Open notifications",
+    "openWithCount": "Open notifications, {count} unread",
+    "loading": "Loading…",
+    "loadError": "Couldn't load notifications.",
+    "retry": "Try again",
+    "event_VM_INVITATION_RECEIVED": "New VM invitation",
+    "event_VM_INVITATION_ACCEPTED": "Invitation accepted",
+    "event_VM_INVITATION_DECLINED": "Invitation declined",
+    "event_VM_INVITATION_EXPIRED": "Invitation expired",
+    "event_INVITEE_JOINED_PLATFORM": "Invitee joined",
+    "event_JOURNEY_DORMANT": "Journey marked dormant",
+    "event_NEW_ERC_AVAILABLE": "New items available",
+    "event_ERC_CLOSURE_SUBMITTED": "Practice closure submitted",
+    "event_ERC_CLOSURE_APPROVED": "Practice closure approved",
+    "event_ERC_RETURNED_FOR_REVISIT": "Returned for revisit",
+    "event_JOURNEY_COMPLETION_SUBMITTED": "Journey completion submitted",
+    "event_JOURNEY_COMPLETION_APPROVED": "Journey completion approved",
+    "event_CUSTOM_ERC_REVIEW_REQUESTED": "Custom item review requested",
+    "event_CUSTOM_ERC_APPROVED": "Custom item approved",
+    "event_CUSTOM_ERC_REJECTED": "Custom item returned",
+    "event_VM_SUGGESTION_NEW": "New suggestion",
+    "event_VM_SUGGESTION_DISMISSED": "Suggestion dismissed",
+    "event_BLOG_COMMENT_NEW": "New comment",
+    "event_COMMENT_REPORTED": "Comment reported",
+    "event_NEW_FOLLOWER": "New follower",
+    "event_CHAT_MESSAGE_RECEIVED": "New message",
+    "event_VM_WITHDREW": "VM withdrew"
   },
   "actions_inbox": {
     "title": "Actions",
@@ -354,7 +491,18 @@
   "dashboard": {
     "greeting": "Namaskar",
     "greetingWithName": "Namaskar, {name}",
-    "sakaPlaceholder": "Saka date coming soon",
+    "sakaDate": "{weekday}, Saur {month} {day}, Saka {year}",
+    "hero": {
+      "continueEyebrow": "Continue your journey",
+      "continueCta": "Continue",
+      "startEyebrow": "Begin here",
+      "startTitle": "Find a weakness to work on",
+      "startSubtitle": "Study your weaknesses through a short reflection, then start a journey to grow.",
+      "startCta": "Study a weakness",
+      "allJourneys": "All journeys",
+      "study": "Study",
+      "logExperience": "Log experience"
+    },
     "logExperience": "Log your experience",
     "pathCard01Eyebrow": "Path 01 · Study",
     "pathCard01Title": "Study your weakness",
@@ -364,8 +512,8 @@
     "pathCard02Subtitle": "Journeys, exposures, resolutions, and challenges",
     "goStudy": "Go to Study",
     "goWork": "Go to Journeys",
-    "statsVirtues": "{count, plural, one {virtue} other {virtues}} being cultivated",
-    "statsSubvirtues": "{count, plural, one {subvirtue} other {subvirtues}}",
+    "statsVirtues": "{count, plural, one {# virtue} other {# virtues}} being cultivated",
+    "statsSubvirtues": "{count, plural, one {# subvirtue} other {# subvirtues}}",
     "statsJourneysActive": "{count, plural, one {# active journey} other {# active journeys}}",
     "statsJourneysCompleted": "{count, plural, one {# completed} other {# completed}}",
     "statsWeaknesses": "{count, plural, one {# weakness explored} other {# weaknesses explored}}",
@@ -374,20 +522,26 @@
     "suggestionsEmpty": "Take your first test to see personalized suggestions.",
     "suggestionsEmptyCta": "Take a test",
     "suggestionsStartJourney": "Start journey",
+    "suggestionsSeeAll": "See all {count} suggestions",
     "scoreLabel": "Score {score}",
     "platformStatsTitle": "Platform",
     "platformStatsVratarthis": "Vratarthis",
     "platformStatsVratmitras": "Vratmitras",
     "platformStatsTestsSolved": "Tests solved",
     "platformStatsPracticeDays": "Practice days",
-    "shlokaPlaceholder": "Shloka of the day coming soon"
+    "shlokaPlaceholder": "Shloka of the day coming soon",
+    "platformStatsError": "Couldn't load platform stats.",
+    "statsError": "Couldn't load your stats.",
+    "suggestionsError": "Couldn't load suggestions.",
+    "retry": "Try again"
   },
   "journey": {
     "nav": "Journeys",
     "list": {
       "title": "Your journeys",
       "emptyState": "You haven't started any journeys yet.",
-      "emptyStateCta": "Take a test to begin"
+      "emptyStateCta": "Take a test to begin",
+      "loadError": "Couldn't load your journeys. Please try again."
     },
     "stateBadge": {
       "not_started": "Not started",
@@ -414,7 +568,18 @@
       "chatBanner": "Chat with your Vratmitra about “{title}”.",
       "openChat": "Open chat",
       "chatNoVm": "Invite a Vratmitra to start a conversation.",
-      "logExperience": "Log experience"
+      "logExperience": "Log experience",
+      "countTotal": "Total",
+      "countActive": "Active",
+      "countDone": "Done",
+      "loadError": "Couldn't load this journey. Please try again.",
+      "retry": "Retry",
+      "notFoundTitle": "Journey not found",
+      "notFoundBody": "This journey may have been removed or you may not have access to it.",
+      "backToJourneys": "Journeys",
+      "titleLabel": "Journey title",
+      "editTitleHint": "Click to edit title",
+      "vmAssigned": "VM assigned"
     },
     "activity": {
       "title": "Recent activity",
@@ -478,7 +643,17 @@
       "customCreating": "Adding…",
       "customCancel": "Cancel",
       "submitForReview": "Submit for review",
-      "reviewPending": "Pending review"
+      "reviewPending": "Pending review",
+      "loadError": "Couldn't load these items. Please try again.",
+      "emptyExposures": "Browse the pool above to select your first exposures.",
+      "emptyResolutions": "Browse the pool above to select your first resolutions.",
+      "emptyChallenges": "Browse the pool above to select your first challenges.",
+      "poolLoading": "Loading pool…",
+      "poolLoadError": "Couldn't load the pool. Please try again.",
+      "frequency": "Frequency",
+      "actionError": "That action couldn't be completed. Please try again.",
+      "customCreateError": "Couldn't add this item. Please try again.",
+      "vmBadgeLabel": "Vratmitra"
     },
     "checkin": {
       "logTitle": "Log check-in",
@@ -493,7 +668,15 @@
       "justNow": "just now",
       "minutesAgo": "{count}m ago",
       "hoursAgo": "{count}h ago",
-      "daysAgo": "{count}d ago"
+      "daysAgo": "{count}d ago",
+      "logError": "Couldn't save your check-in. Please try again.",
+      "noteLabel": "Check-in note",
+      "loadError": "Couldn't load your check-ins. Please try again.",
+      "streak": "{count}-day streak"
+    },
+    "new": {
+      "creating": "Creating your journey…",
+      "createError": "Couldn't start this journey. Please try again."
     }
   },
   "my_vratmitras": {
@@ -515,7 +698,14 @@
     "no_messages": "No messages yet. Start the conversation.",
     "type_message": "Type a message...",
     "add_image": "Add image",
-    "image_failed": "Could not upload image"
+    "image_failed": "Could not upload image",
+    "image_alt": "Shared image",
+    "send": "Send",
+    "identity_error": "Couldn't load mentor details",
+    "history_error": "Couldn't load messages",
+    "mention": {
+      "no_matches": "No matches"
+    }
   },
   "profile": {
     "title": "Profile & privacy",
@@ -542,7 +732,11 @@
     "fieldChallenges": "Challenges",
     "fieldExperiences": "Public experiences",
     "followers": "followers",
-    "following": "following"
+    "following": "following",
+    "loading": "Loading profile…",
+    "loadError": "Couldn't load your profile",
+    "loadErrorHint": "Something went wrong. Please try again.",
+    "retry": "Try again"
   },
   "invitation": {
     "title": "Vratmitra invitation",
@@ -580,7 +774,12 @@
     "following": "Following",
     "followers": "followers",
     "guidedJourneys": "Guided {count} {count, plural, one {journey} other {journeys}} to completion",
-    "publicExperiences": "Public experiences"
+    "publicExperiences": "Public experiences",
+    "loading": "Loading profile…",
+    "loadError": "Couldn't load this profile",
+    "loadErrorHint": "Something went wrong. Please try again.",
+    "retry": "Try again",
+    "experiencesError": "Couldn't load experiences."
   },
   "actions": {
     "title": "Actions",
@@ -606,7 +805,10 @@
       "exposure": "Exposure",
       "resolution": "Resolution",
       "challenge": "Challenge"
-    }
+    },
+    "loading": "Loading actions…",
+    "acceptError": "Couldn't accept this item. Please try again.",
+    "metaLine": "{ercType} · in {journey}"
   },
   "vm_guidance": {
     "title": "Vratmitra Guidance",
@@ -638,7 +840,9 @@
       "exposure": "Exposure",
       "resolution": "Resolution",
       "challenge": "Challenge"
-    }
+    },
+    "actionError": "Something went wrong. Please try again.",
+    "confirmReturn": "Confirm return"
   },
   "experiences": {
     "newTitle": "Log your experience",
@@ -677,7 +881,36 @@
     "poolEmpty": "No public experiences yet",
     "poolEmptyHint": "Be the first to share a reflection publicly.",
     "loading": "Loading…",
-    "loadMore": "Load more"
+    "loadMore": "Load more",
+    "tagType": {
+      "VIRTUE": "Virtue",
+      "SUBVIRTUE": "Subvirtue",
+      "WEAKNESS": "Weakness",
+      "SENTENCE": "Sentence",
+      "EXPOSURE": "Exposure",
+      "RESOLUTION": "Resolution",
+      "CHALLENGE": "Challenge",
+      "JOURNEY": "Journey"
+    },
+    "notFound": "Experience not found",
+    "back": "Back to my experiences",
+    "uploading": "Uploading…",
+    "deleteError": "Couldn't delete your entry",
+    "deleteConfirmTitle": "Delete this experience?",
+    "deleteConfirmBody": "This will permanently remove this experience log. This can't be undone.",
+    "deleteCancel": "Cancel",
+    "tagSearchError": "Couldn't search right now",
+    "tagSearchEmpty": "No matches found",
+    "entityType": {
+      "VIRTUE": "Virtue",
+      "SUBVIRTUE": "Subvirtue",
+      "WEAKNESS": "Weakness",
+      "SENTENCE": "Sentence",
+      "EXPOSURE": "Exposure",
+      "RESOLUTION": "Resolution",
+      "CHALLENGE": "Challenge",
+      "JOURNEY": "Journey"
+    }
   },
   "invitations_flow": {
     "title": "Invite a Vratmitra",
@@ -760,7 +993,12 @@
     "hide": "Hide",
     "delete": "Delete",
     "report": "Report",
-    "reported": "Reported for review"
+    "reported": "Reported for review",
+    "commentError": "Couldn't post your comment",
+    "moderationError": "Couldn't complete that action",
+    "backToMine": "Back to my blogs",
+    "titleLabel": "Blog title",
+    "uploading": "Uploading…"
   },
   "virtues": {
     "title": "Virtues & Weaknesses",
@@ -782,7 +1020,11 @@
     "takeTest": "Take a test",
     "takeTestForWeakness": "Take the test for this weakness",
     "loginToTest": "Log in to take a test.",
-    "login": "Log in"
+    "login": "Log in",
+    "retry": "Try again",
+    "noSubvirtues": "No subvirtues yet",
+    "virtuesEmpty": "No virtues yet",
+    "weaknessesEmpty": "No weaknesses yet"
   },
   "moderation": {
     "title": "Moderation",
@@ -802,7 +1044,27 @@
     "rejectReasonPlaceholder": "Reason for rejection (required)…",
     "approved": "Approved and added to the pool",
     "rejected": "Submission rejected",
-    "actionError": "Something went wrong"
+    "actionError": "Something went wrong",
+    "queueError": "Couldn't load the review queue",
+    "detailError": "Couldn't load this submission",
+    "rejectReasonLabel": "Reason for rejection",
+    "durationWeeks": "{count, plural, one {# week} other {# weeks}}",
+    "durationDays": "{count, plural, one {# day} other {# days}}",
+    "entityType": {
+      "EXPOSURE": "Exposure",
+      "RESOLUTION": "Resolution",
+      "CHALLENGE": "Challenge"
+    },
+    "ercTypeLabel": {
+      "exposure": "Exposure",
+      "resolution": "Resolution",
+      "challenge": "Challenge"
+    },
+    "tier": {
+      "local": "Local",
+      "national": "National",
+      "international": "International"
+    }
   },
   "content": {
     "pothiTitle": "Pothi",
@@ -834,7 +1096,8 @@
     "whatIsPothiBody": "The Pothi is the ceremonial guide for Veervrat — an ordered sequence of sections, shlokas, congregational responses, and commentary used during gatherings. It frames the practice of cultivating virtues within a shared, structured ritual.",
     "whyShlokasLink": "Why we study shlokas",
     "whyShlokasTitle": "Why we study shlokas",
-    "whyShlokasBody": "Shlokas distil the wisdom that underpins Veervrat. Reciting and reflecting on them anchors daily practice, connects each virtue to a living tradition, and turns abstract aspiration into remembered, repeatable guidance."
+    "whyShlokasBody": "Shlokas distil the wisdom that underpins Veervrat. Reciting and reflecting on them anchors daily practice, connects each virtue to a living tradition, and turns abstract aspiration into remembered, repeatable guidance.",
+    "retry": "Try again"
   },
   "admin": {
     "dashboardTitle": "Admin",
@@ -907,7 +1170,16 @@
     "usersTitle": "Users",
     "usersDesc": "Accounts, roles, and account actions.",
     "auditTitle": "Audit log",
-    "auditDesc": "Browse all admin/moderator actions."
+    "auditDesc": "Browse all admin/moderator actions.",
+    "loading": "Loading...",
+    "loadError": "Couldn't load. Please try again.",
+    "saving": "Saving…",
+    "confirmDeleteTitle": "Delete this item?",
+    "toggleFeatured": "Toggle featured",
+    "toggleFeaturedError": "Couldn't update featured status. Please try again.",
+    "noBlogs": "No blogs yet",
+    "noExperiences": "No experiences yet",
+    "cmsKeyLabel": "Key"
   },
   "adminUsers": {
     "title": "Users",
@@ -936,7 +1208,32 @@
     "experiences": "Experiences",
     "noExperiences": "No experiences.",
     "submitted": "submitted",
-    "draft": "draft"
+    "draft": "draft",
+    "loading": "Loading...",
+    "loadError": "Couldn't load. Please try again.",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "overrideStateTitle": "Override journey state",
+    "reasonLabel": "Reason",
+    "reasonPlaceholder": "Reason (audit-logged)…",
+    "role": {
+      "VRATARTHI": "Vratarthi",
+      "VRATMITRA": "Vratmitra",
+      "MODERATOR": "Moderator",
+      "ADMIN": "Admin"
+    },
+    "journeyState": {
+      "NOT_STARTED": "Not started",
+      "ACTIVE": "Active",
+      "PAUSED": "Paused",
+      "DORMANT": "Dormant",
+      "COMPLETED": "Completed"
+    },
+    "visibility": {
+      "ONLY_ME": "Only me",
+      "FRIENDS": "Friends",
+      "PUBLIC": "Public"
+    }
   },
   "audit": {
     "title": "Audit log",
@@ -944,7 +1241,9 @@
     "filterAction": "Filter by action (e.g. admin.suspend_user)",
     "filterActor": "Filter by actor id",
     "noEvents": "No audit events",
-    "actor": "Actor"
+    "actor": "Actor",
+    "loading": "Loading...",
+    "loadError": "Couldn't load audit events. Please try again."
   },
   "settings": {
     "title": "Settings",
@@ -1015,7 +1314,13 @@
     "vratmitraTour": "Guided tour",
     "vratmitraTourDesc": "Replay the contextual walkthroughs across the app.",
     "vratmitraRestartTour": "Restart tour",
-    "vratmitraTourReset": "The guided tour will restart as you navigate."
+    "vratmitraTourReset": "The guided tour will restart as you navigate.",
+    "loading": "Loading settings…",
+    "loadError": "Couldn't load your settings",
+    "loadErrorHint": "Something went wrong. Please try again.",
+    "retry": "Try again",
+    "saveError": "Couldn't save. Please try again.",
+    "disconnectError": "Couldn't disconnect this account. Please try again."
   },
   "confirmEmailChange": {
     "title": "Confirm email change",
@@ -1024,5 +1329,15 @@
     "error": "This confirmation link is invalid or has expired.",
     "goToDashboard": "Go to dashboard",
     "backToSettings": "Back to settings"
+  },
+  "entityType": {
+    "weakness": "Weakness",
+    "virtue": "Virtue",
+    "subvirtue": "Subvirtue",
+    "sentence": "Sentence",
+    "journey": "Journey",
+    "exposure": "Exposure",
+    "resolution": "Resolution",
+    "challenge": "Challenge"
   }
 }

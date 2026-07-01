@@ -6,10 +6,13 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { AuthShell } from '@/components/auth/auth-shell';
 import { StatusBanner } from '@/components/auth/status-banner';
 import { useForgotPassword } from '@/hooks/use-auth';
 import { forgotPasswordSchema, type ForgotPasswordInput } from '@/lib/validations/auth';
+
+const FIELD_LABEL = 'mb-2 block font-mono text-[11px] uppercase tracking-[0.1em] text-muted';
 
 export default function ForgotPasswordPage() {
   const t = useTranslations('auth.forgotPassword');
@@ -28,10 +31,10 @@ export default function ForgotPasswordPage() {
   };
 
   const hero = {
-    eyebrow: 'Recover',
-    heading: 'Forgot how to come back in?',
-    devanagari: 'हरकत नाही. नवीन सुरुवात नेहमीच शक्य आहे.',
-    gloss: 'No matter. A fresh start is always possible.',
+    eyebrow: t('heroEyebrow'),
+    heading: t('heroHeading'),
+    devanagari: t('heroDevanagari'),
+    gloss: t('heroGloss'),
   };
 
   // Enumeration prevention: the API always returns 'sent'. We show one neutral
@@ -40,12 +43,14 @@ export default function ForgotPasswordPage() {
     return (
       <AuthShell hero={hero}>
         <StatusBanner variant="success" title={t('sentTitle')} description={t('sentDescription')} />
-        <Link
-          href="/login"
-          className="mt-4 inline-flex h-auto w-full items-center justify-center rounded-xl bg-accent px-6 py-3.5 text-[15px] font-medium text-bg hover:bg-accent-hover"
+        <Button
+          size="lg"
+          className="mt-4 min-h-12 w-full text-[15px]"
+          nativeButton={false}
+          render={<Link href="/login" />}
         >
           {t('backToLogin')}
-        </Link>
+        </Button>
       </AuthShell>
     );
   }
@@ -57,24 +62,30 @@ export default function ForgotPasswordPage() {
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div>
-          <label className="mb-2 block font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
+          <Label htmlFor="forgot-email" className={FIELD_LABEL}>
             {t('emailLabel')}
-          </label>
+          </Label>
           <Input
+            id="forgot-email"
             type="email"
+            variant="underline"
             placeholder={t('emailPlaceholder')}
-            className="rounded-none border-0 border-b border-border-strong bg-transparent px-0 py-3 text-base focus-visible:border-accent focus-visible:ring-0"
+            aria-invalid={errors.email ? true : undefined}
+            aria-describedby={errors.email ? 'forgot-email-error' : undefined}
             {...register('email')}
           />
           {errors.email && (
-            <p className="mt-1.5 text-xs text-accent">{errors.email.message}</p>
+            <p id="forgot-email-error" role="alert" className="mt-1.5 text-xs text-danger">
+              {errors.email.message}
+            </p>
           )}
         </div>
 
         <Button
           type="submit"
-          disabled={forgotPassword.isPending}
-          className="h-auto w-full rounded-xl bg-accent px-6 py-3.5 text-[15px] text-bg hover:bg-accent-hover"
+          size="lg"
+          loading={forgotPassword.isPending}
+          className="min-h-12 w-full text-[15px]"
         >
           {forgotPassword.isPending ? t('submitting') : t('submit')}
         </Button>

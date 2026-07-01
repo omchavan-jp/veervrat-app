@@ -12,11 +12,13 @@ function getStrength(password: string): number {
   return score;
 }
 
+// Strength is state, not brand — use semantic tokens (danger/warning/success),
+// never the brand accent or a raw hex.
 function barClass(index: number, strength: number): string {
   if (index >= strength) return 'bg-border';
-  if (strength <= 1) return 'bg-accent';
-  if (strength <= 2) return 'bg-[#d4a373]';
-  return 'bg-accent-2';
+  if (strength <= 1) return 'bg-danger';
+  if (strength <= 2) return 'bg-warning';
+  return 'bg-success';
 }
 
 export function PasswordStrength({ password }: { password: string }) {

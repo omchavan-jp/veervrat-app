@@ -26,6 +26,7 @@ export type SuggestionItem = {
   virtueNameMr: string | null;
   weaknessId: string;
   weaknessNameEn: string;
+  weaknessNameMr: string | null;
 };
 
 const ACTIVE_JOURNEY_STATES = [JourneyState.ACTIVE, JourneyState.NOT_STARTED] as const;
@@ -124,7 +125,7 @@ export class DashboardRepository {
     if (weaknesses.length === 0) return [];
 
     // For each weakness, get the most recent submitted attempt with low-score answers (sentenceId + score only)
-    const rawAnswers: { sentenceId: string; score: number; weaknessId: string; weaknessNameEn: string }[] = [];
+    const rawAnswers: { sentenceId: string; score: number; weaknessId: string; weaknessNameEn: string; weaknessNameMr: string | null }[] = [];
 
     await Promise.all(
       weaknesses.map(async ({ weaknessId }) => {
@@ -132,7 +133,7 @@ export class DashboardRepository {
           where: { userId, weaknessId, isDraft: false },
           orderBy: { submittedAt: 'desc' },
           select: {
-            weakness: { select: { id: true, nameEn: true } },
+            weakness: { select: { id: true, nameEn: true, nameMr: true } },
             answers: {
               where: { score: { lte: 2 } },
               select: { sentenceId: true, score: true },
@@ -148,6 +149,7 @@ export class DashboardRepository {
             score: a.score,
             weaknessId: latestAttempt.weakness.id,
             weaknessNameEn: latestAttempt.weakness.nameEn,
+            weaknessNameMr: latestAttempt.weakness.nameMr,
           });
         }
       }),
@@ -156,7 +158,7 @@ export class DashboardRepository {
     if (rawAnswers.length === 0) return [];
 
     // Deduplicate by sentenceId — keep lowest score
-    const byId = new Map<string, { sentenceId: string; score: number; weaknessId: string; weaknessNameEn: string }>();
+    const byId = new Map<string, { sentenceId: string; score: number; weaknessId: string; weaknessNameEn: string; weaknessNameMr: string | null }>();
     for (const a of rawAnswers) {
       const existing = byId.get(a.sentenceId);
       if (!existing || a.score < existing.score) {
@@ -204,6 +206,7 @@ export class DashboardRepository {
           virtueNameMr: s.subvirtue.virtue.nameMr,
           weaknessId: d.weaknessId,
           weaknessNameEn: d.weaknessNameEn,
+          weaknessNameMr: d.weaknessNameMr,
         },
       ];
     });

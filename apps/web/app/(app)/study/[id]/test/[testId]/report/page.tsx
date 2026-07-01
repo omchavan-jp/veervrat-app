@@ -3,13 +3,16 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useTranslations } from 'next-intl';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslations, useFormatter } from 'next-intl';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { ArrowLeft, ArrowRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTestReport } from '@/hooks/use-tests';
 import type { ReportSentence } from '@/lib/api/tests';
-import { BilingualText } from '@/components/shared/bilingual-text';
+import { BilingualText, ContentText } from '@/components/shared/bilingual-text';
+import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
+import { Alert, AlertTitle } from '@/components/ui/alert';
 
-const SCORE_LABELS: Record<number, string> = { 4: 'Always', 3: 'Often', 2: 'Sometimes', 1: 'Never' };
 const SCORE_COLORS: Record<number, string> = {
   4: 'bg-success/15 text-success border-success/30',
   3: 'bg-accent-2/15 text-accent-2 border-accent-2/30',
@@ -17,13 +20,21 @@ const SCORE_COLORS: Record<number, string> = {
   1: 'bg-accent/15 text-accent border-accent/30',
 };
 
+// Cap the entrance stagger so a long list doesn't cascade for seconds — keeps the
+// motion calm per the design north-star.
+const STAGGER_CAP = 6;
+const STAGGER_STEP = 0.06;
+
 function SentenceCard({ sentence, index, weaknessId }: { sentence: ReportSentence; index: number; weaknessId: string }) {
   const t = useTranslations('study.report');
+  const tScore = useTranslations('study.report.score');
+  const reduceMotion = useReducedMotion();
+  const delay = reduceMotion ? 0 : Math.min(index, STAGGER_CAP) * STAGGER_STEP;
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
+      initial={reduceMotion ? false : { opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.06 }}
+      transition={{ delay }}
       className="rounded-xl border border-border bg-surface p-5"
     >
       <div className="mb-3 flex items-start justify-between gap-3">
@@ -32,19 +43,15 @@ function SentenceCard({ sentence, index, weaknessId }: { sentence: ReportSentenc
         </div>
         {sentence.score !== null && (
           <span className={`shrink-0 rounded-full border px-3 py-1 text-[12px] font-medium ${SCORE_COLORS[sentence.score] ?? ''}`}>
-            {SCORE_LABELS[sentence.score] ?? sentence.score}
+            {tScore(String(sentence.score))}
           </span>
         )}
       </div>
       <div className="flex items-center justify-between">
-        <span className="text-[12px] text-muted">
-          <span className={sentence.subvirtueNameMr ? 'font-deva' : undefined}>
-            {sentence.subvirtueNameMr ?? sentence.subvirtueNameEn}
-          </span>
-          {' → '}
-          <span className={sentence.virtueNameMr ? 'font-deva' : undefined}>
-            {sentence.virtueNameMr ?? sentence.virtueNameEn}
-          </span>
+        <span className="inline-flex items-center gap-1.5 text-[12px] text-muted">
+          <ContentText en={sentence.subvirtueNameEn} mr={sentence.subvirtueNameMr} />
+          <ArrowRight className="h-3 w-3 shrink-0" aria-hidden="true" />
+          <ContentText en={sentence.virtueNameEn} mr={sentence.virtueNameMr} />
         </span>
         <Link
           href={`/journeys/new?sentenceId=${sentence.sentenceId}&weaknessId=${weaknessId}`}
@@ -60,13 +67,39 @@ function SentenceCard({ sentence, index, weaknessId }: { sentence: ReportSentenc
 export default function TestReportPage() {
   const { id, testId } = useParams<{ id: string; testId: string }>();
   const t = useTranslations('study.report');
-  const { data: report, isLoading } = useTestReport(testId);
+  const format = useFormatter();
+  const { data: report, isLoading, isError, refetch } = useTestReport(testId);
   const [otherExpanded, setOtherExpanded] = useState(false);
 
-  if (isLoading || !report) {
+  const backLink = (
+    <Link href={`/study/${id}`} className="mb-6 inline-flex items-center gap-1 text-[13px] text-muted hover:text-fg">
+      <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+      {t('backToWeakness')}
+    </Link>
+  );
+
+  if (isLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent border-t-transparent" />
+        <Spinner size="lg" label={t('loading')} />
+      </div>
+    );
+  }
+
+  if (isError || !report) {
+    return (
+      <div className="py-8">
+        <div className="mx-auto max-w-2xl">
+          {backLink}
+          <Alert variant="destructive" className="max-w-sm">
+            <AlertTitle>{t('loadError')}</AlertTitle>
+            <div className="mt-3">
+              <Button size="sm" variant="outline" onClick={() => refetch()}>
+                {t('retry')}
+              </Button>
+            </div>
+          </Alert>
+        </div>
       </div>
     );
   }
@@ -75,9 +108,7 @@ export default function TestReportPage() {
     <div className="py-8">
       <div className="mx-auto max-w-2xl">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
-          <Link href={`/study/${id}`} className="mb-6 inline-flex items-center gap-1 text-[13px] text-muted hover:text-fg">
-            ← {t('backToWeakness')}
-          </Link>
+          {backLink}
 
           <BilingualText
             en={report.weaknessNameEn}
@@ -87,7 +118,11 @@ export default function TestReportPage() {
             className="mb-1"
           />
           <p className="mb-6 text-[13px] text-muted">
-            {report.answeredCount}/{report.totalSentences} reflected on · {new Date(report.submittedAt).toLocaleDateString()}
+            {t('reflectedMeta', {
+              answered: report.answeredCount,
+              total: report.totalSentences,
+              date: format.dateTime(new Date(report.submittedAt), { dateStyle: 'medium' }),
+            })}
           </p>
 
           {/* Virtues to explore */}
@@ -101,12 +136,12 @@ export default function TestReportPage() {
               <h2 className="mb-3 font-mono text-[11px] uppercase tracking-[0.12em] text-muted">{t('virtuesTitle')}</h2>
               <div className="flex flex-wrap gap-2">
                 {report.virtuesToExplore.map((v) => (
-                  <span
+                  <ContentText
                     key={v.virtueId}
-                    className={`rounded-full bg-accent-2/10 px-4 py-1.5 text-[13px] font-medium text-accent-2 ${v.virtueNameMr ? 'font-deva' : ''}`}
-                  >
-                    {v.virtueNameMr ?? v.virtueNameEn}
-                  </span>
+                    en={v.virtueNameEn}
+                    mr={v.virtueNameMr}
+                    className="rounded-full bg-accent-2/10 px-4 py-1.5 text-[13px] font-medium text-accent-2"
+                  />
                 ))}
               </div>
             </motion.section>
@@ -130,16 +165,24 @@ export default function TestReportPage() {
           {/* Other sentences collapsible */}
           {report.otherSentences.length > 0 && (
             <section className="mb-8">
-              <button
+              <Button
+                variant="outline"
+                className="mb-4 h-auto w-full justify-between rounded-xl border-border px-4 py-3 text-[14px] font-normal"
+                aria-expanded={otherExpanded}
+                aria-controls="report-other-sentences"
                 onClick={() => setOtherExpanded((v) => !v)}
-                className="mb-4 flex w-full items-center justify-between rounded-xl border border-border bg-surface px-4 py-3 text-[14px] hover:bg-bg"
               >
                 <span className="text-muted">{t('otherToggle', { count: report.otherSentences.length })}</span>
-                <span className="text-muted">{otherExpanded ? '↑' : '↓'}</span>
-              </button>
+                {otherExpanded ? (
+                  <ChevronUp className="h-4 w-4 text-muted" aria-hidden="true" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-muted" aria-hidden="true" />
+                )}
+              </Button>
               <AnimatePresence>
                 {otherExpanded && (
                   <motion.div
+                    id="report-other-sentences"
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}

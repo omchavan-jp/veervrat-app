@@ -1,35 +1,37 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { formatDistanceToNow } from 'date-fns';
 import { useRouter } from 'next/navigation';
+import { useTranslations, useFormatter } from 'next-intl';
 import { queryKeys } from '@/lib/api/query-keys';
 import { notificationsApi, type NotificationItem } from '@/lib/api/notifications';
 
-const EVENT_LABELS: Record<string, string> = {
-  VM_INVITATION_RECEIVED: 'New VM invitation',
-  VM_INVITATION_ACCEPTED: 'Invitation accepted',
-  VM_INVITATION_DECLINED: 'Invitation declined',
-  VM_INVITATION_EXPIRED: 'Invitation expired',
-  INVITEE_JOINED_PLATFORM: 'Invitee joined',
-  JOURNEY_DORMANT: 'Journey marked dormant',
-  NEW_ERC_AVAILABLE: 'New ERC available',
-  ERC_CLOSURE_SUBMITTED: 'ERC closure submitted',
-  ERC_CLOSURE_APPROVED: 'ERC closure approved',
-  ERC_RETURNED_FOR_REVISIT: 'ERC returned for revisit',
-  JOURNEY_COMPLETION_SUBMITTED: 'Journey completion submitted',
-  JOURNEY_COMPLETION_APPROVED: 'Journey completion approved',
-  CUSTOM_ERC_REVIEW_REQUESTED: 'Custom ERC review requested',
-  CUSTOM_ERC_APPROVED: 'Custom ERC approved',
-  CUSTOM_ERC_REJECTED: 'Custom ERC rejected',
-  VM_SUGGESTION_NEW: 'New VM suggestion',
-  VM_SUGGESTION_DISMISSED: 'VM suggestion dismissed',
-  BLOG_COMMENT_NEW: 'New comment',
-  COMMENT_REPORTED: 'Comment reported',
-  NEW_FOLLOWER: 'New follower',
-  CHAT_MESSAGE_RECEIVED: 'New message',
-  VM_WITHDREW: 'VM withdrew',
-};
+// Canonical event types whose labels are resolved through i18n; unknown server-side
+// types fall back to the raw eventType string.
+const KNOWN_EVENT_TYPES = new Set<string>([
+  'VM_INVITATION_RECEIVED',
+  'VM_INVITATION_ACCEPTED',
+  'VM_INVITATION_DECLINED',
+  'VM_INVITATION_EXPIRED',
+  'INVITEE_JOINED_PLATFORM',
+  'JOURNEY_DORMANT',
+  'NEW_ERC_AVAILABLE',
+  'ERC_CLOSURE_SUBMITTED',
+  'ERC_CLOSURE_APPROVED',
+  'ERC_RETURNED_FOR_REVISIT',
+  'JOURNEY_COMPLETION_SUBMITTED',
+  'JOURNEY_COMPLETION_APPROVED',
+  'CUSTOM_ERC_REVIEW_REQUESTED',
+  'CUSTOM_ERC_APPROVED',
+  'CUSTOM_ERC_REJECTED',
+  'VM_SUGGESTION_NEW',
+  'VM_SUGGESTION_DISMISSED',
+  'BLOG_COMMENT_NEW',
+  'COMMENT_REPORTED',
+  'NEW_FOLLOWER',
+  'CHAT_MESSAGE_RECEIVED',
+  'VM_WITHDREW',
+]);
 
 function eventTypeToPath(eventType: string, resourceId: string | null): string | null {
   if (!resourceId) return null;
@@ -60,10 +62,14 @@ function NotificationRow({
   item: NotificationItem;
   onRead: (id: string, path: string | null) => void;
 }) {
-  const label = EVENT_LABELS[item.eventType] ?? item.eventType;
+  const t = useTranslations('notifications');
+  const format = useFormatter();
+  const label = KNOWN_EVENT_TYPES.has(item.eventType)
+    ? t(`event_${item.eventType}` as never)
+    : item.eventType;
   const path = eventTypeToPath(item.eventType, item.resourceId);
   const isUnread = item.readAt === null;
-  const relativeTime = formatDistanceToNow(new Date(item.createdAt), { addSuffix: true });
+  const relativeTime = format.relativeTime(new Date(item.createdAt));
 
   return (
     <button
@@ -71,10 +77,12 @@ function NotificationRow({
       className="flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/50"
     >
       <span
-        className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${isUnread ? 'bg-primary' : 'bg-transparent'}`}
-      />
+        className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${isUnread ? 'bg-accent' : 'bg-transparent'}`}
+      >
+        {isUnread && <span className="sr-only">{t('unread')}</span>}
+      </span>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-fg">{item.actor?.displayName ?? 'System'}</p>
+        <p className="text-sm font-medium text-fg">{item.actor?.displayName ?? t('system')}</p>
         <p className="text-xs text-muted">{label}</p>
         <p className="mt-0.5 text-xs text-muted">{relativeTime}</p>
       </div>
@@ -83,10 +91,11 @@ function NotificationRow({
 }
 
 export function NotificationPanel() {
+  const t = useTranslations('notifications');
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: queryKeys.notifications.list,
     queryFn: () => notificationsApi.list(),
   });
@@ -117,25 +126,37 @@ export function NotificationPanel() {
   return (
     <div className="flex flex-col">
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <span className="text-sm font-semibold text-fg">Notifications</span>
+        <span className="text-sm font-semibold text-fg">{t('title')}</span>
         <button
           onClick={() => markAllRead.mutate()}
           disabled={markAllRead.isPending || !hasUnread}
           className="text-xs text-muted transition-colors hover:text-fg disabled:opacity-50"
         >
-          Mark all as read
+          {t('markAllRead')}
         </button>
       </div>
 
       {isLoading && (
-        <div className="px-4 py-8 text-center text-sm text-muted">Loading...</div>
+        <div className="px-4 py-8 text-center text-sm text-muted">{t('loading')}</div>
       )}
 
-      {!isLoading && items.length === 0 && (
-        <div className="px-4 py-8 text-center text-sm text-muted">No notifications yet</div>
+      {!isLoading && isError && (
+        <div className="px-4 py-8 text-center text-sm text-muted">
+          <p>{t('loadError')}</p>
+          <button
+            onClick={() => refetch()}
+            className="mt-2 text-xs text-accent transition-colors hover:text-fg"
+          >
+            {t('retry')}
+          </button>
+        </div>
       )}
 
-      {!isLoading && items.length > 0 && (
+      {!isLoading && !isError && items.length === 0 && (
+        <div className="px-4 py-8 text-center text-sm text-muted">{t('empty')}</div>
+      )}
+
+      {!isLoading && !isError && items.length > 0 && (
         <div className="max-h-96 overflow-y-auto divide-y divide-border">
           {items.map((item) => (
             <NotificationRow key={item.id} item={item} onRead={handleItemClick} />

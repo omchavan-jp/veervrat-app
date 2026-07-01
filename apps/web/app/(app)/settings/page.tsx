@@ -11,6 +11,13 @@ import { authApi } from '@/lib/api/auth';
 import { queryKeys } from '@/lib/api/query-keys';
 import { useAuth, useLogout } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Spinner } from '@/components/ui/spinner';
+import { Dialog } from '@/components/ui/dialog';
+import { EmptyState } from '@/components/ui/empty-state';
+import { useToast } from '@/hooks/use-toast';
 import { EMAILABLE_EVENTS } from '@/lib/notification-events';
 
 function Section({ icon, title, desc, children }: { icon: React.ReactNode; title: string; desc?: string; children: React.ReactNode }) {
@@ -28,20 +35,12 @@ function Section({ icon, title, desc, children }: { icon: React.ReactNode; title
   );
 }
 
-function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+function Toggle({ label, checked, onChange, disabled }: { label: string; checked: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
   return (
-    <label className="flex cursor-pointer items-center justify-between py-2">
+    <div className="flex items-center justify-between py-2">
       <span className="text-[14px]">{label}</span>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        onClick={() => onChange(!checked)}
-        className={`relative h-6 w-10 shrink-0 rounded-full transition-colors ${checked ? 'bg-accent' : 'bg-muted/30'}`}
-      >
-        <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-bg shadow transition-transform ${checked ? 'translate-x-[18px]' : 'translate-x-0.5'}`} />
-      </button>
-    </label>
+      <Switch aria-label={label} checked={checked} disabled={disabled} onCheckedChange={onChange} />
+    </div>
   );
 }
 
@@ -52,9 +51,26 @@ export default function SettingsPage() {
   const profile = useQuery({ queryKey: queryKeys.auth.me, queryFn: () => usersApi.getMyProfile() });
 
   if (isLoading || profile.isLoading) {
-    return <div className="flex min-h-[40vh] items-center justify-center"><div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" /></div>;
+    return <div className="flex min-h-[40vh] items-center justify-center"><Spinner size="lg" label={t('loading')} /></div>;
   }
-  if (!profile.data) return null;
+
+  if (profile.isError || !profile.data) {
+    return (
+      <div className="mx-auto max-w-[680px]">
+        <h1 className="font-display text-[30px] font-medium tracking-tight">{t('title')}</h1>
+        <EmptyState
+          icon={<RotateCcw className="h-5 w-5" />}
+          title={t('loadError')}
+          description={t('loadErrorHint')}
+          action={
+            <Button variant="outline" onClick={() => profile.refetch()}>
+              {t('retry')}
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-[680px]">
@@ -85,13 +101,21 @@ function ProfileSection({ profile, onSaved }: { profile: OwnProfile; onSaved: ()
   return (
     <Section icon={<UserIcon className="h-4 w-4" />} title={t('profileTitle')} desc={t('profileDesc')}>
       <div className="grid gap-3">
-        <label className="text-[12px] text-muted">{t('displayName')}
-          <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="mt-1 w-full rounded-xl border border-border bg-bg px-3 py-2 text-[14px] text-fg outline-none focus:border-accent" />
-        </label>
+        <div>
+          <Label htmlFor="settings-displayName" className="text-[12px] font-normal text-muted">{t('displayName')}</Label>
+          <Input
+            id="settings-displayName"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? 'settings-displayName-error' : undefined}
+            className="mt-1 h-auto rounded-xl border-border bg-bg px-3 py-2 text-[14px] focus-visible:border-accent focus-visible:ring-0"
+          />
+        </div>
         <div className="text-[12px] text-muted">{t('username')}: <span className="text-fg">@{profile.username}</span></div>
         <div className="text-[12px] text-muted">{t('email')}: <span className="text-fg">{profile.email}</span>{profile.pendingEmail && <span className="ml-1 text-accent-2">({t('pendingEmail', { email: profile.pendingEmail })})</span>}</div>
-        {error && <p className="text-[12px] text-danger">{error}</p>}
-        <div><Button onClick={() => save.mutate()} disabled={!displayName.trim() || save.isPending}>{save.isPending ? '…' : t('save')}</Button></div>
+        {error && <p id="settings-displayName-error" role="alert" className="text-[12px] text-danger">{error}</p>}
+        <div><Button onClick={() => save.mutate()} loading={save.isPending} disabled={!displayName.trim() || save.isPending}>{t('save')}</Button></div>
       </div>
     </Section>
   );
@@ -100,15 +124,17 @@ function ProfileSection({ profile, onSaved }: { profile: OwnProfile; onSaved: ()
 function PrivacySection({ profile }: { profile: OwnProfile }) {
   const t = useTranslations('settings');
   const qc = useQueryClient();
+  const { toast } = useToast();
   const m = useMutation({
     mutationFn: (data: Parameters<typeof usersApi.updateSettings>[0]) => usersApi.updateSettings(data),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.auth.me }),
+    onError: () => toast({ title: t('saveError'), variant: 'destructive' }),
   });
   return (
     <Section icon={<ShieldCheck className="h-4 w-4" />} title={t('privacyTitle')} desc={t('privacyDesc')}>
-      <Toggle label={t('showLastActive')} checked={profile.showLastActive} onChange={(v) => m.mutate({ showLastActive: v })} />
-      <Toggle label={t('showOnlineIndicator')} checked={profile.showOnlineIndicator} onChange={(v) => m.mutate({ showOnlineIndicator: v })} />
-      <Toggle label={t('profilePrivate')} checked={profile.profilePrivate} onChange={(v) => m.mutate({ profilePrivate: v })} />
+      <Toggle label={t('showLastActive')} checked={profile.showLastActive} disabled={m.isPending} onChange={(v) => m.mutate({ showLastActive: v })} />
+      <Toggle label={t('showOnlineIndicator')} checked={profile.showOnlineIndicator} disabled={m.isPending} onChange={(v) => m.mutate({ showOnlineIndicator: v })} />
+      <Toggle label={t('profilePrivate')} checked={profile.profilePrivate} disabled={m.isPending} onChange={(v) => m.mutate({ profilePrivate: v })} />
     </Section>
   );
 }
@@ -116,9 +142,11 @@ function PrivacySection({ profile }: { profile: OwnProfile }) {
 function LanguageSection({ profile }: { profile: OwnProfile }) {
   const t = useTranslations('settings');
   const qc = useQueryClient();
+  const { toast } = useToast();
   const m = useMutation({
     mutationFn: (language: string) => usersApi.updateSettings({ language }),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.auth.me }),
+    onError: () => toast({ title: t('saveError'), variant: 'destructive' }),
   });
   return (
     <Section icon={<Languages className="h-4 w-4" />} title={t('languageTitle')} desc={t('languageDesc')}>
@@ -136,10 +164,12 @@ function LanguageSection({ profile }: { profile: OwnProfile }) {
 function NotificationsSection({ profile }: { profile: OwnProfile }) {
   const t = useTranslations('settings');
   const qc = useQueryClient();
+  const { toast } = useToast();
   const prefs = profile.notificationPrefs ?? {};
   const m = useMutation({
     mutationFn: (notificationPrefs: Record<string, boolean>) => usersApi.updateSettings({ notificationPrefs }),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.auth.me }),
+    onError: () => toast({ title: t('saveError'), variant: 'destructive' }),
   });
   return (
     <Section icon={<Bell className="h-4 w-4" />} title={t('notificationsTitle')} desc={t('notificationsDesc')}>
@@ -149,6 +179,7 @@ function NotificationsSection({ profile }: { profile: OwnProfile }) {
           key={event}
           label={t(`event_${event}` as never)}
           checked={prefs[event] !== false}
+          disabled={m.isPending}
           onChange={(v) => m.mutate({ [event]: v })}
         />
       ))}
@@ -160,6 +191,7 @@ function VratmitraSection({ profile }: { profile: OwnProfile }) {
   const t = useTranslations('settings');
   const router = useRouter();
   const qc = useQueryClient();
+  const { toast } = useToast();
   const [cascade, setCascade] = useState<GlobalVmCascade>('keep');
   const [confirming, setConfirming] = useState<null | 'remove' | 'change'>(null);
   const [tourDone, setTourDone] = useState(false);
@@ -169,18 +201,20 @@ function VratmitraSection({ profile }: { profile: OwnProfile }) {
 
   const remove = useMutation({
     mutationFn: () => vmRelationshipsApi.removeGlobalVm(cascade),
-    onSuccess: (_res, _vars, ctx) => {
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['my-vms'] });
       const action = confirming;
       setConfirming(null);
       // "Change" = remove then send a fresh global invite via the invitations flow.
       if (action === 'change') router.push('/invitations');
     },
+    onError: () => toast({ title: t('saveError'), variant: 'destructive' }),
   });
 
   const restart = useMutation({
     mutationFn: () => usersApi.restartTour(),
     onSuccess: () => { setTourDone(true); qc.invalidateQueries({ queryKey: queryKeys.auth.me }); },
+    onError: () => toast({ title: t('saveError'), variant: 'destructive' }),
   });
 
   return (
@@ -218,7 +252,7 @@ function VratmitraSection({ profile }: { profile: OwnProfile }) {
               </label>
             </div>
             <div className="mt-3 flex gap-2">
-              <Button onClick={() => remove.mutate()} disabled={remove.isPending}>{remove.isPending ? '…' : t('vratmitraConfirm')}</Button>
+              <Button onClick={() => remove.mutate()} loading={remove.isPending} disabled={remove.isPending}>{t('vratmitraConfirm')}</Button>
               <Button variant="outline" onClick={() => setConfirming(null)} disabled={remove.isPending}>{t('cancel')}</Button>
             </div>
           </div>
@@ -230,8 +264,8 @@ function VratmitraSection({ profile }: { profile: OwnProfile }) {
               <div className="text-[14px] text-fg">{t('vratmitraTour')}</div>
               <div className="text-[12px] text-muted">{t('vratmitraTourDesc')}</div>
             </div>
-            <Button variant="outline" onClick={() => restart.mutate()} disabled={restart.isPending}>
-              <RotateCcw className="mr-1 h-3.5 w-3.5" />{restart.isPending ? '…' : t('vratmitraRestartTour')}
+            <Button variant="outline" onClick={() => restart.mutate()} loading={restart.isPending} disabled={restart.isPending}>
+              <RotateCcw className="mr-1 h-3.5 w-3.5" />{t('vratmitraRestartTour')}
             </Button>
           </div>
           {tourDone && <p className="mt-1 text-[12px] text-accent-2">{t('vratmitraTourReset')}</p>}
@@ -245,10 +279,14 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
   const t = useTranslations('settings');
   const router = useRouter();
   const logout = useLogout();
+  const { toast } = useToast();
   const [pw, setPw] = useState({ current: '', next: '' });
   const [pwMsg, setPwMsg] = useState<string | null>(null);
   const [emailForm, setEmailForm] = useState({ newEmail: '', password: '' });
   const [emailMsg, setEmailMsg] = useState<string | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteMsg, setDeleteMsg] = useState<string | null>(null);
 
   const connected = useQuery({ queryKey: queryKeys.connectedAccounts, queryFn: () => usersApi.listConnectedAccounts() });
 
@@ -265,10 +303,12 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
   const disconnect = useMutation({
     mutationFn: (provider: string) => usersApi.disconnectAccount(provider),
     onSuccess: () => connected.refetch(),
+    onError: () => toast({ title: t('disconnectError'), variant: 'destructive' }),
   });
   const del = useMutation({
     mutationFn: (password: string) => usersApi.deleteAccount(password),
-    onSuccess: () => { logout.mutate(); router.replace('/login'); },
+    onSuccess: () => { setDeleteOpen(false); logout.mutate(); router.replace('/login'); },
+    onError: (e: Error) => setDeleteMsg(e.message),
   });
 
   return (
@@ -277,10 +317,16 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
       <div className="mb-5">
         <h3 className="mb-2 text-[13px] font-medium">{t('changePassword')}</h3>
         <div className="grid gap-2">
-          <input type="password" value={pw.current} onChange={(e) => setPw({ ...pw, current: e.target.value })} placeholder={t('currentPassword')} className="rounded-xl border border-border bg-bg px-3 py-2 text-[14px] outline-none focus:border-accent" />
-          <input type="password" value={pw.next} onChange={(e) => setPw({ ...pw, next: e.target.value })} placeholder={t('newPassword')} className="rounded-xl border border-border bg-bg px-3 py-2 text-[14px] outline-none focus:border-accent" />
-          {pwMsg && <p className="text-[12px] text-muted">{pwMsg}</p>}
-          <div><Button onClick={() => changePw.mutate()} disabled={!pw.current || pw.next.length < 8 || changePw.isPending}>{changePw.isPending ? '…' : t('updatePassword')}</Button></div>
+          <div>
+            <Label htmlFor="settings-currentPassword" className="sr-only">{t('currentPassword')}</Label>
+            <Input id="settings-currentPassword" type="password" value={pw.current} onChange={(e) => setPw({ ...pw, current: e.target.value })} placeholder={t('currentPassword')} className="h-auto rounded-xl border-border bg-bg px-3 py-2 text-[14px] focus-visible:border-accent focus-visible:ring-0" />
+          </div>
+          <div>
+            <Label htmlFor="settings-newPassword" className="sr-only">{t('newPassword')}</Label>
+            <Input id="settings-newPassword" type="password" value={pw.next} onChange={(e) => setPw({ ...pw, next: e.target.value })} placeholder={t('newPassword')} className="h-auto rounded-xl border-border bg-bg px-3 py-2 text-[14px] focus-visible:border-accent focus-visible:ring-0" />
+          </div>
+          {pwMsg && <p role="alert" className="text-[12px] text-muted">{pwMsg}</p>}
+          <div><Button onClick={() => changePw.mutate()} loading={changePw.isPending} disabled={!pw.current || pw.next.length < 8 || changePw.isPending}>{t('updatePassword')}</Button></div>
         </div>
       </div>
 
@@ -288,10 +334,16 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
       <div className="mb-5 border-t border-border pt-4">
         <h3 className="mb-2 text-[13px] font-medium">{t('changeEmail')}</h3>
         <div className="grid gap-2">
-          <input type="email" value={emailForm.newEmail} onChange={(e) => setEmailForm({ ...emailForm, newEmail: e.target.value })} placeholder={t('newEmail')} className="rounded-xl border border-border bg-bg px-3 py-2 text-[14px] outline-none focus:border-accent" />
-          <input type="password" value={emailForm.password} onChange={(e) => setEmailForm({ ...emailForm, password: e.target.value })} placeholder={t('currentPassword')} className="rounded-xl border border-border bg-bg px-3 py-2 text-[14px] outline-none focus:border-accent" />
-          {emailMsg && <p className="text-[12px] text-muted">{emailMsg}</p>}
-          <div><Button variant="outline" onClick={() => changeEmail.mutate()} disabled={!emailForm.newEmail || !emailForm.password || changeEmail.isPending}>{changeEmail.isPending ? '…' : t('sendConfirmation')}</Button></div>
+          <div>
+            <Label htmlFor="settings-newEmail" className="sr-only">{t('newEmail')}</Label>
+            <Input id="settings-newEmail" type="email" value={emailForm.newEmail} onChange={(e) => setEmailForm({ ...emailForm, newEmail: e.target.value })} placeholder={t('newEmail')} className="h-auto rounded-xl border-border bg-bg px-3 py-2 text-[14px] focus-visible:border-accent focus-visible:ring-0" />
+          </div>
+          <div>
+            <Label htmlFor="settings-emailPassword" className="sr-only">{t('currentPassword')}</Label>
+            <Input id="settings-emailPassword" type="password" value={emailForm.password} onChange={(e) => setEmailForm({ ...emailForm, password: e.target.value })} placeholder={t('currentPassword')} className="h-auto rounded-xl border-border bg-bg px-3 py-2 text-[14px] focus-visible:border-accent focus-visible:ring-0" />
+          </div>
+          {emailMsg && <p role="alert" className="text-[12px] text-muted">{emailMsg}</p>}
+          <div><Button variant="outline" onClick={() => changeEmail.mutate()} loading={changeEmail.isPending} disabled={!emailForm.newEmail || !emailForm.password || changeEmail.isPending}>{t('sendConfirmation')}</Button></div>
         </div>
       </div>
 
@@ -303,7 +355,7 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
             <div key={acc.provider} className="flex items-center justify-between rounded-lg border border-border bg-bg px-3 py-2 text-[13px]">
               <span>{acc.provider === 'GOOGLE' ? 'Google' : t('emailPassword')}</span>
               {acc.provider === 'GOOGLE' && (
-                <button onClick={() => disconnect.mutate(acc.provider)} disabled={disconnect.isPending} className="text-[12px] text-danger hover:underline disabled:opacity-50">{t('disconnect')}</button>
+                <Button variant="ghost" size="sm" className="text-danger hover:text-danger" onClick={() => disconnect.mutate(acc.provider)} loading={disconnect.isPending} disabled={disconnect.isPending}>{t('disconnect')}</Button>
               )}
             </div>
           ))}
@@ -317,14 +369,45 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
         <Button
           variant="destructive"
           disabled={del.isPending}
-          onClick={() => {
-            const password = window.prompt(t('deleteReauthPrompt') ?? '');
-            if (password && password.length > 0 && window.confirm(t('deleteConfirm') ?? '')) del.mutate(password);
-          }}
+          onClick={() => { setDeletePassword(''); setDeleteMsg(null); setDeleteOpen(true); }}
         >
           {t('deleteAccount')}
         </Button>
       </div>
+
+      {/* Re-auth + confirm via Dialog (keyboard/AT friendly, focus-trapped) instead of
+          native window.prompt/confirm. */}
+      <Dialog
+        open={deleteOpen}
+        onOpenChange={(open) => { if (!del.isPending) setDeleteOpen(open); }}
+        title={t('deleteAccount')}
+        description={t('deleteConfirm')}
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setDeleteOpen(false)} disabled={del.isPending}>{t('cancel')}</Button>
+            <Button
+              variant="destructive"
+              onClick={() => del.mutate(deletePassword)}
+              loading={del.isPending}
+              disabled={!deletePassword || del.isPending}
+            >
+              {t('deleteAccount')}
+            </Button>
+          </>
+        }
+      >
+        <Label htmlFor="settings-deletePassword" className="text-[12px] font-normal text-muted">{t('deleteReauthPrompt')}</Label>
+        <Input
+          id="settings-deletePassword"
+          type="password"
+          value={deletePassword}
+          onChange={(e) => setDeletePassword(e.target.value)}
+          aria-invalid={deleteMsg ? true : undefined}
+          aria-describedby={deleteMsg ? 'settings-deletePassword-error' : undefined}
+          className="mt-1.5 h-auto rounded-xl border-border bg-bg px-3 py-2 text-[14px] focus-visible:border-accent focus-visible:ring-0"
+        />
+        {deleteMsg && <p id="settings-deletePassword-error" role="alert" className="mt-1.5 text-[12px] text-danger">{deleteMsg}</p>}
+      </Dialog>
     </Section>
   );
 }

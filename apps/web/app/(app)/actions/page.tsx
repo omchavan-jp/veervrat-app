@@ -9,6 +9,11 @@ import { ercApi, type ErcType } from '@/lib/api/journeys';
 import { queryKeys } from '@/lib/api/query-keys';
 import { BilingualText } from '@/components/shared/bilingual-text';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { PageTitle } from '@/components/ui/typography';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 function SectionShell({
   icon,
@@ -58,8 +63,10 @@ function Row({
       {action ?? (href ? <ChevronRight className="h-4 w-4 shrink-0 text-muted" /> : null)}
     </>
   );
+  // Hairline rows, not raised cards (15a §4: rows aren't all elevated). bg-surface
+  // gives a subtle lift against the page without a shadow on every item.
   const cls =
-    'flex w-full items-center gap-3 rounded-2xl border border-border bg-surface p-4 text-left shadow-card transition-colors hover:border-accent/25';
+    'flex w-full items-center gap-3 rounded-xl border border-border bg-surface p-4 text-left transition-colors hover:border-accent/40';
   return href ? (
     <Link href={href} className={cls}>
       {inner}
@@ -72,6 +79,7 @@ function Row({
 export default function ActionsPage() {
   const t = useTranslations('actions');
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: queryKeys.actions.va,
@@ -84,12 +92,19 @@ export default function ActionsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.actions.va });
     },
+    onError: () => toast({ title: t('acceptError'), variant: 'destructive' }),
   });
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[40vh] items-center justify-center">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+      <div className="mx-auto max-w-[680px]">
+        <PageTitle>{t('title')}</PageTitle>
+        <p className="mt-1 text-[14px] text-muted">{t('subtitle')}</p>
+        <div className="mt-7 space-y-2.5">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-[68px] w-full rounded-xl" />
+          ))}
+        </div>
       </div>
     );
   }
@@ -97,18 +112,15 @@ export default function ActionsPage() {
   if (isError || !data) {
     return (
       <div className="mx-auto max-w-[680px]">
-        <h1 className="font-display text-[30px] font-medium tracking-tight">{t('title')}</h1>
+        <PageTitle>{t('title')}</PageTitle>
         <EmptyState
           icon={<RotateCcw className="h-5 w-5" />}
           title={t('error')}
           description={t('errorHint')}
           action={
-            <button
-              onClick={() => refetch()}
-              className="rounded-full border border-border-strong px-4 py-1.5 text-[13px] hover:border-accent"
-            >
+            <Button variant="outline" onClick={() => refetch()}>
               {t('retry')}
-            </button>
+            </Button>
           }
         />
       </div>
@@ -116,11 +128,12 @@ export default function ActionsPage() {
   }
 
   const d: VaActions = data;
-  const meta = (journey: string) => t('inJourney', { journey });
+  const meta = (ercType: string, journey: string) =>
+    t('metaLine', { ercType, journey });
 
   return (
     <div className="mx-auto max-w-[680px]">
-      <h1 className="font-display text-[30px] font-medium tracking-tight">{t('title')}</h1>
+      <PageTitle>{t('title')}</PageTitle>
       <p className="mt-1 text-[14px] text-muted">{t('subtitle')}</p>
 
       <div className="mt-7">
@@ -140,7 +153,7 @@ export default function ActionsPage() {
                   href={`/journeys/${it.journeyId}`}
                   titleEn={it.titleEn}
                   titleMr={it.titleMr}
-                  meta={`${t(`ercType.${it.ercType}`)} · ${meta(it.journeyTitle)}`}
+                  meta={meta(t(`ercType.${it.ercType}`), it.journeyTitle)}
                 />
               ))}
             </SectionShell>
@@ -156,24 +169,26 @@ export default function ActionsPage() {
                   key={s.id}
                   titleEn={s.itemTitleEn}
                   titleMr={s.itemTitleMr}
-                  meta={`${t(`ercType.${s.ercType}`)} · ${meta(s.journeyTitle)}`}
+                  meta={meta(t(`ercType.${s.ercType}`), s.journeyTitle)}
                   action={
                     <div className="flex shrink-0 gap-2">
                       <Link
                         href={`/journeys/${s.journeyId}`}
-                        className="rounded-full border border-border-strong px-3 py-1.5 text-[12px] text-muted hover:border-accent"
+                        className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'rounded-full')}
                       >
                         {t('view')}
                       </Link>
-                      <button
+                      <Button
+                        size="sm"
+                        className="rounded-full"
+                        loading={acknowledge.isPending && acknowledge.variables?.itemId === s.itemId}
+                        disabled={acknowledge.isPending && acknowledge.variables?.itemId === s.itemId}
                         onClick={() =>
                           acknowledge.mutate({ journeyId: s.journeyId, type: s.ercType, itemId: s.itemId })
                         }
-                        disabled={acknowledge.isPending}
-                        className="rounded-full bg-accent px-3 py-1.5 text-[12px] text-bg disabled:opacity-50"
                       >
                         {t('accept')}
-                      </button>
+                      </Button>
                     </div>
                   }
                 />
@@ -192,7 +207,7 @@ export default function ActionsPage() {
                   href={`/journeys/${it.journeyId}`}
                   titleEn={it.titleEn}
                   titleMr={it.titleMr}
-                  meta={`${t(`ercType.${it.ercType}`)} · ${meta(it.journeyTitle)}`}
+                  meta={meta(t(`ercType.${it.ercType}`), it.journeyTitle)}
                 />
               ))}
             </SectionShell>

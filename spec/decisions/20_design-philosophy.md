@@ -59,7 +59,11 @@ Users remember two moments: the **peak** (most intense/meaningful) and the **end
 
 ### 8. Language Control
 Language affects every layer of the app. Known cases that need handling:
-- **UI language vs content language**: UI labels (buttons, nav, headings) in EN or MR based on user preference. Content (sentences, ERC, shlokas) is bilingual — both displayed together, not toggled.
+- **UI language vs content language**: UI labels (buttons, nav, headings) in EN or MR based on user preference.
+- **Content language (REVISED 2026-06-30)**: bilingual content (sentence/weakness/subvirtue/virtue/ERC names) is now **toggle-ordered**, not fixed Devanagari-first:
+  - **Primary content** shown as two stacked lines (e.g. a card's main sentence, a page heading) follows the active locale — the selected language is the **primary line** (foreground, larger), the other is the **secondary line** (muted, below). In EN: English primary, Devanagari secondary; in MR: Devanagari primary, English secondary. Both lines are still shown.
+  - **Compact content** (chips, metadata rows, breadcrumbs) shows a **single language** — the active locale only (falling back to the other script when the preferred one is missing).
+  - Rationale: the original "always both, Devanagari primary, never toggled" rule (a) ignored the English-preferring user, who saw Devanagari first everywhere, and (b) wrecked the composition of small cards/chips where two stacked scripts overflowed. Implemented via `BilingualText` (stacked, toggle-ordered) and `ContentText` (single, toggle-driven). Genuinely side-by-side reading surfaces (shloka verse text, pothi) keep both scripts as before.
 - **Devanagari rendering**: ensure proper font loading and fallbacks for Devanagari across all contexts (modals, cards, chat, PDFs).
 - **Mixed-script contexts**: some content naturally mixes EN and MR/Devanagari (e.g. a shloka with an English commentary). Layout must handle bidirectionality gracefully.
 - **Language preference persists**: set at onboarding, changeable from settings, applied globally.

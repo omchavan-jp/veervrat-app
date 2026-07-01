@@ -1,6 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { NextIntlClientProvider } from 'next-intl';
+import enMessages from '../../messages/en.json';
 
 const mockNotificationsApi = vi.hoisted(() => ({
   list: vi.fn(),
@@ -21,6 +23,8 @@ vi.mock('next/navigation', () => ({
 
 import { NotificationPanel } from '../../components/layout/notification-panel';
 
+const n = enMessages.notifications;
+
 function makeItem(overrides: Record<string, unknown> = {}) {
   return {
     id: 'n-1',
@@ -39,9 +43,11 @@ function makeItem(overrides: Record<string, unknown> = {}) {
 function renderPanel() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <QueryClientProvider client={client}>
-      <NotificationPanel />
-    </QueryClientProvider>,
+    <NextIntlClientProvider locale="en" messages={enMessages}>
+      <QueryClientProvider client={client}>
+        <NotificationPanel />
+      </QueryClientProvider>
+    </NextIntlClientProvider>,
   );
 }
 
@@ -55,8 +61,10 @@ describe('NotificationPanel', () => {
       expect(screen.getByText('Mentor One')).toBeInTheDocument();
     });
 
-    // The filled dot is rendered as a span with bg-primary; check the read-status label text
-    expect(screen.getByText('ERC closure approved')).toBeInTheDocument();
+    // The event label is resolved through i18n (event_ERC_CLOSURE_APPROVED).
+    expect(screen.getByText(n.event_ERC_CLOSURE_APPROVED)).toBeInTheDocument();
+    // The filled dot carries an sr-only "unread" label; assert that read-status marker is present.
+    expect(screen.getByText(n.unread)).toBeInTheDocument();
   });
 
   it('renders "read" dot (transparent) for an already-read notification', async () => {
@@ -68,6 +76,9 @@ describe('NotificationPanel', () => {
     await waitFor(() => {
       expect(screen.getByText('Mentor One')).toBeInTheDocument();
     });
+
+    // A read item omits the sr-only "unread" marker.
+    expect(screen.queryByText(n.unread)).not.toBeInTheDocument();
   });
 
   it('shows empty state when list is empty', async () => {
@@ -76,7 +87,7 @@ describe('NotificationPanel', () => {
     renderPanel();
 
     await waitFor(() => {
-      expect(screen.getByText('No notifications yet')).toBeInTheDocument();
+      expect(screen.getByText(n.empty)).toBeInTheDocument();
     });
   });
 
@@ -90,7 +101,7 @@ describe('NotificationPanel', () => {
       expect(screen.getByText('Mentor One')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByText('Mark all as read'));
+    fireEvent.click(screen.getByRole('button', { name: n.markAllRead }));
 
     await waitFor(() => {
       expect(mockNotificationsApi.markAllRead).toHaveBeenCalledOnce();
@@ -107,7 +118,7 @@ describe('NotificationPanel', () => {
       expect(screen.getByText('Mentor One')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Mark all as read')).toBeDisabled();
+    expect(screen.getByRole('button', { name: n.markAllRead })).toBeDisabled();
   });
 
   it('shows "System" when actor is null', async () => {
@@ -119,7 +130,7 @@ describe('NotificationPanel', () => {
     renderPanel();
 
     await waitFor(() => {
-      expect(screen.getByText('System')).toBeInTheDocument();
+      expect(screen.getByText(n.system)).toBeInTheDocument();
     });
   });
 });

@@ -2,19 +2,48 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useFormatter } from 'next-intl';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useWeakness } from '@/hooks/use-weaknesses';
 import { WhyModal } from '@/components/study/why-modal';
+import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
+import { Alert, AlertTitle } from '@/components/ui/alert';
+import { BilingualText, ContentText } from '@/components/shared/bilingual-text';
 
 export default function WeaknessDetailPage() {
   const { id } = useParams<{ id: string }>();
   const t = useTranslations('study.detail');
-  const { data: weakness, isLoading } = useWeakness(id);
+  const format = useFormatter();
+  const { data: weakness, isLoading, isError, refetch } = useWeakness(id);
+
+  const backLink = (
+    <Link href="/study" className="mb-6 inline-flex items-center gap-1 text-sm text-muted hover:text-fg">
+      <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+      {t('backToWeaknesses')}
+    </Link>
+  );
 
   if (isLoading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+        <Spinner size="lg" label={t('loading')} />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="py-8">
+        {backLink}
+        <Alert variant="destructive" className="max-w-sm">
+          <AlertTitle>{t('loadError')}</AlertTitle>
+          <div className="mt-3">
+            <Button size="sm" variant="outline" onClick={() => refetch()}>
+              {t('retry')}
+            </Button>
+          </div>
+        </Alert>
       </div>
     );
   }
@@ -22,10 +51,8 @@ export default function WeaknessDetailPage() {
   if (!weakness) {
     return (
       <div className="py-8">
-        <Link href="/study" className="mb-4 inline-flex items-center gap-1 text-sm text-muted hover:text-fg">
-          ← Back to weaknesses
-        </Link>
-        <p className="text-muted">Weakness not found.</p>
+        {backLink}
+        <p className="text-muted">{t('notFound')}</p>
       </div>
     );
   }
@@ -34,23 +61,10 @@ export default function WeaknessDetailPage() {
 
   return (
     <div className="py-8">
-      <Link href="/study" className="mb-6 inline-flex items-center gap-1 text-sm text-muted hover:text-fg">
-        ← Back to weaknesses
-      </Link>
+      {backLink}
 
       <div className="mb-8">
-        {weakness.nameMr ? (
-          <>
-            <h1 className="mb-1 font-deva text-[clamp(28px,3vw,40px)] leading-tight tracking-tight">
-              {weakness.nameMr}
-            </h1>
-            <p className="mb-3 text-[16px] text-muted">{weakness.nameEn}</p>
-          </>
-        ) : (
-          <h1 className="mb-3 font-display text-[clamp(28px,3vw,40px)] leading-tight tracking-tight">
-            {weakness.nameEn}
-          </h1>
-        )}
+        <BilingualText en={weakness.nameEn} mr={weakness.nameMr} size="xl" as="h1" className="mb-3" />
         {weakness.description && (
           <p className="text-[15px] leading-relaxed text-muted">{weakness.description}</p>
         )}
@@ -66,12 +80,14 @@ export default function WeaknessDetailPage() {
             {t('subvirtuesTitle')}
           </h2>
           <div className="flex flex-wrap gap-2">
-            {weakness.subvirtues.map((sv: { id: string; nameEn: string; virtue: { nameEn: string } }) => (
+            {weakness.subvirtues.map((sv) => (
               <span
                 key={sv.id}
-                className="rounded-full border border-accent-2/30 px-3 py-1 text-[13px] text-accent-2"
+                className="inline-flex items-center gap-1.5 rounded-full border border-accent-2/30 px-3 py-1 text-[13px] text-accent-2"
               >
-                {sv.virtue.nameEn} → {sv.nameEn}
+                <ContentText en={sv.virtue.nameEn} mr={sv.virtue.nameMr} />
+                <ArrowRight className="h-3 w-3 shrink-0" aria-hidden="true" />
+                <ContentText en={sv.nameEn} mr={sv.nameMr} />
               </span>
             ))}
           </div>
@@ -87,13 +103,16 @@ export default function WeaknessDetailPage() {
           <p className="text-[14px] text-muted">{t('noTests')}</p>
         ) : (
           <div className="flex flex-wrap gap-2">
-            {weakness.testHistory.map((test: { id: string; submittedAt: string }, i: number) => (
+            {weakness.testHistory.map((test, i) => (
               <Link
                 key={test.id}
                 href={`/study/${id}/test/${test.id}/report`}
                 className="rounded-full border border-border px-3 py-1 text-[13px] text-muted hover:border-accent hover:text-fg"
               >
-                Test {i + 1} · {new Date(test.submittedAt).toLocaleDateString()}
+                {t('testPill', {
+                  n: i + 1,
+                  date: format.dateTime(new Date(test.submittedAt), { dateStyle: 'medium' }),
+                })}
               </Link>
             ))}
           </div>
@@ -101,12 +120,16 @@ export default function WeaknessDetailPage() {
       </section>
 
       {/* CTA */}
-      <Link
-        href={hasDraft ? `/study/${id}/test/${weakness.draftTestId}` : `/study/${id}/test`}
-        className="inline-flex h-auto items-center justify-center rounded-xl bg-accent px-8 py-3.5 text-[15px] font-medium text-bg hover:bg-accent-hover"
+      <Button
+        size="lg"
+        className="h-auto rounded-xl px-8 py-3.5 text-[15px]"
+        nativeButton={false}
+        render={
+          <Link href={hasDraft ? `/study/${id}/test/${weakness.draftTestId}` : `/study/${id}/test`} />
+        }
       >
         {hasDraft ? t('resumeDraft') : t('takeTest')}
-      </Link>
+      </Button>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { Sparkles, ScrollText, BookOpen, Library, FileText, Star, Users, ClipboardList, ChevronRight } from 'lucide-react';
 import { useAdminGuard } from '@/hooks/use-admin-guard';
+import { Spinner } from '@/components/ui/spinner';
 
 const CARDS = [
   { href: '/admin/users', labelKey: 'usersTitle', descKey: 'usersDesc', icon: Users },
@@ -18,7 +19,13 @@ const CARDS = [
 
 export default function AdminDashboardPage() {
   const t = useTranslations('admin');
-  const { isAdmin } = useAdminGuard();
+  const { isAdmin, ready } = useAdminGuard();
+  if (!ready)
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <Spinner size="lg" label={t('loading')} />
+      </div>
+    );
   if (!isAdmin) return null;
 
   return (
@@ -38,7 +45,7 @@ export default function AdminDashboardPage() {
             </span>
             <div className="min-w-0 flex-1">
               <div className="text-[15px] font-medium">{t(labelKey)}</div>
-              <div className="text-[12px] text-muted">{t(descKey)}</div>
+              <div className="line-clamp-2 text-[12px] text-muted">{t(descKey)}</div>
             </div>
             <ChevronRight className="h-4 w-4 shrink-0 text-muted" />
           </Link>

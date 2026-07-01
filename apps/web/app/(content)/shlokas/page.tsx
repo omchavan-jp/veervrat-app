@@ -8,6 +8,10 @@ import { contentApi, type Shloka, type ShlokaDetail } from '@/lib/api/content';
 import { queryKeys } from '@/lib/api/query-keys';
 import { useDebounce } from '@/hooks/use-debounce';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
+import { Dialog, DialogPrimitive } from '@/components/ui/dialog';
 import { CmsInfoModal } from '@/components/shared/cms-info-modal';
 
 function ShlokaCard({ s, onOpen }: { s: Shloka; onOpen: () => void }) {
@@ -21,19 +25,36 @@ function ShlokaCard({ s, onOpen }: { s: Shloka; onOpen: () => void }) {
 
 function DetailModal({ id, onClose }: { id: string; onClose: () => void }) {
   const t = useTranslations('content');
-  const { data, isLoading } = useQuery({ queryKey: queryKeys.content.shloka(id), queryFn: () => contentApi.shloka(id) });
+  const { data, isLoading, isError, refetch } = useQuery({ queryKey: queryKeys.content.shloka(id), queryFn: () => contentApi.shloka(id) });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
-      <div className="max-h-[85vh] w-full max-w-[600px] overflow-y-auto rounded-2xl border border-border bg-bg p-6 shadow-raised" onClick={(e) => e.stopPropagation()}>
-        <button onClick={onClose} aria-label={t('close')} className="float-right text-muted hover:text-fg"><X className="h-5 w-5" /></button>
-        {isLoading || !data ? (
-          <div className="flex min-h-[20vh] items-center justify-center"><div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" /></div>
-        ) : (
-          <ShlokaDetailBody data={data} />
-        )}
-      </div>
-    </div>
+    <Dialog
+      open
+      onOpenChange={(o) => { if (!o) onClose(); }}
+      className="md:w-[min(600px,calc(100vw-40px))]"
+    >
+      <DialogPrimitive.Close
+        aria-label={t('close')}
+        className="absolute right-4 top-4 text-muted transition-colors hover:text-fg"
+      >
+        <X className="h-5 w-5" />
+      </DialogPrimitive.Close>
+      {isLoading ? (
+        <div className="flex min-h-[20vh] items-center justify-center"><Spinner size="lg" /></div>
+      ) : isError || !data ? (
+        <EmptyState
+          icon={<ScrollText className="h-5 w-5" />}
+          title={t('loadError')}
+          action={
+            <Button variant="outline" size="sm" onClick={() => refetch()}>
+              {t('retry')}
+            </Button>
+          }
+        />
+      ) : (
+        <ShlokaDetailBody data={data} />
+      )}
+    </Dialog>
   );
 }
 
@@ -86,12 +107,18 @@ export default function ShlokasPage() {
 
       <div className="relative mt-5">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('shlokaSearchPlaceholder')} className="w-full rounded-xl border border-border bg-surface py-2.5 pl-9 pr-3 text-[14px] outline-none focus:border-accent" />
+        <Input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={t('shlokaSearchPlaceholder')}
+          aria-label={t('shlokaSearchPlaceholder')}
+          className="h-auto rounded-xl border-border bg-surface py-2.5 pl-9 pr-3 text-[14px] focus-visible:border-accent focus-visible:ring-0"
+        />
       </div>
 
       <div className="mt-6">
         {loading ? (
-          <div className="flex min-h-[30vh] items-center justify-center"><div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" /></div>
+          <div className="flex min-h-[30vh] items-center justify-center"><Spinner size="lg" /></div>
         ) : items.length === 0 ? (
           <EmptyState icon={<ScrollText className="h-5 w-5" />} title={searching ? t('noResults') : t('shlokasEmpty')} description={searching ? undefined : t('shlokasEmptyHint')} />
         ) : (

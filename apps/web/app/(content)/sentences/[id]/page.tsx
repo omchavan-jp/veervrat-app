@@ -8,8 +8,9 @@ import { CheckCircle2 } from 'lucide-react';
 import { virtuesApi } from '@/lib/api/virtues';
 import { queryKeys } from '@/lib/api/query-keys';
 import { useAuth } from '@/hooks/use-auth';
-import { BilingualText } from '@/components/shared/bilingual-text';
+import { BilingualText, ContentText } from '@/components/shared/bilingual-text';
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 
 export default function SentenceInfoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -20,20 +21,28 @@ export default function SentenceInfoPage({ params }: { params: Promise<{ id: str
     queryFn: () => virtuesApi.getSentence(id),
   });
 
-  if (isLoading) return <div className="flex min-h-[40vh] items-center justify-center"><div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" /></div>;
+  if (isLoading) return <div className="flex min-h-[40vh] items-center justify-center"><Spinner size="lg" /></div>;
   if (isError || !data) return <div className="text-muted">{t('notFound')}</div>;
 
   return (
-    <div className="mx-auto max-w-[620px]">
+    <div>
       <Link href={`/subvirtues/${data.subvirtue.id}`} className="text-[13px] text-muted hover:text-accent">
-        ← {data.subvirtue.nameMr ?? data.subvirtue.nameEn}
+        ← <ContentText en={data.subvirtue.nameEn} mr={data.subvirtue.nameMr} />
       </Link>
 
       <div className="mt-4 rounded-2xl border border-border bg-surface p-6 shadow-card">
         <BilingualText en={data.textEn} mr={data.textMr} size="lg" />
         <div className="mt-4 flex flex-wrap gap-2 text-[12px]">
-          <span className="rounded-full bg-accent/12 px-2.5 py-1 text-accent">{data.subvirtue.virtue.nameEn}</span>
-          <span className="rounded-full bg-accent-2/15 px-2.5 py-1 text-accent-2">{data.subvirtue.nameEn}</span>
+          <ContentText
+            en={data.subvirtue.virtue.nameEn}
+            mr={data.subvirtue.virtue.nameMr}
+            className="rounded-full bg-accent/12 px-2.5 py-1 text-accent"
+          />
+          <ContentText
+            en={data.subvirtue.nameEn}
+            mr={data.subvirtue.nameMr}
+            className="rounded-full bg-accent-2/15 px-2.5 py-1 text-accent-2"
+          />
         </div>
         {data.hasActiveJourney && (
           <div className="mt-4 inline-flex items-center gap-1.5 text-[13px] text-success">

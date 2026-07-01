@@ -1,38 +1,63 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { BilingualText } from '@/components/shared/bilingual-text';
+import { screen } from '@testing-library/react';
+import { BilingualText, ContentText } from '@/components/shared/bilingual-text';
+import { renderWithProviders } from './helpers/render';
 
 describe('BilingualText', () => {
-  it('renders Devanagari as primary and English as secondary when both present', () => {
-    const { container } = render(<BilingualText en="Bad communication" mr="विसंवाद" />);
-
-    const mr = screen.getByText('विसंवाद');
+  it('in EN locale: English is primary, Devanagari is the muted secondary', () => {
+    renderWithProviders(<BilingualText en="Bad communication" mr="विसंवाद" />, 'en');
     const en = screen.getByText('Bad communication');
-
-    expect(mr).toBeInTheDocument();
-    expect(en).toBeInTheDocument();
-    // Devanagari line carries the font-deva class (primary script styling).
+    const mr = screen.getByText('विसंवाद');
+    expect(en.className).not.toContain('text-muted'); // primary
+    expect(mr.className).toContain('text-muted'); // secondary
     expect(mr.className).toContain('font-deva');
-    // English line is muted (secondary).
-    expect(en.className).toContain('text-muted');
   });
 
-  it('shows both scripts regardless of which is "primary" — content is never toggled away', () => {
-    render(<BilingualText en="Laziness" mr="आळस" />);
+  it('in MR locale: Devanagari is primary, English is the muted secondary', () => {
+    renderWithProviders(<BilingualText en="Bad communication" mr="विसंवाद" />, 'mr');
+    const mr = screen.getByText('विसंवाद');
+    const en = screen.getByText('Bad communication');
+    expect(mr.className).toContain('font-deva');
+    expect(mr.className).not.toContain('text-muted'); // primary
+    expect(en.className).toContain('text-muted'); // secondary
+  });
+
+  it('shows both scripts in either locale — content keeps both lines', () => {
+    renderWithProviders(<BilingualText en="Laziness" mr="आळस" />, 'en');
     expect(screen.getByText('आळस')).toBeInTheDocument();
     expect(screen.getByText('Laziness')).toBeInTheDocument();
   });
 
   it('falls back to English-only when no Marathi is available', () => {
-    render(<BilingualText en="Ineffectiveness" mr={null} />);
+    renderWithProviders(<BilingualText en="Ineffectiveness" mr={null} />, 'mr');
     const en = screen.getByText('Ineffectiveness');
     expect(en).toBeInTheDocument();
-    // No muted secondary line in fallback mode.
-    expect(en.className).not.toContain('text-muted');
+    expect(en.className).not.toContain('text-muted'); // no secondary line in fallback
   });
 
   it('renders with the requested wrapper element', () => {
-    const { container } = render(<BilingualText en="X" mr="क्ष" as="h1" />);
+    const { container } = renderWithProviders(<BilingualText en="X" mr="क्ष" as="h1" />, 'en');
     expect(container.querySelector('h1')).toBeInTheDocument();
+  });
+});
+
+describe('ContentText (single-language, toggle-driven)', () => {
+  it('shows only English in EN locale', () => {
+    renderWithProviders(<ContentText en="Courage" mr="धैर्य" />, 'en');
+    expect(screen.getByText('Courage')).toBeInTheDocument();
+    expect(screen.queryByText('धैर्य')).not.toBeInTheDocument();
+  });
+
+  it('shows only Devanagari (font-deva) in MR locale', () => {
+    renderWithProviders(<ContentText en="Courage" mr="धैर्य" />, 'mr');
+    const mr = screen.getByText('धैर्य');
+    expect(mr).toBeInTheDocument();
+    expect(mr.className).toContain('font-deva');
+    expect(screen.queryByText('Courage')).not.toBeInTheDocument();
+  });
+
+  it('falls back to English when MR is missing, even in MR locale', () => {
+    renderWithProviders(<ContentText en="Courage" mr={null} />, 'mr');
+    expect(screen.getByText('Courage')).toBeInTheDocument();
   });
 });

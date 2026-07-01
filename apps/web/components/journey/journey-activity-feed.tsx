@@ -1,6 +1,6 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useTranslations, useFormatter, useLocale } from 'next-intl';
 import { CheckCircle2, Send, Play, CalendarCheck, MessageSquareText } from 'lucide-react';
 import { useJourneyActivity } from '@/hooks/use-journeys';
 import type { JourneyActivityEvent, JourneyActivityEventType } from '@/lib/api/journeys';
@@ -21,23 +21,15 @@ const MESSAGE_KEY: Record<JourneyActivityEventType, string> = {
   vm_suggestion: 'vmSuggestion',
 };
 
-function relativeTime(iso: string, now: number): string {
-  const diffMs = now - new Date(iso).getTime();
-  const mins = Math.round(diffMs / 60000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.round(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.round(hours / 24);
-  if (days < 7) return `${days}d ago`;
-  return new Date(iso).toLocaleDateString();
-}
-
-function ActivityRow({ event }: { event: JourneyActivityEvent }) {
+function ActivityRow({ event, now }: { event: JourneyActivityEvent; now: Date }) {
   const t = useTranslations('journey.activity');
+  const format = useFormatter();
+  const locale = useLocale();
   const Icon = ICON[event.type];
-  // The item title is bilingual content — prefer Devanagari, fall back to English.
-  const title = event.titleMr ?? event.titleEn;
+  // The item title is bilingual content — follow the active locale, fall back to the
+  // other script when the preferred one is missing.
+  const useMr = locale === 'mr' && !!event.titleMr;
+  const title = useMr ? (event.titleMr as string) : event.titleEn;
   return (
     <li className="flex items-start gap-3 py-2.5">
       <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
@@ -48,11 +40,11 @@ function ActivityRow({ event }: { event: JourneyActivityEvent }) {
           {t.rich(MESSAGE_KEY[event.type], {
             title,
             b: (chunks) => (
-              <span className={`font-medium ${event.titleMr ? 'font-deva' : ''}`}>{chunks}</span>
+              <span className={`font-medium ${useMr ? 'font-deva' : ''}`}>{chunks}</span>
             ),
           })}
         </p>
-        <span className="font-mono text-[11px] text-muted">{relativeTime(event.at, Date.now())}</span>
+        <span className="font-mono text-[11px] text-muted">{format.relativeTime(new Date(event.at), now)}</span>
       </div>
     </li>
   );
@@ -61,6 +53,8 @@ function ActivityRow({ event }: { event: JourneyActivityEvent }) {
 export function JourneyActivityFeed({ journeyId }: { journeyId: string }) {
   const t = useTranslations('journey.activity');
   const { data: events, isLoading } = useJourneyActivity(journeyId);
+  // Compute the reference time once per render so identical events render identical labels.
+  const now = new Date();
 
   return (
     <section className="rounded-2xl border border-border bg-surface p-5">
@@ -76,7 +70,7 @@ export function JourneyActivityFeed({ journeyId }: { journeyId: string }) {
       ) : (
         <ul className="divide-y divide-border">
           {events.map((event) => (
-            <ActivityRow key={event.id} event={event} />
+            <ActivityRow key={event.id} event={event} now={now} />
           ))}
         </ul>
       )}

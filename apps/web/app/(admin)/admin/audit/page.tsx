@@ -9,10 +9,13 @@ import { queryKeys } from '@/lib/api/query-keys';
 import { useAdminGuard } from '@/hooks/use-admin-guard';
 import { useDebounce } from '@/hooks/use-debounce';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function AuditDashboardPage() {
   const t = useTranslations('audit');
-  const { isAdmin } = useAdminGuard();
+  const { isAdmin, ready } = useAdminGuard();
   const [action, setAction] = useState('');
   const [actor, setActor] = useState('');
   const dAction = useDebounce(action, 250);
@@ -24,7 +27,13 @@ export default function AuditDashboardPage() {
     enabled: isAdmin,
   });
 
-  if (!isAdmin) return null;
+  if (ready && !isAdmin) return null;
+  if (!ready)
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <Spinner size="lg" label={t('loading')} />
+      </div>
+    );
 
   return (
     <div className="mx-auto max-w-[860px]">
@@ -32,13 +41,17 @@ export default function AuditDashboardPage() {
       <p className="mt-1 text-[14px] text-muted">{t('subtitle')}</p>
 
       <div className="mt-5 grid gap-2 sm:grid-cols-2">
-        <input value={action} onChange={(e) => setAction(e.target.value)} placeholder={t('filterAction')} className="rounded-xl border border-border bg-surface px-3 py-2 text-[14px] outline-none focus:border-accent" />
-        <input value={actor} onChange={(e) => setActor(e.target.value)} placeholder={t('filterActor')} className="rounded-xl border border-border bg-surface px-3 py-2 font-mono text-[13px] outline-none focus:border-accent" />
+        <Input value={action} onChange={(e) => setAction(e.target.value)} placeholder={t('filterAction')} aria-label={t('filterAction')} className="rounded-xl border border-border bg-surface px-3 py-2 text-[14px] focus:border-accent" />
+        <Input value={actor} onChange={(e) => setActor(e.target.value)} placeholder={t('filterActor')} aria-label={t('filterActor')} className="rounded-xl border border-border bg-surface px-3 py-2 font-mono text-[13px] focus:border-accent" />
       </div>
 
       <div className="mt-6">
         {list.isLoading ? (
-          <div className="flex min-h-[20vh] items-center justify-center"><div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" /></div>
+          <div className="flex min-h-[20vh] items-center justify-center"><Spinner size="lg" label={t('loading')} /></div>
+        ) : list.isError ? (
+          <Alert variant="destructive" className="border-destructive/40 bg-destructive/10">
+            <AlertDescription className="text-destructive">{t('loadError')}</AlertDescription>
+          </Alert>
         ) : (list.data?.items.length ?? 0) === 0 ? (
           <EmptyState icon={<ClipboardList className="h-5 w-5" />} title={t('noEvents')} />
         ) : (
@@ -53,7 +66,7 @@ export default function AuditDashboardPage() {
                   {t('actor')}: {e.actorId ?? '—'}{e.resourceType ? ` · ${e.resourceType}${e.resourceId ? `:${e.resourceId.slice(0, 8)}` : ''}` : ''}{e.ipAddress ? ` · ${e.ipAddress}` : ''}
                 </div>
                 {e.metadata && Object.keys(e.metadata).length > 0 && (
-                  <pre className="mt-1 overflow-x-auto rounded bg-bg px-2 py-1 font-mono text-[11px] text-muted">{JSON.stringify(e.metadata)}</pre>
+                  <pre className="mt-1 overflow-x-auto whitespace-pre-wrap break-words rounded bg-bg px-2 py-1 font-mono text-[11px] text-muted">{JSON.stringify(e.metadata, null, 2)}</pre>
                 )}
               </div>
             ))}

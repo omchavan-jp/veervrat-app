@@ -44,7 +44,28 @@
     "error_loading": "डेटा लोड करण्यात त्रुटी",
     "auth_required": "प्रमाणीकरण आवश्यक आहे",
     "back": "मागे",
-    "close": "बंद करा"
+    "close": "बंद करा",
+    "pendingCount": "{count, plural, one {# प्रलंबित} other {# प्रलंबित}}",
+    "logoutError": "लॉग आउट करता आले नाही. कृपया पुन्हा प्रयत्न करा.",
+    "loggingOut": "लॉग आउट होत आहे…",
+    "primaryNav": "मुख्य नेव्हिगेशन",
+    "role": {
+      "vratarthi": "व्रतार्थी",
+      "vratmitra": "व्रतमित्र",
+      "moderator": "नियंत्रक",
+      "admin": "प्रशासक"
+    },
+    "theme": {
+      "switchToLight": "फिकट थीमवर जा",
+      "switchToDark": "गडद थीमवर जा",
+      "toggle": "थीम बदला"
+    },
+    "language": {
+      "switchTo": "भाषा बदला (सध्या {current})",
+      "current": "भाषा: {current}",
+      "en": "EN",
+      "mr": "मराठी"
+    }
   },
   "auth": {
     "login": {
@@ -59,7 +80,12 @@
       "submitting": "लॉग इन होत आहे...",
       "googleCta": "Google सह सुरू ठेवा",
       "noAccount": "नवीन आहात?",
-      "signupLink": "खाते तयार करा"
+      "signupLink": "खाते तयार करा",
+      "heroEyebrow": "परत",
+      "heroHeading": "पुन्हा स्वागत आहे. जिथे थांबलात तिथून सुरू करा.",
+      "heroDevanagari": "दिवसातून एक पाऊल — पुरेसे आहे.",
+      "heroGloss": "दिवसातून एक पाऊल पुरेसे आहे. साधना हेच ध्येय.",
+      "orDivider": "किंवा"
     },
     "signup": {
       "title": "तुमचे खाते तयार करा",
@@ -90,7 +116,13 @@
       "backToLogin": "लॉग इनवर परत जा",
       "passwordWeak": "कमकुवत",
       "passwordOk": "ठीक",
-      "passwordStrong": "मजबूत"
+      "passwordStrong": "मजबूत",
+      "heroEyebrow": "सुरुवात",
+      "heroHeading": "एका वेळी एक उणीव — घडण्याची साधना.",
+      "heroDevanagari": "वीरव्रत — स्वतःशी प्रामाणिक राहण्याचा संकल्प.",
+      "heroGloss": "वीरव्रत — स्वतःशी प्रामाणिक राहण्याचा संकल्प. तुम्हाला अडवणारे ओळखा. रोज त्यावर काम करा. बदल नोंदवा.",
+      "orDivider": "किंवा",
+      "usernameError": "उपलब्धता तपासता आली नाही. पुन्हा प्रयत्न करा."
     },
     "forgotPassword": {
       "title": "तुमचा पासवर्ड रीसेट करा",
@@ -102,7 +134,11 @@
       "sentTitle": "तुमचा ईमेल तपासा",
       "sentDescription": "त्या पत्त्यासाठी खाते अस्तित्वात असल्यास, आम्ही पासवर्ड रीसेट लिंक पाठवली आहे. ती 1 तासात कालबाह्य होते.",
       "backToLogin": "लॉग इनवर परत जा",
-      "rememberedIt": "आठवले का?"
+      "rememberedIt": "आठवले का?",
+      "heroEyebrow": "पुनर्प्राप्ती",
+      "heroHeading": "परत कसे यायचे ते विसरलात?",
+      "heroDevanagari": "हरकत नाही. नवीन सुरुवात नेहमीच शक्य आहे.",
+      "heroGloss": "हरकत नाही. नवीन सुरुवात नेहमीच शक्य आहे."
     },
     "resetPassword": {
       "title": "नवीन पासवर्ड सेट करा",
@@ -124,7 +160,21 @@
       "sendingNewLink": "पाठवत आहे...",
       "newLinkSentTitle": "रीसेट लिंक पाठवली",
       "newLinkSentDescription": "नवीन रीसेट लिंकसाठी तुमचा ईमेल तपासा. ती 30 मिनिटांत कालबाह्य होते.",
-      "wrongAccount": "चुकीचे खाते?"
+      "wrongAccount": "चुकीचे खाते?",
+      "heroFormEyebrow": "रीसेट",
+      "heroFormHeading": "त्याच दाराची नवी किल्ली.",
+      "heroFormDevanagari": "अनायासेन मरणं विना दैन्येन जीवनम्।",
+      "heroFormGloss": "सहज पुन्हा सुरू करा. लक्षात राहील असा पासफ्रेज निवडा.",
+      "heroSuccessEyebrow": "झाले",
+      "heroSuccessHeading": "दार पुन्हा उघडले.",
+      "heroSuccessDevanagari": "पुनश्च हरि ॐ — सुरुवात पुन्हा.",
+      "heroExpiredEyebrow": "पुन्हा प्रयत्न करा",
+      "heroExpiredHeading": "ही लिंक आता निष्क्रिय झाली आहे.",
+      "heroExpiredDevanagari": "कालः सर्वं भक्षयति।",
+      "heroExpiredGloss": "काळ सर्व काही संपवतो — रीसेट लिंकसुद्धा. नवी मागवा.",
+      "accountEmailLabel": "खात्याचा ईमेल",
+      "accountEmailPlaceholder": "you@example.com",
+      "loginLink": "लॉग इन"
     },
     "verifyEmail": {
       "title": "तुमची ओळख पुष्टी होत आहे.",
@@ -135,7 +185,12 @@
       "invalidLink": "हे सत्यापन लिंक गहाळ आहे किंवा अवैध आहे.",
       "failedTitle": "सत्यापन अयशस्वी",
       "backToLogin": "लॉग इनवर परत जा",
-      "continueToLogin": "लॉग इन सुरू ठेवा"
+      "continueToLogin": "लॉग इन सुरू ठेवा",
+      "heroEyebrow": "पडताळणी",
+      "heroDevanagari": "प्रमाणं हि प्रथमं पदम्।",
+      "heroGloss": "प्रमाण हीच पहिली पायरी.",
+      "genericError": "पडताळणी अयशस्वी झाली.",
+      "networkError": "सर्व्हरशी संपर्क होऊ शकला नाही. पुन्हा प्रयत्न करा."
     },
     "errors": {
       "invalidCredentials": "अवैध ईमेल किंवा पासवर्ड.",
@@ -153,7 +208,12 @@
       "submitting": "जोडत आहे...",
       "expiredError": "ही लिंक कालबाह्य झाली आहे. कृपया पुन्हा Google सह साइन इन करण्याचा प्रयत्न करा.",
       "wrongPasswordError": "चुकीचा पासवर्ड. कृपया पुन्हा प्रयत्न करा.",
-      "noToken": "अवैध किंवा गहाळ लिंक. कृपया Google सह साइन इन करण्याचा पुन्हा प्रयत्न करा."
+      "noToken": "अवैध किंवा गहाळ लिंक. कृपया Google सह साइन इन करण्याचा पुन्हा प्रयत्न करा.",
+      "heroEyebrow": "जोडा",
+      "heroDevanagari": "एकता हेच बल।",
+      "heroGloss": "एकता हेच बळ.",
+      "backToLogin": "लॉग इनकडे परत",
+      "changedMind": "विचार बदलला?"
     }
   },
   "onboarding": {
@@ -188,7 +248,11 @@
         "usernameTaken": "वापरकर्तानाव आधीच घेतले आहे. कृपया दुसरे निवडा.",
         "languageRequired": "कृपया एक भाषा निवडा.",
         "dobInvalid": "कृपया YYYY-MM-DD स्वरूपात वैध तारीख प्रविष्ट करा."
-      }
+      },
+      "stepIndicator": "पायरी {current}/{total}",
+      "loading": "लोड होत आहे...",
+      "genderMale": "पुरुष",
+      "genderFemale": "स्त्री"
     },
     "framework": {
       "section1Title": "वीरव्रत म्हणजे काय",
@@ -213,7 +277,10 @@
       "ctaTakeTest": "आता परीक्षा द्या",
       "ctaExplore": "प्रथम अॅप एक्सप्लोर करा",
       "next": "पुढे",
-      "back": "मागे"
+      "back": "मागे",
+      "stepIndicator": "पायरी {current}/{total}",
+      "loading": "लोड होत आहे...",
+      "submitting": "जतन होत आहे..."
     }
   },
   "study": {
@@ -232,7 +299,13 @@
         "title": "कमजोरी का अभ्यासायची?",
         "body": "वीरव्रतात कमजोर्‍या म्हणजे लज्जास्पद दोष नाहीत — त्या एक निदान लेन्स आहेत जी दाखवते की कुठे सद्गुण जोपासणे आवश्यक आहे. कमजोरीचा अभ्यास करणे हे ओळखण्यास मदत करते की कोणते सद्गुण जोपासायचे आहेत. हाच 'सद्गुणांची उपासना'चा मार्ग आहे — सद्गुणांचा पाठपुरावा आणि उपासना. चाचणी दाखवते की कोणत्या वाक्यांमध्ये (सरावांमध्ये) तुम्हाला अडचण येते.",
         "close": "समजले"
-      }
+      },
+      "loadError": "कमजोर्‍या लोड करता आल्या नाहीत.",
+      "retry": "पुन्हा प्रयत्न करा",
+      "emptyTitle": "अभ्यासण्यासाठी अजून कमजोरी नाहीत",
+      "emptyBody": "उपलब्ध झाल्यावर कमजोर्‍या इथे दिसतील.",
+      "notExplored": "अजून अभ्यासले नाही",
+      "journeyActive": "प्रवास सुरू आहे"
     },
     "detail": {
       "subvirtuesTitle": "हे सद्गुण जोपासण्यात मदत होईल",
@@ -240,7 +313,12 @@
       "testPill": "चाचणी {n} · {date}",
       "takeTest": "चाचणी द्या",
       "resumeDraft": "मसुदा सुरू ठेवा",
-      "noTests": "तुम्ही अजून ही चाचणी दिली नाही."
+      "noTests": "तुम्ही अजून ही चाचणी दिली नाही.",
+      "backToWeaknesses": "कमजोर्‍यांकडे परत",
+      "notFound": "कमजोरी सापडली नाही.",
+      "loading": "लोड होत आहे",
+      "loadError": "ही कमजोरी लोड करता आली नाही.",
+      "retry": "पुन्हा प्रयत्न करा"
     },
     "test": {
       "progress": "{answered}/{total} उत्तर दिले",
@@ -268,14 +346,36 @@
       "exitTitle": "चाचणी सोडायची?",
       "exitBody": "तुमची आतापर्यंतची उत्तरे जतन झाली आहेत. तुम्ही ही चाचणी कमकुवतपणा पानावरून कधीही पुन्हा सुरू करू शकता.",
       "saveLeave": "जतन करा व सोडा",
-      "continueReflecting": "विचार करत राहा"
+      "continueReflecting": "विचार करत राहा",
+      "loading": "लोड होत आहे",
+      "loadError": "चाचणी लोड करता आली नाही.",
+      "retry": "पुन्हा प्रयत्न करा",
+      "createError": "चाचणी सुरू करता आली नाही. कृपया पुन्हा प्रयत्न करा.",
+      "creating": "तुमची चाचणी तयार होत आहे",
+      "saveError": "तुमची उत्तरे जतन करता आली नाहीत. ती साठवली गेली नसतील.",
+      "focusSentence": "वाक्य {n} वर लक्ष द्या",
+      "scoreGroupLabel": "गुण निवडा"
     },
     "preview": {
       "title": "तुमची उत्तरे तपासा",
       "subtitle": "सादर करण्यापूर्वी उत्तरे पुष्टी करा.",
       "unanswered": "—",
       "confirmSubmit": "सादरीकरण पुष्टी करा",
-      "goBack": "पुनरावलोकनासाठी परत जा"
+      "goBack": "पुनरावलोकनासाठी परत जा",
+      "loading": "लोड होत आहे",
+      "loadError": "तुमची उत्तरे लोड करता आली नाहीत.",
+      "retry": "पुन्हा प्रयत्न करा",
+      "submitError": "विचार पूर्ण करता आला नाही. कृपया पुन्हा प्रयत्न करा.",
+      "editAnswers": "उत्तरे संपादित करा",
+      "editAnswersShort": "उत्तरे संपादित करा",
+      "reviewTitle": "तुमची उत्तरे तपासा",
+      "reflectedCount": "{total} पैकी {answered} वर विचार केला.",
+      "blankCount": "{count, plural, one {# रिकामे ठेवले.} other {# रिकामे ठेवली.}}",
+      "reflectedSection": "विचार केलेली ({count})",
+      "blankSection": "रिकामी ठेवलेली ({count})",
+      "hide": "लपवा",
+      "show": "दाखवा",
+      "completeReflection": "विचार पूर्ण करा"
     },
     "report": {
       "flaggedTitle": "काम करण्यासारखी वाक्ये",
@@ -291,7 +391,11 @@
         "2": "क्वचित",
         "3": "कधी कधी",
         "4": "नेहमी"
-      }
+      },
+      "loading": "लोड होत आहे",
+      "loadError": "तुमचा अहवाल लोड करता आला नाही.",
+      "retry": "पुन्हा प्रयत्न करा",
+      "reflectedMeta": "{answered}/{total} वर विचार केला · {date}"
     },
     "dashboard": {
       "pathCard01Title": "तुमची कमजोरी अभ्यासा",
@@ -303,6 +407,11 @@
       "suggestionsSubtitle": "तुमच्या ताज्या चाचण्यांमधील वाक्ये जी 'क्वचित' किंवा 'कधीच नाही' गुण मिळाली.",
       "noSuggestions": "वैयक्तिक सूचना पाहण्यासाठी पहिली चाचणी द्या.",
       "startJourney": "प्रवास सुरू करा"
+    },
+    "why": {
+      "title": "कमजोरी का अभ्यासायची?",
+      "body": "वीरव्रतात कमजोर्‍या म्हणजे लज्जास्पद दोष नाहीत — त्या एक निदान लेन्स आहेत जी दाखवते की कुठे सद्गुण जोपासणे आवश्यक आहे. कमजोरीचा अभ्यास करणे हे ओळखण्यास मदत करते की कोणते सद्गुण जोपासायचे आहेत. हाच 'सद्गुणांची उपासना'चा मार्ग आहे — सद्गुणांचा पाठपुरावा आणि उपासना. चाचणी दाखवते की कोणत्या वाक्यांमध्ये (सरावांमध्ये) तुम्हाला अडचण येते.",
+      "link": "कमजोरी का अभ्यासायची?"
     }
   },
   "notifications": {
@@ -327,7 +436,35 @@
       "VM_INVITATION_RECEIVED": "ने तुम्हाला आमंत्रित केले.",
       "VM_INVITATION_ACCEPTED": "ने तुमचे आमंत्रण स्वीकारले.",
       "VM_INVITATION_DECLINED": "ने तुमचे आमंत्रण नाकारले."
-    }
+    },
+    "system": "सिस्टीम",
+    "open": "सूचना उघडा",
+    "openWithCount": "सूचना उघडा, {count} न वाचलेल्या",
+    "loading": "लोड होत आहे...",
+    "loadError": "सूचना लोड करता आल्या नाहीत.",
+    "retry": "पुन्हा प्रयत्न करा",
+    "event_VM_INVITATION_RECEIVED": "वीरमित्र निमंत्रण मिळाले",
+    "event_VM_INVITATION_ACCEPTED": "वीरमित्र निमंत्रण स्वीकारले",
+    "event_VM_INVITATION_DECLINED": "वीरमित्र निमंत्रण नाकारले",
+    "event_VM_INVITATION_EXPIRED": "वीरमित्र निमंत्रण कालबाह्य",
+    "event_INVITEE_JOINED_PLATFORM": "निमंत्रित व्यक्ती सामील झाली",
+    "event_JOURNEY_DORMANT": "प्रवास सुप्त झाला",
+    "event_NEW_ERC_AVAILABLE": "नवीन बाबी उपलब्ध",
+    "event_ERC_CLOSURE_SUBMITTED": "सराव समाप्ती सादर",
+    "event_ERC_CLOSURE_APPROVED": "सराव समाप्ती मंजूर",
+    "event_ERC_RETURNED_FOR_REVISIT": "सराव पुनरावलोकनासाठी परत",
+    "event_JOURNEY_COMPLETION_SUBMITTED": "प्रवास पूर्तता सादर",
+    "event_JOURNEY_COMPLETION_APPROVED": "प्रवास पूर्तता मंजूर",
+    "event_CUSTOM_ERC_REVIEW_REQUESTED": "सानुकूल सराव पुनरावलोकन विनंती",
+    "event_CUSTOM_ERC_APPROVED": "सानुकूल सराव मंजूर",
+    "event_CUSTOM_ERC_REJECTED": "सानुकूल सराव नाकारला",
+    "event_VM_SUGGESTION_NEW": "नवीन सूचना",
+    "event_VM_SUGGESTION_DISMISSED": "सूचना रद्द केली",
+    "event_BLOG_COMMENT_NEW": "नवीन टिप्पणी",
+    "event_COMMENT_REPORTED": "टिप्पणीची तक्रार झाली",
+    "event_NEW_FOLLOWER": "नवीन अनुयायी",
+    "event_CHAT_MESSAGE_RECEIVED": "नवीन संदेश",
+    "event_VM_WITHDREW": "वीरमित्र निवृत्त"
   },
   "actions_inbox": {
     "title": "कृती",
@@ -354,7 +491,18 @@
   "dashboard": {
     "greeting": "नमस्कार",
     "greetingWithName": "नमस्कार, {name}",
-    "sakaPlaceholder": "शक तारीख लवकरच येणार",
+    "sakaDate": "{weekday}, सौर {month} {day}, शाके {year}",
+    "hero": {
+      "continueEyebrow": "तुमचा प्रवास सुरू ठेवा",
+      "continueCta": "सुरू ठेवा",
+      "startEyebrow": "येथून सुरुवात करा",
+      "startTitle": "काम करण्यासाठी एक कमजोरी निवडा",
+      "startSubtitle": "छोट्या चिंतनातून तुमच्या कमजोरींचा अभ्यास करा, मग वाढीसाठी प्रवास सुरू करा.",
+      "startCta": "कमजोरीचा अभ्यास करा",
+      "allJourneys": "सर्व प्रवास",
+      "study": "अभ्यास",
+      "logExperience": "अनुभव नोंदवा"
+    },
     "logExperience": "अनुभव नोंदवा",
     "pathCard01Eyebrow": "मार्ग ०१ · अभ्यास",
     "pathCard01Title": "तुमची कमजोरी अभ्यासा",
@@ -364,8 +512,8 @@
     "pathCard02Subtitle": "प्रवास, एक्सपोजर, संकल्प आणि आव्हाने",
     "goStudy": "अभ्यासाकडे जा",
     "goWork": "प्रवासाकडे जा",
-    "statsVirtues": "सद्गुण जोपासत आहे",
-    "statsSubvirtues": "उपसद्गुण",
+    "statsVirtues": "{count} सद्गुण जोपासत आहे",
+    "statsSubvirtues": "{count} उपसद्गुण",
     "statsJourneysActive": "{count} सक्रिय प्रवास",
     "statsJourneysCompleted": "{count} पूर्ण",
     "statsWeaknesses": "{count} कमजोरी अभ्यासल्या",
@@ -374,20 +522,26 @@
     "suggestionsEmpty": "वैयक्तिक सुचवणी पाहण्यासाठी पहिली चाचणी द्या.",
     "suggestionsEmptyCta": "चाचणी द्या",
     "suggestionsStartJourney": "प्रवास सुरू करा",
+    "suggestionsSeeAll": "सर्व {count} सूचना पाहा",
     "scoreLabel": "गुण {score}",
     "platformStatsTitle": "व्यासपीठ",
     "platformStatsVratarthis": "व्रतार्थी",
     "platformStatsVratmitras": "व्रतमित्र",
     "platformStatsTestsSolved": "चाचण्या सोडवल्या",
     "platformStatsPracticeDays": "सराव दिवस",
-    "shlokaPlaceholder": "दिवसाचा श्लोक लवकरच येणार"
+    "shlokaPlaceholder": "दिवसाचा श्लोक लवकरच येणार",
+    "platformStatsError": "प्लॅटफॉर्म आकडेवारी लोड करता आली नाही.",
+    "statsError": "तुमची आकडेवारी लोड करता आली नाही.",
+    "suggestionsError": "सूचना लोड करता आल्या नाहीत.",
+    "retry": "पुन्हा प्रयत्न करा"
   },
   "journey": {
     "nav": "प्रवास",
     "list": {
       "title": "तुमचे प्रवास",
       "emptyState": "तुम्ही अजून कोणताही प्रवास सुरू केलेला नाही.",
-      "emptyStateCta": "चाचणी द्या आणि सुरू करा"
+      "emptyStateCta": "चाचणी द्या आणि सुरू करा",
+      "loadError": "तुमचे प्रवास लोड करता आले नाहीत. कृपया पुन्हा प्रयत्न करा."
     },
     "stateBadge": {
       "not_started": "सुरू नाही",
@@ -414,7 +568,18 @@
       "chatBanner": "“{title}” बद्दल तुमच्या व्रतमित्राशी चॅट करा.",
       "openChat": "चॅट उघडा",
       "chatNoVm": "संभाषण सुरू करण्यासाठी व्रतमित्राला आमंत्रित करा.",
-      "logExperience": "अनुभव नोंदवा"
+      "logExperience": "अनुभव नोंदवा",
+      "countTotal": "एकूण",
+      "countActive": "सक्रिय",
+      "countDone": "पूर्ण",
+      "loadError": "हा प्रवास लोड करता आला नाही. कृपया पुन्हा प्रयत्न करा.",
+      "retry": "पुन्हा प्रयत्न करा",
+      "notFoundTitle": "प्रवास सापडला नाही",
+      "notFoundBody": "हा प्रवास कदाचित काढून टाकला असेल किंवा तुम्हाला त्याची परवानगी नसेल.",
+      "backToJourneys": "प्रवास",
+      "titleLabel": "प्रवासाचे शीर्षक",
+      "editTitleHint": "शीर्षक संपादित करण्यासाठी क्लिक करा",
+      "vmAssigned": "VM नियुक्त"
     },
     "activity": {
       "title": "अलीकडील घडामोडी",
@@ -478,7 +643,17 @@
       "customCreating": "जोडत आहे…",
       "customCancel": "रद्द करा",
       "submitForReview": "पुनरावलोकनासाठी सादर करा",
-      "reviewPending": "पुनरावलोकन प्रलंबित"
+      "reviewPending": "पुनरावलोकन प्रलंबित",
+      "loadError": "हे घटक लोड करता आले नाहीत. कृपया पुन्हा प्रयत्न करा.",
+      "emptyExposures": "तुमचे पहिले एक्सपोजर निवडण्यासाठी वरील संच पाहा.",
+      "emptyResolutions": "तुमचे पहिले संकल्प निवडण्यासाठी वरील संच पाहा.",
+      "emptyChallenges": "तुमची पहिली आव्हाने निवडण्यासाठी वरील संच पाहा.",
+      "poolLoading": "संच लोड करत आहे…",
+      "poolLoadError": "संच लोड करता आला नाही. कृपया पुन्हा प्रयत्न करा.",
+      "frequency": "वारंवारता",
+      "actionError": "ती क्रिया पूर्ण करता आली नाही. कृपया पुन्हा प्रयत्न करा.",
+      "customCreateError": "हा घटक जोडता आला नाही. कृपया पुन्हा प्रयत्न करा.",
+      "vmBadgeLabel": "व्रतमित्र"
     },
     "checkin": {
       "logTitle": "चेक-इन नोंदवा",
@@ -493,7 +668,15 @@
       "justNow": "आत्ताच",
       "minutesAgo": "{count} मि. पूर्वी",
       "hoursAgo": "{count} तास पूर्वी",
-      "daysAgo": "{count} दिवस पूर्वी"
+      "daysAgo": "{count} दिवस पूर्वी",
+      "logError": "तुमचे चेक-इन जतन करता आले नाही. कृपया पुन्हा प्रयत्न करा.",
+      "noteLabel": "चेक-इन टीप",
+      "loadError": "तुमचे चेक-इन लोड करता आले नाहीत. कृपया पुन्हा प्रयत्न करा.",
+      "streak": "{count} दिवसांची मालिका"
+    },
+    "new": {
+      "creating": "तुमचा प्रवास तयार करत आहे…",
+      "createError": "हा प्रवास सुरू करता आला नाही. कृपया पुन्हा प्रयत्न करा."
     }
   },
   "my_vratmitras": {
@@ -515,7 +698,14 @@
     "no_messages": "अद्याप संदेश नाही. संभाषण सुरू करा.",
     "type_message": "संदेश टाइप करा...",
     "add_image": "प्रतिमा जोडा",
-    "image_failed": "प्रतिमा अपलोड करता आली नाही"
+    "image_failed": "प्रतिमा अपलोड करता आली नाही",
+    "image_alt": "शेअर केलेली प्रतिमा",
+    "send": "पाठवा",
+    "identity_error": "मार्गदर्शकाचे तपशील लोड करता आले नाहीत",
+    "history_error": "संदेश लोड करता आले नाहीत",
+    "mention": {
+      "no_matches": "जुळणारे काहीही नाही"
+    }
   },
   "profile": {
     "title": "प्रोफाइल आणि गोपनीयता",
@@ -542,7 +732,11 @@
     "fieldChallenges": "आव्हाने",
     "fieldExperiences": "सार्वजनिक अनुभव",
     "followers": "अनुयायी",
-    "following": "अनुसरण"
+    "following": "अनुसरण",
+    "loading": "प्रोफाइल लोड होत आहे…",
+    "loadError": "तुमचे प्रोफाइल लोड करता आले नाही",
+    "loadErrorHint": "काहीतरी चूक झाली. कृपया पुन्हा प्रयत्न करा.",
+    "retry": "पुन्हा प्रयत्न करा"
   },
   "invitation": {
     "title": "व्रतमित्र आमंत्रण",
@@ -580,7 +774,12 @@
     "following": "अनुसरण करत आहात",
     "followers": "अनुयायी",
     "guidedJourneys": "{count} {count, plural, one {प्रवास} other {प्रवास}} पूर्णत्वास मार्गदर्शन केले",
-    "publicExperiences": "सार्वजनिक अनुभव"
+    "publicExperiences": "सार्वजनिक अनुभव",
+    "loading": "प्रोफाइल लोड होत आहे…",
+    "loadError": "हे प्रोफाइल लोड करता आले नाही",
+    "loadErrorHint": "काहीतरी चूक झाली. कृपया पुन्हा प्रयत्न करा.",
+    "retry": "पुन्हा प्रयत्न करा",
+    "experiencesError": "अनुभव लोड करता आले नाहीत."
   },
   "actions": {
     "title": "कृती",
@@ -606,7 +805,10 @@
       "exposure": "अनावरण",
       "resolution": "संकल्प",
       "challenge": "आव्हान"
-    }
+    },
+    "loading": "क्रिया लोड होत आहेत…",
+    "acceptError": "ही बाब स्वीकारता आली नाही. कृपया पुन्हा प्रयत्न करा.",
+    "metaLine": "{ercType} · {journey} मध्ये"
   },
   "vm_guidance": {
     "title": "व्रतमित्र मार्गदर्शन",
@@ -638,7 +840,9 @@
       "exposure": "अनावरण",
       "resolution": "संकल्प",
       "challenge": "आव्हान"
-    }
+    },
+    "actionError": "काहीतरी चूक झाली. कृपया पुन्हा प्रयत्न करा.",
+    "confirmReturn": "परत पाठवणे निश्चित करा"
   },
   "experiences": {
     "newTitle": "तुमचा अनुभव नोंदवा",
@@ -677,7 +881,36 @@
     "poolEmpty": "अद्याप कोणतेही सार्वजनिक अनुभव नाहीत",
     "poolEmptyHint": "सार्वजनिकरित्या चिंतन सामायिक करणारे पहिले व्हा.",
     "loading": "लोड होत आहे…",
-    "loadMore": "अधिक लोड करा"
+    "loadMore": "अधिक लोड करा",
+    "tagType": {
+      "VIRTUE": "सद्गुण",
+      "SUBVIRTUE": "उपगुण",
+      "WEAKNESS": "दुर्गुण",
+      "SENTENCE": "वाक्य",
+      "EXPOSURE": "अनावरण",
+      "RESOLUTION": "संकल्प",
+      "CHALLENGE": "आव्हान",
+      "JOURNEY": "प्रवास"
+    },
+    "notFound": "अनुभव सापडला नाही",
+    "back": "माझ्या अनुभवांकडे परत",
+    "uploading": "अपलोड होत आहे…",
+    "deleteError": "तुमची नोंद हटवता आली नाही",
+    "deleteConfirmTitle": "हा अनुभव हटवायचा?",
+    "deleteConfirmBody": "यामुळे ही अनुभव नोंद कायमची काढून टाकली जाईल. हे पूर्ववत करता येणार नाही.",
+    "deleteCancel": "रद्द करा",
+    "tagSearchError": "आत्ता शोध घेता आला नाही",
+    "tagSearchEmpty": "कोणतेही जुळणारे आढळले नाहीत",
+    "entityType": {
+      "VIRTUE": "सद्गुण",
+      "SUBVIRTUE": "उपगुण",
+      "WEAKNESS": "दुर्गुण",
+      "SENTENCE": "वाक्य",
+      "EXPOSURE": "अनावरण",
+      "RESOLUTION": "संकल्प",
+      "CHALLENGE": "आव्हान",
+      "JOURNEY": "प्रवास"
+    }
   },
   "invitations_flow": {
     "title": "व्रतमित्राला आमंत्रित करा",
@@ -760,7 +993,12 @@
     "hide": "लपवा",
     "delete": "हटवा",
     "report": "तक्रार करा",
-    "reported": "पुनरावलोकनासाठी कळवले"
+    "reported": "पुनरावलोकनासाठी कळवले",
+    "commentError": "तुमची प्रतिक्रिया पोस्ट करता आली नाही",
+    "moderationError": "ती क्रिया पूर्ण करता आली नाही",
+    "backToMine": "माझ्या ब्लॉगकडे परत",
+    "titleLabel": "ब्लॉग शीर्षक",
+    "uploading": "अपलोड होत आहे…"
   },
   "virtues": {
     "title": "सद्गुण व दुर्गुण",
@@ -782,7 +1020,11 @@
     "takeTest": "चाचणी द्या",
     "takeTestForWeakness": "या दुर्गुणाची चाचणी द्या",
     "loginToTest": "चाचणी देण्यासाठी लॉग इन करा.",
-    "login": "लॉग इन करा"
+    "login": "लॉग इन करा",
+    "retry": "पुन्हा प्रयत्न करा",
+    "noSubvirtues": "अद्याप कोणतेही उपगुण नाहीत",
+    "virtuesEmpty": "अद्याप कोणतेही सद्गुण नाहीत",
+    "weaknessesEmpty": "अद्याप कोणतेही दुर्गुण नाहीत"
   },
   "moderation": {
     "title": "नियंत्रण",
@@ -802,7 +1044,27 @@
     "rejectReasonPlaceholder": "नाकारण्याचे कारण (आवश्यक)…",
     "approved": "मंजूर करून पूलमध्ये जोडले",
     "rejected": "सबमिशन नाकारले",
-    "actionError": "काहीतरी चूक झाली"
+    "actionError": "काहीतरी चूक झाली",
+    "queueError": "पुनरावलोकन रांग लोड करता आली नाही",
+    "detailError": "हे सबमिशन लोड करता आले नाही",
+    "rejectReasonLabel": "नाकारण्याचे कारण",
+    "durationWeeks": "{count, plural, one {# आठवडा} other {# आठवडे}}",
+    "durationDays": "{count, plural, one {# दिवस} other {# दिवस}}",
+    "entityType": {
+      "EXPOSURE": "अनावरण",
+      "RESOLUTION": "संकल्प",
+      "CHALLENGE": "आव्हान"
+    },
+    "ercTypeLabel": {
+      "exposure": "अनावरण",
+      "resolution": "संकल्प",
+      "challenge": "आव्हान"
+    },
+    "tier": {
+      "local": "स्थानिक",
+      "national": "राष्ट्रीय",
+      "international": "आंतरराष्ट्रीय"
+    }
   },
   "content": {
     "pothiTitle": "पोथी",
@@ -834,7 +1096,8 @@
     "whatIsPothiBody": "पोथी ही वीरव्रताची विधी-मार्गदर्शिका आहे — विभाग, श्लोक, सामूहिक प्रतिसाद आणि भाष्य यांचा क्रमबद्ध संच, जो मेळाव्यांमध्ये वापरला जातो. ती सद्गुणांची उपासना एका सामायिक, रचनाबद्ध विधीत बसवते.",
     "whyShlokasLink": "आपण श्लोक का अभ्यासतो",
     "whyShlokasTitle": "आपण श्लोक का अभ्यासतो",
-    "whyShlokasBody": "श्लोक वीरव्रताच्या मुळाशी असलेले शहाणपण सारतात. त्यांचे पठण व चिंतन दैनंदिन साधनेला आधार देते, प्रत्येक सद्गुणाला जिवंत परंपरेशी जोडते आणि अमूर्त आकांक्षेचे स्मरणीय, पुनरावर्ती मार्गदर्शनात रूपांतर करते."
+    "whyShlokasBody": "श्लोक वीरव्रताच्या मुळाशी असलेले शहाणपण सारतात. त्यांचे पठण व चिंतन दैनंदिन साधनेला आधार देते, प्रत्येक सद्गुणाला जिवंत परंपरेशी जोडते आणि अमूर्त आकांक्षेचे स्मरणीय, पुनरावर्ती मार्गदर्शनात रूपांतर करते.",
+    "retry": "पुन्हा प्रयत्न करा"
   },
   "admin": {
     "dashboardTitle": "प्रशासन",
@@ -907,7 +1170,16 @@
     "usersTitle": "वापरकर्ते",
     "usersDesc": "खाती, भूमिका व खाते कृती.",
     "auditTitle": "लेखापरीक्षण नोंद",
-    "auditDesc": "सर्व प्रशासक/नियंत्रक कृती पहा."
+    "auditDesc": "सर्व प्रशासक/नियंत्रक कृती पहा.",
+    "loading": "लोड होत आहे...",
+    "loadError": "लोड करता आले नाही. कृपया पुन्हा प्रयत्न करा.",
+    "saving": "जतन होत आहे…",
+    "confirmDeleteTitle": "हा घटक हटवायचा?",
+    "toggleFeatured": "वैशिष्ट्यीकृत करा/काढा",
+    "toggleFeaturedError": "वैशिष्ट्यीकृत स्थिती अद्ययावत करता आली नाही. कृपया पुन्हा प्रयत्न करा.",
+    "noBlogs": "अद्याप कोणतेही ब्लॉग नाहीत",
+    "noExperiences": "अद्याप कोणतेही अनुभव नाहीत",
+    "cmsKeyLabel": "की"
   },
   "adminUsers": {
     "title": "वापरकर्ते",
@@ -936,7 +1208,32 @@
     "experiences": "अनुभव",
     "noExperiences": "अनुभव नाहीत.",
     "submitted": "सादर",
-    "draft": "मसुदा"
+    "draft": "मसुदा",
+    "loading": "लोड होत आहे...",
+    "loadError": "लोड करता आले नाही. कृपया पुन्हा प्रयत्न करा.",
+    "cancel": "रद्द करा",
+    "confirm": "पुष्टी करा",
+    "overrideStateTitle": "प्रवास स्थिती बदला",
+    "reasonLabel": "कारण",
+    "reasonPlaceholder": "कारण (लेखापरीक्षणात नोंदले जाते)…",
+    "role": {
+      "VRATARTHI": "व्रतार्थी",
+      "VRATMITRA": "व्रतमित्र",
+      "MODERATOR": "नियंत्रक",
+      "ADMIN": "प्रशासक"
+    },
+    "journeyState": {
+      "NOT_STARTED": "सुरू नाही",
+      "ACTIVE": "सक्रिय",
+      "PAUSED": "थांबलेला",
+      "DORMANT": "निष्क्रिय",
+      "COMPLETED": "पूर्ण"
+    },
+    "visibility": {
+      "ONLY_ME": "फक्त मी",
+      "FRIENDS": "मित्र",
+      "PUBLIC": "सार्वजनिक"
+    }
   },
   "audit": {
     "title": "लेखापरीक्षण नोंद",
@@ -944,7 +1241,9 @@
     "filterAction": "कृतीनुसार गाळा (उदा. admin.suspend_user)",
     "filterActor": "कर्ता आयडीनुसार गाळा",
     "noEvents": "लेखापरीक्षण घटना नाहीत",
-    "actor": "कर्ता"
+    "actor": "कर्ता",
+    "loading": "लोड होत आहे...",
+    "loadError": "लेखापरीक्षण घटना लोड करता आल्या नाहीत. कृपया पुन्हा प्रयत्न करा."
   },
   "settings": {
     "title": "सेटिंग्ज",
@@ -1015,7 +1314,13 @@
     "vratmitraTour": "मार्गदर्शित फेरफटका",
     "vratmitraTourDesc": "अ‍ॅपवरील संदर्भात्मक मार्गदर्शन पुन्हा पहा.",
     "vratmitraRestartTour": "फेरफटका पुन्हा सुरू करा",
-    "vratmitraTourReset": "तुम्ही नेव्हिगेट करताना मार्गदर्शित फेरफटका पुन्हा सुरू होईल."
+    "vratmitraTourReset": "तुम्ही नेव्हिगेट करताना मार्गदर्शित फेरफटका पुन्हा सुरू होईल.",
+    "loading": "सेटिंग्ज लोड होत आहेत…",
+    "loadError": "तुमच्या सेटिंग्ज लोड करता आल्या नाहीत",
+    "loadErrorHint": "काहीतरी चूक झाली. कृपया पुन्हा प्रयत्न करा.",
+    "retry": "पुन्हा प्रयत्न करा",
+    "saveError": "जतन करता आले नाही. कृपया पुन्हा प्रयत्न करा.",
+    "disconnectError": "हे खाते डिस्कनेक्ट करता आले नाही. कृपया पुन्हा प्रयत्न करा."
   },
   "confirmEmailChange": {
     "title": "ईमेल बदल निश्चित करा",
@@ -1024,5 +1329,15 @@
     "error": "हा पुष्टीकरण दुवा अवैध आहे किंवा कालबाह्य झाला आहे.",
     "goToDashboard": "डॅशबोर्डवर जा",
     "backToSettings": "सेटिंग्जकडे परत"
+  },
+  "entityType": {
+    "weakness": "दुर्बलता",
+    "virtue": "सद्गुण",
+    "subvirtue": "उपगुण",
+    "sentence": "वाक्य",
+    "journey": "प्रवास",
+    "exposure": "अनावरण",
+    "resolution": "संकल्प",
+    "challenge": "आव्हान"
   }
 }

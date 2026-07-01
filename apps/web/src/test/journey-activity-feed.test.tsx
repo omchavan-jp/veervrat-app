@@ -11,9 +11,9 @@ vi.mock('@/hooks/use-journeys', () => ({
   useJourneyActivity: () => mockUseActivity(),
 }));
 
-function renderFeed() {
+function renderFeed(locale: 'en' | 'mr' = 'en') {
   return render(
-    <NextIntlClientProvider locale="en" messages={enMessages}>
+    <NextIntlClientProvider locale={locale} messages={enMessages}>
       <JourneyActivityFeed journeyId="j1" />
     </NextIntlClientProvider>,
   );
@@ -45,21 +45,29 @@ describe('JourneyActivityFeed', () => {
     expect(screen.getByText('Talk to a stranger')).toBeInTheDocument();
   });
 
-  it('prefers Devanagari title when available', () => {
-    const events: JourneyActivityEvent[] = [
-      {
-        id: 'resolution:r1:checkin',
-        type: 'checkin',
-        at: new Date().toISOString(),
-        ercType: 'resolution',
-        itemId: 'r1',
-        titleEn: 'Daily walk',
-        titleMr: 'रोज चालणे',
-        checkinStatus: 'DONE',
-      },
-    ];
-    mockUseActivity.mockReturnValue({ data: events, isLoading: false });
-    renderFeed();
+  const bilingualEvent: JourneyActivityEvent[] = [
+    {
+      id: 'resolution:r1:checkin',
+      type: 'checkin',
+      at: new Date().toISOString(),
+      ercType: 'resolution',
+      itemId: 'r1',
+      titleEn: 'Daily walk',
+      titleMr: 'रोज चालणे',
+      checkinStatus: 'DONE',
+    },
+  ];
+
+  it('follows the active locale: English title in EN', () => {
+    mockUseActivity.mockReturnValue({ data: bilingualEvent, isLoading: false });
+    renderFeed('en');
+    expect(screen.getByText('Daily walk')).toBeInTheDocument();
+    expect(screen.queryByText('रोज चालणे')).not.toBeInTheDocument();
+  });
+
+  it('follows the active locale: Devanagari title in MR', () => {
+    mockUseActivity.mockReturnValue({ data: bilingualEvent, isLoading: false });
+    renderFeed('mr');
     expect(screen.getByText('रोज चालणे')).toBeInTheDocument();
     expect(screen.queryByText('Daily walk')).not.toBeInTheDocument();
   });

@@ -7,8 +7,11 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '@/hooks/use-auth';
 import { api } from '@/lib/api/client';
 import { io, Socket } from 'socket.io-client';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, UserRound } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Spinner } from '@/components/ui/spinner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { ChatComposer } from '@/components/chat/chat-composer';
 import { MessageContent, type TiptapDoc } from '@/components/chat/message-content';
@@ -42,7 +45,8 @@ interface VmSummary {
 
 function initialsOf(name: string): string {
   return name
-    .split(' ')
+    .split(/\s+/)
+    .filter(Boolean)
     .map((n) => n[0])
     .join('')
     .toUpperCase()
@@ -71,7 +75,7 @@ export function ChatThreadClient({ vmId }: { vmId: string }) {
   const roomId = user && vmId ? `chat:${[user.id, vmId].sort().join(':')}` : '';
 
   // Resolve the VM's identity (name, handle, profile link) from the cached VM list.
-  const { data: vms } = useQuery({
+  const { data: vms, isLoading: vmsLoading, isError: vmsError } = useQuery({
     queryKey: ['my-vms'],
     queryFn: async () => {
       const response = await api.get<{ data: VmSummary[] }>('/vm-relationships/my-vms');
@@ -81,7 +85,12 @@ export function ChatThreadClient({ vmId }: { vmId: string }) {
   });
   const vm = useMemo(() => (vms ?? []).find((v) => v.id === vmId), [vms, vmId]);
 
-  const { data: initialMessages } = useQuery({
+  const {
+    data: initialMessages,
+    isLoading: historyLoading,
+    isError: historyError,
+    refetch: refetchHistory,
+  } = useQuery({
     queryKey: ['chat-messages', roomId],
     queryFn: async () => {
       if (!roomId) return [];
@@ -152,7 +161,11 @@ export function ChatThreadClient({ vmId }: { vmId: string }) {
   }, [initialMessages]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Respect prefers-reduced-motion: jump instantly instead of smooth-scrolling.
+    const prefersReduced =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    messagesEndRef.current?.scrollIntoView({ behavior: prefersReduced ? 'auto' : 'smooth' });
   }, [messages]);
 
   const sendMessage = (content: TiptapDoc) => {
@@ -202,7 +215,7 @@ export function ChatThreadClient({ vmId }: { vmId: string }) {
         <Avatar className="h-9 w-9 shrink-0">
           {vm?.avatarUrl && <AvatarImage src={vm.avatarUrl} />}
           <AvatarFallback className="text-xs">
-            {initialsOf(vm?.displayName ?? '·')}
+            {vm ? initialsOf(vm.displayName) : <UserRound className="h-4 w-4 text-muted" aria-hidden="true" />}
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
@@ -210,11 +223,16 @@ export function ChatThreadClient({ vmId }: { vmId: string }) {
             <Link href={`/u/${vm.username}`} className="block truncate font-medium leading-tight hover:text-accent">
               {vm.displayName}
             </Link>
+          ) : vmsLoading ? (
+            <span className="block h-4 w-32 animate-pulse rounded bg-fg/[0.08] motion-reduce:animate-none" />
+          ) : vmsError ? (
+            <span className="block truncate font-medium leading-tight text-danger">{t('chat.identity_error')}</span>
           ) : (
             <span className="block truncate font-medium leading-tight">{t('chat.title')}</span>
           )}
-          <span className="flex items-center gap-1.5 text-[12px] text-muted">
+          <span className="flex items-center gap-1.5 text-[12px] text-muted" aria-live="polite">
             <span
+              aria-hidden="true"
               className={`inline-block h-1.5 w-1.5 rounded-full ${isConnected ? 'bg-success' : 'bg-warning'}`}
             />
             {isConnected ? t('chat.connected') : t('chat.connecting')}
@@ -233,7 +251,22 @@ export function ChatThreadClient({ vmId }: { vmId: string }) {
 
       {/* Messages */}
       <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
-        {messages.length === 0 ? (
+        {messages.length === 0 && historyLoading ? (
+          <div className="flex h-full items-center justify-center">
+            <Spinner size="lg" label={t('common.loading')} />
+          </div>
+        ) : messages.length === 0 && historyError ? (
+          <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-sm text-danger">
+            <Alert variant="destructive" className="border-destructive/40 bg-destructive/10">
+              <AlertDescription className="flex flex-col items-center gap-2 text-destructive">
+                {t('chat.history_error')}
+                <Button size="sm" variant="outline" onClick={() => refetchHistory()}>
+                  {t('common.status.retry')}
+                </Button>
+              </AlertDescription>
+            </Alert>
+          </div>
+        ) : messages.length === 0 ? (
           <div className="flex h-full items-center justify-center text-center text-sm text-muted">
             <p>{t('chat.no_messages')}</p>
           </div>

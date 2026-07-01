@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import { renderWithProviders } from './helpers/render';
 import { MessageContent, type TiptapDoc } from '@/components/chat/message-content';
 
 // next/image and next/link render fine in jsdom, but stub next/link to a plain anchor
@@ -15,12 +16,14 @@ const doc = (...content: unknown[]): TiptapDoc => ({ type: 'doc', content: conte
 
 describe('MessageContent', () => {
   it('renders plain paragraph text', () => {
-    render(<MessageContent content={doc({ type: 'paragraph', content: [{ type: 'text', text: 'hello world' }] })} />);
+    renderWithProviders(
+      <MessageContent content={doc({ type: 'paragraph', content: [{ type: 'text', text: 'hello world' }] })} />,
+    );
     expect(screen.getByText('hello world')).toBeInTheDocument();
   });
 
   it('renders an entity chip with a link for navigable types', () => {
-    render(
+    renderWithProviders(
       <MessageContent
         content={doc({
           type: 'paragraph',
@@ -35,7 +38,7 @@ describe('MessageContent', () => {
   });
 
   it('renders a non-navigable concept mention as plain text (no link)', () => {
-    render(
+    renderWithProviders(
       <MessageContent
         content={doc({
           type: 'paragraph',
@@ -48,7 +51,7 @@ describe('MessageContent', () => {
   });
 
   it('renders an image node', () => {
-    const { container } = render(
+    const { container } = renderWithProviders(
       <MessageContent content={doc({ type: 'image', attrs: { src: 'https://cdn.example.com/a.png' } })} />,
     );
     const img = container.querySelector('img');
@@ -56,7 +59,7 @@ describe('MessageContent', () => {
   });
 
   it('applies bold marks', () => {
-    render(
+    renderWithProviders(
       <MessageContent
         content={doc({ type: 'paragraph', content: [{ type: 'text', text: 'strong', marks: [{ type: 'bold' }] }] })}
       />,

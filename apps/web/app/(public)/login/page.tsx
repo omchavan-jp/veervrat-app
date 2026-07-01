@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AuthShell } from '@/components/auth/auth-shell';
 import { GoogleIcon } from '@/components/auth/google-icon';
 import { useLogin } from '@/hooks/use-auth';
@@ -14,6 +16,8 @@ import { loginSchema, type LoginInput } from '@/lib/validations/auth';
 import { ApiError } from '@/lib/api/client';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+
+const FIELD_LABEL = 'mb-2 block font-mono text-[11px] uppercase tracking-[0.1em] text-muted';
 
 export default function LoginPage() {
   const t = useTranslations('auth.login');
@@ -46,62 +50,72 @@ export default function LoginPage() {
   return (
     <AuthShell
       hero={{
-        eyebrow: 'Return',
-        heading: 'Welcome back. Pick up where you left.',
-        devanagari: 'दिवसातून एक पाऊल — पुरेसे आहे.',
-        gloss: 'One step a day is enough. The discipline is the destination.',
+        eyebrow: t('heroEyebrow'),
+        heading: t('heroHeading'),
+        devanagari: t('heroDevanagari'),
+        gloss: t('heroGloss'),
       }}
     >
       <h2 className="mb-2 font-display text-[32px] tracking-tight">{t('title')}</h2>
       <p className="mb-8 text-[15px] text-muted">{t('subtitle')}</p>
 
       {oauthErrorMsg && (
-        <div className="mb-4 rounded-xl border border-[rgba(192,81,47,0.2)] bg-[rgba(192,81,47,0.08)] px-4 py-3 text-sm text-accent">
-          {oauthErrorMsg}
-        </div>
+        <Alert variant="destructive" className="mb-4 border-destructive/40 bg-destructive/10">
+          <AlertDescription className="text-destructive">{oauthErrorMsg}</AlertDescription>
+        </Alert>
       )}
 
       {apiError && (
-        <div className="mb-4 rounded-xl border border-[rgba(192,81,47,0.2)] bg-[rgba(192,81,47,0.08)] px-4 py-3 text-sm text-accent">
-          {apiError}
-        </div>
+        <Alert variant="destructive" className="mb-4 border-destructive/40 bg-destructive/10">
+          <AlertDescription className="text-destructive">{apiError}</AlertDescription>
+        </Alert>
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div>
-          <label className="mb-2 block font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
+          <Label htmlFor="login-email" className={FIELD_LABEL}>
             {t('email')}
-          </label>
+          </Label>
           <Input
+            id="login-email"
             type="email"
+            variant="underline"
             placeholder={t('emailPlaceholder')}
-            className="rounded-none border-0 border-b border-border-strong bg-transparent px-0 py-3 text-base focus-visible:border-accent focus-visible:ring-0"
+            aria-invalid={errors.email ? true : undefined}
+            aria-describedby={errors.email ? 'login-email-error' : undefined}
             {...register('email')}
           />
           {errors.email && (
-            <p className="mt-1.5 text-xs text-accent">{errors.email.message}</p>
+            <p id="login-email-error" role="alert" className="mt-1.5 text-xs text-danger">
+              {errors.email.message}
+            </p>
           )}
         </div>
 
         <div>
-          <label className="mb-2 block font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
+          <Label htmlFor="login-password" className={FIELD_LABEL}>
             {t('password')}
-          </label>
+          </Label>
           <Input
+            id="login-password"
             type="password"
+            variant="underline"
             placeholder={t('passwordPlaceholder')}
-            className="rounded-none border-0 border-b border-border-strong bg-transparent px-0 py-3 text-base focus-visible:border-accent focus-visible:ring-0"
+            aria-invalid={errors.password ? true : undefined}
+            aria-describedby={errors.password ? 'login-password-error' : undefined}
             {...register('password')}
           />
           {errors.password && (
-            <p className="mt-1.5 text-xs text-accent">{errors.password.message}</p>
+            <p id="login-password-error" role="alert" className="mt-1.5 text-xs text-danger">
+              {errors.password.message}
+            </p>
           )}
         </div>
 
         <div className="-mt-2 text-right">
           <Link
             href="/forgot-password"
-            className="text-[13px] text-accent-2 underline decoration-[rgba(47,91,79,0.3)]"
+            className="text-[13px] text-accent-2 underline decoration-accent-2/30"
           >
             {t('forgotPassword')}
           </Link>
@@ -109,8 +123,9 @@ export default function LoginPage() {
 
         <Button
           type="submit"
-          disabled={login.isPending}
-          className="h-auto w-full rounded-xl bg-accent px-6 py-3.5 text-[15px] text-bg hover:bg-accent-hover"
+          size="lg"
+          loading={login.isPending}
+          className="min-h-12 w-full text-[15px]"
         >
           {login.isPending ? t('submitting') : t('submit')}
         </Button>
@@ -118,13 +133,16 @@ export default function LoginPage() {
 
       <div className="my-5 flex items-center gap-3">
         <span className="h-px flex-1 bg-border" />
-        <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">or</span>
+        <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">
+          {t('orDivider')}
+        </span>
         <span className="h-px flex-1 bg-border" />
       </div>
 
       <Button
         variant="outline"
-        className="h-auto w-full rounded-xl border-border-strong bg-surface px-6 py-3.5 text-[15px] text-fg hover:bg-bg"
+        size="lg"
+        className="min-h-12 w-full text-[15px]"
         nativeButton={false}
         render={<a href={`${API_URL}/auth/google`} />}
       >

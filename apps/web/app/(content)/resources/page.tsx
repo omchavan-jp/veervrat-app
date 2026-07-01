@@ -8,23 +8,43 @@ import { contentApi, type ResourceSummary, type ResourceDetail } from '@/lib/api
 import { queryKeys } from '@/lib/api/query-keys';
 import { MessageContent } from '@/components/chat/message-content';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
+import { Dialog, DialogPrimitive } from '@/components/ui/dialog';
 
 type TypeFilter = '' | 'FILE' | 'LINK';
 
 function DetailModal({ id, onClose }: { id: string; onClose: () => void }) {
   const t = useTranslations('content');
-  const { data, isLoading } = useQuery({ queryKey: queryKeys.content.resource(id), queryFn: () => contentApi.resource(id) });
+  const { data, isLoading, isError, refetch } = useQuery({ queryKey: queryKeys.content.resource(id), queryFn: () => contentApi.resource(id) });
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
-      <div className="max-h-[85vh] w-full max-w-[600px] overflow-y-auto rounded-2xl border border-border bg-bg p-6 shadow-raised" onClick={(e) => e.stopPropagation()}>
-        <button onClick={onClose} aria-label={t('close')} className="float-right text-muted hover:text-fg"><X className="h-5 w-5" /></button>
-        {isLoading || !data ? (
-          <div className="flex min-h-[20vh] items-center justify-center"><div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" /></div>
-        ) : (
-          <ResourceDetailBody data={data} />
-        )}
-      </div>
-    </div>
+    <Dialog
+      open
+      onOpenChange={(o) => { if (!o) onClose(); }}
+      className="md:w-[min(600px,calc(100vw-40px))]"
+    >
+      <DialogPrimitive.Close
+        aria-label={t('close')}
+        className="absolute right-4 top-4 text-muted transition-colors hover:text-fg"
+      >
+        <X className="h-5 w-5" />
+      </DialogPrimitive.Close>
+      {isLoading ? (
+        <div className="flex min-h-[20vh] items-center justify-center"><Spinner size="lg" /></div>
+      ) : isError || !data ? (
+        <EmptyState
+          icon={<Library className="h-5 w-5" />}
+          title={t('loadError')}
+          action={
+            <Button variant="outline" size="sm" onClick={() => refetch()}>
+              {t('retry')}
+            </Button>
+          }
+        />
+      ) : (
+        <ResourceDetailBody data={data} />
+      )}
+    </Dialog>
   );
 }
 
@@ -65,15 +85,24 @@ export default function ResourcesPage() {
       <h1 className="font-display text-[30px] font-medium tracking-tight">{t('resourcesTitle')}</h1>
       <p className="mt-1 text-[14px] text-muted">{t('resourcesSubtitle')}</p>
 
-      <div className="mt-5 flex gap-2">
+      <div className="mt-5 flex flex-wrap gap-2">
         {filters.map((f) => (
-          <button key={f.key} onClick={() => setType(f.key)} className={`rounded-full border px-3.5 py-1.5 text-[13px] transition-colors ${type === f.key ? 'border-accent bg-accent text-bg' : 'border-border-strong text-muted hover:border-accent'}`}>{f.label}</button>
+          <Button
+            key={f.key}
+            variant="toggle"
+            size="sm"
+            aria-pressed={type === f.key}
+            onClick={() => setType(f.key)}
+            className="rounded-full px-3.5 py-1.5 text-[13px]"
+          >
+            {f.label}
+          </Button>
         ))}
       </div>
 
       <div className="mt-6">
         {isLoading ? (
-          <div className="flex min-h-[30vh] items-center justify-center"><div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" /></div>
+          <div className="flex min-h-[30vh] items-center justify-center"><Spinner size="lg" /></div>
         ) : isError ? (
           <p className="text-[13px] text-danger">{t('loadError')}</p>
         ) : items.length === 0 ? (

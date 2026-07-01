@@ -1,7 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 import { useLogCheckin } from '@/hooks/use-journeys';
 import type { CheckinStatus } from '@/lib/api/journeys';
 
@@ -33,6 +37,8 @@ const STATUS_STYLES: Record<CheckinStatus, { active: string; idle: string }> = {
 
 export function CheckinForm({ journeyId, resolutionId }: Props) {
   const t = useTranslations('journey.checkin');
+  const { toast } = useToast();
+  const noteId = useId();
   const [selected, setSelected] = useState<CheckinStatus | null>(null);
   const [note, setNote] = useState('');
   const logCheckin = useLogCheckin(journeyId, resolutionId);
@@ -51,6 +57,12 @@ export function CheckinForm({ journeyId, resolutionId }: Props) {
           setSelected(null);
           setNote('');
         },
+        onError: (e) =>
+          toast({
+            title: t('logError'),
+            description: e instanceof Error ? e.message : undefined,
+            variant: 'destructive',
+          }),
       },
     );
   }
@@ -58,40 +70,48 @@ export function CheckinForm({ journeyId, resolutionId }: Props) {
   return (
     <div className="mt-3 rounded-lg border border-dashed border-border p-3">
       <p className="mb-2 text-[12px] font-medium text-muted">{t('logTitle')}</p>
-      <div className="flex gap-2">
+      <div className="flex gap-2" role="radiogroup" aria-label={t('logTitle')}>
         {STATUSES.map(({ value, labelKey }) => (
-          <button
+          <Button
             key={value}
             type="button"
+            variant="outline"
+            size="sm"
+            role="radio"
+            aria-checked={selected === value}
             onClick={() => setSelected(value)}
             disabled={logCheckin.isPending}
-            className={`rounded-lg border px-3 py-1.5 text-[12px] font-medium transition-colors disabled:opacity-40 ${
+            className={`rounded-lg border px-3 py-1.5 text-[12px] font-medium ${
               selected === value ? STATUS_STYLES[value].active : STATUS_STYLES[value].idle
             }`}
           >
             {t(labelKey)}
-          </button>
+          </Button>
         ))}
       </div>
       {selected && (
         <div className="mt-2">
-          <textarea
+          <Label htmlFor={noteId} className="sr-only">{t('noteLabel')}</Label>
+          <Textarea
+            id={noteId}
             value={note}
             onChange={(e) => setNote(e.target.value)}
             maxLength={500}
             placeholder={t('notePlaceholder')}
             disabled={logCheckin.isPending}
             rows={2}
-            className="w-full resize-none rounded-lg border border-border bg-bg px-3 py-2 text-[13px] placeholder:text-muted/50 focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-40"
+            className="resize-none text-[13px]"
           />
-          <button
+          <Button
             type="button"
+            size="sm"
             onClick={handleSubmit}
+            loading={logCheckin.isPending}
             disabled={logCheckin.isPending}
-            className="mt-1 rounded-lg bg-accent-2/10 px-3 py-1.5 text-[12px] font-medium text-accent-2 hover:bg-accent-2/20 disabled:opacity-40"
+            className="mt-1 bg-accent-2/10 px-3 py-1.5 text-[12px] font-medium text-accent-2 hover:bg-accent-2/20"
           >
             {logCheckin.isPending ? t('logging') : t('log')}
-          </button>
+          </Button>
         </div>
       )}
     </div>

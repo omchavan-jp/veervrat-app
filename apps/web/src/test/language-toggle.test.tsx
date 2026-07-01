@@ -10,8 +10,20 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ refresh: mockRouterRefresh }),
 }));
 
+// The component reads common.language.{en,mr,switchTo,current}. Mirror those strings
+// so assertions track the real labels without pulling the full provider.
 vi.mock('next-intl', () => ({
   useLocale: () => mockLocale.value,
+  useTranslations: () => {
+    const dict: Record<string, string> = {
+      en: 'EN',
+      mr: 'मराठी',
+      switchTo: 'Switch language (currently {current})',
+      current: 'Language: {current}',
+    };
+    return (key: string, vars?: Record<string, string>) =>
+      (dict[key] ?? key).replace('{current}', vars?.current ?? '');
+  },
 }));
 
 vi.mock('@/hooks/use-auth', () => ({
@@ -47,14 +59,14 @@ describe('LanguageToggle', () => {
   it('shows the current language (EN) and labels the switch target', () => {
     mockLocale.value = 'en';
     render(<LanguageToggle />);
-    expect(screen.getByRole('button', { name: 'Switch language (currently English)' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Switch language (currently EN)' })).toBeInTheDocument();
     expect(screen.getByText('EN')).toBeInTheDocument();
   });
 
   it('shows the current language (मराठी) when locale is mr', () => {
     mockLocale.value = 'mr';
     render(<LanguageToggle />);
-    expect(screen.getByRole('button', { name: 'Switch language (currently Marathi)' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Switch language (currently मराठी)' })).toBeInTheDocument();
     expect(screen.getByText('मराठी')).toBeInTheDocument();
   });
 

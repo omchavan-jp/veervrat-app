@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AuthShell } from '@/components/auth/auth-shell';
 import { StatusBanner } from '@/components/auth/status-banner';
 import { PasswordStrength } from '@/components/auth/password-strength';
@@ -18,6 +20,8 @@ import {
   type ForgotPasswordInput,
 } from '@/lib/validations/auth';
 import { ApiError } from '@/lib/api/client';
+
+const FIELD_LABEL = 'mb-2 block font-mono text-[11px] uppercase tracking-[0.1em] text-muted';
 
 function ExpiredState() {
   const t = useTranslations('auth.resetPassword');
@@ -43,12 +47,14 @@ function ExpiredState() {
           title={t('newLinkSentTitle')}
           description={t('newLinkSentDescription')}
         />
-        <Link
-          href="/login"
-          className="inline-flex h-auto w-full items-center justify-center rounded-xl bg-accent px-6 py-3.5 text-[15px] font-medium text-bg hover:bg-accent-hover"
+        <Button
+          size="lg"
+          className="min-h-12 w-full text-[15px]"
+          nativeButton={false}
+          render={<Link href="/login" />}
         >
           {t('continueToLogin')}
-        </Link>
+        </Button>
       </>
     );
   }
@@ -66,24 +72,30 @@ function ExpiredState() {
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div>
-          <label className="mb-2 block font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
-            Account email
-          </label>
+          <Label htmlFor="reset-resend-email" className={FIELD_LABEL}>
+            {t('accountEmailLabel')}
+          </Label>
           <Input
+            id="reset-resend-email"
             type="email"
-            placeholder="you@example.com"
-            className="rounded-none border-0 border-b border-border-strong bg-transparent px-0 py-3 text-base focus-visible:border-accent focus-visible:ring-0"
+            variant="underline"
+            placeholder={t('accountEmailPlaceholder')}
+            aria-invalid={errors.email ? true : undefined}
+            aria-describedby={errors.email ? 'reset-resend-email-error' : undefined}
             {...register('email')}
           />
           {errors.email && (
-            <p className="mt-1.5 text-xs text-accent">{errors.email.message}</p>
+            <p id="reset-resend-email-error" role="alert" className="mt-1.5 text-xs text-danger">
+              {errors.email.message}
+            </p>
           )}
         </div>
 
         <Button
           type="submit"
-          disabled={forgotPassword.isPending}
-          className="h-auto w-full rounded-xl bg-accent px-6 py-3.5 text-[15px] text-bg hover:bg-accent-hover"
+          size="lg"
+          loading={forgotPassword.isPending}
+          className="min-h-12 w-full text-[15px]"
         >
           {forgotPassword.isPending ? t('sendingNewLink') : t('sendNewLink')}
         </Button>
@@ -92,14 +104,31 @@ function ExpiredState() {
   );
 }
 
-function heroForState(state: 'form' | 'success' | 'expired') {
+function heroForState(
+  state: 'form' | 'success' | 'expired',
+  t: ReturnType<typeof useTranslations>,
+) {
   if (state === 'success') {
-    return { eyebrow: 'Done', heading: 'A door reopened.', devanagari: 'पुनश्च हरि ॐ — सुरुवात पुन्हा.' };
+    return {
+      eyebrow: t('heroSuccessEyebrow'),
+      heading: t('heroSuccessHeading'),
+      devanagari: t('heroSuccessDevanagari'),
+    };
   }
   if (state === 'expired') {
-    return { eyebrow: 'Try again', heading: 'This link has gone quiet.', devanagari: 'कालः सर्वं भक्षयति।', gloss: 'Time consumes everything — including reset links. Ask for another.' };
+    return {
+      eyebrow: t('heroExpiredEyebrow'),
+      heading: t('heroExpiredHeading'),
+      devanagari: t('heroExpiredDevanagari'),
+      gloss: t('heroExpiredGloss'),
+    };
   }
-  return { eyebrow: 'Reset', heading: 'A new key for the same door.', devanagari: 'अनायासेन मरणं विना दैन्येन जीवनम्।', gloss: "Begin again, simply. Pick a passphrase you'll honour." };
+  return {
+    eyebrow: t('heroFormEyebrow'),
+    heading: t('heroFormHeading'),
+    devanagari: t('heroFormDevanagari'),
+    gloss: t('heroFormGloss'),
+  };
 }
 
 export default function ResetPasswordPage() {
@@ -136,20 +165,21 @@ export default function ResetPasswordPage() {
       : 'form';
 
   return (
-    <AuthShell hero={heroForState(state)}>
+    <AuthShell hero={heroForState(state, t)}>
       {state === 'expired' && <ExpiredState />}
 
       {state === 'success' && (
         <>
-          <StatusBanner variant="success" title={t('successTitle')} description={t('successBody')} />
           <h2 className="mb-2 font-display text-[32px] tracking-tight">{t('successTitle')}</h2>
           <p className="mb-6 text-[15px] text-muted">{t('successBody')}</p>
-          <Link
-            href="/login"
-            className="inline-flex h-auto w-full items-center justify-center rounded-xl bg-accent px-6 py-3.5 text-[15px] font-medium text-bg hover:bg-accent-hover"
+          <Button
+            size="lg"
+            className="min-h-12 w-full text-[15px]"
+            nativeButton={false}
+            render={<Link href="/login" />}
           >
             {t('continueToLogin')}
-          </Link>
+          </Button>
         </>
       )}
 
@@ -159,49 +189,60 @@ export default function ResetPasswordPage() {
           <p className="mb-8 text-[15px] text-muted">{t('subtitle')}</p>
 
           {resetPassword.error && !isExpired && (
-            <div className="mb-4 rounded-xl border border-[rgba(192,81,47,0.2)] bg-[rgba(192,81,47,0.08)] px-4 py-3 text-sm text-accent">
-              {resetPassword.error instanceof ApiError
-                ? resetPassword.error.message
-                : resetPassword.error.message}
-            </div>
+            <Alert variant="destructive" className="mb-4 border-destructive/40 bg-destructive/10">
+              <AlertDescription className="text-destructive">
+                {resetPassword.error.message}
+              </AlertDescription>
+            </Alert>
           )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
-              <label className="mb-2 block font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
+              <Label htmlFor="reset-new-password" className={FIELD_LABEL}>
                 {t('newPasswordLabel')}
-              </label>
+              </Label>
               <Input
+                id="reset-new-password"
                 type="password"
+                variant="underline"
                 placeholder={t('newPasswordPlaceholder')}
-                className="rounded-none border-0 border-b border-border-strong bg-transparent px-0 py-3 text-base focus-visible:border-accent focus-visible:ring-0"
+                aria-invalid={errors.newPassword ? true : undefined}
+                aria-describedby={errors.newPassword ? 'reset-new-password-error' : undefined}
                 {...register('newPassword')}
               />
               <PasswordStrength password={newPassword} />
               {errors.newPassword && (
-                <p className="mt-1.5 text-xs text-accent">{errors.newPassword.message}</p>
+                <p id="reset-new-password-error" role="alert" className="mt-1.5 text-xs text-danger">
+                  {errors.newPassword.message}
+                </p>
               )}
             </div>
 
             <div>
-              <label className="mb-2 block font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
+              <Label htmlFor="reset-confirm-password" className={FIELD_LABEL}>
                 {t('confirmPasswordLabel')}
-              </label>
+              </Label>
               <Input
+                id="reset-confirm-password"
                 type="password"
+                variant="underline"
                 placeholder={t('confirmPasswordPlaceholder')}
-                className="rounded-none border-0 border-b border-border-strong bg-transparent px-0 py-3 text-base focus-visible:border-accent focus-visible:ring-0"
+                aria-invalid={errors.confirmPassword ? true : undefined}
+                aria-describedby={errors.confirmPassword ? 'reset-confirm-password-error' : undefined}
                 {...register('confirmPassword')}
               />
               {errors.confirmPassword && (
-                <p className="mt-1.5 text-xs text-accent">{errors.confirmPassword.message}</p>
+                <p id="reset-confirm-password-error" role="alert" className="mt-1.5 text-xs text-danger">
+                  {errors.confirmPassword.message}
+                </p>
               )}
             </div>
 
             <Button
               type="submit"
-              disabled={resetPassword.isPending}
-              className="h-auto w-full rounded-xl bg-accent px-6 py-3.5 text-[15px] text-bg hover:bg-accent-hover"
+              size="lg"
+              loading={resetPassword.isPending}
+              className="min-h-12 w-full text-[15px]"
             >
               {resetPassword.isPending ? t('submitting') : t('submit')}
             </Button>
@@ -210,7 +251,7 @@ export default function ResetPasswordPage() {
           <p className="mt-6 text-center text-sm text-muted">
             {t('wrongAccount')}{' '}
             <Link href="/login" className="text-accent underline decoration-accent/40 hover:no-underline">
-              Login
+              {t('loginLink')}
             </Link>
           </p>
         </>

@@ -6,6 +6,9 @@ import { useQuery } from '@tanstack/react-query';
 import { cmsApi } from '@/lib/api/cms';
 import { queryKeys } from '@/lib/api/query-keys';
 import { MessageContent } from '@/components/chat/message-content';
+import { Dialog } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 
 // A "learn more" link that opens a modal whose copy is admin-managed via the CMS (keyed by
 // `cmsKey`). When no CMS page exists for the key, it falls back to the static title/body
@@ -25,7 +28,7 @@ export function CmsInfoModal({
   const locale = useLocale();
   const [open, setOpen] = useState(false);
 
-  const { data } = useQuery({
+  const { data, isPending } = useQuery({
     queryKey: queryKeys.cms.page(cmsKey),
     queryFn: () => cmsApi.getByKey(cmsKey),
     enabled: open,
@@ -33,38 +36,40 @@ export function CmsInfoModal({
   });
 
   const isMr = locale === 'mr';
+  // While the CMS fetch is in flight (or if it errors / has no page), show the
+  // fallback title; swap in the CMS title only once data arrives.
   const title = data ? (isMr && data.titleMr ? data.titleMr : data.titleEn) : fallbackTitle;
   const body = data ? (isMr && data.bodyMr ? data.bodyMr : data.bodyEn) : null;
 
   return (
     <>
-      <button
+      <Button
+        variant="link"
+        size="sm"
         onClick={() => setOpen(true)}
-        className="text-sm text-accent-2 underline decoration-accent-2/40 hover:no-underline"
+        className="h-auto p-0 text-sm text-accent-2 underline decoration-accent-2/40 hover:no-underline"
       >
         {linkLabel}
-      </button>
+      </Button>
 
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-fg/40 px-4" onClick={() => setOpen(false)}>
-          <div className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-surface p-8 shadow-modal" onClick={(e) => e.stopPropagation()}>
-            <h2 className="mb-4 font-display text-[24px] tracking-tight">{title}</h2>
-            {body ? (
-              <div className="text-[15px] leading-relaxed text-muted">
-                <MessageContent content={body} />
-              </div>
-            ) : (
-              <p className="whitespace-pre-line text-[15px] leading-relaxed text-muted">{fallbackBody}</p>
-            )}
-            <button
-              onClick={() => setOpen(false)}
-              className="mt-6 inline-flex h-auto items-center justify-center rounded-xl bg-accent px-6 py-3 text-[14px] font-medium text-bg hover:bg-accent-hover"
-            >
-              {t('close')}
-            </button>
+      <Dialog
+        open={open}
+        onOpenChange={setOpen}
+        title={title}
+        footer={<Button onClick={() => setOpen(false)}>{t('close')}</Button>}
+      >
+        {open && isPending ? (
+          <div className="flex justify-center py-6">
+            <Spinner />
           </div>
-        </div>
-      )}
+        ) : body ? (
+          <div className="text-[15px] leading-relaxed text-muted">
+            <MessageContent content={body} />
+          </div>
+        ) : (
+          <p className="whitespace-pre-line text-[15px] leading-relaxed text-muted">{fallbackBody}</p>
+        )}
+      </Dialog>
     </>
   );
 }

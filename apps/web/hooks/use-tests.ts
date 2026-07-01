@@ -9,6 +9,10 @@ export function useTest(testId: string) {
     queryKey: queryKeys.tests.detail(testId),
     queryFn: () => testsApi.getTest(testId),
     enabled: !!testId,
+    // Always re-check on mount so back/forward navigation into a test reflects its
+    // true submitted/draft state (a stale cached draft would otherwise let a user
+    // re-enter and "answer" an already-submitted test).
+    refetchOnMount: 'always',
   });
 }
 
@@ -28,8 +32,14 @@ export function useSaveAnswers(testId: string) {
 }
 
 export function useSubmitTest() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: testsApi.submit,
+    onSuccess: (_data, testId) => {
+      // Mark the cached test as submitted so the test/preview draft-guards fire on any
+      // subsequent back/forward navigation instead of showing a stale editable draft.
+      queryClient.invalidateQueries({ queryKey: queryKeys.tests.detail(testId) });
+    },
   });
 }
 

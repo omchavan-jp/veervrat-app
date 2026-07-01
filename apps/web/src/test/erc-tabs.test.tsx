@@ -92,7 +92,12 @@ describe('ExposuresTab — active items', () => {
   it('Start button calls updateStatus with in_progress', () => {
     wrap(<ExposuresTab journeyId="j-1" hasVm={false} />);
     fireEvent.click(screen.getByText('Start'));
-    expect(mockUpdateStatusMutate).toHaveBeenCalledWith({ itemId: 'e1', status: 'in_progress' });
+    // The remediation added a second mutate arg ({ onError }) for toast-on-failure;
+    // assert the payload exactly and tolerate the options object.
+    expect(mockUpdateStatusMutate).toHaveBeenCalledWith(
+      { itemId: 'e1', status: 'in_progress' },
+      expect.objectContaining({ onError: expect.any(Function) }),
+    );
   });
 
   it('deactivated item shows Reactivate and Remove buttons', () => {
@@ -105,6 +110,9 @@ describe('ExposuresTab — active items', () => {
     wrap(<ExposuresTab journeyId="j-1" hasVm={false} />);
     const deactivateBtns = screen.getAllByText('Deactivate');
     fireEvent.click(deactivateBtns[0]);
-    expect(mockDeactivateMutate).toHaveBeenCalledWith({ itemId: 'e1' });
+    expect(mockDeactivateMutate).toHaveBeenCalledWith(
+      { itemId: 'e1' },
+      expect.objectContaining({ onError: expect.any(Function) }),
+    );
   });
 });

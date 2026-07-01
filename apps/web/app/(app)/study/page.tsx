@@ -2,41 +2,58 @@
 
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import { ArrowRight, Search } from 'lucide-react';
 import { useWeaknesses } from '@/hooks/use-weaknesses';
 import { WhyModal } from '@/components/study/why-modal';
+import { QueryBoundary } from '@/components/ui/query-boundary';
+import { EmptyState } from '@/components/ui/empty-state';
+import { BilingualText } from '@/components/shared/bilingual-text';
+import { PageTitle, SectionLabel } from '@/components/ui/typography';
+import { SkeletonCard } from '@/components/ui/skeleton';
 
 export default function StudyBrowserPage() {
   const t = useTranslations('study.browser');
   const tStudy = useTranslations('study');
-  const { data, isLoading } = useWeaknesses();
+  const { data, isLoading, isError, refetch } = useWeaknesses();
   const clusters = data?.clusters ?? [];
 
   return (
     <div className="py-8">
-      <div className="mb-1 font-mono text-[11px] uppercase tracking-[0.14em] text-accent">
-        {tStudy('nav')}
-      </div>
-      <div className="mb-6 flex items-end justify-between">
+      <SectionLabel className="mb-1 text-accent">{tStudy('nav')}</SectionLabel>
+      <div className="mb-6 flex items-end justify-between gap-4">
         <div>
-          <h1 className="mb-1 font-display text-[clamp(28px,3vw,40px)] leading-tight tracking-tight">
-            {t('title')}
-          </h1>
-          <p className="text-[15px] text-muted">{t('subtitle')}</p>
+          <PageTitle className="mb-1">{t('title')}</PageTitle>
+          <p className="text-[14px] text-muted">{t('subtitle')}</p>
         </div>
         <WhyModal />
       </div>
 
-      {isLoading ? (
-        <div className="flex items-center justify-center py-20">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-        </div>
-      ) : (
+      <QueryBoundary
+        isLoading={isLoading}
+        isError={isError}
+        isEmpty={clusters.length === 0}
+        onRetry={() => refetch()}
+        errorTitle={t('loadError')}
+        retryLabel={t('retry')}
+        skeleton={
+          <div className="grid gap-3 sm:grid-cols-2">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
+        }
+        empty={
+          <EmptyState
+            icon={<Search className="h-5 w-5" />}
+            title={t('emptyTitle')}
+            description={t('emptyBody')}
+          />
+        }
+      >
         <div className="space-y-10">
           {clusters.map((cluster) => (
             <section key={cluster.key}>
-              <h2 className="mb-4 font-mono text-[11px] uppercase tracking-[0.12em] text-muted">
-                {cluster.label}
-              </h2>
+              <SectionLabel as="h2" className="mb-4">{cluster.label}</SectionLabel>
               <div className="grid gap-3 sm:grid-cols-2">
                 {cluster.weaknesses.map((w, i) => (
                   <Link
@@ -46,28 +63,24 @@ export default function StudyBrowserPage() {
                   >
                     <div className="mb-2 flex items-start justify-between gap-2">
                       <span className="font-mono text-[11px] text-muted">{String(i + 1).padStart(2, '0')}</span>
-                      <span className="font-mono text-[11px] text-muted group-hover:text-accent">→</span>
+                      <ArrowRight
+                        className="h-3.5 w-3.5 text-muted group-hover:text-accent"
+                        aria-hidden="true"
+                      />
                     </div>
-                    {w.nameMr ? (
-                      <>
-                        <h3 className="mb-0.5 font-deva text-[19px] leading-snug tracking-tight">{w.nameMr}</h3>
-                        <p className="mb-2 text-[13px] text-muted">{w.nameEn}</p>
-                      </>
-                    ) : (
-                      <h3 className="mb-2 font-display text-[18px] tracking-tight">{w.nameEn}</h3>
-                    )}
+                    <BilingualText en={w.nameEn} mr={w.nameMr} size="md" as="h3" className="mb-2" />
                     {w.description && (
                       <p className="mb-3 line-clamp-2 text-[13px] text-muted">{w.description}</p>
                     )}
                     {w.stats && (
                       <div className="flex items-center gap-4 border-t border-border pt-3">
-                        <span className={`text-[12px] ${w.stats.testsTaken > 0 ? 'text-accent-2' : 'text-muted/50'}`}>
+                        <span className={`text-[12px] ${w.stats.testsTaken > 0 ? 'text-accent-2' : 'text-muted'}`}>
                           {w.stats.testsTaken > 0
-                            ? `${w.stats.testsTaken} test${w.stats.testsTaken !== 1 ? 's' : ''} taken`
-                            : 'Not explored yet'}
+                            ? t('testsTaken', { count: w.stats.testsTaken })
+                            : t('notExplored')}
                         </span>
                         {w.stats.hasActiveJourney && (
-                          <span className="text-[12px] text-accent">Journey active</span>
+                          <span className="text-[12px] text-accent">{t('journeyActive')}</span>
                         )}
                       </div>
                     )}
@@ -77,7 +90,7 @@ export default function StudyBrowserPage() {
             </section>
           ))}
         </div>
-      )}
+      </QueryBoundary>
     </div>
   );
 }

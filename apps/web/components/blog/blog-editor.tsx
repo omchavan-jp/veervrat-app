@@ -9,6 +9,8 @@ import { useTranslations } from 'next-intl';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ImageIcon, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { uploadsApi } from '@/lib/api/uploads';
 import { useToast } from '@/hooks/use-toast';
 import { queryKeys } from '@/lib/api/query-keys';
@@ -31,7 +33,7 @@ export function BlogEditor({ existing }: { existing?: Blog }) {
     editorProps: {
       attributes: {
         class:
-          'min-h-[300px] rounded-2xl border border-border bg-surface px-5 py-4 text-[15px] leading-relaxed focus:outline-none focus:border-accent [&_h2]:text-xl [&_h2]:font-display [&_h2]:mt-4 [&_img]:max-h-80 [&_img]:rounded-xl [&_img]:my-3',
+          'min-h-[300px] rounded-2xl border border-border bg-surface px-5 py-4 text-[15px] leading-relaxed outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 [&_h2]:text-xl [&_h2]:font-display [&_h2]:mt-4 [&_img]:max-h-80 [&_img]:rounded-xl [&_img]:my-3',
       },
     },
   });
@@ -88,22 +90,31 @@ export function BlogEditor({ existing }: { existing?: Blog }) {
         {existing ? t('editTitle') : t('newTitle')}
       </h1>
 
-      <input
+      <Label htmlFor="blog-title" className="sr-only">{t('titleLabel')}</Label>
+      <Input
+        id="blog-title"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder={t('titlePlaceholder')}
-        className="mt-5 w-full rounded-xl border border-border bg-surface px-4 py-3 font-display text-[20px] outline-none focus:border-accent"
+        className="mt-5 h-auto rounded-xl border border-border bg-surface px-4 py-3 font-display text-[20px] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
       />
 
       <div className="mt-3">
-        <EditorContent editor={editor} />
+        {editor ? (
+          <EditorContent editor={editor} />
+        ) : (
+          <div
+            className="min-h-[300px] animate-pulse rounded-2xl border border-border bg-surface motion-reduce:animate-none"
+            aria-hidden="true"
+          />
+        )}
       </div>
 
       <div className="mt-3 flex items-center gap-2">
         <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/heic,image/heif,.heic,.heif" hidden onChange={onPickImage} />
-        <Button variant="outline" size="sm" type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+        <Button variant="outline" size="sm" type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} aria-busy={uploading}>
           {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
-          <span className="ml-1.5">{t('addImage')}</span>
+          <span className="ml-1.5">{uploading ? t('uploading') : t('addImage')}</span>
         </Button>
       </div>
 

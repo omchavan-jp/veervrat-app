@@ -8,10 +8,14 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AuthShell } from '@/components/auth/auth-shell';
 import { StatusBanner } from '@/components/auth/status-banner';
 import { useLinkGoogle } from '@/hooks/use-auth';
 import { ApiError } from '@/lib/api/client';
+
+const FIELD_LABEL = 'mb-2 block font-mono text-[11px] uppercase tracking-[0.1em] text-muted';
 
 const schema = z.object({
   password: z.string().min(8),
@@ -31,22 +35,24 @@ export default function LinkAccountPage() {
   } = useForm<FormInput>({ resolver: zodResolver(schema) });
 
   const hero = {
-    eyebrow: 'Link',
+    eyebrow: t('heroEyebrow'),
     heading: t('title'),
-    devanagari: 'एकता हेच बल।',
-    gloss: 'Unity is strength.',
+    devanagari: t('heroDevanagari'),
+    gloss: t('heroGloss'),
   };
 
   if (!token) {
     return (
       <AuthShell hero={hero}>
         <StatusBanner variant="error" title={t('title')} description={t('noToken')} />
-        <Link
-          href="/login"
-          className="inline-flex h-auto w-full items-center justify-center rounded-xl bg-accent px-6 py-3.5 text-[15px] font-medium text-bg hover:bg-accent-hover"
+        <Button
+          size="lg"
+          className="min-h-12 w-full text-[15px]"
+          nativeButton={false}
+          render={<Link href="/login" />}
         >
-          Back to login
-        </Link>
+          {t('backToLogin')}
+        </Button>
       </AuthShell>
     );
   }
@@ -73,40 +79,46 @@ export default function LinkAccountPage() {
       <p className="mb-8 text-[15px] text-muted">{t('subtitle')}</p>
 
       {errorMsg && (
-        <div className="mb-4 rounded-xl border border-[rgba(192,81,47,0.2)] bg-[rgba(192,81,47,0.08)] px-4 py-3 text-sm text-accent">
-          {errorMsg}
-        </div>
+        <Alert variant="destructive" className="mb-4 border-destructive/40 bg-destructive/10">
+          <AlertDescription className="text-destructive">{errorMsg}</AlertDescription>
+        </Alert>
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div>
-          <label className="mb-2 block font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
+          <Label htmlFor="link-password" className={FIELD_LABEL}>
             {t('passwordLabel')}
-          </label>
+          </Label>
           <Input
+            id="link-password"
             type="password"
+            variant="underline"
             placeholder={t('passwordPlaceholder')}
-            className="rounded-none border-0 border-b border-border-strong bg-transparent px-0 py-3 text-base focus-visible:border-accent focus-visible:ring-0"
+            aria-invalid={errors.password ? true : undefined}
+            aria-describedby={errors.password ? 'link-password-error' : undefined}
             {...register('password')}
           />
           {errors.password && (
-            <p className="mt-1.5 text-xs text-accent">{errors.password.message}</p>
+            <p id="link-password-error" role="alert" className="mt-1.5 text-xs text-danger">
+              {errors.password.message}
+            </p>
           )}
         </div>
 
         <Button
           type="submit"
-          disabled={linkGoogle.isPending}
-          className="h-auto w-full rounded-xl bg-accent px-6 py-3.5 text-[15px] text-bg hover:bg-accent-hover"
+          size="lg"
+          loading={linkGoogle.isPending}
+          className="min-h-12 w-full text-[15px]"
         >
           {linkGoogle.isPending ? t('submitting') : t('submit')}
         </Button>
       </form>
 
       <p className="mt-6 text-center text-sm text-muted">
-        Changed your mind?{' '}
+        {t('changedMind')}{' '}
         <Link href="/login" className="text-accent underline decoration-accent/40 hover:no-underline">
-          Back to login
+          {t('backToLogin')}
         </Link>
       </p>
     </AuthShell>

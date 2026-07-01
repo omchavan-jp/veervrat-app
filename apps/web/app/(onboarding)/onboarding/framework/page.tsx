@@ -3,7 +3,11 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Spinner } from '@/components/ui/spinner';
+import { ApiError } from '@/lib/api/client';
 import { useAuth, useCompleteFramework } from '@/hooks/use-auth';
 
 type Section = 'section1' | 'section2' | 'cta';
@@ -30,7 +34,7 @@ export default function FrameworkOnboardingPage() {
   if (isLoading || !user || user.accountSetupCompletedAt === null || user.onboardingCompletedAt !== null) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-bg">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent border-t-transparent" />
+        <Spinner size="lg" label={t('loading')} />
       </div>
     );
   }
@@ -38,6 +42,10 @@ export default function FrameworkOnboardingPage() {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center px-4 py-12">
       <div className="w-full max-w-2xl">
+        {/* Step indicator mirrors account-setup so onboarding progress reads consistently. */}
+        <div className="mb-6 font-mono text-[11px] uppercase tracking-[0.14em] text-accent">
+          {t('stepIndicator', { current: 2, total: 2 })}
+        </div>
         {section === 'section1' && <Section1 t={t} onNext={() => setSection('section2')} />}
         {section === 'section2' && (
           <Section2 t={t} onBack={() => setSection('section1')} onNext={() => setSection('cta')} />
@@ -78,7 +86,8 @@ function Section1({ t, onNext }: { t: ReturnType<typeof useTranslations<'onboard
           onClick={onNext}
           className="h-auto rounded-xl bg-accent px-8 py-3 text-[15px] text-bg hover:bg-accent-hover"
         >
-          {t('next')} →
+          {t('next')}
+          <ArrowRight aria-hidden="true" />
         </Button>
       </div>
     </div>
@@ -131,13 +140,15 @@ function Section2({
           onClick={onBack}
           className="h-auto rounded-xl border-border-strong bg-surface px-8 py-3 text-[15px] text-fg hover:bg-bg"
         >
-          ← {t('back')}
+          <ArrowLeft aria-hidden="true" />
+          {t('back')}
         </Button>
         <Button
           onClick={onNext}
           className="h-auto rounded-xl bg-accent px-8 py-3 text-[15px] text-bg hover:bg-accent-hover"
         >
-          {t('next')} →
+          {t('next')}
+          <ArrowRight aria-hidden="true" />
         </Button>
       </div>
     </div>
@@ -161,6 +172,13 @@ function CtaScreen({
     });
   };
 
+  // Surface a failed completion so the user is not stranded on re-enabled buttons
+  // with no explanation and no navigation.
+  const completeError =
+    completeFramework.error instanceof ApiError
+      ? completeFramework.error.message
+      : completeFramework.error?.message ?? null;
+
   return (
     <div className="space-y-8 text-center">
       <div>
@@ -170,13 +188,22 @@ function CtaScreen({
         <p className="text-[16px] leading-relaxed text-muted">{t('ctaBody')}</p>
       </div>
 
+      {completeError && (
+        <Alert
+          variant="destructive"
+          className="border-destructive/40 bg-destructive/10 text-left"
+        >
+          <AlertDescription className="text-destructive">{completeError}</AlertDescription>
+        </Alert>
+      )}
+
       <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
         <Button
           onClick={() => finish('/study')}
-          disabled={completeFramework.isPending}
+          loading={completeFramework.isPending}
           className="h-auto rounded-xl bg-accent px-8 py-4 text-[15px] text-bg hover:bg-accent-hover"
         >
-          {t('ctaTakeTest')}
+          {completeFramework.isPending ? t('submitting') : t('ctaTakeTest')}
         </Button>
         <Button
           variant="outline"
@@ -189,13 +216,15 @@ function CtaScreen({
       </div>
 
       <div className="pt-2">
-        <button
+        <Button
+          variant="ghost"
           onClick={onBack}
           disabled={completeFramework.isPending}
-          className="text-sm text-muted hover:text-fg disabled:opacity-50"
+          className="h-auto px-3 py-1.5 text-sm text-muted hover:text-fg"
         >
-          ← {t('back')}
-        </button>
+          <ArrowLeft aria-hidden="true" />
+          {t('back')}
+        </Button>
       </div>
     </div>
   );

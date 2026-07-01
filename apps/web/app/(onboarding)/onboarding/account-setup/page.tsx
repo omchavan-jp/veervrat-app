@@ -7,11 +7,18 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Fieldset, FieldsetLegend } from '@/components/ui/field';
+import { Spinner } from '@/components/ui/spinner';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useAuth, useCompleteOnboarding } from '@/hooks/use-auth';
 import { accountSetupSchema, type AccountSetupInput } from '@/lib/validations/onboarding';
 import { authApi } from '@/lib/api/auth';
 import { ApiError } from '@/lib/api/client';
+
+const FIELD_LABEL = 'mb-2 block font-mono text-[11px] uppercase tracking-[0.1em] text-muted';
 
 type UsernameStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
 
@@ -129,11 +136,28 @@ export default function AccountSetupPage() {
       ? completeOnboarding.error.message
       : null;
 
+  // Block submit on a username state known to fail server-side (or still resolving),
+  // not just on the in-flight mutation.
+  const usernameBlocksSubmit =
+    usernameStatus === 'taken' ||
+    usernameStatus === 'invalid' ||
+    usernameStatus === 'checking';
+
+  // Gate on isLoading so the form does not flash with empty defaults (and any
+  // redirect flicker) before the authenticated user resolves.
+  if (isLoading) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center bg-bg">
+        <Spinner size="lg" label={t('loading')} />
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-dvh items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <div className="mb-1 font-mono text-[11px] uppercase tracking-[0.14em] text-accent">
-          Step 1 of 2
+          {t('stepIndicator', { current: 1, total: 2 })}
         </div>
         <h1 className="mb-2 font-display text-[clamp(28px,3vw,36px)] leading-tight tracking-tight">
           {t('title')}
@@ -141,106 +165,152 @@ export default function AccountSetupPage() {
         <p className="mb-8 text-[15px] text-muted">{t('subtitle')}</p>
 
         {apiError && (
-          <div className="mb-4 rounded-xl border border-[rgba(192,81,47,0.2)] bg-[rgba(192,81,47,0.08)] px-4 py-3 text-sm text-accent">
-            {apiError}
-          </div>
+          <Alert variant="destructive" className="mb-4 border-destructive/40 bg-destructive/10">
+            <AlertDescription className="text-destructive">{apiError}</AlertDescription>
+          </Alert>
         )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div>
-            <label className="mb-2 block font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
+            <Label htmlFor="account-displayName" className={FIELD_LABEL}>
               {t('displayName')}
-            </label>
+            </Label>
             <Input
+              id="account-displayName"
               type="text"
+              variant="underline"
               placeholder={t('displayNamePlaceholder')}
-              className="rounded-none border-0 border-b border-border-strong bg-transparent px-0 py-3 text-base focus-visible:border-accent focus-visible:ring-0"
+              aria-invalid={errors.displayName ? true : undefined}
+              aria-describedby={errors.displayName ? 'account-displayName-error' : undefined}
               {...register('displayName')}
             />
             {errors.displayName && (
-              <p className="mt-1.5 text-xs text-accent">{errors.displayName.message}</p>
+              <p id="account-displayName-error" role="alert" className="mt-1.5 text-xs text-danger">
+                {errors.displayName.message}
+              </p>
             )}
           </div>
 
           <div>
-            <label className="mb-2 block font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
+            <Label htmlFor="account-username" className={FIELD_LABEL}>
               {t('username')}
-            </label>
+            </Label>
             <Input
+              id="account-username"
               type="text"
+              variant="underline"
               placeholder={t('usernamePlaceholder')}
-              className="rounded-none border-0 border-b border-border-strong bg-transparent px-0 py-3 text-base focus-visible:border-accent focus-visible:ring-0"
+              aria-invalid={
+                errors.username || usernameStatus === 'taken' || usernameStatus === 'invalid'
+                  ? true
+                  : undefined
+              }
+              aria-describedby="account-username-status"
               {...register('username')}
             />
-            <div className="mt-1.5">
+            {/* Fixed min-height so toggling status lines does not shift the layout while typing. */}
+            <div className="mt-1.5 min-h-5" id="account-username-status" aria-live="polite">
               {usernameStatus === 'checking' && (
                 <p className="text-xs text-muted">{t('usernameChecking')}</p>
               )}
               {usernameStatus === 'available' && (
-                <p className="text-xs text-accent-2">{t('usernameAvailable')}</p>
+                <p className="text-xs text-success">{t('usernameAvailable')}</p>
               )}
               {usernameStatus === 'taken' && (
-                <p className="text-xs text-accent">{t('usernameTaken')}</p>
+                <p className="text-xs text-danger">{t('usernameTaken')}</p>
               )}
               {usernameStatus === 'invalid' && (
-                <p className="text-xs text-accent">{t('usernameHint')}</p>
+                <p className="text-xs text-danger">{t('usernameHint')}</p>
               )}
               {usernameStatus === 'idle' && (
                 <p className="text-xs text-muted">{t('usernameHint')}</p>
               )}
             </div>
             {errors.username && (
-              <p className="mt-1 text-xs text-accent">{errors.username.message}</p>
+              <p role="alert" className="mt-1 text-xs text-danger">{errors.username.message}</p>
             )}
           </div>
 
-          <div>
-            <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
+          <Fieldset>
+            <FieldsetLegend className="mb-3 font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
               {t('languageLabel')}
-            </p>
-            <div className="flex gap-6">
-              <label className="flex cursor-pointer items-center gap-2 text-sm">
-                <input type="radio" value="EN" {...register('language')} className="accent-accent" />
-                {t('en')}
-              </label>
-              <label className="flex cursor-pointer items-center gap-2 text-sm">
-                <input type="radio" value="MR" {...register('language')} className="accent-accent" />
-                {t('mr')}
-              </label>
-            </div>
+            </FieldsetLegend>
+            <Controller
+              control={control}
+              name="language"
+              render={({ field }) => (
+                <RadioGroup
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  className="flex flex-row gap-6"
+                  aria-label={t('languageLabel')}
+                >
+                  <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm">
+                    <RadioGroupItem value="EN" />
+                    {t('en')}
+                  </label>
+                  <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm">
+                    <RadioGroupItem value="MR" />
+                    {t('mr')}
+                  </label>
+                </RadioGroup>
+              )}
+            />
             {errors.language && (
-              <p className="mt-1.5 text-xs text-accent">{errors.language.message}</p>
+              <p role="alert" className="mt-1.5 text-xs text-danger">{errors.language.message}</p>
             )}
-          </div>
+          </Fieldset>
 
-          <div>
-            <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
+          <Fieldset>
+            <FieldsetLegend className="mb-3 font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
               {t('gender')}
               <span className="ml-1 normal-case tracking-normal text-muted/60">{t('optional')}</span>
-            </p>
-            <div className="flex flex-wrap gap-x-6 gap-y-3">
-              {(['Male', 'Female', 'other'] as const).map((val) => (
-                <label key={val} className="flex cursor-pointer items-center gap-2 text-sm">
-                  <input type="radio" value={val} {...register('gender')} className="accent-accent" />
-                  {val === 'other' ? t('genderOther') : val}
-                </label>
-              ))}
-            </div>
+            </FieldsetLegend>
+            <Controller
+              control={control}
+              name="gender"
+              render={({ field }) => (
+                <RadioGroup
+                  value={field.value ?? ''}
+                  onValueChange={field.onChange}
+                  className="flex flex-row flex-wrap gap-x-6 gap-y-3"
+                  aria-label={t('gender')}
+                >
+                  {(['Male', 'Female', 'other'] as const).map((val) => (
+                    <label
+                      key={val}
+                      className="flex min-h-11 cursor-pointer items-center gap-2 text-sm"
+                    >
+                      <RadioGroupItem value={val} />
+                      {val === 'Male'
+                        ? t('genderMale')
+                        : val === 'Female'
+                          ? t('genderFemale')
+                          : t('genderOther')}
+                    </label>
+                  ))}
+                </RadioGroup>
+              )}
+            />
             {genderValue === 'other' && (
               <Input
                 type="text"
+                variant="underline"
+                className="mt-3"
                 placeholder={t('genderCustomPlaceholder')}
-                className="mt-3 rounded-none border-0 border-b border-border-strong bg-transparent px-0 py-3 text-base focus-visible:border-accent focus-visible:ring-0"
+                aria-label={t('genderCustomPlaceholder')}
                 {...register('genderCustom')}
               />
             )}
-          </div>
+          </Fieldset>
 
           <div>
-            <label className="mb-2 block font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
+            {/* DatePicker renders a Popover trigger (not a labelable control), so the
+                caption stays a plain Label without htmlFor. */}
+            <Label className={FIELD_LABEL}>
               {t('dob')}
               <span className="ml-1 normal-case tracking-normal text-muted/60">{t('optional')}</span>
-            </label>
+            </Label>
             <Controller
               name="dob"
               control={control}
@@ -254,14 +324,18 @@ export default function AccountSetupPage() {
               )}
             />
             {errors.dob && (
-              <p className="mt-1.5 text-xs text-accent">{errors.dob.message}</p>
+              <p role="alert" className="mt-1.5 text-xs text-danger">
+                {errors.dob.message}
+              </p>
             )}
           </div>
 
           <Button
             type="submit"
-            disabled={completeOnboarding.isPending}
-            className="h-auto w-full rounded-xl bg-accent px-6 py-3.5 text-[15px] text-bg hover:bg-accent-hover"
+            size="lg"
+            loading={completeOnboarding.isPending}
+            disabled={usernameBlocksSubmit}
+            className="min-h-12 w-full text-[15px]"
           >
             {completeOnboarding.isPending ? t('submitting') : t('submit')}
           </Button>

@@ -2,12 +2,17 @@
 
 import { useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useCreateJourney } from '@/hooks/use-journeys';
+import { useToast } from '@/hooks/use-toast';
 import { ApiError } from '@/lib/api/client';
+import { Spinner } from '@/components/ui/spinner';
 
 export default function NewJourneyPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations('journey.new');
+  const { toast } = useToast();
   const sentenceId = searchParams.get('sentenceId');
   const weaknessId = searchParams.get('weaknessId');
   const createJourney = useCreateJourney();
@@ -33,6 +38,12 @@ export default function NewJourneyPage() {
               return;
             }
           }
+          // Surface the failure before bouncing back so it isn't silent.
+          toast({
+            title: t('createError'),
+            description: err instanceof Error ? err.message : undefined,
+            variant: 'destructive',
+          });
           router.replace('/study');
         },
       },
@@ -41,7 +52,7 @@ export default function NewJourneyPage() {
 
   return (
     <div className="flex min-h-[60vh] items-center justify-center">
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent border-t-transparent" />
+      <Spinner size="lg" label={t('creating')} />
     </div>
   );
 }

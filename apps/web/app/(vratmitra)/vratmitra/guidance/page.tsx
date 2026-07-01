@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { Check, RotateCcw, Flag, Lightbulb, FileCheck, CheckCircle2 } from 'lucide-react';
@@ -9,6 +9,10 @@ import { ercApi, journeysApi, type ErcType } from '@/lib/api/journeys';
 import { queryKeys } from '@/lib/api/query-keys';
 import { BilingualText } from '@/components/shared/bilingual-text';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
+import { useToast } from '@/hooks/use-toast';
 
 function SectionShell({
   icon,
@@ -42,57 +46,71 @@ function ClosureCard({
   meta,
   onApprove,
   onReturn,
-  pending,
+  approvePending,
+  returnPending,
 }: {
   titleEn: string;
   titleMr: string | null;
   meta: string;
   onApprove: () => void;
   onReturn: (note: string) => void;
-  pending: boolean;
+  approvePending: boolean;
+  returnPending: boolean;
 }) {
   const t = useTranslations('vm_guidance');
   const [returning, setReturning] = useState(false);
   const [note, setNote] = useState('');
+  const noteId = useId();
+  const busy = approvePending || returnPending;
 
   return (
     <div className="rounded-2xl border border-border bg-surface p-4 shadow-card">
-      <div className="flex items-start gap-3">
+      <div className="flex flex-wrap items-start gap-3">
         <div className="min-w-0 flex-1">
           <BilingualText en={titleEn} mr={titleMr} size="sm" />
           <div className="mt-1 text-[12px] text-muted">{meta}</div>
         </div>
-        <div className="flex shrink-0 gap-2">
-          <button
+        <div className="flex shrink-0 flex-wrap gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-full text-muted"
+            aria-expanded={returning}
+            aria-controls={noteId}
             onClick={() => setReturning((v) => !v)}
-            className="rounded-full border border-border-strong px-3 py-1.5 text-[12px] text-muted hover:border-accent"
           >
             {t('return')}
-          </button>
-          <button
+          </Button>
+          <Button
+            size="sm"
+            className="rounded-full"
+            disabled={busy}
+            loading={approvePending}
             onClick={onApprove}
-            disabled={pending}
-            className="rounded-full bg-accent px-3 py-1.5 text-[12px] text-bg disabled:opacity-50"
           >
             {t('approve')}
-          </button>
+          </Button>
         </div>
       </div>
       {returning && (
-        <div className="mt-3 flex gap-2">
-          <input
+        <div id={noteId} className="mt-3 flex gap-2">
+          <Input
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder={t('notePlaceholder')}
-            className="flex-1 rounded-lg border border-border bg-bg px-3 py-2 text-[13px] outline-none focus:border-accent"
+            aria-label={t('notePlaceholder')}
+            className="h-auto flex-1 rounded-lg border-border bg-bg px-3 py-2 text-[13px] focus-visible:border-accent focus-visible:ring-0"
           />
-          <button
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-lg"
+            disabled={busy}
+            loading={returnPending}
             onClick={() => onReturn(note)}
-            disabled={pending}
-            className="rounded-lg border border-border-strong px-3 py-2 text-[12px] hover:border-accent disabled:opacity-50"
           >
-            {t('return')}
-          </button>
+            {t('confirmReturn')}
+          </Button>
         </div>
       )}
     </div>
@@ -101,7 +119,9 @@ function ClosureCard({
 
 export default function VmGuidancePage() {
   const t = useTranslations('vm_guidance');
+  const tCommon = useTranslations('common');
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: queryKeys.actions.vm,
@@ -112,27 +132,35 @@ export default function VmGuidancePage() {
     queryClient.invalidateQueries({ queryKey: queryKeys.actions.vm });
   };
 
+  const onActionError = () => toast({ title: t('actionError'), variant: 'destructive' });
+
   const approveErc = useMutation({
     mutationFn: ({ journeyId, type, itemId }: { journeyId: string; type: ErcType; itemId: string }) =>
       ercApi.approve(journeyId, type, itemId),
     onSuccess: invalidate,
+    onError: onActionError,
   });
   const revisitErc = useMutation({
     mutationFn: ({ journeyId, type, itemId }: { journeyId: string; type: ErcType; itemId: string; note?: string }) =>
       ercApi.revisit(journeyId, type, itemId),
     onSuccess: invalidate,
+    onError: onActionError,
   });
   const approveJourney = useMutation({
     mutationFn: (journeyId: string) => journeysApi.completeApprove(journeyId),
     onSuccess: invalidate,
+    onError: onActionError,
   });
 
-  const mutating = approveErc.isPending || revisitErc.isPending || approveJourney.isPending;
+  // Per-item pending helpers so acting on one row never greys out unrelated rows.
+  const isApprovingErc = (itemId: string) => approveErc.isPending && approveErc.variables?.itemId === itemId;
+  const isReturningErc = (itemId: string) => revisitErc.isPending && revisitErc.variables?.itemId === itemId;
+  const isApprovingJourney = (journeyId: string) => approveJourney.isPending && approveJourney.variables === journeyId;
 
   if (isLoading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+        <Spinner size="lg" label={tCommon('loading')} />
       </div>
     );
   }
@@ -146,12 +174,9 @@ export default function VmGuidancePage() {
           title={t('error')}
           description={t('errorHint')}
           action={
-            <button
-              onClick={() => refetch()}
-              className="rounded-full border border-border-strong px-4 py-1.5 text-[13px] hover:border-accent"
-            >
+            <Button variant="outline" size="sm" className="rounded-full" onClick={() => refetch()}>
               {t('retry')}
-            </button>
+            </Button>
           }
         />
       </div>
@@ -183,9 +208,10 @@ export default function VmGuidancePage() {
                   titleEn={it.titleEn}
                   titleMr={it.titleMr}
                   meta={`${t(`ercType.${it.ercType}`)} · ${from(it.journeyTitle)}`}
-                  pending={mutating}
+                  approvePending={isApprovingErc(it.id)}
+                  returnPending={isReturningErc(it.id)}
                   onApprove={() => approveErc.mutate({ journeyId: it.journeyId, type: it.ercType, itemId: it.id })}
-                  onReturn={() => revisitErc.mutate({ journeyId: it.journeyId, type: it.ercType, itemId: it.id })}
+                  onReturn={(note) => revisitErc.mutate({ journeyId: it.journeyId, type: it.ercType, itemId: it.id, note })}
                 />
               ))}
             </SectionShell>
@@ -201,13 +227,15 @@ export default function VmGuidancePage() {
                   <div className="min-w-0 flex-1">
                     <BilingualText en={j.title} size="sm" />
                   </div>
-                  <button
+                  <Button
+                    size="sm"
+                    className="shrink-0 rounded-full"
+                    loading={isApprovingJourney(j.id)}
+                    disabled={isApprovingJourney(j.id)}
                     onClick={() => approveJourney.mutate(j.id)}
-                    disabled={mutating}
-                    className="shrink-0 rounded-full bg-accent px-3 py-1.5 text-[12px] text-bg disabled:opacity-50"
                   >
                     {t('approveJourney')}
-                  </button>
+                  </Button>
                 </div>
               ))}
             </SectionShell>

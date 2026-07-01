@@ -17,6 +17,10 @@ vi.mock('next-intl', () => ({
     if (params) return Object.entries(params).reduce((s, [k, v]) => s.replace(`{${k}}`, v), key);
     return key;
   },
+  useFormatter: () => ({
+    dateTime: (date: Date) => date.toISOString().slice(0, 10),
+  }),
+  useLocale: () => 'en',
 }));
 
 vi.mock('next/navigation', () => ({
@@ -71,13 +75,18 @@ describe('JourneysPage', () => {
     mockUseJourneys.mockReturnValue({ data: { items: [], nextCursor: null }, isLoading: false });
     renderWithQuery(<JourneysPage />);
     expect(screen.getByText('list.emptyState')).toBeInTheDocument();
-    const cta = screen.getByRole('link', { name: 'list.emptyStateCta' });
+    // The CTA is a Button primitive rendered as a Link (base-ui forces role="button"
+    // on the anchor), so query the rendered role/name and still assert the destination.
+    const cta = screen.getByRole('button', { name: 'list.emptyStateCta' });
     expect(cta).toHaveAttribute('href', '/study');
   });
 
-  it('renders loading spinner while loading', () => {
+  it('renders a shape-matching skeleton while loading', () => {
     mockUseJourneys.mockReturnValue({ data: undefined, isLoading: true });
     const { container } = renderWithQuery(<JourneysPage />);
-    expect(container.querySelector('.animate-spin')).toBeTruthy();
+    // List screens use skeleton placeholders (pulse) instead of a centered spinner so
+    // the layout doesn't pop in. The title stays for stability.
+    expect(container.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0);
+    expect(screen.getByText('list.title')).toBeInTheDocument();
   });
 });

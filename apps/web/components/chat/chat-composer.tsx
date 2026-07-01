@@ -59,7 +59,7 @@ export function ChatComposer({
   });
 
   const handleSend = () => {
-    if (!editor || editor.isEmpty || disabled) return;
+    if (!editor || editor.isEmpty || disabled || uploading) return;
     const doc = editor.getJSON() as TiptapDoc;
     onSend(doc);
     editor.commands.clearContent(true);
@@ -90,6 +90,7 @@ export function ChatComposer({
         type="file"
         accept="image/jpeg,image/png,image/gif,image/webp,image/heic,image/heif,.heic,.heif"
         className="hidden"
+        aria-label={t('chat.add_image')}
         onChange={(e) => handleImagePick(e.target.files?.[0])}
       />
       <Button
@@ -97,6 +98,7 @@ export function ChatComposer({
         size="icon"
         disabled={disabled || uploading}
         onClick={() => fileInputRef.current?.click()}
+        aria-label={t('chat.add_image')}
         title={t('chat.add_image')}
       >
         {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
@@ -106,7 +108,13 @@ export function ChatComposer({
         <EditorContent editor={editor} />
       </div>
 
-      <Button size="icon" onClick={handleSend} disabled={disabled || !editor || editor.isEmpty}>
+      <Button
+        size="icon"
+        onClick={handleSend}
+        disabled={disabled || uploading || !editor || editor.isEmpty}
+        aria-label={t('chat.send')}
+        title={t('chat.send')}
+      >
         <Send className="h-4 w-4" />
       </Button>
     </div>

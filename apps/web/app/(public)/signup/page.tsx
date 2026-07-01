@@ -1,12 +1,16 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Fieldset, FieldsetLegend } from '@/components/ui/field';
 import { AuthShell } from '@/components/auth/auth-shell';
 import { GoogleIcon } from '@/components/auth/google-icon';
 import { PasswordStrength } from '@/components/auth/password-strength';
@@ -17,7 +21,11 @@ import { ApiError } from '@/lib/api/client';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
-type UsernameStatus = 'idle' | 'checking' | 'available' | 'taken';
+const FIELD_LABEL = 'mb-2 block font-mono text-[11px] uppercase tracking-[0.1em] text-muted';
+
+// 'error' distinguishes a failed availability check from 'idle' (not-yet-typed),
+// so a network failure is surfaced and retriable instead of silently swallowed.
+type UsernameStatus = 'idle' | 'checking' | 'available' | 'taken' | 'error';
 
 export default function SignupPage() {
   const t = useTranslations('auth.signup');
@@ -29,6 +37,7 @@ export default function SignupPage() {
     register,
     handleSubmit,
     watch,
+    control,
     formState: { errors },
   } = useForm<SignupInput>({
     resolver: zodResolver(signupSchema),
@@ -50,7 +59,7 @@ export default function SignupPage() {
         const result = await authApi.checkUsername(username);
         setUsernameStatus(result.available ? 'available' : 'taken');
       } catch {
-        setUsernameStatus('idle');
+        setUsernameStatus('error');
       }
     }, 400);
   }, []);
@@ -70,10 +79,10 @@ export default function SignupPage() {
     signup.error instanceof ApiError ? signup.error.message : signup.error?.message;
 
   const hero = {
-    eyebrow: 'Begin',
-    heading: 'A practice of becoming, one weakness at a time.',
-    devanagari: 'वीरव्रत — स्वतःशी प्रामाणिक राहण्याचा संकल्प.',
-    gloss: 'Veervrat — the vow to be honest with oneself. Identify what holds you back. Work on it daily. Track the shift.',
+    eyebrow: t('heroEyebrow'),
+    heading: t('heroHeading'),
+    devanagari: t('heroDevanagari'),
+    gloss: t('heroGloss'),
   };
 
   if (signup.isSuccess) {
@@ -81,12 +90,14 @@ export default function SignupPage() {
       <AuthShell hero={hero}>
         <h2 className="mb-2 font-display text-[32px] tracking-tight">{t('successTitle')}</h2>
         <p className="mb-8 text-[15px] text-muted">{t('successBody')}</p>
-        <Link
-          href="/login"
-          className="inline-flex h-auto w-full items-center justify-center rounded-xl bg-accent px-6 py-3.5 text-[15px] font-medium text-bg hover:bg-accent-hover"
+        <Button
+          size="lg"
+          className="min-h-12 w-full text-[15px]"
+          nativeButton={false}
+          render={<Link href="/login" />}
         >
           {t('backToLogin')}
-        </Link>
+        </Button>
       </AuthShell>
     );
   }
@@ -97,110 +108,141 @@ export default function SignupPage() {
       <p className="mb-8 text-[15px] text-muted">{t('subtitle')}</p>
 
       {apiError && (
-        <div className="mb-4 rounded-xl border border-[rgba(192,81,47,0.2)] bg-[rgba(192,81,47,0.08)] px-4 py-3 text-sm text-accent">
-          {apiError}
-        </div>
+        <Alert variant="destructive" className="mb-4 border-destructive/40 bg-destructive/10">
+          <AlertDescription className="text-destructive">{apiError}</AlertDescription>
+        </Alert>
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div>
-          <label className="mb-2 block font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
+          <Label htmlFor="signup-displayName" className={FIELD_LABEL}>
             {t('displayName')}
-          </label>
+          </Label>
           <Input
+            id="signup-displayName"
             type="text"
+            variant="underline"
             placeholder={t('displayNamePlaceholder')}
-            className="rounded-none border-0 border-b border-border-strong bg-transparent px-0 py-3 text-base focus-visible:border-accent focus-visible:ring-0"
+            aria-invalid={errors.displayName ? true : undefined}
+            aria-describedby={errors.displayName ? 'signup-displayName-error' : undefined}
             {...register('displayName')}
           />
           {errors.displayName && (
-            <p className="mt-1.5 text-xs text-accent">{errors.displayName.message}</p>
+            <p id="signup-displayName-error" role="alert" className="mt-1.5 text-xs text-danger">
+              {errors.displayName.message}
+            </p>
           )}
         </div>
 
         <div>
-          <label className="mb-2 block font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
+          <Label htmlFor="signup-username" className={FIELD_LABEL}>
             {t('username')}
-          </label>
+          </Label>
           <Input
+            id="signup-username"
             type="text"
+            variant="underline"
             placeholder={t('usernamePlaceholder')}
-            className="rounded-none border-0 border-b border-border-strong bg-transparent px-0 py-3 text-base focus-visible:border-accent focus-visible:ring-0"
+            aria-invalid={errors.username || usernameStatus === 'taken' ? true : undefined}
+            aria-describedby="signup-username-status"
             {...register('username')}
           />
-          <div className="mt-1.5">
+          <div className="mt-1.5" id="signup-username-status" aria-live="polite">
             {usernameStatus === 'checking' && (
               <p className="text-xs text-muted">{t('usernameChecking')}</p>
             )}
             {usernameStatus === 'available' && (
-              <p className="text-xs text-accent-2">{t('usernameAvailable')}</p>
+              <p className="text-xs text-success">{t('usernameAvailable')}</p>
             )}
             {usernameStatus === 'taken' && (
-              <p className="text-xs text-accent">{t('usernameTaken')}</p>
+              <p className="text-xs text-danger">{t('usernameTaken')}</p>
+            )}
+            {usernameStatus === 'error' && (
+              <p className="text-xs text-danger">{t('usernameError')}</p>
             )}
             {usernameStatus === 'idle' && (
               <p className="text-xs text-muted">{t('usernameHint')}</p>
             )}
           </div>
           {errors.username && (
-            <p className="mt-1 text-xs text-accent">{errors.username.message}</p>
+            <p role="alert" className="mt-1 text-xs text-danger">{errors.username.message}</p>
           )}
         </div>
 
         <div>
-          <label className="mb-2 block font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
+          <Label htmlFor="signup-email" className={FIELD_LABEL}>
             {t('email')}
-          </label>
+          </Label>
           <Input
+            id="signup-email"
             type="email"
+            variant="underline"
             placeholder={t('emailPlaceholder')}
-            className="rounded-none border-0 border-b border-border-strong bg-transparent px-0 py-3 text-base focus-visible:border-accent focus-visible:ring-0"
+            aria-invalid={errors.email ? true : undefined}
+            aria-describedby={errors.email ? 'signup-email-error' : undefined}
             {...register('email')}
           />
           {errors.email && (
-            <p className="mt-1.5 text-xs text-accent">{errors.email.message}</p>
+            <p id="signup-email-error" role="alert" className="mt-1.5 text-xs text-danger">
+              {errors.email.message}
+            </p>
           )}
         </div>
 
         <div>
-          <label className="mb-2 block font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
+          <Label htmlFor="signup-password" className={FIELD_LABEL}>
             {t('password')}
-          </label>
+          </Label>
           <Input
+            id="signup-password"
             type="password"
+            variant="underline"
             placeholder={t('passwordPlaceholder')}
-            className="rounded-none border-0 border-b border-border-strong bg-transparent px-0 py-3 text-base focus-visible:border-accent focus-visible:ring-0"
+            aria-invalid={errors.password ? true : undefined}
+            aria-describedby={errors.password ? 'signup-password-error' : undefined}
             {...register('password')}
           />
           <PasswordStrength password={passwordValue} />
           {errors.password && (
-            <p className="mt-1 text-xs text-accent">{errors.password.message}</p>
+            <p id="signup-password-error" role="alert" className="mt-1 text-xs text-danger">
+              {errors.password.message}
+            </p>
           )}
         </div>
 
-        <div>
-          <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
-            {t('languageLabel')}
-          </p>
-          <div className="flex gap-6">
-            <label className="flex cursor-pointer items-center gap-2 text-sm">
-              <input type="radio" value="EN" {...register('language')} className="accent-accent" />
-              {t('en')}
-            </label>
-            <label className="flex cursor-pointer items-center gap-2 text-sm">
-              <input type="radio" value="MR" {...register('language')} className="accent-accent" />
-              {t('mr')}
-            </label>
-          </div>
+        <Fieldset>
+          <FieldsetLegend className={FIELD_LABEL}>{t('languageLabel')}</FieldsetLegend>
+          <Controller
+            control={control}
+            name="language"
+            render={({ field }) => (
+              <RadioGroup
+                value={field.value}
+                onValueChange={field.onChange}
+                className="flex flex-row gap-6"
+                aria-label={t('languageLabel')}
+              >
+                <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm">
+                  <RadioGroupItem value="EN" />
+                  {t('en')}
+                </label>
+                <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm">
+                  <RadioGroupItem value="MR" />
+                  {t('mr')}
+                </label>
+              </RadioGroup>
+            )}
+          />
           {errors.language && (
-            <p className="mt-1.5 text-xs text-accent">{errors.language.message}</p>
+            <p role="alert" className="mt-1.5 text-xs text-danger">{errors.language.message}</p>
           )}
-        </div>
+        </Fieldset>
 
         <Button
           type="submit"
-          disabled={signup.isPending}
-          className="h-auto w-full rounded-xl bg-accent px-6 py-3.5 text-[15px] text-bg hover:bg-accent-hover"
+          size="lg"
+          loading={signup.isPending}
+          className="min-h-12 w-full text-[15px]"
         >
           {signup.isPending ? t('submitting') : t('submit')}
         </Button>
@@ -208,13 +250,16 @@ export default function SignupPage() {
 
       <div className="my-5 flex items-center gap-3">
         <span className="h-px flex-1 bg-border" />
-        <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">or</span>
+        <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">
+          {t('orDivider')}
+        </span>
         <span className="h-px flex-1 bg-border" />
       </div>
 
       <Button
         variant="outline"
-        className="h-auto w-full rounded-xl border-border-strong bg-surface px-6 py-3.5 text-[15px] text-fg hover:bg-bg"
+        size="lg"
+        className="min-h-12 w-full text-[15px]"
         nativeButton={false}
         render={<a href={`${API_URL}/auth/google`} />}
       >

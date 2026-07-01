@@ -9,6 +9,7 @@ import { queryKeys } from '@/lib/api/query-keys';
 import { excerptFromDoc } from '@/components/experience/experience-excerpt';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 
 export default function PublicExperiencesPage() {
   const t = useTranslations('experiences');
@@ -31,7 +32,7 @@ export default function PublicExperiencesPage() {
       <div className="mt-6">
         {isLoading ? (
           <div className="flex min-h-[30vh] items-center justify-center">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+            <Spinner size="lg" />
           </div>
         ) : isError ? (
           <EmptyState
@@ -39,9 +40,9 @@ export default function PublicExperiencesPage() {
             title={t('loadError')}
             description={t('loadErrorHint')}
             action={
-              <button onClick={() => refetch()} className="rounded-full border border-border-strong px-4 py-1.5 text-[13px] hover:border-accent">
+              <Button variant="outline" size="sm" onClick={() => refetch()}>
                 {t('retry')}
-              </button>
+              </Button>
             }
           />
         ) : items.length === 0 ? (
@@ -62,8 +63,8 @@ export default function PublicExperiencesPage() {
                   {e.tags.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {e.tags.map((tg) => (
-                        <span key={tg.id ?? tg.entityId} className="rounded-full bg-accent/10 px-2 py-0.5 text-[11px] text-accent">
-                          {tg.entityType.toLowerCase()}
+                        <span key={tg.id ?? `${tg.entityType}-${tg.entityId}`} className="rounded-full bg-accent/10 px-2 py-0.5 text-[11px] text-accent">
+                          {t(`tagType.${tg.entityType}`)}
                         </span>
                       ))}
                     </div>

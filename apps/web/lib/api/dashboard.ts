@@ -26,6 +26,7 @@ export type SuggestionItem = {
   virtueNameMr: string | null;
   weaknessId: string;
   weaknessNameEn: string;
+  weaknessNameMr: string | null;
 };
 
 export type DashboardSuggestions = {

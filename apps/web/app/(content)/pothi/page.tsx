@@ -3,11 +3,13 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
-import { BookOpen, ScrollText } from 'lucide-react';
+import { ScrollText } from 'lucide-react';
 import { contentApi, type Shloka } from '@/lib/api/content';
 import { queryKeys } from '@/lib/api/query-keys';
 import { BilingualText } from '@/components/shared/bilingual-text';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 import { CmsInfoModal } from '@/components/shared/cms-info-modal';
 
 function ShlokaBlock({ s }: { s: Shloka }) {
@@ -16,6 +18,7 @@ function ShlokaBlock({ s }: { s: Shloka }) {
       <div className="font-deva text-[18px] leading-relaxed">{s.devanagariText}</div>
       {s.transliteration && <div className="mt-1 text-[12px] italic text-muted">{s.transliteration}</div>}
       {s.meaningEn && <div className="mt-2 text-[14px] text-muted">{s.meaningEn}</div>}
+      {s.meaningMr && <div className="mt-1 font-deva text-[14px] text-muted">{s.meaningMr}</div>}
       {s.sourceCitation && <div className="mt-2 font-mono text-[10px] uppercase tracking-[0.1em] text-muted">{s.sourceCitation}</div>}
     </div>
   );
@@ -27,7 +30,7 @@ export default function PothiPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="font-display text-[30px] font-medium tracking-tight">{t('pothiTitle')}</h1>
           <p className="mt-1 text-[14px] text-muted">{t('pothiSubtitle')}</p>
@@ -35,22 +38,22 @@ export default function PothiPage() {
             <CmsInfoModal cmsKey="what-is-pothi" linkLabel={t('whatIsPothiLink')} fallbackTitle={t('whatIsPothiTitle')} fallbackBody={t('whatIsPothiBody')} />
           </div>
         </div>
-        <div className="flex gap-3 text-[13px]">
-          <Link href="/shlokas" className="text-accent hover:underline">{t('seeMoreShlokas')}</Link>
-          <Link href="/resources" className="text-accent hover:underline">{t('resources')}</Link>
+        <div className="flex flex-wrap gap-1">
+          <Button variant="link" size="sm" nativeButton={false} render={<Link href="/shlokas" />}>{t('seeMoreShlokas')}</Button>
+          <Button variant="link" size="sm" nativeButton={false} render={<Link href="/resources" />}>{t('resources')}</Button>
         </div>
       </div>
 
       <div className="mt-6">
         {isLoading ? (
-          <div className="flex min-h-[30vh] items-center justify-center"><div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" /></div>
+          <div className="flex min-h-[30vh] items-center justify-center"><Spinner size="lg" /></div>
         ) : isError ? (
           <p className="text-[13px] text-danger">{t('loadError')}</p>
         ) : (data?.length ?? 0) === 0 ? (
           <EmptyState icon={<ScrollText className="h-5 w-5" />} title={t('pothiEmpty')} description={t('pothiEmptyHint')} />
         ) : (
           <div className="space-y-6">
-            {data!.map((section) => (
+            {(data ?? []).map((section) => (
               <section key={section.id} className="rounded-2xl border border-border bg-surface p-5 shadow-card">
                 <div className="mb-1 font-mono text-[10px] uppercase tracking-[0.14em] text-muted">{t('section', { n: section.sectionNumber })}</div>
                 <BilingualText en={section.titleEn} mr={section.titleMr} size="lg" />

@@ -3,15 +3,21 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { ChevronLeft } from 'lucide-react';
 import { useJourney, useUpdateJourneyState, useUpdateJourneyTitle, useCompleteJourney } from '@/hooks/use-journeys';
 import type { JourneyState, ErcCounts } from '@/lib/api/journeys';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Tabs } from '@/components/ui/tabs';
 import { ExposuresTab } from '@/components/journey/exposures-tab';
 import { ResolutionsTab } from '@/components/journey/resolutions-tab';
 import { ChallengesTab } from '@/components/journey/challenges-tab';
-import { BilingualText } from '@/components/shared/bilingual-text';
+import { BilingualText, ContentText } from '@/components/shared/bilingual-text';
 import { JourneyActivityFeed } from '@/components/journey/journey-activity-feed';
 
 const STATE_COLORS: Record<JourneyState, string> = {
@@ -25,21 +31,22 @@ const STATE_COLORS: Record<JourneyState, string> = {
 type Tab = 'overview' | 'exposures' | 'resolutions' | 'challenges' | 'chat';
 
 function ErcCard({ label, counts }: { label: string; counts: ErcCounts }) {
+  const t = useTranslations('journey');
   return (
     <div className="rounded-xl border border-border bg-surface p-4">
       <h3 className="mb-3 font-mono text-[11px] uppercase tracking-[0.12em] text-muted">{label}</h3>
       <div className="flex gap-4">
         <div className="text-center">
           <div className="font-mono text-[22px] font-medium">{counts.total}</div>
-          <div className="text-[11px] text-muted">Total</div>
+          <div className="text-[11px] text-muted">{t('detail.countTotal')}</div>
         </div>
         <div className="text-center">
           <div className="font-mono text-[22px] font-medium text-accent-2">{counts.active}</div>
-          <div className="text-[11px] text-muted">Active</div>
+          <div className="text-[11px] text-muted">{t('detail.countActive')}</div>
         </div>
         <div className="text-center">
           <div className="font-mono text-[22px] font-medium text-success">{counts.approved}</div>
-          <div className="text-[11px] text-muted">Done</div>
+          <div className="text-[11px] text-muted">{t('detail.countDone')}</div>
         </div>
       </div>
     </div>
@@ -49,7 +56,11 @@ function ErcCard({ label, counts }: { label: string; counts: ErcCounts }) {
 export default function JourneyDetailPage() {
   const { id } = useParams<{ id: string }>();
   const t = useTranslations('journey');
-  const { data: journey, isLoading } = useJourney(id);
+  const locale = useLocale();
+  // Pick the active-locale content value, falling back to the other script when the
+  // preferred one is missing (content is sometimes English-only).
+  const pick = (en: string, mr?: string | null) => (locale === 'mr' && mr ? mr : en);
+  const { data: journey, isLoading, isError, refetch } = useJourney(id);
   const updateState = useUpdateJourneyState();
   const updateTitle = useUpdateJourneyTitle();
   const completeJourney = useCompleteJourney();
@@ -76,10 +87,41 @@ export default function JourneyDetailPage() {
     updateTitle.mutate({ id, title: titleValue.trim() });
   }, [id, titleValue, journey?.title, updateTitle]);
 
-  if (isLoading || !journey) {
+  if (isLoading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+        <Spinner size="md" />
+      </div>
+    );
+  }
+
+  // An error or a missing journey must read distinctly from the loading spinner so a
+  // failure never collapses into an infinite spin.
+  if (isError) {
+    return (
+      <div className="mx-auto max-w-md py-12">
+        <Alert variant="destructive" className="border-destructive/40 bg-destructive/10">
+          <AlertTitle className="text-destructive">{t('detail.loadError')}</AlertTitle>
+          <div className="mt-3">
+            <Button size="sm" variant="outline" onClick={() => refetch()}>{t('detail.retry')}</Button>
+          </div>
+        </Alert>
+      </div>
+    );
+  }
+
+  if (!journey) {
+    return (
+      <div className="mx-auto max-w-md py-12">
+        <Alert>
+          <AlertTitle>{t('detail.notFoundTitle')}</AlertTitle>
+          <AlertDescription>{t('detail.notFoundBody')}</AlertDescription>
+          <div className="mt-3">
+            <Button size="sm" variant="outline" nativeButton={false} render={<Link href="/journeys" />}>
+              {t('detail.backToJourneys')}
+            </Button>
+          </div>
+        </Alert>
       </div>
     );
   }
@@ -136,28 +178,34 @@ export default function JourneyDetailPage() {
       <div className="border-b border-border bg-bg px-4 py-5">
         <div className="mx-auto max-w-4xl">
           <div className="mb-1">
-            <Link href="/journeys" className="text-[12px] text-muted hover:text-fg">← Journeys</Link>
+            <Link href="/journeys" className="inline-flex items-center gap-0.5 text-[12px] text-muted hover:text-fg">
+              <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
+              {t('detail.backToJourneys')}
+            </Link>
           </div>
 
           {/* Title — editable inline */}
           <div className="mb-2 flex items-start gap-3">
             {editingTitle ? (
-              <input
+              <Input
                 autoFocus
+                variant="underline"
+                aria-label={t('detail.titleLabel')}
                 value={titleValue}
                 onChange={(e) => setTitleValue(e.target.value)}
                 onBlur={handleTitleBlur}
                 onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-                className="flex-1 rounded-none border-0 border-b border-accent bg-transparent font-display text-[clamp(20px,2.5vw,30px)] tracking-tight focus:outline-none"
+                className="flex-1 border-b-accent py-0 font-display text-[clamp(26px,3vw,36px)] tracking-tight"
               />
             ) : (
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => { setTitleValue(journey.title); setEditingTitle(true); }}
-                className="flex-1 text-left font-display text-[clamp(20px,2.5vw,30px)] tracking-tight hover:opacity-70"
-                title="Click to edit title"
+                title={t('detail.editTitleHint')}
+                className="h-auto flex-1 justify-start px-0 text-left font-display text-[clamp(26px,3vw,36px)] font-normal tracking-tight hover:bg-transparent hover:opacity-70"
               >
                 {journey.title}
-              </button>
+              </Button>
             )}
             <span className={`mt-1 shrink-0 rounded-full px-3 py-0.5 text-[12px] font-medium ${STATE_COLORS[journey.state]}`}>
               {t(`stateBadge.${journey.state.toLowerCase()}`)}
@@ -168,54 +216,59 @@ export default function JourneyDetailPage() {
           <BilingualText en={journey.sentence.textEn} mr={journey.sentence.textMr} size="md" as="p" className="mb-2" />
           <p className="mb-3 text-[13px] text-accent-2">
             {t('detail.cultivating', {
-              subvirtue: journey.sentence.subvirtue.nameMr ?? journey.sentence.subvirtue.nameEn,
-              virtue: journey.sentence.subvirtue.virtue.nameMr ?? journey.sentence.subvirtue.virtue.nameEn,
+              subvirtue: pick(journey.sentence.subvirtue.nameEn, journey.sentence.subvirtue.nameMr),
+              virtue: pick(journey.sentence.subvirtue.virtue.nameEn, journey.sentence.subvirtue.virtue.nameMr),
             })}
           </p>
 
           {/* Weakness tags */}
           <div className="mb-3 flex flex-wrap gap-1.5">
             {journey.weaknesses.map((w) => (
-              <span
+              <ContentText
                 key={w.id}
-                className={`rounded-full border border-border px-2 py-0.5 text-[11px] text-muted ${w.nameMr ? 'font-deva' : ''}`}
-              >
-                {w.nameMr ?? w.nameEn}
-              </span>
+                en={w.nameEn}
+                mr={w.nameMr}
+                className="rounded-full border border-border px-2 py-0.5 text-[11px] text-muted"
+              />
             ))}
           </div>
 
           {/* VM + actions */}
           <div className="flex items-center gap-3">
             <span className="text-[13px] text-muted">
-              {journey.globalVmRelationship ? 'VM assigned' : t('detail.noVm')}
+              {journey.globalVmRelationship ? t('detail.vmAssigned') : t('detail.noVm')}
             </span>
             {canPause && (
-              <button
+              <Button
+                size="sm"
+                variant="outline"
                 onClick={() => updateState.mutate({ id, action: 'pause' })}
                 disabled={updateState.isPending}
-                className="rounded-lg border border-border-strong px-3 py-1.5 text-[12px] hover:bg-bg disabled:opacity-40"
+                className="border-border-strong px-3 py-1.5 text-[12px] hover:bg-bg"
               >
                 {t('detail.pause')}
-              </button>
+              </Button>
             )}
             {canResume && (
-              <button
+              <Button
+                size="sm"
                 onClick={() => updateState.mutate({ id, action: 'resume' })}
                 disabled={updateState.isPending}
-                className="rounded-lg bg-accent-2/10 px-3 py-1.5 text-[12px] text-accent-2 hover:bg-accent-2/20 disabled:opacity-40"
+                className="bg-accent-2/10 px-3 py-1.5 text-[12px] text-accent-2 hover:bg-accent-2/20"
               >
                 {t('detail.resume')}
-              </button>
+              </Button>
             )}
             {canComplete && (
-              <button
+              <Button
+                size="sm"
                 onClick={handleComplete}
+                loading={completeJourney.isPending}
                 disabled={completeJourney.isPending}
-                className="rounded-lg bg-accent px-3 py-1.5 text-[12px] font-medium text-bg transition-transform hover:bg-accent-hover active:scale-95 disabled:opacity-40"
+                className="bg-accent px-3 py-1.5 text-[12px] font-medium text-bg hover:bg-accent-hover"
               >
-                {completeJourney.isPending ? '…' : t('detail.complete')}
-              </button>
+                {t('detail.complete')}
+              </Button>
             )}
           </div>
         </div>
@@ -223,21 +276,12 @@ export default function JourneyDetailPage() {
 
       {/* Tab bar */}
       <div className="border-b border-border bg-bg px-4">
-        <div className="mx-auto flex max-w-4xl gap-1 overflow-x-auto">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`shrink-0 border-b-2 px-4 py-3 text-[13px] font-medium transition-colors ${
-                activeTab === tab.key
-                  ? 'border-accent text-fg'
-                  : 'border-transparent text-muted hover:text-fg'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+        <Tabs
+          className="mx-auto max-w-4xl border-b-0"
+          items={tabs}
+          active={activeTab}
+          onChange={(key) => setActiveTab(key as Tab)}
+        />
       </div>
 
       {/* Tab content */}
@@ -247,18 +291,19 @@ export default function JourneyDetailPage() {
             <div className="rounded-xl border border-dashed border-border p-12 text-center">
               <p className="mb-4 text-[15px] text-muted">{t('detail.emptyState')}</p>
               <div className="flex justify-center gap-3">
-                <button
+                <Button
                   onClick={() => setActiveTab('exposures')}
-                  className="rounded-xl bg-accent px-5 py-2.5 text-[14px] font-medium text-bg hover:bg-accent-hover"
+                  className="h-auto bg-accent px-5 py-2.5 text-[14px] font-medium text-bg hover:bg-accent-hover"
                 >
                   {t('detail.tabExposures')}
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="outline"
                   onClick={() => setActiveTab('resolutions')}
-                  className="rounded-xl border border-border-strong bg-surface px-5 py-2.5 text-[14px] hover:bg-bg"
+                  className="h-auto border-border-strong bg-surface px-5 py-2.5 text-[14px] hover:bg-bg"
                 >
                   {t('detail.tabResolutions')}
-                </button>
+                </Button>
               </div>
             </div>
           ) : (
@@ -298,12 +343,13 @@ export default function JourneyDetailPage() {
           return vmId ? (
             <div className="rounded-xl border border-border bg-surface p-8 text-center">
               <p className="mb-4 text-[14px] text-muted">{t('detail.chatBanner', { title: journey.title })}</p>
-              <Link
-                href={`/my-vratmitras/${vmId}/chat`}
-                className="inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-[14px] font-medium text-bg transition-transform hover:bg-accent-hover active:scale-95"
+              <Button
+                nativeButton={false}
+                render={<Link href={`/my-vratmitras/${vmId}/chat`} />}
+                className="h-auto bg-accent px-5 py-2.5 text-[14px] font-medium text-bg hover:bg-accent-hover"
               >
                 {t('detail.openChat')}
-              </Link>
+              </Button>
             </div>
           ) : (
             <div className="rounded-xl border border-dashed border-border p-12 text-center">

@@ -38,6 +38,7 @@ function makeSuggestion(sentenceId: string, score: number, weaknessId = 'w-1'): 
     virtueNameMr: null,
     weaknessId,
     weaknessNameEn: 'Weakness A',
+    weaknessNameMr: null,
   };
 }
 

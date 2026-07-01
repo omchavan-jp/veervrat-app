@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import { Languages } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
@@ -23,6 +23,7 @@ export function LanguageToggle({
   display?: Display;
 }) {
   const locale = useLocale();
+  const t = useTranslations('common.language');
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const [revealed, setRevealed] = useState(false);
@@ -32,7 +33,7 @@ export function LanguageToggle({
 
   if (!isAuthenticated) return null;
 
-  const currentLabel = locale === 'mr' ? 'मराठी' : 'EN';
+  const currentLabel = locale === 'mr' ? t('mr') : t('en');
   const next = locale === 'mr' ? 'en' : 'mr';
 
   async function handleToggle() {
@@ -55,8 +56,8 @@ export function LanguageToggle({
     <button
       type="button"
       onClick={handleToggle}
-      title={`Language: ${currentLabel}`}
-      aria-label={`Switch language (currently ${locale === 'mr' ? 'Marathi' : 'English'})`}
+      title={t('current', { current: currentLabel })}
+      aria-label={t('switchTo', { current: currentLabel })}
       className={`flex h-9 items-center justify-center rounded-lg border border-border text-[12px] font-medium text-muted transition-colors hover:border-accent hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${className}`}
     >
       <Languages className="h-4 w-4 shrink-0" />
