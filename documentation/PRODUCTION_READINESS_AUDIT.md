@@ -38,17 +38,17 @@ Do NOT rebuild what exists. The real work is the ops/deploy cluster + a short bu
 
 ---
 
-## Cluster B — Ops / observability / hardening: PARTIAL
+## Cluster B — Ops / observability / hardening: MOSTLY DONE (as of 2026-07-01)
 
 | Item | Status | Evidence / gap |
 |---|---|---|
-| Rate limiting | PARTIAL | Global 300/min + auth overrides; **reset-password missing** (BUG-3) |
-| CORS | PARTIAL | Restricted to `FRONTEND_URL` + credentials; no URL-format validation at boot |
-| Error handling | PARTIAL | Global filter returns generic messages (no leak); but logs stacks regardless of NODE_ENV |
-| Structured logging | PARTIAL | Pino + correlation-id wired; redaction minimal (cookie/password only — not email/PII) |
-| **Error tracking (GlitchTip/Sentry)** | **MISSING** | Not initialized anywhere; not in deps/config. Prod would be blind to errors. |
-| **Security headers (Helmet)** | **MISSING** | No Helmet; no X-Frame-Options/HSTS/CSP/nosniff |
-| **Health check** | **MISSING (stub)** | `/health` returns static `ok` — doesn't check DB/Redis; useless for orchestration |
+| Rate limiting | DONE | reset-password now throttled 5/hr (BUG-3 fixed) alongside global 300/min + auth overrides |
+| Error tracking (GlitchTip/Sentry) | DONE | `instrument.ts` inits Sentry when `GLITCHTIP_DSN` set (no-op otherwise); 5xx forwarded from GlobalExceptionFilter; `GLITCHTIP_DSN` in config validation |
+| Security headers (Helmet) | DONE | `helmet()` in `configureApp` (CSP/COEP off — API is JSON-only); nosniff + X-Frame-Options verified in integration test |
+| Health check | DONE | `/health` = cheap liveness; new `/ready` = readiness (pings DB+Redis, 503 if down); integration-tested |
+| CORS | PARTIAL | Restricted to `FRONTEND_URL` + credentials; no URL-format validation at boot (low risk — deploy sets a fixed origin) |
+| Error handling | OK (was over-flagged) | Global filter returns generic messages, never leaks internals; logging 5xx stacks server-side is desirable, not a leak |
+| Structured logging | PARTIAL | Pino + correlation-id wired; redaction minimal (cookie/password only — not email/PII). Follow-up if PII-in-logs matters. |
 
 ---
 
