@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { JourneyState, Role, VmRelationshipState } from '@prisma/client';
+import { JourneyState, Prisma, Role, VmRelationshipState } from '@prisma/client';
 import { JourneysService } from './journeys.service';
 import {
   JourneyConflictException,
@@ -141,6 +141,36 @@ describe('JourneysService — createJourney', () => {
     await expect(service.createJourney(VA_USER, { sentenceId: SENTENCE_ID, weaknessId: WEAKNESS_ID }))
       .resolves.not.toThrow();
     expect(repo.create).toHaveBeenCalled();
+  });
+
+  it('RACE: maps a P2002 from the DB unique index to JourneyConflictException with the winner', async () => {
+    // The app pre-check passes (null), but a concurrent request already inserted, so the
+    // partial unique index rejects this insert with P2002. The service should re-resolve
+    // the winner and throw the same conflict as the sequential path.
+    const p2002 = new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+      code: 'P2002',
+      clientVersion: 'test',
+    });
+    const findActiveForSentence = vi
+      .fn()
+      .mockResolvedValueOnce(null) // pre-check: nothing yet
+      .mockResolvedValueOnce({ id: 'winner-1', state: JourneyState.ACTIVE }); // after P2002: the winner
+    const repo = makeRepo({
+      findActiveForSentence,
+      create: vi.fn().mockRejectedValue(p2002),
+    });
+    const service = makeService(repo);
+    await expect(service.createJourney(VA_USER, { sentenceId: SENTENCE_ID, weaknessId: WEAKNESS_ID }))
+      .rejects.toThrow(JourneyConflictException);
+    expect(findActiveForSentence).toHaveBeenCalledTimes(2);
+  });
+
+  it('RACE: re-throws a non-P2002 repository error unchanged', async () => {
+    const boom = new Error('db down');
+    const repo = makeRepo({ create: vi.fn().mockRejectedValue(boom) });
+    const service = makeService(repo);
+    await expect(service.createJourney(VA_USER, { sentenceId: SENTENCE_ID, weaknessId: WEAKNESS_ID }))
+      .rejects.toThrow('db down');
   });
 });
 

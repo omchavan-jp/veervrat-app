@@ -583,6 +583,11 @@ model Journey {
 
   @@index([vratarthiId])
   @@index([sentenceId])
+  // Partial unique index enforcing "one live journey per (vratarthi, sentence)":
+  // UNIQUE (vratarthi_id, sentence_id) WHERE deleted_at IS NULL AND state <> 'completed'.
+  // Prisma can't express the WHERE predicate declaratively, so it lives in the migration
+  // (journeys_vratarthi_sentence_live_key). Keep its predicate in sync with the blocking
+  // states in JourneysRepository.findActiveForSentence.
   @@map("journeys")
 }
 

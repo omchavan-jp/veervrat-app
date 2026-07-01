@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { JourneyState, NotificationEventType, VmRelationshipState } from '@prisma/client';
+import { JourneyState, NotificationEventType, Prisma, VmRelationshipState } from '@prisma/client';
 import { JourneysRepository } from './journeys.repository';
 import { NotificationsRepository } from '../notifications/notifications.repository';
 import { CreateJourneyDto } from './dto/create-journey.dto';
@@ -38,14 +38,25 @@ export class JourneysService {
       title = (sentence?.textEn ?? 'My Journey').slice(0, 100);
     }
 
-    const journey = await this.journeysRepository.create({
-      vratarthiId: user.id,
-      sentenceId: dto.sentenceId,
-      weaknessId: dto.weaknessId,
-      title,
-    });
-
-    return journey;
+    try {
+      return await this.journeysRepository.create({
+        vratarthiId: user.id,
+        sentenceId: dto.sentenceId,
+        weaknessId: dto.weaknessId,
+        title,
+      });
+    } catch (err) {
+      // The application check above has a check-then-insert race: two concurrent
+      // requests can both pass it. The partial unique index
+      // (journeys_vratarthi_sentence_live_key) is the DB backstop — the loser gets a
+      // P2002. Map it to the same conflict the sequential path returns, resolving the
+      // winning journey for the client.
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+        const winner = await this.journeysRepository.findActiveForSentence(user.id, dto.sentenceId);
+        if (winner) throw new JourneyConflictException(winner.id, winner.state);
+      }
+      throw err;
+    }
   }
 
   async listJourneys(user: SessionUser, cursor?: string) {
