@@ -77,8 +77,8 @@ Set these in Railway per service (Settings → Variables). Never commit real val
 | `S3_BUCKET` | bucket name | |
 | `S3_ACCESS_KEY` / `S3_SECRET_KEY` | R2 token pair | |
 | `S3_PUBLIC_URL` | bucket public URL | |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | OAuth creds | from Google Cloud console |
-| `GOOGLE_CALLBACK_URL` | `https://<api-url>/api/v1/auth/google/callback` | must match Google console |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | OAuth creds | **REQUIRED at boot** — from Google Cloud console. Missing/empty = the api crash-loops (`GoogleStrategy` reads these via `getOrThrow`, and they are NOT in the Joi schema so there is no friendly validation error). Set all three before first deploy. |
+| `GOOGLE_CALLBACK_URL` | `https://<api-url>/api/v1/auth/google/callback` | **REQUIRED at boot** — must match Google console |
 | `GLITCHTIP_DSN` | (optional) | enables error tracking; safe to leave unset |
 | `MEILI_HOST` / `MEILI_MASTER_KEY` | (leave unset) | search deferred |
 

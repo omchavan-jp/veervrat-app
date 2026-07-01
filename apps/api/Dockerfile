@@ -26,7 +26,12 @@ COPY . .
 RUN pnpm --filter api db:generate
 RUN pnpm --filter api build
 # Prune dev dependencies for a lean runtime node_modules.
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm --filter api --prod deploy /app/pruned
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm --filter api --prod --legacy deploy /app/pruned
+# `pnpm deploy` copies only declared packages from the store, so the generated Prisma
+# client (a `.prisma/client` folder, not a package) is left out. Re-generate it into the
+# pruned tree. Run from /app so the pruned prisma.config.ts (whose imports are dev-only
+# and absent here) is NOT auto-loaded; the schema path is passed explicitly.
+RUN /app/apps/api/node_modules/.bin/prisma generate --schema /app/pruned/prisma/schema.prisma
 
 # ---- Runtime: minimal image with compiled output + prod deps ----
 FROM base AS runtime
