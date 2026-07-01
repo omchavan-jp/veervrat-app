@@ -1,24 +1,9 @@
-import {
-  Controller,
-  Post,
-  UseInterceptors,
-  UploadedFile,
-  BadRequestException,
-  UseGuards,
-  Query,
-  Body,
-} from '@nestjs/common';
+import { Controller, Post, UseGuards, Body } from '@nestjs/common';
 import { UploadsService } from './uploads.service';
 import { SessionGuard } from '../auth/guards/session.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { SessionUser } from '../auth/types/auth.types';
-
-interface UploadChatImageRequest {
-  fileBuffer: string; // base64 encoded
-  filename: string;
-  mimeType: string;
-  roomId?: string;
-}
+import { UploadImageDto } from './dto/upload-image.dto';
 
 @Controller('uploads')
 @UseGuards(SessionGuard)
@@ -26,49 +11,19 @@ export class UploadsController {
   constructor(private uploadsService: UploadsService) {}
 
   @Post('chat')
-  async uploadChatImage(
-    @Body() request: UploadChatImageRequest,
-    @CurrentUser() user: SessionUser,
-  ) {
-    if (!request.fileBuffer || !request.filename || !request.mimeType) {
-      throw new BadRequestException(
-        'Missing required fields: fileBuffer, filename, mimeType',
-      );
-    }
-
-    const result = await this.uploadsService.uploadChatImage(
-      request,
-      user,
-    );
+  async uploadChatImage(@Body() request: UploadImageDto, @CurrentUser() user: SessionUser) {
+    const result = await this.uploadsService.uploadChatImage(request, user);
     return { data: result };
   }
 
   @Post('experience')
-  async uploadExperienceImage(
-    @Body() request: UploadChatImageRequest,
-    @CurrentUser() user: SessionUser,
-  ) {
-    if (!request.fileBuffer || !request.filename || !request.mimeType) {
-      throw new BadRequestException(
-        'Missing required fields: fileBuffer, filename, mimeType',
-      );
-    }
-
+  async uploadExperienceImage(@Body() request: UploadImageDto, @CurrentUser() user: SessionUser) {
     const result = await this.uploadsService.uploadImage(request, user, 'experience');
     return { data: result };
   }
 
   @Post('blog')
-  async uploadBlogImage(
-    @Body() request: UploadChatImageRequest,
-    @CurrentUser() user: SessionUser,
-  ) {
-    if (!request.fileBuffer || !request.filename || !request.mimeType) {
-      throw new BadRequestException(
-        'Missing required fields: fileBuffer, filename, mimeType',
-      );
-    }
-
+  async uploadBlogImage(@Body() request: UploadImageDto, @CurrentUser() user: SessionUser) {
     const result = await this.uploadsService.uploadImage(request, user, 'blog');
     return { data: result };
   }

@@ -99,6 +99,7 @@ export class AuthController {
 
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { ttl: 3600000, limit: 5 } })
   @Audited({ action: 'auth.password_change', resourceType: 'user' })
   async resetPassword(@Body() dto: ResetPasswordDto) {
     await this.authService.resetPassword(dto.token, dto.newPassword);
@@ -128,6 +129,7 @@ export class AuthController {
   }
 
   @Post('confirm-email-change')
+  @SkipCsrf() // called from an email link (no session, no CSRF token) — same as verify-email/link-google
   @HttpCode(HttpStatus.OK)
   @Audited({ action: 'auth.email_change_confirmed', resourceType: 'user' })
   async confirmEmailChange(@Body() dto: ConfirmEmailChangeDto) {

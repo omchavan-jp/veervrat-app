@@ -224,6 +224,9 @@ export class AuthService {
     if (!verificationToken) {
       throw new TokenInvalidException();
     }
+    if (verificationToken.expiresAt < new Date()) {
+      throw new TokenExpiredException('google link');
+    }
 
     const emailAccount = await this.authRepository.findEmailAccountByUserId(verificationToken.userId);
     if (!emailAccount?.passwordHash) {

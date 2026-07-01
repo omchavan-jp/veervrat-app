@@ -5,6 +5,7 @@ import { AuthService } from './auth.service';
 import {
   InvalidCredentialsException,
   TokenInvalidException,
+  TokenExpiredException,
 } from '../../common/exceptions/app.exceptions';
 
 vi.mock('bcrypt', () => ({
@@ -139,6 +140,18 @@ describe('AuthService — linkGoogleAccount', () => {
       TokenInvalidException,
     );
     expect(repo.addAuthAccount).not.toHaveBeenCalled();
+  });
+
+  it('NEGATIVE: throws TokenExpiredException when the link token has expired', async () => {
+    const expired = { ...LINK_TOKEN_ROW, expiresAt: new Date(Date.now() - 1000) };
+    const repo = makeRepo({ findVerificationToken: vi.fn().mockResolvedValue(expired) });
+    const service = makeService(repo);
+
+    await expect(service.linkGoogleAccount('validtoken', 'password123', null, null)).rejects.toThrow(
+      TokenExpiredException,
+    );
+    expect(repo.addAuthAccount).not.toHaveBeenCalled();
+    expect(repo.createSession).not.toHaveBeenCalled();
   });
 
   it('NEGATIVE: throws InvalidCredentialsException on wrong password', async () => {
