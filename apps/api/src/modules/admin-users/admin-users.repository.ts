@@ -61,7 +61,9 @@ export class AdminUsersRepository {
             state: true,
             createdAt: true,
             sentence: { select: { id: true, textEn: true, textMr: true } },
-            weaknesses: { select: { weakness: { select: { id: true, nameEn: true, nameMr: true } } } },
+            weaknesses: {
+              select: { weakness: { select: { id: true, nameEn: true, nameMr: true } } },
+            },
           },
         },
         testAttempts: {
@@ -86,7 +88,14 @@ export class AdminUsersRepository {
   findById(id: string) {
     return this.prisma.user.findUnique({
       where: { id },
-      select: { id: true, displayName: true, suspendedAt: true, anonymisedAt: true, deletedAt: true, roles: { select: { role: true } } },
+      select: {
+        id: true,
+        displayName: true,
+        suspendedAt: true,
+        anonymisedAt: true,
+        deletedAt: true,
+        roles: { select: { role: true } },
+      },
     });
   }
 
@@ -113,7 +122,11 @@ export class AdminUsersRepository {
     });
   }
 
-  anonymise(userId: string, pseudonym: { displayName: string; email: string; username: string }, at: Date) {
+  anonymise(
+    userId: string,
+    pseudonym: { displayName: string; email: string; username: string },
+    at: Date,
+  ) {
     return this.prisma.user.update({
       where: { id: userId },
       data: {

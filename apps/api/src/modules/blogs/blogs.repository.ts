@@ -65,7 +65,11 @@ export class BlogsRepository {
   }
 
   async softDelete(id: string) {
-    return this.prisma.blog.update({ where: { id }, data: { deletedAt: new Date() }, select: { id: true } });
+    return this.prisma.blog.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+      select: { id: true },
+    });
   }
 
   async findPublishedList(cursor?: string, featured?: boolean) {
@@ -130,9 +134,7 @@ export class BlogsRepository {
       where: {
         blogId,
         deletedAt: null,
-        ...(viewerId
-          ? { OR: [{ isHidden: false }, { authorId: viewerId }] }
-          : { isHidden: false }),
+        ...(viewerId ? { OR: [{ isHidden: false }, { authorId: viewerId }] } : { isHidden: false }),
       },
       select: COMMENT_SELECT,
       orderBy: { createdAt: 'asc' },
@@ -140,7 +142,11 @@ export class BlogsRepository {
   }
 
   async softDeleteComment(id: string) {
-    return this.prisma.blogComment.update({ where: { id }, data: { deletedAt: new Date() }, select: { id: true } });
+    return this.prisma.blogComment.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+      select: { id: true },
+    });
   }
 
   async hideComment(id: string, hiddenById: string) {

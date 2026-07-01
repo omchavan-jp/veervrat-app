@@ -82,12 +82,21 @@ export class ExperienceLogsRepository {
       return tx.experienceLog.update({
         where: { id },
         data: {
-          ...(data.body !== undefined ? { body: data.body as unknown as Prisma.InputJsonValue } : {}),
+          ...(data.body !== undefined
+            ? { body: data.body as unknown as Prisma.InputJsonValue }
+            : {}),
           ...(data.visibility !== undefined ? { visibility: data.visibility } : {}),
           ...(data.isDraft !== undefined ? { isDraft: data.isDraft } : {}),
           ...(data.publishedAt !== undefined ? { publishedAt: data.publishedAt } : {}),
           ...(data.tags
-            ? { tags: { create: data.tags.map((t) => ({ entityType: t.entityType, entityId: t.entityId })) } }
+            ? {
+                tags: {
+                  create: data.tags.map((t) => ({
+                    entityType: t.entityType,
+                    entityId: t.entityId,
+                  })),
+                },
+              }
             : {}),
         },
         select: LOG_SELECT,

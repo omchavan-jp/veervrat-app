@@ -18,7 +18,11 @@ export class DisplayContentController {
     resourceIdParam: 'id',
     metadata: (c) => ({ featured: (c.body as SetFeaturedDto)?.featured }),
   })
-  featureBlog(@CurrentUser() user: SessionUser, @Param('id') id: string, @Body() dto: SetFeaturedDto) {
+  featureBlog(
+    @CurrentUser() user: SessionUser,
+    @Param('id') id: string,
+    @Body() dto: SetFeaturedDto,
+  ) {
     return this.display.setBlogFeatured(user, id, dto.featured);
   }
 
@@ -29,7 +33,11 @@ export class DisplayContentController {
     resourceIdParam: 'id',
     metadata: (c) => ({ featured: (c.body as SetFeaturedDto)?.featured }),
   })
-  featureExperience(@CurrentUser() user: SessionUser, @Param('id') id: string, @Body() dto: SetFeaturedDto) {
+  featureExperience(
+    @CurrentUser() user: SessionUser,
+    @Param('id') id: string,
+    @Body() dto: SetFeaturedDto,
+  ) {
     return this.display.setExperienceFeatured(user, id, dto.featured);
   }
 }

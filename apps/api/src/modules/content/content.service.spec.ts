@@ -9,7 +9,9 @@ function make(repo: Record<string, any>, index: Record<string, any> = {}) {
 
 describe('ContentService', () => {
   it('lists pothi sections', async () => {
-    const { service } = make({ listPothiSections: vi.fn().mockResolvedValue([{ id: 's1', shlokas: [] }]) });
+    const { service } = make({
+      listPothiSections: vi.fn().mockResolvedValue([{ id: 's1', shlokas: [] }]),
+    });
     expect(await service.getPothiSections()).toHaveLength(1);
   });
 
@@ -68,10 +70,15 @@ describe('ContentService', () => {
   });
 
   it('resources list + detail 404', async () => {
-    const ok = make({ listResources: vi.fn().mockResolvedValue({ items: [], nextCursor: null }), findResourceDetail: vi.fn().mockResolvedValue({ id: 'r1', formalTags: [] }) });
+    const ok = make({
+      listResources: vi.fn().mockResolvedValue({ items: [], nextCursor: null }),
+      findResourceDetail: vi.fn().mockResolvedValue({ id: 'r1', formalTags: [] }),
+    });
     await ok.service.getResources();
     expect((await ok.service.getResource('r1')).id).toBe('r1');
     const missing = make({ findResourceDetail: vi.fn().mockResolvedValue(null) });
-    await expect(missing.service.getResource('nope')).rejects.toBeInstanceOf(EntityNotFoundException);
+    await expect(missing.service.getResource('nope')).rejects.toBeInstanceOf(
+      EntityNotFoundException,
+    );
   });
 });

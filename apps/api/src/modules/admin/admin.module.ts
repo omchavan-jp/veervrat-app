@@ -13,7 +13,12 @@ import { AdminResourcesService } from './admin-resources.service';
 
 @Module({
   imports: [AuthModule, ContentModule],
-  controllers: [TaxonomyController, AdminShlokasController, AdminPothiController, AdminResourcesController],
+  controllers: [
+    TaxonomyController,
+    AdminShlokasController,
+    AdminPothiController,
+    AdminResourcesController,
+  ],
   providers: [
     AdminContentRepository,
     TaxonomyService,

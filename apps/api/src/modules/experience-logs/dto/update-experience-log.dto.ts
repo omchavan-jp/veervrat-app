@@ -1,4 +1,12 @@
-import { IsArray, IsBoolean, IsEnum, IsObject, IsOptional, ValidateNested, ArrayMaxSize } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsEnum,
+  IsObject,
+  IsOptional,
+  ValidateNested,
+  ArrayMaxSize,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { ExperienceVisibility } from '@prisma/client';
 import { ExperienceTagDto } from './experience-tag.dto';

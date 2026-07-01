@@ -6,11 +6,10 @@ import { JourneysRepository } from '../journeys/journeys.repository';
 import { NotificationsRepository } from '../notifications/notifications.repository';
 import { NotificationsService } from '../notifications/notifications.service';
 import type { SessionUser } from '../auth/types/auth.types';
-import { NotificationEventType, Role, VmRelationshipState } from '@prisma/client';
+import { NotificationEventType, Role } from '@prisma/client';
 
 describe('VmRelationshipsService', () => {
   let service: VmRelationshipsService;
-  let repository: VmRelationshipsRepository;
 
   const mockRepository = {
     findActiveGlobalVm: vi.fn(),
@@ -68,7 +67,6 @@ describe('VmRelationshipsService', () => {
     }).compile();
 
     service = module.get<VmRelationshipsService>(VmRelationshipsService);
-    repository = module.get<VmRelationshipsRepository>(VmRelationshipsRepository);
   });
 
   afterEach(() => {

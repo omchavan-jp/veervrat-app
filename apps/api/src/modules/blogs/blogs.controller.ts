@@ -76,7 +76,11 @@ export class BlogsController {
   @Post(':id/comments')
   @UseGuards(SessionGuard)
   @HttpCode(HttpStatus.CREATED)
-  addComment(@CurrentUser() user: SessionUser, @Param('id') id: string, @Body() dto: CreateCommentDto) {
+  addComment(
+    @CurrentUser() user: SessionUser,
+    @Param('id') id: string,
+    @Body() dto: CreateCommentDto,
+  ) {
     return this.blogsService.addComment(user, id, dto.body);
   }
 
@@ -89,7 +93,11 @@ export class BlogsController {
     resourceIdParam: 'cid',
     metadata: (ctx) => ({ blog_id: ctx.params.id }),
   })
-  deleteComment(@CurrentUser() user: SessionUser, @Param('id') id: string, @Param('cid') cid: string) {
+  deleteComment(
+    @CurrentUser() user: SessionUser,
+    @Param('id') id: string,
+    @Param('cid') cid: string,
+  ) {
     return this.blogsService.deleteComment(user, id, cid);
   }
 
@@ -102,14 +110,22 @@ export class BlogsController {
     resourceIdParam: 'cid',
     metadata: (ctx) => ({ blog_id: ctx.params.id }),
   })
-  hideComment(@CurrentUser() user: SessionUser, @Param('id') id: string, @Param('cid') cid: string) {
+  hideComment(
+    @CurrentUser() user: SessionUser,
+    @Param('id') id: string,
+    @Param('cid') cid: string,
+  ) {
     return this.blogsService.hideComment(user, id, cid);
   }
 
   @Post(':id/comments/:cid/report')
   @UseGuards(SessionGuard)
   @HttpCode(HttpStatus.OK)
-  reportComment(@CurrentUser() user: SessionUser, @Param('id') id: string, @Param('cid') cid: string) {
+  reportComment(
+    @CurrentUser() user: SessionUser,
+    @Param('id') id: string,
+    @Param('cid') cid: string,
+  ) {
     return this.blogsService.reportComment(user, id, cid);
   }
 }

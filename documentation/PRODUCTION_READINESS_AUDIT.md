@@ -58,12 +58,13 @@ Do NOT rebuild what exists. The real work is the ops/deploy cluster + a short bu
 |---|---|---|
 | DB indexes | DONE | 30+ indexes; all hot FK paths covered (vratarthi_id, journey_id, recipientId+readAt, roomId+seqNo…) |
 | Build setup | DONE | Turbo build works; `dist/` + `.next/` outputs; `start:prod` scripts exist |
-| Migrations | PARTIAL | 19 migrations versioned in git; **no deploy-time migration step / runbook** |
-| Env config | PARTIAL | Comprehensive `.env.example`; **no staging/prod separation** |
+| **CI pipeline** | **DONE** (2026-07-01) | `.github/workflows/ci.yml` (lint+typecheck+unit+build) + `integration.yml` (Postgres+Redis service containers, migrate, integration tests). Activate on first push. All steps verified green locally. |
+| Lint health | DONE (2026-07-01) | Was broken/masked: web eslint couldn't run (missing dep, fixed via explicit deps); api had 1290 errors hidden by `--fix` + an eslint/prettier config conflict (fixed via shared `.prettierrc.json`). Now `pnpm lint` = 0 errors across api/web/types. |
+| Migrations | PARTIAL | 20 migrations versioned; `db:migrate:deploy` script added + used in integration CI. Prod deploy-time step lands with CD. |
+| Env config | PARTIAL | Comprehensive `.env.example`; **no staging/prod separation** (lands with CD) |
 | Caching/CDN | PARTIAL | Redis used (sessions/rate-limit/lockout); CDN "decided" (Cloudflare) but not set up |
-| **CI pipeline** | **MISSING** | No `.github/workflows/` — nothing gates lint/typecheck/test/build before merge |
-| **CD / deployment** | **MISSING** | No Dockerfile, no host config; docker-compose is dev-only. Cannot deploy today. |
-| **Backups / recovery** | **MISSING** | No physical backup strategy; soft-deletes are app-level only |
+| **CD / deployment** | **MISSING** | No Dockerfile, no host config; docker-compose is dev-only. Next step — Railway/Render per deployment decisions. |
+| **Backups / recovery** | **MISSING** | No physical backup strategy; soft-deletes are app-level only (managed PG on Railway/Render provides this) |
 
 ---
 

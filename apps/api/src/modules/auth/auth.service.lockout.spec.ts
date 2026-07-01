@@ -1,13 +1,15 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { AuthService } from './auth.service';
 
-function makeRedis(overrides: Partial<{
-  hget: () => Promise<string | null>;
-  hincrby: () => Promise<number>;
-  expire: () => Promise<number>;
-  hset: () => Promise<number>;
-  del: () => Promise<number>;
-}> = {}) {
+function makeRedis(
+  overrides: Partial<{
+    hget: () => Promise<string | null>;
+    hincrby: () => Promise<number>;
+    expire: () => Promise<number>;
+    hset: () => Promise<number>;
+    del: () => Promise<number>;
+  }> = {},
+) {
   return {
     hget: vi.fn().mockResolvedValue(null),
     hincrby: vi.fn().mockResolvedValue(1),

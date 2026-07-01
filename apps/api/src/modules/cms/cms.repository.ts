@@ -34,7 +34,8 @@ export class CmsRepository {
     updatedById: string;
   }) {
     const bodyEn = data.bodyEn as unknown as Prisma.InputJsonValue;
-    const bodyMr = data.bodyMr !== undefined ? (data.bodyMr as unknown as Prisma.InputJsonValue) : undefined;
+    const bodyMr =
+      data.bodyMr !== undefined ? (data.bodyMr as unknown as Prisma.InputJsonValue) : undefined;
     return this.prisma.cmsPage.upsert({
       where: { key: data.key },
       create: {
@@ -58,15 +59,25 @@ export class CmsRepository {
 
   update(
     key: string,
-    data: { titleEn?: string; titleMr?: string; bodyEn?: TiptapDoc; bodyMr?: TiptapDoc; updatedById: string },
+    data: {
+      titleEn?: string;
+      titleMr?: string;
+      bodyEn?: TiptapDoc;
+      bodyMr?: TiptapDoc;
+      updatedById: string;
+    },
   ) {
     return this.prisma.cmsPage.update({
       where: { key },
       data: {
         ...(data.titleEn !== undefined ? { titleEn: data.titleEn } : {}),
         ...(data.titleMr !== undefined ? { titleMr: data.titleMr } : {}),
-        ...(data.bodyEn !== undefined ? { bodyEn: data.bodyEn as unknown as Prisma.InputJsonValue } : {}),
-        ...(data.bodyMr !== undefined ? { bodyMr: data.bodyMr as unknown as Prisma.InputJsonValue } : {}),
+        ...(data.bodyEn !== undefined
+          ? { bodyEn: data.bodyEn as unknown as Prisma.InputJsonValue }
+          : {}),
+        ...(data.bodyMr !== undefined
+          ? { bodyMr: data.bodyMr as unknown as Prisma.InputJsonValue }
+          : {}),
         updatedById: data.updatedById,
       },
       select: CMS_SELECT,

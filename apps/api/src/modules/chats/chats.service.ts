@@ -16,12 +16,7 @@ export class ChatsService {
     private vmRelationshipsRepository: VmRelationshipsRepository,
   ) {}
 
-  async sendMessage(
-    roomId: string,
-    user: SessionUser,
-    content: unknown,
-    journeyId?: string,
-  ) {
+  async sendMessage(roomId: string, user: SessionUser, content: unknown, journeyId?: string) {
     await this.authorizeRoom(roomId, user, 'chat.send');
 
     let sanitized: TiptapDoc;
@@ -37,12 +32,7 @@ export class ChatsService {
     return this.chatsRepository.createMessage(roomId, user.id, sanitized, journeyId);
   }
 
-  async getMessages(
-    roomId: string,
-    user: SessionUser,
-    afterSeqNo: number,
-    limit: number = 50,
-  ) {
+  async getMessages(roomId: string, user: SessionUser, afterSeqNo: number, limit: number = 50) {
     await this.authorizeRoom(roomId, user, 'chat.view');
 
     return this.chatsRepository.getMessagesByRoomAfterSeqNo(

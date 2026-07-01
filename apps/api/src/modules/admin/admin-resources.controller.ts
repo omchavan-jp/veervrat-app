@@ -23,14 +23,22 @@ export class AdminResourcesController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @Audited({ action: 'admin.create_resource', resourceType: 'resource', resourceId: (c) => (c.result as { id?: string })?.id })
+  @Audited({
+    action: 'admin.create_resource',
+    resourceType: 'resource',
+    resourceId: (c) => (c.result as { id?: string })?.id,
+  })
   create(@CurrentUser() user: SessionUser, @Body() dto: CreateResourceDto) {
     return this.resources.create(user, dto);
   }
 
   @Patch(':id')
   @Audited({ action: 'admin.update_resource', resourceType: 'resource', resourceIdParam: 'id' })
-  update(@CurrentUser() user: SessionUser, @Param('id') id: string, @Body() dto: UpdateResourceDto) {
+  update(
+    @CurrentUser() user: SessionUser,
+    @Param('id') id: string,
+    @Body() dto: UpdateResourceDto,
+  ) {
     return this.resources.update(user, id, dto);
   }
 

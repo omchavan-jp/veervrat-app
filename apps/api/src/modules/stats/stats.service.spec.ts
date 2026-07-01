@@ -45,7 +45,12 @@ describe('StatsService.getPlatformStats', () => {
     const { svc, repo, redis } = makeService();
     const result = await svc.getPlatformStats();
     expect(repo.getPlatformStats).toHaveBeenCalledOnce();
-    expect(redis.set).toHaveBeenCalledWith('platform:stats', JSON.stringify(PLATFORM_STATS), 'EX', 3600);
+    expect(redis.set).toHaveBeenCalledWith(
+      'platform:stats',
+      JSON.stringify(PLATFORM_STATS),
+      'EX',
+      3600,
+    );
     expect(result).toEqual(PLATFORM_STATS);
   });
 

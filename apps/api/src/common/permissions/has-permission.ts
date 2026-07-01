@@ -6,7 +6,6 @@ import {
   isVa,
   isVm,
   isAdmin,
-  isModerator,
   isAdminOrModerator,
   isJourneyOwner,
   isActiveJourneyVm,
@@ -121,14 +120,16 @@ function checkLayerOne(
     case 'custom_erc.edit': {
       if (resource.type !== 'erc') return false;
       const { erc } = resource;
-      const preSubmission = erc.status === ErcStatus.NOT_STARTED || erc.status === ErcStatus.IN_PROGRESS;
+      const preSubmission =
+        erc.status === ErcStatus.NOT_STARTED || erc.status === ErcStatus.IN_PROGRESS;
       return erc.createdById === user.id && preSubmission;
     }
 
     case 'custom_erc.delete': {
       if (resource.type !== 'erc') return false;
       const { erc } = resource;
-      const preSubmission = erc.status === ErcStatus.NOT_STARTED || erc.status === ErcStatus.IN_PROGRESS;
+      const preSubmission =
+        erc.status === ErcStatus.NOT_STARTED || erc.status === ErcStatus.IN_PROGRESS;
       return erc.createdById === user.id && preSubmission;
     }
 
@@ -198,7 +199,8 @@ function checkLayerOne(
       if (isVm(user) && journey !== null && isGlobalVmForJourney(user, journey)) return true;
       // FRIENDS tier = mutual follow (spec/10). The service resolves friendship and
       // passes viewerIsFriend; the permission function stays pure/synchronous.
-      if (log.visibility === ExperienceVisibility.FRIENDS && resource.viewerIsFriend === true) return true;
+      if (log.visibility === ExperienceVisibility.FRIENDS && resource.viewerIsFriend === true)
+        return true;
       return false;
     }
 
@@ -344,4 +346,3 @@ function checkLayerTwo(
       return false;
   }
 }
-

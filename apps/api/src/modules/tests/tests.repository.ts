@@ -133,7 +133,7 @@ export class TestsRepository {
         sentenceId: s.id,
         textEn: s.textEn,
         textMr: s.textMr,
-        score: (answerMap.get(s.id) ?? null) as number | null,
+        score: answerMap.get(s.id) ?? null,
         subvirtueId: s.subvirtue.id,
         subvirtueNameEn: s.subvirtue.nameEn,
         subvirtueNameMr: s.subvirtue.nameMr,

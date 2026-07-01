@@ -60,14 +60,32 @@ export class TestsService {
     if (existing) {
       const totalSentences = await this.testsRepository.countSentencesForWeakness(weaknessId);
       const answeredCount = await this.testsRepository.countAnswers(existing.id);
-      return { id: existing.id, weaknessId, isDraft: true, answeredCount, totalSentences, existed: true };
+      return {
+        id: existing.id,
+        weaknessId,
+        isDraft: true,
+        answeredCount,
+        totalSentences,
+        existed: true,
+      };
     }
     const draft = await this.testsRepository.createDraft(userId, weaknessId);
     const totalSentences = await this.testsRepository.countSentencesForWeakness(weaknessId);
-    return { id: draft.id, weaknessId, isDraft: true, answeredCount: 0, totalSentences, existed: false };
+    return {
+      id: draft.id,
+      weaknessId,
+      isDraft: true,
+      answeredCount: 0,
+      totalSentences,
+      existed: false,
+    };
   }
 
-  async saveAnswers(userId: string, testId: string, answers: { sentenceId: string; score: number }[]) {
+  async saveAnswers(
+    userId: string,
+    testId: string,
+    answers: { sentenceId: string; score: number }[],
+  ) {
     const test = await this.testsRepository.findById(testId);
     if (!test) throw new EntityNotFoundException('TestAttempt', testId);
     if (test.userId !== userId) throw new AccessDeniedException();
@@ -97,12 +115,13 @@ export class TestsService {
       .filter((s) => s.score !== null && s.score <= 2)
       .sort((a, b) => (a.score ?? 0) - (b.score ?? 0));
 
-    const otherSentences = data.sentences.filter(
-      (s) => s.score === null || s.score > 2,
-    );
+    const otherSentences = data.sentences.filter((s) => s.score === null || s.score > 2);
 
     // Deduplicate virtues from flagged sentences
-    const virtueMap = new Map<string, { virtueId: string; virtueNameEn: string; virtueNameMr: string | null }>();
+    const virtueMap = new Map<
+      string,
+      { virtueId: string; virtueNameEn: string; virtueNameMr: string | null }
+    >();
     for (const s of flaggedSentences) {
       if (!virtueMap.has(s.virtueId)) {
         virtueMap.set(s.virtueId, {

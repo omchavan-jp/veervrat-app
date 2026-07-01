@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Patch, Param, Query, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Param,
+  Query,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { ListNotificationsDto } from './dto/list-notifications.dto';
 import { SessionGuard } from '../auth/guards/session.guard';

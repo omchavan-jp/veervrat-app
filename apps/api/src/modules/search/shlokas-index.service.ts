@@ -28,7 +28,13 @@ export class ShlokasIndexService implements OnModuleInit {
     if (!index) return;
     try {
       await index.updateSettings({
-        searchableAttributes: ['devanagariText', 'transliteration', 'meaningEn', 'meaningMr', 'looseTags'],
+        searchableAttributes: [
+          'devanagariText',
+          'transliteration',
+          'meaningEn',
+          'meaningMr',
+          'looseTags',
+        ],
       });
     } catch (error) {
       this.logger.warn({ msg: 'shlokas index settings failed', error: errMessage(error) });
@@ -41,7 +47,11 @@ export class ShlokasIndexService implements OnModuleInit {
     try {
       await index.addDocuments([doc]);
     } catch (error) {
-      this.logger.warn({ msg: 'shlokas index upsert failed', id: doc.id, error: errMessage(error) });
+      this.logger.warn({
+        msg: 'shlokas index upsert failed',
+        id: doc.id,
+        error: errMessage(error),
+      });
     }
   }
 

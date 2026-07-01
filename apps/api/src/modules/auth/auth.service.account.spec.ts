@@ -35,14 +35,21 @@ function makeService(repo: Record<string, unknown>, email?: Record<string, unkno
 
 const HASH = '$2b$10$abcdefghijklmnopqrstuv'; // shape only; bcrypt.compare is mocked
 
-beforeEach(() => { mockedCompare.mockReset(); mockedHash.mockReset(); });
+beforeEach(() => {
+  mockedCompare.mockReset();
+  mockedHash.mockReset();
+});
 
 describe('AuthService — changePassword', () => {
   it('rejects a wrong current password', async () => {
     mockedCompare.mockResolvedValue(false as never);
-    const repo = { findEmailAccountByUserId: vi.fn().mockResolvedValue({ id: 'a1', passwordHash: HASH }) };
+    const repo = {
+      findEmailAccountByUserId: vi.fn().mockResolvedValue({ id: 'a1', passwordHash: HASH }),
+    };
     const service = makeService(repo);
-    await expect(service.changePassword('u1', 'wrong', 'newpassword1')).rejects.toBeInstanceOf(InvalidCredentialsException);
+    await expect(service.changePassword('u1', 'wrong', 'newpassword1')).rejects.toBeInstanceOf(
+      InvalidCredentialsException,
+    );
   });
 
   it('updates hash + re-issues a session on success', async () => {
@@ -64,7 +71,9 @@ describe('AuthService — changePassword', () => {
   it('rejects when there is no credential account (Google-only)', async () => {
     const repo = { findEmailAccountByUserId: vi.fn().mockResolvedValue(null) };
     const service = makeService(repo);
-    await expect(service.changePassword('u1', 'x', 'newpassword1')).rejects.toBeInstanceOf(EntityNotFoundException);
+    await expect(service.changePassword('u1', 'x', 'newpassword1')).rejects.toBeInstanceOf(
+      EntityNotFoundException,
+    );
   });
 });
 
@@ -72,28 +81,38 @@ describe('AuthService — requestEmailChange', () => {
   it('rejects a duplicate email', async () => {
     mockedCompare.mockResolvedValue(true as never);
     const repo = {
-      findUserById: vi.fn().mockResolvedValue({ id: 'u1', email: 'old@x.com', displayName: 'U', language: 'EN' }),
+      findUserById: vi
+        .fn()
+        .mockResolvedValue({ id: 'u1', email: 'old@x.com', displayName: 'U', language: 'EN' }),
       findEmailAccountByUserId: vi.fn().mockResolvedValue({ id: 'a1', passwordHash: HASH }),
       emailInUse: vi.fn().mockResolvedValue(true),
     };
     const service = makeService(repo);
-    await expect(service.requestEmailChange('u1', 'taken@x.com', 'pw')).rejects.toBeInstanceOf(DuplicateEntityException);
+    await expect(service.requestEmailChange('u1', 'taken@x.com', 'pw')).rejects.toBeInstanceOf(
+      DuplicateEntityException,
+    );
   });
 
   it('rejects a wrong password', async () => {
     mockedCompare.mockResolvedValue(false as never);
     const repo = {
-      findUserById: vi.fn().mockResolvedValue({ id: 'u1', email: 'old@x.com', displayName: 'U', language: 'EN' }),
+      findUserById: vi
+        .fn()
+        .mockResolvedValue({ id: 'u1', email: 'old@x.com', displayName: 'U', language: 'EN' }),
       findEmailAccountByUserId: vi.fn().mockResolvedValue({ id: 'a1', passwordHash: HASH }),
     };
     const service = makeService(repo);
-    await expect(service.requestEmailChange('u1', 'new@x.com', 'wrong')).rejects.toBeInstanceOf(InvalidCredentialsException);
+    await expect(service.requestEmailChange('u1', 'new@x.com', 'wrong')).rejects.toBeInstanceOf(
+      InvalidCredentialsException,
+    );
   });
 
   it('stores pendingEmail + issues a token + emails the new address', async () => {
     mockedCompare.mockResolvedValue(true as never);
     const repo = {
-      findUserById: vi.fn().mockResolvedValue({ id: 'u1', email: 'old@x.com', displayName: 'U', language: 'EN' }),
+      findUserById: vi
+        .fn()
+        .mockResolvedValue({ id: 'u1', email: 'old@x.com', displayName: 'U', language: 'EN' }),
       findEmailAccountByUserId: vi.fn().mockResolvedValue({ id: 'a1', passwordHash: HASH }),
       emailInUse: vi.fn().mockResolvedValue(false),
       setPendingEmail: vi.fn().mockResolvedValue({ id: 'u1' }),
@@ -106,9 +125,17 @@ describe('AuthService — requestEmailChange', () => {
     expect(r).toBe('sent');
     expect(repo.setPendingEmail).toHaveBeenCalledWith('u1', 'new@x.com');
     expect(repo.createVerificationToken).toHaveBeenCalledWith(
-      expect.objectContaining({ type: VerificationType.EMAIL_CHANGE, metadata: { newEmail: 'new@x.com' } }),
+      expect.objectContaining({
+        type: VerificationType.EMAIL_CHANGE,
+        metadata: { newEmail: 'new@x.com' },
+      }),
     );
-    expect(sendTransactional).toHaveBeenCalledWith('new@x.com', expect.any(String), expect.any(String), expect.any(String));
+    expect(sendTransactional).toHaveBeenCalledWith(
+      'new@x.com',
+      expect.any(String),
+      expect.any(String),
+      expect.any(String),
+    );
   });
 });
 
@@ -116,13 +143,25 @@ describe('AuthService — confirmEmailChange', () => {
   it('applies the change when token + pending email match', async () => {
     const repo = {
       findVerificationToken: vi.fn().mockResolvedValue({
-        id: 't1', userId: 'u1', expiresAt: new Date(Date.now() + 60000), metadata: { newEmail: 'new@x.com' },
+        id: 't1',
+        userId: 'u1',
+        expiresAt: new Date(Date.now() + 60000),
+        metadata: { newEmail: 'new@x.com' },
       }),
       getPendingEmail: vi.fn().mockResolvedValue('new@x.com'),
       emailInUse: vi.fn().mockResolvedValue(false),
       applyEmailChange: vi.fn().mockResolvedValue({
-        id: 'u1', email: 'new@x.com', displayName: 'U', username: 'u', language: 'EN', gender: null, dob: null,
-        avatarUrl: null, roles: [{ role: 'VRATARTHI' }], emailVerifiedAt: new Date(), accountSetupCompletedAt: new Date(),
+        id: 'u1',
+        email: 'new@x.com',
+        displayName: 'U',
+        username: 'u',
+        language: 'EN',
+        gender: null,
+        dob: null,
+        avatarUrl: null,
+        roles: [{ role: 'VRATARTHI' }],
+        emailVerifiedAt: new Date(),
+        accountSetupCompletedAt: new Date(),
         onboardingCompletedAt: new Date(),
       }),
       markTokenUsed: vi.fn().mockResolvedValue({}),
@@ -137,7 +176,10 @@ describe('AuthService — confirmEmailChange', () => {
   it('rejects when pending email no longer matches the token', async () => {
     const repo = {
       findVerificationToken: vi.fn().mockResolvedValue({
-        id: 't1', userId: 'u1', expiresAt: new Date(Date.now() + 60000), metadata: { newEmail: 'new@x.com' },
+        id: 't1',
+        userId: 'u1',
+        expiresAt: new Date(Date.now() + 60000),
+        metadata: { newEmail: 'new@x.com' },
       }),
       getPendingEmail: vi.fn().mockResolvedValue(null),
     };
@@ -149,10 +191,14 @@ describe('AuthService — confirmEmailChange', () => {
 describe('AuthService — disconnectAccount', () => {
   it('blocks removing the only login method', async () => {
     const repo = {
-      listAuthAccounts: vi.fn().mockResolvedValue([{ id: 'g1', provider: AuthProvider.GOOGLE, passwordHash: null }]),
+      listAuthAccounts: vi
+        .fn()
+        .mockResolvedValue([{ id: 'g1', provider: AuthProvider.GOOGLE, passwordHash: null }]),
     };
     const service = makeService(repo);
-    await expect(service.disconnectAccount('u1', AuthProvider.GOOGLE)).rejects.toBeInstanceOf(EntityInUseException);
+    await expect(service.disconnectAccount('u1', AuthProvider.GOOGLE)).rejects.toBeInstanceOf(
+      EntityInUseException,
+    );
   });
 
   it('disconnects when another login method remains', async () => {

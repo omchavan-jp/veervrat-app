@@ -16,7 +16,12 @@ import { SessionGuard } from '../auth/guards/session.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { SessionUser } from '../auth/types/auth.types';
 import { Audited } from '../audit/audited.decorator';
-import { CreateShlokaDto, ReorderQueueDto, ScheduleShlokaDto, UpdateShlokaDto } from './dto/shloka.dto';
+import {
+  CreateShlokaDto,
+  ReorderQueueDto,
+  ScheduleShlokaDto,
+  UpdateShlokaDto,
+} from './dto/shloka.dto';
 
 @Controller('admin/shlokas')
 @UseGuards(SessionGuard)
@@ -25,7 +30,11 @@ export class AdminShlokasController {
 
   // schedule + queue declared before :id so they aren't swallowed as ids.
   @Get('schedule')
-  listSchedule(@CurrentUser() user: SessionUser, @Query('from') from?: string, @Query('to') to?: string) {
+  listSchedule(
+    @CurrentUser() user: SessionUser,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
     return this.shlokas.listSchedule(user, from, to);
   }
 
@@ -42,7 +51,11 @@ export class AdminShlokasController {
   }
 
   @Delete('schedule/:date')
-  @Audited({ action: 'admin.unschedule_shloka', resourceType: 'shloka_schedule', metadata: (c) => ({ date: c.params.date }) })
+  @Audited({
+    action: 'admin.unschedule_shloka',
+    resourceType: 'shloka_schedule',
+    metadata: (c) => ({ date: c.params.date }),
+  })
   unschedule(@CurrentUser() user: SessionUser, @Param('date') date: string) {
     return this.shlokas.unschedule(user, date);
   }
@@ -65,7 +78,11 @@ export class AdminShlokasController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @Audited({ action: 'admin.create_shloka', resourceType: 'shloka', resourceId: (c) => (c.result as { id?: string })?.id })
+  @Audited({
+    action: 'admin.create_shloka',
+    resourceType: 'shloka',
+    resourceId: (c) => (c.result as { id?: string })?.id,
+  })
   create(@CurrentUser() user: SessionUser, @Body() dto: CreateShlokaDto) {
     return this.shlokas.create(user, dto);
   }

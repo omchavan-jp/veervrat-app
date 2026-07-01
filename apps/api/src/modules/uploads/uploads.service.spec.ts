@@ -153,7 +153,11 @@ describe('UploadsService', () => {
       heicConvertMock.mockRejectedValue(new Error('bad heic'));
       await expect(
         service.uploadChatImage(
-          { fileBuffer: Buffer.from('x').toString('base64'), filename: 'b.heic', mimeType: 'image/heic' },
+          {
+            fileBuffer: Buffer.from('x').toString('base64'),
+            filename: 'b.heic',
+            mimeType: 'image/heic',
+          },
           mockUser,
         ),
       ).rejects.toThrow(BadRequestException);

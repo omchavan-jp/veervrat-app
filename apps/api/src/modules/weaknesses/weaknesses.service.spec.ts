@@ -55,7 +55,16 @@ describe('WeaknessesService — getWeakness', () => {
   });
 
   it('returns weakness when found', async () => {
-    const weakness = { id: 'w1', nameEn: 'Alpha', nameMr: null, category: 'A', description: null, subvirtues: [], testHistory: [], draftTestId: null };
+    const weakness = {
+      id: 'w1',
+      nameEn: 'Alpha',
+      nameMr: null,
+      category: 'A',
+      description: null,
+      subvirtues: [],
+      testHistory: [],
+      draftTestId: null,
+    };
     const service = makeService(makeRepo({ findById: vi.fn().mockResolvedValue(weakness) }));
     const result = await service.getWeakness('w1');
     expect(result.id).toBe('w1');

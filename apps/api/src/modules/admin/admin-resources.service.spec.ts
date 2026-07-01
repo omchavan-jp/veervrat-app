@@ -9,13 +9,24 @@ import {
 import type { SessionUser } from '../auth/types/auth.types';
 
 const base: Omit<SessionUser, 'id' | 'roles'> = {
-  email: 'u@x.com', displayName: 'U', username: 'u', language: 'EN', gender: null, dob: null,
-  avatarUrl: null, emailVerifiedAt: new Date(), accountSetupCompletedAt: new Date(), onboardingCompletedAt: new Date(),
+  email: 'u@x.com',
+  displayName: 'U',
+  username: 'u',
+  language: 'EN',
+  gender: null,
+  dob: null,
+  avatarUrl: null,
+  emailVerifiedAt: new Date(),
+  accountSetupCompletedAt: new Date(),
+  onboardingCompletedAt: new Date(),
 };
 const ADMIN: SessionUser = { ...base, id: 'admin-1', roles: [Role.ADMIN] };
 const MOD: SessionUser = { ...base, id: 'mod-1', roles: [Role.MODERATOR] };
 
-const validDoc = { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'hi' }] }] };
+const validDoc = {
+  type: 'doc',
+  content: [{ type: 'paragraph', content: [{ type: 'text', text: 'hi' }] }],
+};
 
 function make(overrides: Record<string, any> = {}) {
   const repo = {
@@ -31,7 +42,9 @@ function make(overrides: Record<string, any> = {}) {
 describe('AdminResourcesService', () => {
   it('NEGATIVE: non-admin cannot create a resource', async () => {
     const { service } = make();
-    await expect(service.create(MOD, { type: ResourceType.LINK, title: 'X' })).rejects.toBeInstanceOf(AccessDeniedException);
+    await expect(
+      service.create(MOD, { type: ResourceType.LINK, title: 'X' }),
+    ).rejects.toBeInstanceOf(AccessDeniedException);
   });
 
   it('admin creates a resource with sanitized description', async () => {
@@ -49,6 +62,8 @@ describe('AdminResourcesService', () => {
 
   it('update 404 when resource missing', async () => {
     const { service } = make({ findResource: vi.fn().mockResolvedValue(null) });
-    await expect(service.update(ADMIN, 'r1', { title: 'Y' })).rejects.toBeInstanceOf(EntityNotFoundException);
+    await expect(service.update(ADMIN, 'r1', { title: 'Y' })).rejects.toBeInstanceOf(
+      EntityNotFoundException,
+    );
   });
 });

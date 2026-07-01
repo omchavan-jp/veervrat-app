@@ -12,7 +12,12 @@ describe('AuditService', () => {
     service.record({ action: 'auth.login_success', actorId: 'u1' });
     await new Promise((r) => setTimeout(r, 0)); // let the fire-and-forget settle
     expect(repo.create).toHaveBeenCalledWith(
-      expect.objectContaining({ action: 'auth.login_success', actorId: 'u1', resourceType: null, metadata: null }),
+      expect.objectContaining({
+        action: 'auth.login_success',
+        actorId: 'u1',
+        resourceType: null,
+        metadata: null,
+      }),
     );
   });
 

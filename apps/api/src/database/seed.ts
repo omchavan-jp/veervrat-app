@@ -14,8 +14,8 @@ async function seed() {
   const adapter = new PrismaPg(process.env.DATABASE_URL!);
   // PrismaClient with driver adapter — cast required because generated client
   // does not expose adapter in its constructor overload in Prisma 7
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const prisma = new PrismaClient({ adapter } as any);
+
+  const prisma = new PrismaClient({ adapter });
   await prisma.$connect();
 
   try {
@@ -75,7 +75,9 @@ async function seed() {
         const weaknessId = weaknessMap.get(row['weakness_name_en']);
         const subvirtueId = subvirtueMap.get(row['subvirtue_name_en']);
         if (!weaknessId || !subvirtueId) {
-          console.warn(`  WARN: skipping weakness_subvirtue link — "${row['weakness_name_en']}" ↔ "${row['subvirtue_name_en']}"`);
+          console.warn(
+            `  WARN: skipping weakness_subvirtue link — "${row['weakness_name_en']}" ↔ "${row['subvirtue_name_en']}"`,
+          );
           wsSkipped++;
           return null;
         }
@@ -117,7 +119,9 @@ async function seed() {
     for (const row of ercMeta) {
       const sid = sentenceMap.get(row['sentence_text_en']);
       if (!sid) {
-        console.warn(`  WARN: sentence not found for ERC meta "${row['sentence_text_en'].slice(0, 50)}"`);
+        console.warn(
+          `  WARN: sentence not found for ERC meta "${row['sentence_text_en'].slice(0, 50)}"`,
+        );
         continue;
       }
       await prisma.sentence.update({
@@ -146,7 +150,9 @@ async function seed() {
       if (!existing) {
         existing = await prisma.exposure.create({
           data: {
-            sentenceId, tier, titleEn: row['title'],
+            sentenceId,
+            tier,
+            titleEn: row['title'],
             descriptionEn: row['description'] || null,
             sortOrder: parseInt(row['sort_order'] || '0', 10),
           },
@@ -155,7 +161,11 @@ async function seed() {
       } else {
         await prisma.exposure.update({
           where: { id: existing.id },
-          data: { tier, descriptionEn: row['description'] || null, sortOrder: parseInt(row['sort_order'] || '0', 10) },
+          data: {
+            tier,
+            descriptionEn: row['description'] || null,
+            sortOrder: parseInt(row['sort_order'] || '0', 10),
+          },
         });
       }
 
@@ -169,7 +179,8 @@ async function seed() {
           ewData.push({ exposureId: existing.id, weaknessId });
         }
       }
-      if (ewData.length) await prisma.exposureWeakness.createMany({ data: ewData, skipDuplicates: true });
+      if (ewData.length)
+        await prisma.exposureWeakness.createMany({ data: ewData, skipDuplicates: true });
     }
 
     // ── Resolutions ───────────────────────────────────────────────────────────
@@ -188,7 +199,8 @@ async function seed() {
       if (!existingR) {
         existingR = await prisma.resolution.create({
           data: {
-            sentenceId, titleEn: row['title'],
+            sentenceId,
+            titleEn: row['title'],
             descriptionEn: row['description'] || null,
             durationWeeks: dur,
             sortOrder: parseInt(row['sort_order'] || '0', 10),
@@ -198,7 +210,11 @@ async function seed() {
       } else {
         await prisma.resolution.update({
           where: { id: existingR.id },
-          data: { descriptionEn: row['description'] || null, durationWeeks: dur, sortOrder: parseInt(row['sort_order'] || '0', 10) },
+          data: {
+            descriptionEn: row['description'] || null,
+            durationWeeks: dur,
+            sortOrder: parseInt(row['sort_order'] || '0', 10),
+          },
         });
       }
 
@@ -212,7 +228,8 @@ async function seed() {
           rwData.push({ resolutionId: existingR.id, weaknessId });
         }
       }
-      if (rwData.length) await prisma.resolutionWeakness.createMany({ data: rwData, skipDuplicates: true });
+      if (rwData.length)
+        await prisma.resolutionWeakness.createMany({ data: rwData, skipDuplicates: true });
     }
 
     // ── Challenges ────────────────────────────────────────────────────────────
@@ -231,7 +248,8 @@ async function seed() {
       if (!existingC) {
         existingC = await prisma.challenge.create({
           data: {
-            sentenceId, titleEn: row['title'],
+            sentenceId,
+            titleEn: row['title'],
             descriptionEn: row['description'] || null,
             durationDays: durC,
           },
@@ -254,7 +272,8 @@ async function seed() {
           cwData.push({ challengeId: existingC.id, weaknessId });
         }
       }
-      if (cwData.length) await prisma.challengeWeakness.createMany({ data: cwData, skipDuplicates: true });
+      if (cwData.length)
+        await prisma.challengeWeakness.createMany({ data: cwData, skipDuplicates: true });
     }
 
     // ── Summary ───────────────────────────────────────────────────────────────
@@ -273,14 +292,20 @@ async function seed() {
     ]);
 
     const labels = [
-      'virtues', 'subvirtues', 'weaknesses', 'weakness_subvirtues',
-      'sentences', 'exposures', 'exposure_weaknesses',
-      'resolutions', 'resolution_weaknesses',
-      'challenges', 'challenge_weaknesses',
+      'virtues',
+      'subvirtues',
+      'weaknesses',
+      'weakness_subvirtues',
+      'sentences',
+      'exposures',
+      'exposure_weaknesses',
+      'resolutions',
+      'resolution_weaknesses',
+      'challenges',
+      'challenge_weaknesses',
     ];
     console.log('\nSeed complete:');
     labels.forEach((label, i) => console.log(`  ${label}: ${counts[i]}`));
-
   } finally {
     await prisma.$disconnect();
   }

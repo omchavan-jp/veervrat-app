@@ -16,7 +16,11 @@ const TOTAL_LIMIT = 12;
 export class EntitySearchService {
   constructor(private readonly repo: EntitySearchRepository) {}
 
-  async search(user: SessionUser, query: string, scope: EntitySearchScope): Promise<EntitySearchHit[]> {
+  async search(
+    user: SessionUser,
+    query: string,
+    scope: EntitySearchScope,
+  ): Promise<EntitySearchHit[]> {
     const q = query.trim();
     if (q.length < 2) return [];
 

@@ -32,7 +32,9 @@ describe('EmailService', () => {
       const service = new EmailService();
       const logSpy = vi.spyOn(service['logger'], 'log').mockImplementation(() => {});
 
-      expect(() => service.sendNotification('to@example.com', 'Subject', '<p>html</p>', 'text')).not.toThrow();
+      expect(() =>
+        service.sendNotification('to@example.com', 'Subject', '<p>html</p>', 'text'),
+      ).not.toThrow();
       expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('[EMAIL DEV]'));
     });
   });
@@ -44,7 +46,7 @@ describe('EmailService', () => {
 
       const mockSend = vi.fn().mockResolvedValue({ id: 'email-id' });
       const service = new EmailService();
-      service['resend'] = { emails: { send: mockSend } } as unknown as typeof service['resend'];
+      service['resend'] = { emails: { send: mockSend } } as unknown as (typeof service)['resend'];
       service['isDev'] = false;
 
       await service.sendTransactional('to@example.com', 'Subject', '<p>html</p>', 'text');

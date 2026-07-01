@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { ModerationRepository } from './moderation.repository';
 import { hasPermission } from '../../common/permissions/has-permission';
-import { AccessDeniedException, EntityNotFoundException } from '../../common/exceptions/app.exceptions';
+import {
+  AccessDeniedException,
+  EntityNotFoundException,
+} from '../../common/exceptions/app.exceptions';
 import type { SessionUser } from '../auth/types/auth.types';
 
 @Injectable()
@@ -22,7 +25,8 @@ export class DisplayContentService {
 
   async setExperienceFeatured(user: SessionUser, id: string, featured: boolean) {
     this.assert(user);
-    if (!(await this.repository.findExperienceLog(id))) throw new EntityNotFoundException('ExperienceLog', id);
+    if (!(await this.repository.findExperienceLog(id)))
+      throw new EntityNotFoundException('ExperienceLog', id);
     return this.repository.setExperienceLogFeatured(id, featured);
   }
 }

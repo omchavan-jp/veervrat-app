@@ -97,13 +97,21 @@ export class UsersController {
   @Patch('me/password')
   @UseGuards(SessionGuard)
   @HttpCode(HttpStatus.OK)
-  @Audited({ action: 'auth.password_change', resourceType: 'user', resourceId: (c) => (c.req.user as SessionUser)?.id })
+  @Audited({
+    action: 'auth.password_change',
+    resourceType: 'user',
+    resourceId: (c) => (c.req.user as SessionUser)?.id,
+  })
   async changePassword(
     @Body() dto: ChangePasswordDto,
     @CurrentUser() user: SessionUser,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { sessionToken } = await this.authService.changePassword(user.id, dto.currentPassword, dto.newPassword);
+    const { sessionToken } = await this.authService.changePassword(
+      user.id,
+      dto.currentPassword,
+      dto.newPassword,
+    );
     res.cookie(this.cookieName, sessionToken, {
       httpOnly: true,
       secure: this.isProduction,
@@ -122,7 +130,12 @@ export class UsersController {
 
   @Delete('me/connected-accounts/:provider')
   @UseGuards(SessionGuard)
-  @Audited({ action: 'auth.disconnect_account', resourceType: 'user', resourceId: (c) => (c.req.user as SessionUser)?.id, metadata: (c) => ({ provider: c.params.provider }) })
+  @Audited({
+    action: 'auth.disconnect_account',
+    resourceType: 'user',
+    resourceId: (c) => (c.req.user as SessionUser)?.id,
+    metadata: (c) => ({ provider: c.params.provider }),
+  })
   async disconnectAccount(@Param('provider') provider: string, @CurrentUser() user: SessionUser) {
     return this.authService.disconnectAccount(user.id, provider.toUpperCase() as AuthProvider);
   }
@@ -130,21 +143,33 @@ export class UsersController {
   @Delete('me')
   @UseGuards(SessionGuard)
   @HttpCode(HttpStatus.OK)
-  @Audited({ action: 'user.self_delete', resourceType: 'user', resourceId: (c) => (c.req.user as SessionUser)?.id })
+  @Audited({
+    action: 'user.self_delete',
+    resourceType: 'user',
+    resourceId: (c) => (c.req.user as SessionUser)?.id,
+  })
   async deleteAccount(
     @Body() dto: DeleteAccountDto,
     @CurrentUser() user: SessionUser,
     @Res({ passthrough: true }) res: Response,
   ) {
     const result = await this.usersService.selfDelete(user.id, dto.currentPassword);
-    res.clearCookie(this.cookieName, { httpOnly: true, secure: this.isProduction, sameSite: 'lax', path: '/' });
+    res.clearCookie(this.cookieName, {
+      httpOnly: true,
+      secure: this.isProduction,
+      sameSite: 'lax',
+      path: '/',
+    });
     return result;
   }
 
   // Declared before :username so it is matched first.
   @Get(':username/experience-logs')
   @UseGuards(OptionalSessionGuard)
-  async getPublicExperiences(@Param('username') username: string, @Query('cursor') cursor?: string) {
+  async getPublicExperiences(
+    @Param('username') username: string,
+    @Query('cursor') cursor?: string,
+  ) {
     return this.usersService.getPublicExperiences(username, cursor);
   }
 

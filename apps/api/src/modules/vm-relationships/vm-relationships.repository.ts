@@ -2,6 +2,18 @@ import { Injectable } from '@nestjs/common';
 import { VmRelationshipState } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 
+// Shapes for getMyVms — the VM user summary selected in both queries, and the flattened
+// result returned to callers (chat gateway, my-vratmitras page).
+type VmUserSummary = {
+  id: string;
+  displayName: string;
+  username: string;
+  avatarUrl: string | null;
+};
+type VmWithUser = { vm: VmUserSummary };
+type JourneyVmWithUser = { vm: VmUserSummary; journey: { id: string } };
+export type MyVm = VmUserSummary & { scope: 'GLOBAL' | 'JOURNEY'; assignedJourneys: string[] };
+
 export type VmRelationshipRecord = {
   id: string;
   vratarthiId: string;
@@ -147,7 +159,12 @@ export class VmRelationshipsRepository {
   // (erc.approve_closure / journey.complete are "assigned journey VM" in spec/05).
   async getVmAssignedJourneys(vmId: string): Promise<{ journeyId: string; vratarthiId: string }[]> {
     const rows = await this.prisma.journeyVmAssignment.findMany({
-      where: { vmId, state: VmRelationshipState.ACTIVE, endedAt: null, journey: { deletedAt: null } },
+      where: {
+        vmId,
+        state: VmRelationshipState.ACTIVE,
+        endedAt: null,
+        journey: { deletedAt: null },
+      },
       select: { journeyId: true, journey: { select: { vratarthiId: true } } },
     });
     return rows.map((r) => ({ journeyId: r.journeyId, vratarthiId: r.journey.vratarthiId }));
@@ -196,9 +213,9 @@ export class VmRelationshipsRepository {
     return journeyCount > 0;
   }
 
-  async getMyVms(vratarthiId: string, scope?: 'GLOBAL' | 'JOURNEY') {
-    let globalVm = null;
-    let journeyVms: any[] = [];
+  async getMyVms(vratarthiId: string, scope?: 'GLOBAL' | 'JOURNEY'): Promise<MyVm[]> {
+    let globalVm: VmWithUser | null = null;
+    let journeyVms: JourneyVmWithUser[] = [];
 
     if (!scope || scope === 'GLOBAL') {
       globalVm = await this.prisma.vmRelationship.findFirst({
@@ -248,7 +265,7 @@ export class VmRelationshipsRepository {
       });
     }
 
-    const vms: any[] = [];
+    const vms: MyVm[] = [];
     const vmIds = new Set<string>();
 
     if (globalVm) {

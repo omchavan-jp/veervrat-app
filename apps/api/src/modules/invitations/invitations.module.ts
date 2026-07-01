@@ -10,7 +10,14 @@ import { VmRelationshipsModule } from '../vm-relationships/vm-relationships.modu
 import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [AuthModule, EmailModule, JourneysModule, UsersModule, VmRelationshipsModule, NotificationsModule],
+  imports: [
+    AuthModule,
+    EmailModule,
+    JourneysModule,
+    UsersModule,
+    VmRelationshipsModule,
+    NotificationsModule,
+  ],
   controllers: [InvitationsController],
   providers: [InvitationsService, InvitationsRepository],
   exports: [InvitationsService],

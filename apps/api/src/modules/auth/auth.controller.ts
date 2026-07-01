@@ -50,7 +50,13 @@ export class AuthController {
   @Post('register')
   @Throttle({ default: { ttl: 3600000, limit: 5 } })
   async register(@Body() dto: RegisterDto) {
-    const result = await this.authService.register(dto.email, dto.password, dto.displayName, dto.username, dto.language);
+    const result = await this.authService.register(
+      dto.email,
+      dto.password,
+      dto.displayName,
+      dto.username,
+      dto.language,
+    );
     return {
       ...result.user,
       message: 'Registration successful. Please check your email to verify your account.',
@@ -79,7 +85,11 @@ export class AuthController {
   @Post('logout')
   @UseGuards(SessionGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
-  @Audited({ action: 'auth.logout', resourceType: 'user', resourceId: (ctx) => (ctx.req.user as SessionUser | undefined)?.id ?? null })
+  @Audited({
+    action: 'auth.logout',
+    resourceType: 'user',
+    resourceId: (ctx) => (ctx.req.user as SessionUser | undefined)?.id ?? null,
+  })
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const token = req.cookies?.[this.cookieName] as string | undefined;
     if (token) {
@@ -91,7 +101,10 @@ export class AuthController {
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { ttl: 3600000, limit: 5 } })
-  @Audited({ action: 'auth.password_reset_request', metadata: (ctx) => ({ email: (ctx.body as { email?: string })?.email }) })
+  @Audited({
+    action: 'auth.password_reset_request',
+    metadata: (ctx) => ({ email: (ctx.body as { email?: string })?.email }),
+  })
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     const status = await this.authService.forgotPassword(dto.email);
     return { status };
@@ -122,7 +135,11 @@ export class AuthController {
   @Post('request-email-change')
   @UseGuards(SessionGuard)
   @HttpCode(HttpStatus.OK)
-  @Audited({ action: 'auth.email_change_requested', resourceType: 'user', resourceId: (c) => (c.req.user as SessionUser)?.id })
+  @Audited({
+    action: 'auth.email_change_requested',
+    resourceType: 'user',
+    resourceId: (c) => (c.req.user as SessionUser)?.id,
+  })
   async requestEmailChange(@Body() dto: RequestEmailChangeDto, @CurrentUser() user: SessionUser) {
     await this.authService.requestEmailChange(user.id, dto.newEmail, dto.currentPassword);
     return { message: 'A confirmation link has been sent to the new email address.' };
@@ -194,11 +211,15 @@ export class AuthController {
   @Post('complete-onboarding')
   @UseGuards(SessionGuard)
   @HttpCode(HttpStatus.OK)
-  async completeOnboarding(
-    @Body() dto: CompleteOnboardingDto,
-    @CurrentUser() user: SessionUser,
-  ) {
-    return this.authService.completeOnboarding(user.id, dto.displayName, dto.username, dto.language, dto.gender, dto.dob);
+  async completeOnboarding(@Body() dto: CompleteOnboardingDto, @CurrentUser() user: SessionUser) {
+    return this.authService.completeOnboarding(
+      user.id,
+      dto.displayName,
+      dto.username,
+      dto.language,
+      dto.gender,
+      dto.dob,
+    );
   }
 
   @Post('complete-framework')

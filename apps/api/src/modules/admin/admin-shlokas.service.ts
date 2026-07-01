@@ -8,7 +8,12 @@ import {
   EntityNotFoundException,
   ValidationException,
 } from '../../common/exceptions/app.exceptions';
-import { CreateShlokaDto, ReorderQueueDto, ScheduleShlokaDto, UpdateShlokaDto } from './dto/shloka.dto';
+import {
+  CreateShlokaDto,
+  ReorderQueueDto,
+  ScheduleShlokaDto,
+  UpdateShlokaDto,
+} from './dto/shloka.dto';
 
 @Injectable()
 export class AdminShlokasService {
@@ -71,7 +76,8 @@ export class AdminShlokasService {
 
   async schedule(user: SessionUser, dto: ScheduleShlokaDto) {
     this.assert(user);
-    if (!(await this.repo.findShloka(dto.shlokaId))) throw new EntityNotFoundException('Shloka', dto.shlokaId);
+    if (!(await this.repo.findShloka(dto.shlokaId)))
+      throw new EntityNotFoundException('Shloka', dto.shlokaId);
     return this.repo.upsertSchedule(this.parseDate(dto.date), dto.shlokaId);
   }
 
@@ -103,10 +109,12 @@ export class AdminShlokasService {
   async reorderQueue(user: SessionUser, dto: ReorderQueueDto) {
     this.assert(user);
     const unique = new Set(dto.shlokaIds);
-    if (unique.size !== dto.shlokaIds.length) throw new ValidationException('Queue contains duplicate shlokas');
+    if (unique.size !== dto.shlokaIds.length)
+      throw new ValidationException('Queue contains duplicate shlokas');
     if (dto.shlokaIds.length > 0) {
       const found = await this.repo.countShlokasByIds(dto.shlokaIds);
-      if (found !== dto.shlokaIds.length) throw new ValidationException('Queue references unknown shlokas');
+      if (found !== dto.shlokaIds.length)
+        throw new ValidationException('Queue references unknown shlokas');
     }
     await this.repo.replaceQueue(dto.shlokaIds);
     return this.repo.listQueue();

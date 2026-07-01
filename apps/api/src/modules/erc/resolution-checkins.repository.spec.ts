@@ -29,7 +29,9 @@ function makePrisma(checkins: ReturnType<typeof makeCheckin>[]) {
 }
 
 function makeRepo(prisma: ReturnType<typeof makePrisma>) {
-  const repo = Object.create(ResolutionCheckinsRepository.prototype) as ResolutionCheckinsRepository;
+  const repo = Object.create(
+    ResolutionCheckinsRepository.prototype,
+  ) as ResolutionCheckinsRepository;
   (repo as unknown as Record<string, unknown>)['prisma'] = prisma;
   return repo;
 }
@@ -91,10 +93,7 @@ describe('ResolutionCheckinsRepository — listWithStreak', () => {
   });
 
   it('returns 0 when last entry is missed', async () => {
-    const checkins = [
-      makeCheckin(CheckinStatus.DONE, 1),
-      makeCheckin(CheckinStatus.MISSED, 2),
-    ];
+    const checkins = [makeCheckin(CheckinStatus.DONE, 1), makeCheckin(CheckinStatus.MISSED, 2)];
     const repo = makeRepo(makePrisma(checkins));
     const result = await repo.listWithStreak(RESOLUTION_ID);
     expect(result.streak).toBe(0);
@@ -107,10 +106,7 @@ describe('ResolutionCheckinsRepository — listWithStreak', () => {
   });
 
   it('returns all checkins in the result', async () => {
-    const checkins = [
-      makeCheckin(CheckinStatus.DONE, 1),
-      makeCheckin(CheckinStatus.PARTIAL, 2),
-    ];
+    const checkins = [makeCheckin(CheckinStatus.DONE, 1), makeCheckin(CheckinStatus.PARTIAL, 2)];
     const repo = makeRepo(makePrisma(checkins));
     const result = await repo.listWithStreak(RESOLUTION_ID);
     expect(result.checkins).toHaveLength(2);

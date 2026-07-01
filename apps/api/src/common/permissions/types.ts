@@ -158,7 +158,12 @@ export type PermissionResource =
   | { type: 'platform' }
   | { type: 'journey'; journey: JourneySlim }
   | { type: 'erc'; journey: JourneySlim; erc: ErcSlim }
-  | { type: 'experience_log'; journey: JourneySlim | null; log: ExperienceLogSlim; viewerIsFriend?: boolean }
+  | {
+      type: 'experience_log';
+      journey: JourneySlim | null;
+      log: ExperienceLogSlim;
+      viewerIsFriend?: boolean;
+    }
   | { type: 'blog'; blog: BlogSlim }
   | { type: 'blog_comment'; blog: BlogSlim; comment: BlogCommentSlim }
   | { type: 'test_attempt'; attempt: TestAttemptSlim; journey: JourneySlim | null }

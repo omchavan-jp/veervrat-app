@@ -16,7 +16,9 @@ describe('UsersIndexService', () => {
     const addDocuments = vi.fn().mockResolvedValue({ taskUid: 1 });
     const { service } = makeService({ addDocuments });
     await service.upsert({ id: 'u1', username: 'om', displayName: 'Om', isPublic: true });
-    expect(addDocuments).toHaveBeenCalledWith([{ id: 'u1', username: 'om', displayName: 'Om', isPublic: true }]);
+    expect(addDocuments).toHaveBeenCalledWith([
+      { id: 'u1', username: 'om', displayName: 'Om', isPublic: true },
+    ]);
   });
 
   it('indexed document never contains an email field', async () => {
@@ -46,7 +48,10 @@ describe('UsersIndexService', () => {
     });
     const { service } = makeService({ search });
     const ids = await service.search('om', 'req-1');
-    expect(search).toHaveBeenCalledWith('om', expect.objectContaining({ filter: 'isPublic = true' }));
+    expect(search).toHaveBeenCalledWith(
+      'om',
+      expect.objectContaining({ filter: 'isPublic = true' }),
+    );
     expect(ids).toEqual(['a', 'b']);
   });
 

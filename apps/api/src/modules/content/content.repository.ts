@@ -45,7 +45,9 @@ export class ContentRepository {
   async listShlokas(params: { source?: string; cursor?: string; take?: number }) {
     const take = params.take ?? 24;
     const items = await this.prisma.shloka.findMany({
-      where: params.source ? { sourceCitation: { contains: params.source, mode: 'insensitive' } } : {},
+      where: params.source
+        ? { sourceCitation: { contains: params.source, mode: 'insensitive' } }
+        : {},
       select: SHLOKA_SELECT,
       orderBy: { createdAt: 'asc' },
       take,
@@ -57,7 +59,10 @@ export class ContentRepository {
 
   async findShlokasByIds(ids: string[]) {
     if (ids.length === 0) return [];
-    const rows = await this.prisma.shloka.findMany({ where: { id: { in: ids } }, select: SHLOKA_SELECT });
+    const rows = await this.prisma.shloka.findMany({
+      where: { id: { in: ids } },
+      select: SHLOKA_SELECT,
+    });
     const byId = new Map(rows.map((r) => [r.id, r]));
     return ids.map((id) => byId.get(id)).filter((s): s is NonNullable<typeof s> => !!s);
   }
@@ -104,7 +109,15 @@ export class ContentRepository {
     const take = params.take ?? 24;
     const items = await this.prisma.resource.findMany({
       where: params.type ? { type: params.type } : {},
-      select: { id: true, type: true, url: true, thumbnailUrl: true, title: true, oneLiner: true, looseTags: true },
+      select: {
+        id: true,
+        type: true,
+        url: true,
+        thumbnailUrl: true,
+        title: true,
+        oneLiner: true,
+        looseTags: true,
+      },
       orderBy: { createdAt: 'desc' },
       take,
       ...(params.cursor ? { skip: 1, cursor: { id: params.cursor } } : {}),
@@ -117,8 +130,15 @@ export class ContentRepository {
     const resource = await this.prisma.resource.findUnique({
       where: { id },
       select: {
-        id: true, type: true, url: true, filePath: true, thumbnailUrl: true,
-        title: true, oneLiner: true, description: true, looseTags: true,
+        id: true,
+        type: true,
+        url: true,
+        filePath: true,
+        thumbnailUrl: true,
+        title: true,
+        oneLiner: true,
+        description: true,
+        looseTags: true,
         formalTags: { select: { entityType: true, entityId: true } },
       },
     });
@@ -129,15 +149,30 @@ export class ContentRepository {
 
   // ─── Tag resolution ──────────────────────────────────────────────────────────
   // Resolve formal entity tags to display names so the client renders chips directly.
-  private async resolveTags(tags: { entityType: TagEntityType; entityId: string }[]): Promise<ResolvedTag[]> {
+  private async resolveTags(
+    tags: { entityType: TagEntityType; entityId: string }[],
+  ): Promise<ResolvedTag[]> {
     if (tags.length === 0) return [];
-    const byType = <T extends TagEntityType>(t: T) => tags.filter((x) => x.entityType === t).map((x) => x.entityId);
+    const byType = <T extends TagEntityType>(t: T) =>
+      tags.filter((x) => x.entityType === t).map((x) => x.entityId);
 
     const [virtues, subvirtues, weaknesses, sentences] = await Promise.all([
-      this.prisma.virtue.findMany({ where: { id: { in: byType(TagEntityType.VIRTUE) } }, select: { id: true, nameEn: true } }),
-      this.prisma.subvirtue.findMany({ where: { id: { in: byType(TagEntityType.SUBVIRTUE) } }, select: { id: true, nameEn: true } }),
-      this.prisma.weakness.findMany({ where: { id: { in: byType(TagEntityType.WEAKNESS) } }, select: { id: true, nameEn: true } }),
-      this.prisma.sentence.findMany({ where: { id: { in: byType(TagEntityType.SENTENCE) } }, select: { id: true, textEn: true } }),
+      this.prisma.virtue.findMany({
+        where: { id: { in: byType(TagEntityType.VIRTUE) } },
+        select: { id: true, nameEn: true },
+      }),
+      this.prisma.subvirtue.findMany({
+        where: { id: { in: byType(TagEntityType.SUBVIRTUE) } },
+        select: { id: true, nameEn: true },
+      }),
+      this.prisma.weakness.findMany({
+        where: { id: { in: byType(TagEntityType.WEAKNESS) } },
+        select: { id: true, nameEn: true },
+      }),
+      this.prisma.sentence.findMany({
+        where: { id: { in: byType(TagEntityType.SENTENCE) } },
+        select: { id: true, textEn: true },
+      }),
     ]);
     const names = new Map<string, string>();
     virtues.forEach((v) => names.set(v.id, v.nameEn));
@@ -145,6 +180,10 @@ export class ContentRepository {
     weaknesses.forEach((v) => names.set(v.id, v.nameEn));
     sentences.forEach((v) => names.set(v.id, v.textEn));
 
-    return tags.map((t) => ({ entityType: t.entityType, entityId: t.entityId, name: names.get(t.entityId) ?? null }));
+    return tags.map((t) => ({
+      entityType: t.entityType,
+      entityId: t.entityId,
+      name: names.get(t.entityId) ?? null,
+    }));
   }
 }

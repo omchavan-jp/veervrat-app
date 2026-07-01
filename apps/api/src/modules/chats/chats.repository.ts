@@ -7,12 +7,7 @@ import type { TiptapDoc } from '../../common/tiptap/sanitize';
 export class ChatsRepository {
   constructor(private prisma: PrismaService) {}
 
-  async createMessage(
-    roomId: string,
-    senderId: string,
-    content: TiptapDoc,
-    journeyId?: string,
-  ) {
+  async createMessage(roomId: string, senderId: string, content: TiptapDoc, journeyId?: string) {
     return this.prisma.chatMessage.create({
       data: {
         roomId,
@@ -42,11 +37,7 @@ export class ChatsRepository {
     return (lastMessage?.seqNo ?? 0) + 1;
   }
 
-  async getMessagesByRoomAfterSeqNo(
-    roomId: string,
-    afterSeqNo: number,
-    limit: number = 50,
-  ) {
+  async getMessagesByRoomAfterSeqNo(roomId: string, afterSeqNo: number, limit: number = 50) {
     return this.prisma.chatMessage.findMany({
       where: {
         roomId,

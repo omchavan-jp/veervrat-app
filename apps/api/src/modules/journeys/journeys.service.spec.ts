@@ -70,11 +70,25 @@ const makeJourneyDetail = (state: JourneyState = JourneyState.ACTIVE) => ({
   dormantSince: null,
   createdAt: new Date(),
   updatedAt: new Date(),
-  sentence: { id: SENTENCE_ID, textEn: 'Test sentence', textMr: null, subvirtue: { id: 'sv-1', nameEn: 'SV', nameMr: null, virtue: { id: 'v-1', nameEn: 'Virtue', nameMr: null } } },
+  sentence: {
+    id: SENTENCE_ID,
+    textEn: 'Test sentence',
+    textMr: null,
+    subvirtue: {
+      id: 'sv-1',
+      nameEn: 'SV',
+      nameMr: null,
+      virtue: { id: 'v-1', nameEn: 'Virtue', nameMr: null },
+    },
+  },
   weaknesses: [],
   vmAssignments: [],
   globalVmRelationship: null,
-  ercCounts: { exposures: { total: 0, active: 0, approved: 0 }, resolutions: { total: 0, active: 0, approved: 0 }, challenges: { total: 0, active: 0, approved: 0 } },
+  ercCounts: {
+    exposures: { total: 0, active: 0, approved: 0 },
+    resolutions: { total: 0, active: 0, approved: 0 },
+    challenges: { total: 0, active: 0, approved: 0 },
+  },
 });
 
 function makeRepo(overrides: Record<string, unknown> = {}) {
@@ -85,8 +99,14 @@ function makeRepo(overrides: Record<string, unknown> = {}) {
     findById: vi.fn().mockResolvedValue(makeJourneyDetail()),
     updateState: vi.fn().mockResolvedValue({ id: JOURNEY_ID, state: JourneyState.PAUSED }),
     updateTitle: vi.fn().mockResolvedValue({ id: JOURNEY_ID, title: 'New Title' }),
-    setCompleted: vi.fn().mockResolvedValue({ id: JOURNEY_ID, state: JourneyState.COMPLETED, completedAt: new Date() }),
-    markCompletionSubmitted: vi.fn().mockResolvedValue({ id: JOURNEY_ID, completionSubmittedAt: new Date() }),
+    setCompleted: vi.fn().mockResolvedValue({
+      id: JOURNEY_ID,
+      state: JourneyState.COMPLETED,
+      completedAt: new Date(),
+    }),
+    markCompletionSubmitted: vi
+      .fn()
+      .mockResolvedValue({ id: JOURNEY_ID, completionSubmittedAt: new Date() }),
     buildJourneySlim: vi.fn().mockReturnValue(ACTIVE_JOURNEY_SLIM),
     getActivity: vi.fn().mockResolvedValue([]),
     ...overrides,
@@ -97,18 +117,28 @@ function makeNotificationsRepo() {
   return { create: vi.fn().mockResolvedValue({}) };
 }
 
-function makeService(repo: ReturnType<typeof makeRepo>, notifRepo: ReturnType<typeof makeNotificationsRepo> = makeNotificationsRepo()) {
+function makeService(
+  repo: ReturnType<typeof makeRepo>,
+  notifRepo: ReturnType<typeof makeNotificationsRepo> = makeNotificationsRepo(),
+) {
   const service = Object.create(JourneysService.prototype) as JourneysService;
   const s = service as unknown as Record<string, unknown>;
   s['journeysRepository'] = repo;
   s['notificationsRepository'] = notifRepo;
-  s['prisma'] = { sentence: { findUnique: vi.fn().mockResolvedValue({ textEn: 'Test sentence' }) } };
+  s['prisma'] = {
+    sentence: { findUnique: vi.fn().mockResolvedValue({ textEn: 'Test sentence' }) },
+  };
   return service;
 }
 
-function makeServiceWithVm(notifRepo: ReturnType<typeof makeNotificationsRepo> = makeNotificationsRepo()) {
+function makeServiceWithVm(
+  notifRepo: ReturnType<typeof makeNotificationsRepo> = makeNotificationsRepo(),
+) {
   const repo = makeRepo({
-    findById: vi.fn().mockResolvedValue({ ...makeJourneyDetail(), vmAssignments: JOURNEY_SLIM_WITH_VM.vmAssignments }),
+    findById: vi.fn().mockResolvedValue({
+      ...makeJourneyDetail(),
+      vmAssignments: JOURNEY_SLIM_WITH_VM.vmAssignments,
+    }),
     buildJourneySlim: vi.fn().mockReturnValue(JOURNEY_SLIM_WITH_VM),
   });
   return { service: makeService(repo, notifRepo), repo, notifRepo };
@@ -120,26 +150,33 @@ describe('JourneysService — createJourney', () => {
   it('AUTH MATRIX POSITIVE: VA can create a journey', async () => {
     const repo = makeRepo();
     const service = makeService(repo);
-    const result = await service.createJourney(VA_USER, { sentenceId: SENTENCE_ID, weaknessId: WEAKNESS_ID });
+    const result = await service.createJourney(VA_USER, {
+      sentenceId: SENTENCE_ID,
+      weaknessId: WEAKNESS_ID,
+    });
     expect(repo.create).toHaveBeenCalled();
     expect(result.id).toBe(JOURNEY_ID);
   });
 
   it('NEGATIVE: throws JourneyConflictException when active journey exists for same sentence', async () => {
     const repo = makeRepo({
-      findActiveForSentence: vi.fn().mockResolvedValue({ id: 'existing-1', state: JourneyState.ACTIVE }),
+      findActiveForSentence: vi
+        .fn()
+        .mockResolvedValue({ id: 'existing-1', state: JourneyState.ACTIVE }),
     });
     const service = makeService(repo);
-    await expect(service.createJourney(VA_USER, { sentenceId: SENTENCE_ID, weaknessId: WEAKNESS_ID }))
-      .rejects.toThrow(JourneyConflictException);
+    await expect(
+      service.createJourney(VA_USER, { sentenceId: SENTENCE_ID, weaknessId: WEAKNESS_ID }),
+    ).rejects.toThrow(JourneyConflictException);
     expect(repo.create).not.toHaveBeenCalled();
   });
 
   it('POSITIVE: allows create when only completed journey exists for same sentence', async () => {
     const repo = makeRepo({ findActiveForSentence: vi.fn().mockResolvedValue(null) });
     const service = makeService(repo);
-    await expect(service.createJourney(VA_USER, { sentenceId: SENTENCE_ID, weaknessId: WEAKNESS_ID }))
-      .resolves.not.toThrow();
+    await expect(
+      service.createJourney(VA_USER, { sentenceId: SENTENCE_ID, weaknessId: WEAKNESS_ID }),
+    ).resolves.not.toThrow();
     expect(repo.create).toHaveBeenCalled();
   });
 
@@ -160,8 +197,9 @@ describe('JourneysService — createJourney', () => {
       create: vi.fn().mockRejectedValue(p2002),
     });
     const service = makeService(repo);
-    await expect(service.createJourney(VA_USER, { sentenceId: SENTENCE_ID, weaknessId: WEAKNESS_ID }))
-      .rejects.toThrow(JourneyConflictException);
+    await expect(
+      service.createJourney(VA_USER, { sentenceId: SENTENCE_ID, weaknessId: WEAKNESS_ID }),
+    ).rejects.toThrow(JourneyConflictException);
     expect(findActiveForSentence).toHaveBeenCalledTimes(2);
   });
 
@@ -169,8 +207,9 @@ describe('JourneysService — createJourney', () => {
     const boom = new Error('db down');
     const repo = makeRepo({ create: vi.fn().mockRejectedValue(boom) });
     const service = makeService(repo);
-    await expect(service.createJourney(VA_USER, { sentenceId: SENTENCE_ID, weaknessId: WEAKNESS_ID }))
-      .rejects.toThrow('db down');
+    await expect(
+      service.createJourney(VA_USER, { sentenceId: SENTENCE_ID, weaknessId: WEAKNESS_ID }),
+    ).rejects.toThrow('db down');
   });
 });
 
@@ -185,24 +224,30 @@ describe('JourneysService — updateState', () => {
   });
 
   it('POSITIVE: PAUSED → ACTIVE succeeds', async () => {
-    const repo = makeRepo({ findById: vi.fn().mockResolvedValue(makeJourneyDetail(JourneyState.PAUSED)) });
+    const repo = makeRepo({
+      findById: vi.fn().mockResolvedValue(makeJourneyDetail(JourneyState.PAUSED)),
+    });
     const service = makeService(repo);
     await service.updateState(VA_USER, JOURNEY_ID, 'resume');
     expect(repo.updateState).toHaveBeenCalledWith(JOURNEY_ID, JourneyState.ACTIVE);
   });
 
   it('NEGATIVE: PAUSED → PAUSED throws InvalidStateTransition', async () => {
-    const repo = makeRepo({ findById: vi.fn().mockResolvedValue(makeJourneyDetail(JourneyState.PAUSED)) });
+    const repo = makeRepo({
+      findById: vi.fn().mockResolvedValue(makeJourneyDetail(JourneyState.PAUSED)),
+    });
     const service = makeService(repo);
-    await expect(service.updateState(VA_USER, JOURNEY_ID, 'pause'))
-      .rejects.toThrow(InvalidStateTransitionException);
+    await expect(service.updateState(VA_USER, JOURNEY_ID, 'pause')).rejects.toThrow(
+      InvalidStateTransitionException,
+    );
   });
 
   it('NEGATIVE: ACTIVE → ACTIVE throws InvalidStateTransition', async () => {
     const repo = makeRepo();
     const service = makeService(repo);
-    await expect(service.updateState(VA_USER, JOURNEY_ID, 'resume'))
-      .rejects.toThrow(InvalidStateTransitionException);
+    await expect(service.updateState(VA_USER, JOURNEY_ID, 'resume')).rejects.toThrow(
+      InvalidStateTransitionException,
+    );
   });
 
   it('NEGATIVE: throws AccessDeniedException when user does not own journey', async () => {
@@ -210,8 +255,9 @@ describe('JourneysService — updateState', () => {
       buildJourneySlim: vi.fn().mockReturnValue({ ...ACTIVE_JOURNEY_SLIM, vratarthiId: 'va-1' }),
     });
     const service = makeService(repo);
-    await expect(service.updateState(OTHER_USER, JOURNEY_ID, 'pause'))
-      .rejects.toThrow(AccessDeniedException);
+    await expect(service.updateState(OTHER_USER, JOURNEY_ID, 'pause')).rejects.toThrow(
+      AccessDeniedException,
+    );
   });
 });
 
@@ -230,15 +276,22 @@ describe('JourneysService — getJourney', () => {
       buildJourneySlim: vi.fn().mockReturnValue({ ...ACTIVE_JOURNEY_SLIM, vratarthiId: 'va-1' }),
     });
     const service = makeService(repo);
-    await expect(service.getJourney(OTHER_USER, JOURNEY_ID))
-      .rejects.toThrow(AccessDeniedException);
+    await expect(service.getJourney(OTHER_USER, JOURNEY_ID)).rejects.toThrow(AccessDeniedException);
   });
 });
 
 describe('JourneysService — getActivity', () => {
   it('POSITIVE: VA gets activity feed for own journey', async () => {
     const feed = [
-      { id: 'exposure:e1:erc_approved', type: 'erc_approved', at: '2026-06-14T00:00:00.000Z', ercType: 'exposure', itemId: 'e1', titleEn: 'X', titleMr: null },
+      {
+        id: 'exposure:e1:erc_approved',
+        type: 'erc_approved',
+        at: '2026-06-14T00:00:00.000Z',
+        ercType: 'exposure',
+        itemId: 'e1',
+        titleEn: 'X',
+        titleMr: null,
+      },
     ];
     const repo = makeRepo({ getActivity: vi.fn().mockResolvedValue(feed) });
     const service = makeService(repo);
@@ -252,7 +305,9 @@ describe('JourneysService — getActivity', () => {
       buildJourneySlim: vi.fn().mockReturnValue({ ...ACTIVE_JOURNEY_SLIM, vratarthiId: 'va-1' }),
     });
     const service = makeService(repo);
-    await expect(service.getActivity(OTHER_USER, JOURNEY_ID)).rejects.toThrow(AccessDeniedException);
+    await expect(service.getActivity(OTHER_USER, JOURNEY_ID)).rejects.toThrow(
+      AccessDeniedException,
+    );
     expect(repo.getActivity).not.toHaveBeenCalled();
   });
 });
@@ -277,33 +332,47 @@ describe('JourneysService — submitCompletion', () => {
     const result = await service.submitCompletion(VA_USER, JOURNEY_ID);
     expect((result as { status: string }).status).toBe('pending_vm_approval');
     expect(repo.markCompletionSubmitted).toHaveBeenCalledWith(JOURNEY_ID);
-    expect(notifRepo.create).toHaveBeenCalledWith(VM_USER.id, VA_USER.id, 'JOURNEY_COMPLETION_SUBMITTED', 'journey', JOURNEY_ID);
+    expect(notifRepo.create).toHaveBeenCalledWith(
+      VM_USER.id,
+      VA_USER.id,
+      'JOURNEY_COMPLETION_SUBMITTED',
+      'journey',
+      JOURNEY_ID,
+    );
   });
 
   it('AUTH MATRIX NEGATIVE: VM cannot call submitCompletion → 403', async () => {
     const service = makeService(makeRepo());
-    await expect(service.submitCompletion(VM_USER, JOURNEY_ID))
-      .rejects.toThrow(AccessDeniedException);
+    await expect(service.submitCompletion(VM_USER, JOURNEY_ID)).rejects.toThrow(
+      AccessDeniedException,
+    );
   });
 
   it('AUTH MATRIX NEGATIVE: VA who does not own the journey → 403', async () => {
     const service = makeService(makeRepo());
-    await expect(service.submitCompletion(OTHER_USER, JOURNEY_ID))
-      .rejects.toThrow(AccessDeniedException);
+    await expect(service.submitCompletion(OTHER_USER, JOURNEY_ID)).rejects.toThrow(
+      AccessDeniedException,
+    );
   });
 
   it('NEGATIVE: already COMPLETED journey → 409 InvalidStateTransitionException', async () => {
-    const repo = makeRepo({ findById: vi.fn().mockResolvedValue(makeJourneyDetail(JourneyState.COMPLETED)) });
+    const repo = makeRepo({
+      findById: vi.fn().mockResolvedValue(makeJourneyDetail(JourneyState.COMPLETED)),
+    });
     const service = makeService(repo);
-    await expect(service.submitCompletion(VA_USER, JOURNEY_ID))
-      .rejects.toThrow(InvalidStateTransitionException);
+    await expect(service.submitCompletion(VA_USER, JOURNEY_ID)).rejects.toThrow(
+      InvalidStateTransitionException,
+    );
   });
 
   it('NEGATIVE: PAUSED journey cannot be submitted for completion → 409', async () => {
-    const repo = makeRepo({ findById: vi.fn().mockResolvedValue(makeJourneyDetail(JourneyState.PAUSED)) });
+    const repo = makeRepo({
+      findById: vi.fn().mockResolvedValue(makeJourneyDetail(JourneyState.PAUSED)),
+    });
     const service = makeService(repo);
-    await expect(service.submitCompletion(VA_USER, JOURNEY_ID))
-      .rejects.toThrow(InvalidStateTransitionException);
+    await expect(service.submitCompletion(VA_USER, JOURNEY_ID)).rejects.toThrow(
+      InvalidStateTransitionException,
+    );
   });
 });
 
@@ -316,27 +385,39 @@ describe('JourneysService — approveCompletion', () => {
     const result = await service.approveCompletion(VM_USER, JOURNEY_ID);
     expect(repo.setCompleted).toHaveBeenCalledWith(JOURNEY_ID);
     expect((result as { state: JourneyState }).state).toBe(JourneyState.COMPLETED);
-    expect(notifRepo.create).toHaveBeenCalledWith(VA_USER.id, VM_USER.id, 'JOURNEY_COMPLETION_APPROVED', 'journey', JOURNEY_ID);
+    expect(notifRepo.create).toHaveBeenCalledWith(
+      VA_USER.id,
+      VM_USER.id,
+      'JOURNEY_COMPLETION_APPROVED',
+      'journey',
+      JOURNEY_ID,
+    );
   });
 
   it('AUTH MATRIX NEGATIVE: VA cannot call approveCompletion → 403', async () => {
     const { service } = makeServiceWithVm();
-    await expect(service.approveCompletion(VA_USER, JOURNEY_ID))
-      .rejects.toThrow(AccessDeniedException);
+    await expect(service.approveCompletion(VA_USER, JOURNEY_ID)).rejects.toThrow(
+      AccessDeniedException,
+    );
   });
 
   it('AUTH MATRIX NEGATIVE: non-assigned VM cannot approve → 403', async () => {
     const { service } = makeServiceWithVm();
     const OTHER_VM = { ...VM_USER, id: 'other-vm-1' };
-    await expect(service.approveCompletion(OTHER_VM, JOURNEY_ID))
-      .rejects.toThrow(AccessDeniedException);
+    await expect(service.approveCompletion(OTHER_VM, JOURNEY_ID)).rejects.toThrow(
+      AccessDeniedException,
+    );
   });
 
   it('NEGATIVE: already COMPLETED journey → 409 InvalidStateTransitionException', async () => {
     const notifRepo = makeNotificationsRepo();
     const { service, repo } = makeServiceWithVm(notifRepo);
-    (repo.findById as ReturnType<typeof vi.fn>).mockResolvedValue({ ...makeJourneyDetail(JourneyState.COMPLETED), vmAssignments: JOURNEY_SLIM_WITH_VM.vmAssignments });
-    await expect(service.approveCompletion(VM_USER, JOURNEY_ID))
-      .rejects.toThrow(InvalidStateTransitionException);
+    (repo.findById as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ...makeJourneyDetail(JourneyState.COMPLETED),
+      vmAssignments: JOURNEY_SLIM_WITH_VM.vmAssignments,
+    });
+    await expect(service.approveCompletion(VM_USER, JOURNEY_ID)).rejects.toThrow(
+      InvalidStateTransitionException,
+    );
   });
 });

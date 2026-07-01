@@ -89,15 +89,29 @@ export class DashboardRepository {
 
     const [testsTaken, distinctWeaknesses] = testData;
 
-    const journeysActive = journeyData.filter((j) => ACTIVE_JOURNEY_STATES.includes(j.state as (typeof ACTIVE_JOURNEY_STATES)[number])).length;
+    const journeysActive = journeyData.filter((j) =>
+      ACTIVE_JOURNEY_STATES.includes(j.state as (typeof ACTIVE_JOURNEY_STATES)[number]),
+    ).length;
     const journeysCompleted = journeyData.filter((j) => j.state === JourneyState.COMPLETED).length;
 
-    const exposuresActive = journeyData.flatMap((j) => j.exposures).filter((e) => e.status === ErcStatus.IN_PROGRESS).length;
-    const exposuresCompleted = journeyData.flatMap((j) => j.exposures).filter((e) => e.status === ErcStatus.APPROVED).length;
-    const resolutionsActive = journeyData.flatMap((j) => j.resolutions).filter((r) => r.status === ErcStatus.IN_PROGRESS).length;
-    const resolutionsCompleted = journeyData.flatMap((j) => j.resolutions).filter((r) => r.status === ErcStatus.APPROVED).length;
-    const challengesActive = journeyData.flatMap((j) => j.challenges).filter((c) => c.status === ErcStatus.IN_PROGRESS).length;
-    const challengesCompleted = journeyData.flatMap((j) => j.challenges).filter((c) => c.status === ErcStatus.APPROVED).length;
+    const exposuresActive = journeyData
+      .flatMap((j) => j.exposures)
+      .filter((e) => e.status === ErcStatus.IN_PROGRESS).length;
+    const exposuresCompleted = journeyData
+      .flatMap((j) => j.exposures)
+      .filter((e) => e.status === ErcStatus.APPROVED).length;
+    const resolutionsActive = journeyData
+      .flatMap((j) => j.resolutions)
+      .filter((r) => r.status === ErcStatus.IN_PROGRESS).length;
+    const resolutionsCompleted = journeyData
+      .flatMap((j) => j.resolutions)
+      .filter((r) => r.status === ErcStatus.APPROVED).length;
+    const challengesActive = journeyData
+      .flatMap((j) => j.challenges)
+      .filter((c) => c.status === ErcStatus.IN_PROGRESS).length;
+    const challengesCompleted = journeyData
+      .flatMap((j) => j.challenges)
+      .filter((c) => c.status === ErcStatus.APPROVED).length;
 
     const subvirtueIds = new Set(virtueData.map((j) => j.sentence.subvirtue.id));
     const virtueIds = new Set(virtueData.map((j) => j.sentence.subvirtue.virtue.id));
@@ -125,7 +139,13 @@ export class DashboardRepository {
     if (weaknesses.length === 0) return [];
 
     // For each weakness, get the most recent submitted attempt with low-score answers (sentenceId + score only)
-    const rawAnswers: { sentenceId: string; score: number; weaknessId: string; weaknessNameEn: string; weaknessNameMr: string | null }[] = [];
+    const rawAnswers: {
+      sentenceId: string;
+      score: number;
+      weaknessId: string;
+      weaknessNameEn: string;
+      weaknessNameMr: string | null;
+    }[] = [];
 
     await Promise.all(
       weaknesses.map(async ({ weaknessId }) => {
@@ -158,7 +178,16 @@ export class DashboardRepository {
     if (rawAnswers.length === 0) return [];
 
     // Deduplicate by sentenceId — keep lowest score
-    const byId = new Map<string, { sentenceId: string; score: number; weaknessId: string; weaknessNameEn: string; weaknessNameMr: string | null }>();
+    const byId = new Map<
+      string,
+      {
+        sentenceId: string;
+        score: number;
+        weaknessId: string;
+        weaknessNameEn: string;
+        weaknessNameMr: string | null;
+      }
+    >();
     for (const a of rawAnswers) {
       const existing = byId.get(a.sentenceId);
       if (!existing || a.score < existing.score) {

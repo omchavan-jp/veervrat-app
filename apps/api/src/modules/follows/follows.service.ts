@@ -4,7 +4,10 @@ import { FollowsRepository } from './follows.repository';
 import { UsersService } from '../users/users.service';
 import { NotificationsRepository } from '../notifications/notifications.repository';
 import { hasPermission } from '../../common/permissions/has-permission';
-import { AccessDeniedException, EntityNotFoundException } from '../../common/exceptions/app.exceptions';
+import {
+  AccessDeniedException,
+  EntityNotFoundException,
+} from '../../common/exceptions/app.exceptions';
 import type { SessionUser } from '../auth/types/auth.types';
 
 @Injectable()

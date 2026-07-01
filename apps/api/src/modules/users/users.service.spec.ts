@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { UsersService } from './users.service';
 import {
   EntityNotFoundException,
@@ -34,13 +34,15 @@ const makeUser = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
-function makeRepo(overrides: Partial<{
-  findById: () => Promise<unknown>;
-  findByUsername: () => Promise<unknown>;
-  updateProfile: () => Promise<unknown>;
-  updateVisibility: () => Promise<unknown>;
-  isUsernameTaken: () => Promise<boolean>;
-}> = {}) {
+function makeRepo(
+  overrides: Partial<{
+    findById: () => Promise<unknown>;
+    findByUsername: () => Promise<unknown>;
+    updateProfile: () => Promise<unknown>;
+    updateVisibility: () => Promise<unknown>;
+    isUsernameTaken: () => Promise<boolean>;
+  }> = {},
+) {
   return {
     findById: vi.fn().mockResolvedValue(makeUser()),
     findByUsername: vi.fn().mockResolvedValue(makeUser()),
@@ -60,10 +62,18 @@ function makeFollows() {
 }
 
 function makeIndex() {
-  return { upsert: vi.fn().mockResolvedValue(undefined), remove: vi.fn(), search: vi.fn().mockResolvedValue([]) };
+  return {
+    upsert: vi.fn().mockResolvedValue(undefined),
+    remove: vi.fn(),
+    search: vi.fn().mockResolvedValue([]),
+  };
 }
 
-function makeService(repo: ReturnType<typeof makeRepo>, follows = makeFollows(), index = makeIndex()) {
+function makeService(
+  repo: ReturnType<typeof makeRepo>,
+  follows = makeFollows(),
+  index = makeIndex(),
+) {
   const service = Object.create(UsersService.prototype) as UsersService;
   const s = service as unknown as Record<string, unknown>;
   s['usersRepository'] = repo;
@@ -133,9 +143,11 @@ describe('UsersService — getPublicProfile', () => {
 
   it('omits a field entirely when toggled off in profileVisibility', async () => {
     const repo = makeRepo({
-      findByUsername: vi.fn().mockResolvedValue(
-        makeUser({ profileVisibility: { testsTaken: false, exposures: false } }),
-      ),
+      findByUsername: vi
+        .fn()
+        .mockResolvedValue(
+          makeUser({ profileVisibility: { testsTaken: false, exposures: false } }),
+        ),
     });
     const result = await makeService(repo).getPublicProfile('testuser');
     expect('testsTaken' in result).toBe(false);
@@ -148,9 +160,9 @@ describe('UsersService — getPublicProfile', () => {
 
   it('always keeps username + displayName regardless of visibility', async () => {
     const repo = makeRepo({
-      findByUsername: vi.fn().mockResolvedValue(
-        makeUser({ profileVisibility: { avatar: false, memberSince: false } }),
-      ),
+      findByUsername: vi
+        .fn()
+        .mockResolvedValue(makeUser({ profileVisibility: { avatar: false, memberSince: false } })),
     });
     const result = await makeService(repo).getPublicProfile('testuser');
     expect(result.username).toBe('testuser');
@@ -193,9 +205,9 @@ describe('UsersService — updateOwnProfile', () => {
     const repo = makeRepo({ isUsernameTaken: vi.fn().mockResolvedValue(true) });
     const service = makeService(repo);
 
-    await expect(
-      service.updateOwnProfile('user-1', { username: 'taken' }),
-    ).rejects.toThrow(UserUsernameTakenException);
+    await expect(service.updateOwnProfile('user-1', { username: 'taken' })).rejects.toThrow(
+      UserUsernameTakenException,
+    );
   });
 
   it('succeeds when username is own current username (not taken by another)', async () => {
@@ -205,7 +217,10 @@ describe('UsersService — updateOwnProfile', () => {
     await expect(
       service.updateOwnProfile('user-1', { username: 'testuser' }),
     ).resolves.not.toThrow();
-    expect(repo.updateProfile).toHaveBeenCalledWith('user-1', expect.objectContaining({ username: 'testuser' }));
+    expect(repo.updateProfile).toHaveBeenCalledWith(
+      'user-1',
+      expect.objectContaining({ username: 'testuser' }),
+    );
   });
 });
 
@@ -237,13 +252,6 @@ describe('UsersService — checkUsernameAvailable', () => {
 });
 
 describe('UsersService — lastActiveAt field', () => {
-  let service: UsersService;
-
-  beforeEach(() => {
-    const repo = makeRepo();
-    service = makeService(repo);
-  });
-
   it('returns ISO timestamp for lastActiveAt when showLastActive = true', async () => {
     const now = new Date();
     const repo = makeRepo({
@@ -281,7 +289,9 @@ describe('UsersService — searchUsers', () => {
       findManyByIds: vi.fn().mockResolvedValue(opts.many ?? []),
     };
     s['usersIndex'] = { search: vi.fn().mockResolvedValue(opts.indexIds ?? []) };
-    s['followsService'] = { getStatus: vi.fn().mockResolvedValue({ isFollowing: false, followsYou: false }) };
+    s['followsService'] = {
+      getStatus: vi.fn().mockResolvedValue({ isFollowing: false, followsYou: false }),
+    };
     return service;
   }
 
@@ -295,8 +305,26 @@ describe('UsersService — searchUsers', () => {
       byEmail: { id: 'email-hit' },
       indexIds: ['fuzzy-hit'],
       many: [
-        { id: 'email-hit', username: 'om', displayName: 'Om', avatarUrl: null, profilePrivate: false, showLastActive: false, showOnlineIndicator: false, lastActiveAt: null },
-        { id: 'fuzzy-hit', username: 'omkar', displayName: 'Omkar', avatarUrl: null, profilePrivate: false, showLastActive: false, showOnlineIndicator: false, lastActiveAt: null },
+        {
+          id: 'email-hit',
+          username: 'om',
+          displayName: 'Om',
+          avatarUrl: null,
+          profilePrivate: false,
+          showLastActive: false,
+          showOnlineIndicator: false,
+          lastActiveAt: null,
+        },
+        {
+          id: 'fuzzy-hit',
+          username: 'omkar',
+          displayName: 'Omkar',
+          avatarUrl: null,
+          profilePrivate: false,
+          showLastActive: false,
+          showOnlineIndicator: false,
+          lastActiveAt: null,
+        },
       ],
     });
     const res = await svc.searchUsers(REQUESTER, 'om@example.com');
@@ -307,8 +335,26 @@ describe('UsersService — searchUsers', () => {
     const svc = makeSearchService({
       indexIds: ['pub', 'priv'],
       many: [
-        { id: 'pub', username: 'pub', displayName: 'Pub', avatarUrl: null, profilePrivate: false, showLastActive: false, showOnlineIndicator: false, lastActiveAt: null },
-        { id: 'priv', username: 'priv', displayName: 'Priv', avatarUrl: null, profilePrivate: true, showLastActive: false, showOnlineIndicator: false, lastActiveAt: null },
+        {
+          id: 'pub',
+          username: 'pub',
+          displayName: 'Pub',
+          avatarUrl: null,
+          profilePrivate: false,
+          showLastActive: false,
+          showOnlineIndicator: false,
+          lastActiveAt: null,
+        },
+        {
+          id: 'priv',
+          username: 'priv',
+          displayName: 'Priv',
+          avatarUrl: null,
+          profilePrivate: true,
+          showLastActive: false,
+          showOnlineIndicator: false,
+          lastActiveAt: null,
+        },
       ],
     });
     const res = await svc.searchUsers(REQUESTER, 'pu');

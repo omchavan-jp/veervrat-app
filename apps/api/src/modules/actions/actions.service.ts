@@ -72,7 +72,9 @@ export class ActionsService {
     return { ...sections, hasAssignments, counts: this.summarize(sections) };
   }
 
-  private summarize(sections: Record<string, unknown[]>): Record<string, number> & { total: number } {
+  private summarize(
+    sections: Record<string, unknown[]>,
+  ): Record<string, number> & { total: number } {
     const counts: Record<string, number> = {};
     let total = 0;
     for (const [key, value] of Object.entries(sections)) {

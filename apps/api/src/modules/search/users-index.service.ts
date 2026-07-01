@@ -68,7 +68,10 @@ export class UsersIndexService implements OnModuleInit {
         filter: 'isPublic = true',
         limit: limit + 1, // headroom to drop self without shrinking the page
       });
-      return res.hits.map((h) => h.id).filter((id) => id !== requesterId).slice(0, limit);
+      return res.hits
+        .map((h) => h.id)
+        .filter((id) => id !== requesterId)
+        .slice(0, limit);
     } catch (error) {
       this.logger.warn({ msg: 'users search failed', error: errMessage(error) });
       return [];

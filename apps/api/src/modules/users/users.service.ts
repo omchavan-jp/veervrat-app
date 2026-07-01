@@ -4,7 +4,11 @@ import { UsersIndexService } from '../search/users-index.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateVisibilityDto } from './dto/update-visibility.dto';
 import { UpdateSettingsDto } from './dto/update-settings.dto';
-import type { OwnProfileDto, PublicProfileDto, UserSearchResultDto } from './dto/public-profile.dto';
+import type {
+  OwnProfileDto,
+  PublicProfileDto,
+  UserSearchResultDto,
+} from './dto/public-profile.dto';
 import type { SessionUser } from '../auth/types/auth.types';
 import { parseVisibility, isFieldVisible } from './profile-visibility';
 import { parseNotificationPrefs } from './notification-prefs';
@@ -39,12 +43,20 @@ export class UsersService implements OnModuleInit {
       const users = await this.usersRepository.listForIndex();
       await Promise.all(users.map((u) => this.usersIndex.upsert(u)));
     } catch (error) {
-      this.logger.warn({ msg: 'user index seed failed', error: error instanceof Error ? error.message : String(error) });
+      this.logger.warn({
+        msg: 'user index seed failed',
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
   }
 
   // Fire-after-write index sync. Best-effort (the index service swallows failures).
-  syncToIndex(user: { id: string; username: string; displayName: string; profilePrivate: boolean }): void {
+  syncToIndex(user: {
+    id: string;
+    username: string;
+    displayName: string;
+    profilePrivate: boolean;
+  }): void {
     void this.usersIndex.upsert({
       id: user.id,
       username: user.username,
@@ -57,7 +69,11 @@ export class UsersService implements OnModuleInit {
     const user = await this.usersRepository.findById(userId);
     if (!user) throw new EntityNotFoundException('User', userId);
     const counts = await this.followsService.getCounts(userId);
-    return { ...this.toOwnProfileDto(user), followerCount: counts.followers, followingCount: counts.following };
+    return {
+      ...this.toOwnProfileDto(user),
+      followerCount: counts.followers,
+      followingCount: counts.following,
+    };
   }
 
   async updateOwnProfile(userId: string, dto: UpdateProfileDto): Promise<OwnProfileDto> {
@@ -82,10 +98,7 @@ export class UsersService implements OnModuleInit {
     return this.toOwnProfileDto(user);
   }
 
-  async getPublicProfile(
-    username: string,
-    requestingUserId?: string,
-  ): Promise<PublicProfileDto> {
+  async getPublicProfile(username: string, requestingUserId?: string): Promise<PublicProfileDto> {
     const user = await this.usersRepository.findByUsername(username);
 
     if (!user || user.profilePrivate) {
@@ -174,9 +187,13 @@ export class UsersService implements OnModuleInit {
     const users = await this.usersRepository.findManyByIds(ids);
     // Preserve relevance order (exact-email first, then Meili), drop private profiles.
     const byId = new Map(users.map((u) => [u.id, u]));
-    const ordered = ids.map((id) => byId.get(id)).filter((u): u is NonNullable<typeof u> => !!u && !u.profilePrivate);
+    const ordered = ids
+      .map((id) => byId.get(id))
+      .filter((u): u is NonNullable<typeof u> => !!u && !u.profilePrivate);
 
-    const statuses = await Promise.all(ordered.map((u) => this.followsService.getStatus(requester.id, u.id)));
+    const statuses = await Promise.all(
+      ordered.map((u) => this.followsService.getStatus(requester.id, u.id)),
+    );
 
     return ordered.map((u, i) => {
       const result: UserSearchResultDto = {
@@ -201,7 +218,10 @@ export class UsersService implements OnModuleInit {
       showLastActive: dto.showLastActive,
       showOnlineIndicator: dto.showOnlineIndicator,
       profileVisibility: dto.profileVisibility
-        ? { ...parseVisibility(existing.profileVisibility), ...parseVisibility(dto.profileVisibility) }
+        ? {
+            ...parseVisibility(existing.profileVisibility),
+            ...parseVisibility(dto.profileVisibility),
+          }
         : undefined,
     });
 
@@ -220,7 +240,10 @@ export class UsersService implements OnModuleInit {
       showLastActive: dto.showLastActive,
       showOnlineIndicator: dto.showOnlineIndicator,
       notificationPrefs: dto.notificationPrefs
-        ? { ...parseNotificationPrefs(existing.notificationPrefs), ...parseNotificationPrefs(dto.notificationPrefs) }
+        ? {
+            ...parseNotificationPrefs(existing.notificationPrefs),
+            ...parseNotificationPrefs(dto.notificationPrefs),
+          }
         : undefined,
     });
 
@@ -247,7 +270,11 @@ export class UsersService implements OnModuleInit {
     const now = new Date();
     const user = await this.usersRepository.anonymise(
       userId,
-      { displayName: '[Deleted user]', email: `anon-${shortId}@deleted.invalid`, username: `deleted_${shortId}` },
+      {
+        displayName: '[Deleted user]',
+        email: `anon-${shortId}@deleted.invalid`,
+        username: `deleted_${shortId}`,
+      },
       now,
     );
     await this.authService.forceLogout(userId);

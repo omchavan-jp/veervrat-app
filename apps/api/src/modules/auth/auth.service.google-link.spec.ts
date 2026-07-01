@@ -51,7 +51,9 @@ function makeRepo(overrides: Record<string, unknown> = {}) {
     invalidateTokensByUserAndType: vi.fn().mockResolvedValue(undefined),
     createVerificationToken: vi.fn().mockResolvedValue({}),
     findVerificationToken: vi.fn().mockResolvedValue(LINK_TOKEN_ROW),
-    findEmailAccountByUserId: vi.fn().mockResolvedValue({ id: 'acc-1', passwordHash: '$2b$12$hash' }),
+    findEmailAccountByUserId: vi
+      .fn()
+      .mockResolvedValue({ id: 'acc-1', passwordHash: '$2b$12$hash' }),
     addAuthAccount: vi.fn().mockResolvedValue({}),
     markTokenUsed: vi.fn().mockResolvedValue({}),
     createSession: vi.fn().mockResolvedValue({}),
@@ -104,7 +106,10 @@ describe('AuthService — handleGoogleLogin (email conflict)', () => {
 
     await service.handleGoogleLogin(GOOGLE_PROFILE, null, null);
 
-    expect(repo.invalidateTokensByUserAndType).toHaveBeenCalledWith('user-1', VerificationType.GOOGLE_LINK);
+    expect(repo.invalidateTokensByUserAndType).toHaveBeenCalledWith(
+      'user-1',
+      VerificationType.GOOGLE_LINK,
+    );
   });
 });
 
@@ -147,9 +152,9 @@ describe('AuthService — linkGoogleAccount', () => {
     const repo = makeRepo({ findVerificationToken: vi.fn().mockResolvedValue(expired) });
     const service = makeService(repo);
 
-    await expect(service.linkGoogleAccount('validtoken', 'password123', null, null)).rejects.toThrow(
-      TokenExpiredException,
-    );
+    await expect(
+      service.linkGoogleAccount('validtoken', 'password123', null, null),
+    ).rejects.toThrow(TokenExpiredException);
     expect(repo.addAuthAccount).not.toHaveBeenCalled();
     expect(repo.createSession).not.toHaveBeenCalled();
   });
@@ -159,9 +164,9 @@ describe('AuthService — linkGoogleAccount', () => {
     const repo = makeRepo();
     const service = makeService(repo);
 
-    await expect(service.linkGoogleAccount('validtoken', 'wrongpassword', null, null)).rejects.toThrow(
-      InvalidCredentialsException,
-    );
+    await expect(
+      service.linkGoogleAccount('validtoken', 'wrongpassword', null, null),
+    ).rejects.toThrow(InvalidCredentialsException);
     expect(repo.addAuthAccount).not.toHaveBeenCalled();
   });
 
@@ -169,9 +174,9 @@ describe('AuthService — linkGoogleAccount', () => {
     const repo = makeRepo({ findEmailAccountByUserId: vi.fn().mockResolvedValue(null) });
     const service = makeService(repo);
 
-    await expect(service.linkGoogleAccount('validtoken', 'password123', null, null)).rejects.toThrow(
-      InvalidCredentialsException,
-    );
+    await expect(
+      service.linkGoogleAccount('validtoken', 'password123', null, null),
+    ).rejects.toThrow(InvalidCredentialsException);
   });
 
   it('NEGATIVE: throws TokenInvalidException when metadata missing googleId', async () => {
@@ -179,8 +184,8 @@ describe('AuthService — linkGoogleAccount', () => {
     const repo = makeRepo({ findVerificationToken: vi.fn().mockResolvedValue(badToken) });
     const service = makeService(repo);
 
-    await expect(service.linkGoogleAccount('validtoken', 'password123', null, null)).rejects.toThrow(
-      TokenInvalidException,
-    );
+    await expect(
+      service.linkGoogleAccount('validtoken', 'password123', null, null),
+    ).rejects.toThrow(TokenInvalidException);
   });
 });

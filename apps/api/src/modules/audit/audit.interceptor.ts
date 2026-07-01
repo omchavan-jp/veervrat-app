@@ -17,7 +17,7 @@ export class AuditInterceptor implements NestInterceptor {
     private readonly auditService: AuditService,
   ) {}
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
+  intercept(context: ExecutionContext, next: CallHandler<unknown>): Observable<unknown> {
     const options = this.reflector.get<AuditOptions | undefined>(
       AUDIT_METADATA_KEY,
       context.getHandler(),
@@ -52,7 +52,7 @@ export class AuditInterceptor implements NestInterceptor {
           action: options.action,
           resourceType: options.resourceType ?? null,
           resourceId,
-          metadata: options.metadata ? options.metadata(ctx) ?? null : null,
+          metadata: options.metadata ? (options.metadata(ctx) ?? null) : null,
           ipAddress: clientIp(req),
           userAgent: req.headers['user-agent'] ?? null,
         });

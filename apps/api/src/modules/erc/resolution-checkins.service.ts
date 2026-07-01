@@ -40,7 +40,17 @@ export class ResolutionCheckinsService {
   ) {
     const { slim } = await this.resolveJourney(journeyId);
 
-    if (!hasPermission(user, { type: 'erc', journey: slim, erc: { journeyId, createdById: user.id, status: ErcStatus.NOT_STARTED } }, 'erc.select')) {
+    if (
+      !hasPermission(
+        user,
+        {
+          type: 'erc',
+          journey: slim,
+          erc: { journeyId, createdById: user.id, status: ErcStatus.NOT_STARTED },
+        },
+        'erc.select',
+      )
+    ) {
       throw new AccessDeniedException();
     }
 

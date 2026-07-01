@@ -16,9 +16,18 @@ const TEST_ID = 'tid-1';
 
 function makeUser(id: string, roles: Role[] = [Role.VRATARTHI]): SessionUser {
   return {
-    id, email: `${id}@x.com`, displayName: id, username: id,
-    roles, language: 'EN', gender: null, dob: null, avatarUrl: null,
-    emailVerifiedAt: new Date(), accountSetupCompletedAt: new Date(), onboardingCompletedAt: new Date(),
+    id,
+    email: `${id}@x.com`,
+    displayName: id,
+    username: id,
+    roles,
+    language: 'EN',
+    gender: null,
+    dob: null,
+    avatarUrl: null,
+    emailVerifiedAt: new Date(),
+    accountSetupCompletedAt: new Date(),
+    onboardingCompletedAt: new Date(),
   };
 }
 
@@ -27,8 +36,22 @@ const OTHER_USER = makeUser(OTHER_USER_ID);
 const VM_USER = makeUser('vm-1', [Role.VRATMITRA]);
 
 const DRAFT_TEST = { id: TEST_ID, weaknessId: WEAKNESS_ID, isDraft: true };
-const SUBMITTED_TEST = { id: TEST_ID, userId: USER_ID, weaknessId: WEAKNESS_ID, isDraft: false, submittedAt: new Date(), answers: [] };
-const OWNED_DRAFT = { id: TEST_ID, userId: USER_ID, weaknessId: WEAKNESS_ID, isDraft: true, submittedAt: null, answers: [] };
+const SUBMITTED_TEST = {
+  id: TEST_ID,
+  userId: USER_ID,
+  weaknessId: WEAKNESS_ID,
+  isDraft: false,
+  submittedAt: new Date(),
+  answers: [],
+};
+const OWNED_DRAFT = {
+  id: TEST_ID,
+  userId: USER_ID,
+  weaknessId: WEAKNESS_ID,
+  isDraft: true,
+  submittedAt: null,
+  answers: [],
+};
 
 const SENTENCE = (id: string, score: number | null) => ({
   sentenceId: id,
@@ -51,7 +74,12 @@ function makeRepo(overrides: Record<string, unknown> = {}) {
     findById: vi.fn().mockResolvedValue(OWNED_DRAFT),
     countAnswers: vi.fn().mockResolvedValue(3),
     upsertAnswers: vi.fn().mockResolvedValue(undefined),
-    markSubmitted: vi.fn().mockResolvedValue({ id: TEST_ID, weaknessId: WEAKNESS_ID, isDraft: false, submittedAt: new Date() }),
+    markSubmitted: vi.fn().mockResolvedValue({
+      id: TEST_ID,
+      weaknessId: WEAKNESS_ID,
+      isDraft: false,
+      submittedAt: new Date(),
+    }),
     findReportData: vi.fn().mockResolvedValue({
       id: TEST_ID,
       userId: USER_ID,
@@ -60,12 +88,7 @@ function makeRepo(overrides: Record<string, unknown> = {}) {
       weaknessNameMr: null,
       isDraft: false,
       submittedAt: new Date(),
-      sentences: [
-        SENTENCE('s1', 1),
-        SENTENCE('s2', 2),
-        SENTENCE('s3', 3),
-        SENTENCE('s4', null),
-      ],
+      sentences: [SENTENCE('s1', 1), SENTENCE('s2', 2), SENTENCE('s3', 3), SENTENCE('s4', null)],
     }),
     ...overrides,
   };
@@ -126,19 +149,25 @@ describe('TestsService — saveAnswers', () => {
   it('NEGATIVE: throws AccessDeniedException for wrong owner', async () => {
     const repo = makeRepo();
     const service = makeService(repo);
-    await expect(service.saveAnswers(OTHER_USER_ID, TEST_ID, [])).rejects.toThrow(AccessDeniedException);
+    await expect(service.saveAnswers(OTHER_USER_ID, TEST_ID, [])).rejects.toThrow(
+      AccessDeniedException,
+    );
   });
 
   it('NEGATIVE: throws TestAlreadySubmittedException for submitted test', async () => {
     const repo = makeRepo({ findById: vi.fn().mockResolvedValue(SUBMITTED_TEST) });
     const service = makeService(repo);
-    await expect(service.saveAnswers(USER_ID, TEST_ID, [])).rejects.toThrow(TestAlreadySubmittedException);
+    await expect(service.saveAnswers(USER_ID, TEST_ID, [])).rejects.toThrow(
+      TestAlreadySubmittedException,
+    );
   });
 
   it('NEGATIVE: throws EntityNotFoundException for unknown test', async () => {
     const repo = makeRepo({ findById: vi.fn().mockResolvedValue(null) });
     const service = makeService(repo);
-    await expect(service.saveAnswers(USER_ID, TEST_ID, [])).rejects.toThrow(EntityNotFoundException);
+    await expect(service.saveAnswers(USER_ID, TEST_ID, [])).rejects.toThrow(
+      EntityNotFoundException,
+    );
   });
 });
 
@@ -156,7 +185,9 @@ describe('TestsService — submitTest', () => {
   it('NEGATIVE: throws TestAlreadySubmittedException for already-submitted test', async () => {
     const repo = makeRepo({ findById: vi.fn().mockResolvedValue(SUBMITTED_TEST) });
     const service = makeService(repo);
-    await expect(service.submitTest(USER_ID, TEST_ID)).rejects.toThrow(TestAlreadySubmittedException);
+    await expect(service.submitTest(USER_ID, TEST_ID)).rejects.toThrow(
+      TestAlreadySubmittedException,
+    );
   });
 
   it('NEGATIVE: throws AccessDeniedException for wrong owner', async () => {
@@ -190,9 +221,14 @@ describe('TestsService — getReport', () => {
 
   it('NEGATIVE: throws TestNotSubmittedException for draft test', async () => {
     const draftData = {
-      id: TEST_ID, userId: USER_ID, weaknessId: WEAKNESS_ID,
-      weaknessNameEn: 'W', weaknessNameMr: null,
-      isDraft: true, submittedAt: null, sentences: [],
+      id: TEST_ID,
+      userId: USER_ID,
+      weaknessId: WEAKNESS_ID,
+      weaknessNameEn: 'W',
+      weaknessNameMr: null,
+      isDraft: true,
+      submittedAt: null,
+      sentences: [],
     };
     const repo = makeRepo({ findReportData: vi.fn().mockResolvedValue(draftData) });
     const service = makeService(repo);

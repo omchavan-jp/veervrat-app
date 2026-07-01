@@ -31,9 +31,27 @@ describe('DormantJourneysCron', () => {
     expect(repo.markDormant).toHaveBeenCalledWith('j-1', expect.any(Date));
     // VA + 2 VMs = 3 notifications, all JOURNEY_DORMANT, system event (null actor).
     expect(notifications.create).toHaveBeenCalledTimes(3);
-    expect(notifications.create).toHaveBeenCalledWith('va-1', null, NotificationEventType.JOURNEY_DORMANT, 'journey', 'j-1');
-    expect(notifications.create).toHaveBeenCalledWith('vm-1', null, NotificationEventType.JOURNEY_DORMANT, 'journey', 'j-1');
-    expect(notifications.create).toHaveBeenCalledWith('vm-2', null, NotificationEventType.JOURNEY_DORMANT, 'journey', 'j-1');
+    expect(notifications.create).toHaveBeenCalledWith(
+      'va-1',
+      null,
+      NotificationEventType.JOURNEY_DORMANT,
+      'journey',
+      'j-1',
+    );
+    expect(notifications.create).toHaveBeenCalledWith(
+      'vm-1',
+      null,
+      NotificationEventType.JOURNEY_DORMANT,
+      'journey',
+      'j-1',
+    );
+    expect(notifications.create).toHaveBeenCalledWith(
+      'vm-2',
+      null,
+      NotificationEventType.JOURNEY_DORMANT,
+      'journey',
+      'j-1',
+    );
   });
 
   it('queries with a ~30-day cutoff', async () => {
@@ -50,7 +68,13 @@ describe('DormantJourneysCron', () => {
     await cron.detectDormant();
     await flush();
     expect(notifications.create).toHaveBeenCalledTimes(1);
-    expect(notifications.create).toHaveBeenCalledWith('va-2', null, NotificationEventType.JOURNEY_DORMANT, 'journey', 'j-2');
+    expect(notifications.create).toHaveBeenCalledWith(
+      'va-2',
+      null,
+      NotificationEventType.JOURNEY_DORMANT,
+      'journey',
+      'j-2',
+    );
   });
 
   it('does nothing when there are no stale journeys', async () => {

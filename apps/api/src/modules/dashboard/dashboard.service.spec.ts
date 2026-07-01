@@ -58,7 +58,9 @@ function makeService(repo: ReturnType<typeof makeRepo> = makeRepo()) {
 describe('DashboardService', () => {
   describe('getStats', () => {
     it('returns stats from repository for a VA with active journeys', async () => {
-      const { svc, repo } = makeService(makeRepo({ getStats: vi.fn().mockResolvedValue(ACTIVE_STATS) }));
+      const { svc, repo } = makeService(
+        makeRepo({ getStats: vi.fn().mockResolvedValue(ACTIVE_STATS) }),
+      );
       const result = await svc.getStats('va-1');
       expect(result.virtues.count).toBe(2);
       expect(result.subvirtues.count).toBe(3);

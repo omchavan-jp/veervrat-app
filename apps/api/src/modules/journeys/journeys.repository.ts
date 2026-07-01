@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { CheckinStatus, ErcStatus, JourneyState, VmRelationshipState } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
-import type { JourneySlim, JourneyVmAssignmentSlim, VmRelationshipSlim } from '../../common/permissions/types';
+import type {
+  JourneySlim,
+  JourneyVmAssignmentSlim,
+  VmRelationshipSlim,
+} from '../../common/permissions/types';
 
 export type JourneyActivityEventType =
   | 'erc_started'
@@ -75,14 +79,26 @@ export class JourneysRepository {
       where: {
         vratarthiId: userId,
         sentenceId,
-        state: { in: [JourneyState.ACTIVE, JourneyState.PAUSED, JourneyState.DORMANT, JourneyState.NOT_STARTED] },
+        state: {
+          in: [
+            JourneyState.ACTIVE,
+            JourneyState.PAUSED,
+            JourneyState.DORMANT,
+            JourneyState.NOT_STARTED,
+          ],
+        },
         deletedAt: null,
       },
       select: { id: true, state: true },
     });
   }
 
-  async create(params: { vratarthiId: string; sentenceId: string; weaknessId: string; title: string }) {
+  async create(params: {
+    vratarthiId: string;
+    sentenceId: string;
+    weaknessId: string;
+    title: string;
+  }) {
     return this.prisma.journey.create({
       data: {
         vratarthiId: params.vratarthiId,
@@ -159,7 +175,7 @@ export class JourneysRepository {
     return {
       ...journey,
       weaknesses: journey.weaknesses.map((w) => w.weakness),
-      globalVmRelationship: globalVm as VmRelationshipSlim | null,
+      globalVmRelationship: globalVm,
       ercCounts: {
         exposures: countByStatus(expCounts),
         resolutions: countByStatus(resCounts),
@@ -237,7 +253,11 @@ export class JourneysRepository {
       const at = item.approvedAt ?? item.submittedAt ?? item.startedAt;
       if (!at) return;
       const kind =
-        item.approvedAt != null ? 'erc_approved' : item.submittedAt != null ? 'erc_submitted' : 'erc_started';
+        item.approvedAt != null
+          ? 'erc_approved'
+          : item.submittedAt != null
+            ? 'erc_submitted'
+            : 'erc_started';
       events.push({
         id: `${ercType}:${item.id}:${kind}`,
         type: kind,
@@ -269,7 +289,11 @@ export class JourneysRepository {
     sidenotes.forEach((s) => {
       const item = s.journeyExposure ?? s.journeyResolution ?? s.journeyChallenge;
       if (!item) return;
-      const ercType = s.journeyExposure ? 'exposure' : s.journeyResolution ? 'resolution' : 'challenge';
+      const ercType = s.journeyExposure
+        ? 'exposure'
+        : s.journeyResolution
+          ? 'resolution'
+          : 'challenge';
       events.push({
         id: `sidenote:${s.id}`,
         type: 'vm_suggestion',
@@ -303,7 +327,10 @@ export class JourneysRepository {
   async updateState(id: string, state: JourneyState) {
     const timestamps: Record<string, Date | null> = {};
     if (state === JourneyState.PAUSED) timestamps.pausedAt = new Date();
-    if (state === JourneyState.ACTIVE) { timestamps.pausedAt = null; timestamps.dormantSince = null; }
+    if (state === JourneyState.ACTIVE) {
+      timestamps.pausedAt = null;
+      timestamps.dormantSince = null;
+    }
 
     return this.prisma.journey.update({
       where: { id },
@@ -323,9 +350,9 @@ export class JourneysRepository {
   // ACTIVE, non-deleted journeys untouched since `cutoff` (spec/04: dormant after 30 days of
   // no views or updates — `updatedAt` is the available signal). Returns each journey's VA and
   // its active journey-VM ids so the cron can notify both (spec/04 dormant nudge).
-  async findStaleActiveJourneys(cutoff: Date): Promise<
-    { id: string; vratarthiId: string; vmIds: string[] }[]
-  > {
+  async findStaleActiveJourneys(
+    cutoff: Date,
+  ): Promise<{ id: string; vratarthiId: string; vmIds: string[] }[]> {
     const rows = await this.prisma.journey.findMany({
       where: {
         state: JourneyState.ACTIVE,

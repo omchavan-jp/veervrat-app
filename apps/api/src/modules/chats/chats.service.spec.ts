@@ -69,13 +69,23 @@ describe('ChatsService', () => {
   describe('sendMessage', () => {
     it('AUTH MATRIX POSITIVE: sends when participant has a verified relationship', async () => {
       const content = makeDoc('Hello');
-      const message = { id: 'msg-1', roomId: mockRoom, senderId: mockVaUser.id, body: content, seqNo: 1, createdAt: new Date() };
+      const message = {
+        id: 'msg-1',
+        roomId: mockRoom,
+        senderId: mockVaUser.id,
+        body: content,
+        seqNo: 1,
+        createdAt: new Date(),
+      };
       mockRepository.createMessage.mockResolvedValue(message);
 
       const result = await service.sendMessage(mockRoom, mockVaUser, content);
 
       expect(result).toEqual(message);
-      expect(mockVmRepository.hasActiveRelationshipBetween).toHaveBeenCalledWith(mockVaUser.id, mockVmUser.id);
+      expect(mockVmRepository.hasActiveRelationshipBetween).toHaveBeenCalledWith(
+        mockVaUser.id,
+        mockVmUser.id,
+      );
       expect(mockRepository.createMessage).toHaveBeenCalledWith(
         mockRoom,
         mockVaUser.id,
@@ -86,17 +96,17 @@ describe('ChatsService', () => {
 
     it('AUTH MATRIX NEGATIVE: rejects a participant with NO verified relationship (forged room)', async () => {
       mockVmRepository.hasActiveRelationshipBetween.mockResolvedValue(false);
-      await expect(
-        service.sendMessage(mockRoom, mockVaUser, makeDoc('hi')),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(service.sendMessage(mockRoom, mockVaUser, makeDoc('hi'))).rejects.toThrow(
+        ForbiddenException,
+      );
       expect(mockRepository.createMessage).not.toHaveBeenCalled();
     });
 
     it('rejects a non-participant even when relationship lookup would pass', async () => {
       const outsider: SessionUser = { ...mockVaUser, id: 'outsider-9' };
-      await expect(
-        service.sendMessage(mockRoom, outsider, makeDoc('hi')),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(service.sendMessage(mockRoom, outsider, makeDoc('hi'))).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('rejects content that is not a Tiptap doc', async () => {
@@ -106,15 +116,15 @@ describe('ChatsService', () => {
     });
 
     it('strips disallowed nodes/marks before persisting', async () => {
-      mockRepository.createMessage.mockImplementation((_room, _sender, content) => ({ body: content }));
+      mockRepository.createMessage.mockImplementation((_room, _sender, content) => ({
+        body: content,
+      }));
       const dirty = {
         type: 'doc',
         content: [
           {
             type: 'paragraph',
-            content: [
-              { type: 'text', text: 'ok', marks: [{ type: 'bold' }, { type: 'evil' }] },
-            ],
+            content: [{ type: 'text', text: 'ok', marks: [{ type: 'bold' }, { type: 'evil' }] }],
           },
           { type: 'script', content: [{ type: 'text', text: 'alert(1)' }] },
         ],
@@ -128,7 +138,9 @@ describe('ChatsService', () => {
 
   describe('getMessages', () => {
     it('AUTH MATRIX POSITIVE: retrieves when participant has a verified relationship', async () => {
-      const messages = [{ id: 'msg-1', roomId: mockRoom, body: {}, seqNo: 1, createdAt: new Date() }];
+      const messages = [
+        { id: 'msg-1', roomId: mockRoom, body: {}, seqNo: 1, createdAt: new Date() },
+      ];
       mockRepository.getMessagesByRoomAfterSeqNo.mockResolvedValue(messages);
 
       const result = await service.getMessages(mockRoom, mockVaUser, 0, 50);
@@ -139,12 +151,16 @@ describe('ChatsService', () => {
 
     it('AUTH MATRIX NEGATIVE: rejects participant with no verified relationship', async () => {
       mockVmRepository.hasActiveRelationshipBetween.mockResolvedValue(false);
-      await expect(service.getMessages(mockRoom, mockVaUser, 0, 50)).rejects.toThrow(ForbiddenException);
+      await expect(service.getMessages(mockRoom, mockVaUser, 0, 50)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('rejects a non-participant', async () => {
       const outsider: SessionUser = { ...mockVaUser, id: 'other-user' };
-      await expect(service.getMessages(mockRoom, outsider, 0, 50)).rejects.toThrow(ForbiddenException);
+      await expect(service.getMessages(mockRoom, outsider, 0, 50)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
   });
 

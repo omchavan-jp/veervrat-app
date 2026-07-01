@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { JourneyState, Role } from '@prisma/client';
+import { Role } from '@prisma/client';
 import { AdminUsersRepository } from './admin-users.repository';
 import { AuthService } from '../auth/auth.service';
 import { JourneysService } from '../journeys/journeys.service';
@@ -23,11 +23,13 @@ export class AdminUsersService {
   ) {}
 
   private assertManage(user: SessionUser): void {
-    if (!hasPermission(user, { type: 'platform' }, 'admin.manage_users')) throw new AccessDeniedException();
+    if (!hasPermission(user, { type: 'platform' }, 'admin.manage_users'))
+      throw new AccessDeniedException();
   }
 
   private assertView(user: SessionUser): void {
-    if (!hasPermission(user, { type: 'platform' }, 'admin.view_any_user')) throw new AccessDeniedException();
+    if (!hasPermission(user, { type: 'platform' }, 'admin.view_any_user'))
+      throw new AccessDeniedException();
   }
 
   async list(user: SessionUser, cursor?: string, q?: string) {
@@ -41,7 +43,10 @@ export class AdminUsersService {
     if (!detail) throw new EntityNotFoundException('User', id);
     return {
       ...detail,
-      journeys: detail.journeys.map((j) => ({ ...j, weaknesses: j.weaknesses.map((w) => w.weakness) })),
+      journeys: detail.journeys.map((j) => ({
+        ...j,
+        weaknesses: j.weaknesses.map((w) => w.weakness),
+      })),
     };
   }
 
@@ -62,7 +67,8 @@ export class AdminUsersService {
 
   async setSuspended(user: SessionUser, id: string, suspended: boolean) {
     this.assertManage(user);
-    if (id === user.id) throw new EntityInUseException('Account', 'you cannot suspend your own account');
+    if (id === user.id)
+      throw new EntityInUseException('Account', 'you cannot suspend your own account');
     const target = await this.repo.findById(id);
     if (!target) throw new EntityNotFoundException('User', id);
 
@@ -81,18 +87,21 @@ export class AdminUsersService {
 
   async anonymise(user: SessionUser, id: string, _dto: AnonymiseUserDto) {
     this.assertManage(user);
-    if (id === user.id) throw new EntityInUseException('Account', 'you cannot anonymise your own account');
+    if (id === user.id)
+      throw new EntityInUseException('Account', 'you cannot anonymise your own account');
     const target = await this.repo.findById(id);
     if (!target) throw new EntityNotFoundException('User', id);
-    if (target.anonymisedAt) throw new EntityInUseException('Account', 'this account is already anonymised');
+    if (target.anonymisedAt)
+      throw new EntityInUseException('Account', 'this account is already anonymised');
 
     // Single anonymisation implementation lives in UsersService (shared with self-delete).
     return this.users.anonymiseAccount(id);
   }
 
   async overrideJourneyState(user: SessionUser, journeyId: string, dto: OverrideJourneyStateDto) {
-    if (!hasPermission(user, { type: 'platform' }, 'admin.override_journey_state')) throw new AccessDeniedException();
-    const transition = await this.journeys.adminOverrideState(journeyId, dto.state as JourneyState);
+    if (!hasPermission(user, { type: 'platform' }, 'admin.override_journey_state'))
+      throw new AccessDeniedException();
+    const transition = await this.journeys.adminOverrideState(journeyId, dto.state);
     return { id: journeyId, ...transition };
   }
 }

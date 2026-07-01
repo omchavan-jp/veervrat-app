@@ -17,12 +17,24 @@ import {
   AccountLockedException,
 } from '../../common/exceptions/app.exceptions';
 import { REDIS_CLIENT } from '../../common/redis/redis.provider';
-import { SessionUser, AuthResult, LinkPendingResult, GoogleProfile, CreateSessionParams } from './types/auth.types';
+import {
+  SessionUser,
+  AuthResult,
+  LinkPendingResult,
+  GoogleProfile,
+  CreateSessionParams,
+} from './types/auth.types';
 import { EmailService } from '../email/email.service';
 import { UsersIndexService } from '../search/users-index.service';
 import { AuditService } from '../audit/audit.service';
-import { VerifyEmailEmail, getSubject as getVerifySubject } from '../email/templates/VerifyEmailEmail';
-import { PasswordResetEmail, getSubject as getResetSubject } from '../email/templates/PasswordResetEmail';
+import {
+  VerifyEmailEmail,
+  getSubject as getVerifySubject,
+} from '../email/templates/VerifyEmailEmail';
+import {
+  PasswordResetEmail,
+  getSubject as getResetSubject,
+} from '../email/templates/PasswordResetEmail';
 import { EmailChangeEmail, getEmailChangeSubject } from '../email/templates/EmailChangeEmail';
 import { createElement } from 'react';
 
@@ -87,7 +99,12 @@ export class AuthService {
     const { html: verifyHtml, text: verifyText } = await this.emailService.renderTemplate(
       createElement(VerifyEmailEmail, { displayName, verifyUrl, language: lang }),
     );
-    await this.emailService.sendTransactional(email, getVerifySubject(lang), verifyHtml, verifyText);
+    await this.emailService.sendTransactional(
+      email,
+      getVerifySubject(lang),
+      verifyHtml,
+      verifyText,
+    );
 
     return { user: this.toSessionUser(user) };
   }
@@ -100,7 +117,12 @@ export class AuthService {
   ): Promise<AuthResult> {
     const lockout = await this.checkLockout(email);
     if (lockout.locked) {
-      this.auditService.record({ action: 'auth.account_lockout', metadata: { email, duration_minutes: LOCKOUT_DURATION_SECONDS / 60 }, ipAddress, userAgent });
+      this.auditService.record({
+        action: 'auth.account_lockout',
+        metadata: { email, duration_minutes: LOCKOUT_DURATION_SECONDS / 60 },
+        ipAddress,
+        userAgent,
+      });
       throw new AccountLockedException(lockout.secondsRemaining);
     }
 
@@ -139,7 +161,15 @@ export class AuthService {
       ttlDays: this.sessionTtlDays,
     });
 
-    this.auditService.record({ actorId: user.id, action: 'auth.login_success', resourceType: 'user', resourceId: user.id, metadata: { method: 'credentials' }, ipAddress, userAgent });
+    this.auditService.record({
+      actorId: user.id,
+      action: 'auth.login_success',
+      resourceType: 'user',
+      resourceId: user.id,
+      metadata: { method: 'credentials' },
+      ipAddress,
+      userAgent,
+    });
 
     return { user: this.toSessionUser(user), sessionToken };
   }
@@ -171,7 +201,10 @@ export class AuthService {
     if (existingUser) {
       // Existing credentials account — issue a short-lived link token instead of erroring.
       // The frontend /link-account page will prompt for the password to confirm ownership.
-      await this.authRepository.invalidateTokensByUserAndType(existingUser.id, VerificationType.GOOGLE_LINK);
+      await this.authRepository.invalidateTokensByUserAndType(
+        existingUser.id,
+        VerificationType.GOOGLE_LINK,
+      );
       const linkToken = this.generateToken();
       await this.authRepository.createVerificationToken({
         userId: existingUser.id,
@@ -228,7 +261,9 @@ export class AuthService {
       throw new TokenExpiredException('google link');
     }
 
-    const emailAccount = await this.authRepository.findEmailAccountByUserId(verificationToken.userId);
+    const emailAccount = await this.authRepository.findEmailAccountByUserId(
+      verificationToken.userId,
+    );
     if (!emailAccount?.passwordHash) {
       throw new InvalidCredentialsException();
     }
@@ -330,9 +365,13 @@ export class AuthService {
     });
 
     const resetUrl = `${this.configService.get<string>('FRONTEND_URL', 'http://localhost:3000')}/reset-password?token=${resetToken}`;
-    const lang = (user.language as 'EN' | 'MR') ?? 'EN';
+    const lang = user.language ?? 'EN';
     const { html: resetHtml, text: resetText } = await this.emailService.renderTemplate(
-      createElement(PasswordResetEmail, { displayName: user.displayName, resetUrl, language: lang }),
+      createElement(PasswordResetEmail, {
+        displayName: user.displayName,
+        resetUrl,
+        language: lang,
+      }),
     );
     await this.emailService.sendTransactional(email, getResetSubject(lang), resetHtml, resetText);
     return 'sent';
@@ -368,7 +407,11 @@ export class AuthService {
 
   // Authenticated password change — requires the current password. Returns a fresh session
   // token so the caller stays logged in while all prior sessions are invalidated.
-  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<{ sessionToken: string }> {
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<{ sessionToken: string }> {
     const emailAccount = await this.authRepository.findEmailAccountByUserId(userId);
     if (!emailAccount?.passwordHash) {
       // Google-only account — no password to change.
@@ -381,7 +424,12 @@ export class AuthService {
     await this.authRepository.updatePasswordHash(emailAccount.id, passwordHash);
     // Invalidate every existing session, then mint a new one for this caller.
     await this.authRepository.deleteAllUserSessions(userId);
-    const sessionToken = await this.createSession({ userId, ipAddress: null, userAgent: null, ttlDays: this.sessionTtlDays });
+    const sessionToken = await this.createSession({
+      userId,
+      ipAddress: null,
+      userAgent: null,
+      ttlDays: this.sessionTtlDays,
+    });
     return { sessionToken };
   }
 
@@ -393,12 +441,17 @@ export class AuthService {
   }
 
   // ─── Connected accounts ──────────────────────────────────────────────────────
-  async listConnectedAccounts(userId: string): Promise<{ provider: AuthProvider; connectedAt: Date }[]> {
+  async listConnectedAccounts(
+    userId: string,
+  ): Promise<{ provider: AuthProvider; connectedAt: Date }[]> {
     const accounts = await this.authRepository.listAuthAccounts(userId);
     return accounts.map((a) => ({ provider: a.provider, connectedAt: a.createdAt }));
   }
 
-  async disconnectAccount(userId: string, provider: AuthProvider): Promise<{ provider: AuthProvider }> {
+  async disconnectAccount(
+    userId: string,
+    provider: AuthProvider,
+  ): Promise<{ provider: AuthProvider }> {
     const accounts = await this.authRepository.listAuthAccounts(userId);
     const target = accounts.find((a) => a.provider === provider);
     if (!target) throw new EntityNotFoundException('AuthAccount', provider);
@@ -416,7 +469,11 @@ export class AuthService {
     return { provider };
   }
 
-  async requestEmailChange(userId: string, newEmail: string, currentPassword: string): Promise<'sent'> {
+  async requestEmailChange(
+    userId: string,
+    newEmail: string,
+    currentPassword: string,
+  ): Promise<'sent'> {
     const normalized = newEmail.trim().toLowerCase();
     const user = await this.authRepository.findUserById(userId);
     if (!user) throw new EntityNotFoundException('User', userId);
@@ -426,8 +483,10 @@ export class AuthService {
     const valid = await bcrypt.compare(currentPassword, emailAccount.passwordHash);
     if (!valid) throw new InvalidCredentialsException();
 
-    if (normalized === user.email.toLowerCase()) throw new DuplicateEntityException('User', 'email');
-    if (await this.authRepository.emailInUse(normalized)) throw new DuplicateEntityException('User', 'email');
+    if (normalized === user.email.toLowerCase())
+      throw new DuplicateEntityException('User', 'email');
+    if (await this.authRepository.emailInUse(normalized))
+      throw new DuplicateEntityException('User', 'email');
 
     await this.authRepository.setPendingEmail(userId, normalized);
     await this.authRepository.invalidateTokensByUserAndType(userId, VerificationType.EMAIL_CHANGE);
@@ -441,16 +500,23 @@ export class AuthService {
     });
 
     const confirmUrl = `${this.configService.get<string>('FRONTEND_URL', 'http://localhost:3000')}/confirm-email-change?token=${token}`;
-    const lang = (user.language as 'EN' | 'MR') ?? 'EN';
+    const lang = user.language ?? 'EN';
     const { html, text } = await this.emailService.renderTemplate(
-      createElement(EmailChangeEmail, { displayName: user.displayName, confirmUrl, language: lang }),
+      createElement(EmailChangeEmail, {
+        displayName: user.displayName,
+        confirmUrl,
+        language: lang,
+      }),
     );
     await this.emailService.sendTransactional(normalized, getEmailChangeSubject(lang), html, text);
     return 'sent';
   }
 
   async confirmEmailChange(token: string): Promise<{ user: SessionUser }> {
-    const verificationToken = await this.authRepository.findVerificationToken(token, VerificationType.EMAIL_CHANGE);
+    const verificationToken = await this.authRepository.findVerificationToken(
+      token,
+      VerificationType.EMAIL_CHANGE,
+    );
     if (!verificationToken) throw new TokenInvalidException();
     if (verificationToken.expiresAt < new Date()) throw new TokenExpiredException('email change');
 
@@ -461,7 +527,8 @@ export class AuthService {
       throw new TokenInvalidException();
     }
     // Guard against the address being taken between request and confirm.
-    if (await this.authRepository.emailInUse(pending)) throw new DuplicateEntityException('User', 'email');
+    if (await this.authRepository.emailInUse(pending))
+      throw new DuplicateEntityException('User', 'email');
 
     const user = await this.authRepository.applyEmailChange(verificationToken.userId, pending);
     await this.authRepository.markTokenUsed(verificationToken.id);
@@ -531,7 +598,9 @@ export class AuthService {
     return this.toSessionUser(user);
   }
 
-  async checkUsernameAvailability(username: string): Promise<{ available: boolean; reason?: 'invalid' | 'taken' }> {
+  async checkUsernameAvailability(
+    username: string,
+  ): Promise<{ available: boolean; reason?: 'invalid' | 'taken' }> {
     if (!USERNAME_REGEX.test(username)) {
       return { available: false, reason: 'invalid' };
     }
@@ -567,7 +636,10 @@ export class AuthService {
       }
       return { locked: false, secondsRemaining: 0 };
     } catch (err) {
-      this.logger.warn({ msg: 'Redis error on lockout check, failing open', error: (err as Error).message });
+      this.logger.warn({
+        msg: 'Redis error on lockout check, failing open',
+        error: (err as Error).message,
+      });
       return { locked: false, secondsRemaining: 0 };
     }
   }
@@ -578,7 +650,12 @@ export class AuthService {
     userAgent: string | null = null,
     reason = 'bad_password',
   ): Promise<void> {
-    this.auditService.record({ action: 'auth.login_failure', metadata: { email, reason }, ipAddress, userAgent });
+    this.auditService.record({
+      action: 'auth.login_failure',
+      metadata: { email, reason },
+      ipAddress,
+      userAgent,
+    });
     try {
       const key = `lockout:${email}`;
       const failures = await this.redis.hincrby(key, 'failures', 1);
@@ -587,10 +664,18 @@ export class AuthService {
         const lockedUntilMs = Date.now() + LOCKOUT_DURATION_SECONDS * 1000;
         await this.redis.hset(key, 'locked_until', lockedUntilMs.toString());
         await this.redis.expire(key, LOCKOUT_DURATION_SECONDS);
-        this.auditService.record({ action: 'auth.account_lockout', metadata: { email, duration_minutes: LOCKOUT_DURATION_SECONDS / 60 }, ipAddress, userAgent });
+        this.auditService.record({
+          action: 'auth.account_lockout',
+          metadata: { email, duration_minutes: LOCKOUT_DURATION_SECONDS / 60 },
+          ipAddress,
+          userAgent,
+        });
       }
     } catch (err) {
-      this.logger.warn({ msg: 'Redis error recording failed login', error: (err as Error).message });
+      this.logger.warn({
+        msg: 'Redis error recording failed login',
+        error: (err as Error).message,
+      });
     }
   }
 
@@ -606,15 +691,15 @@ export class AuthService {
 
   private async generateUsername(email: string): Promise<string> {
     // Replace dots and hyphens with underscores, strip anything else invalid, clamp to 28 chars
-    const base = email
-      .split('@')[0]
-      .toLowerCase()
-      .replace(/[.\-]/g, '_')
-      .replace(/[^a-z0-9_]/g, '')
-      .replace(/_+/g, '_')        // collapse consecutive underscores
-      .replace(/^_+|_+$/g, '')   // trim leading/trailing underscores
-      .slice(0, 28)
-      || 'user';
+    const base =
+      email
+        .split('@')[0]
+        .toLowerCase()
+        .replace(/[.-]/g, '_')
+        .replace(/[^a-z0-9_]/g, '')
+        .replace(/_+/g, '_') // collapse consecutive underscores
+        .replace(/^_+|_+$/g, '') // trim leading/trailing underscores
+        .slice(0, 28) || 'user';
 
     // Try the clean base first
     if (!(await this.authRepository.findUserByUsername(base))) {

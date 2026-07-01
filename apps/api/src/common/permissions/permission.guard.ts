@@ -3,10 +3,7 @@ import { Reflector } from '@nestjs/core';
 import { ModuleRef } from '@nestjs/core';
 import { Request } from 'express';
 import { SessionUser } from '../../modules/auth/types/auth.types';
-import {
-  AccessDeniedException,
-  SessionExpiredException,
-} from '../exceptions/app.exceptions';
+import { AccessDeniedException, SessionExpiredException } from '../exceptions/app.exceptions';
 import { hasPermission } from './has-permission';
 import { PermissionResource } from './types';
 import { PERMISSION_KEY, PermissionMetadata } from './require-permission.decorator';

@@ -127,7 +127,10 @@ export class JourneysService {
   // Admin emergency override — bypasses the normal transition rules (the audit log is the
   // safeguard). Permission is checked by the admin caller; returns prior + new state so the
   // caller can record from/to in audit metadata.
-  async adminOverrideState(id: string, newState: JourneyState): Promise<{ from: JourneyState; to: JourneyState }> {
+  async adminOverrideState(
+    id: string,
+    newState: JourneyState,
+  ): Promise<{ from: JourneyState; to: JourneyState }> {
     const journey = await this.journeysRepository.findById(id);
     if (!journey) throw new EntityNotFoundException('Journey', id);
     const from = journey.state;
@@ -141,7 +144,10 @@ export class JourneysService {
 
     const slim = this.journeysRepository.buildJourneySlim(journey);
 
-    if (!isVa(user) || !hasPermission(user, { type: 'journey', journey: slim }, 'journey.complete')) {
+    if (
+      !isVa(user) ||
+      !hasPermission(user, { type: 'journey', journey: slim }, 'journey.complete')
+    ) {
       throw new AccessDeniedException();
     }
 
@@ -174,7 +180,10 @@ export class JourneysService {
 
     const slim = this.journeysRepository.buildJourneySlim(journey);
 
-    if (!isVm(user) || !hasPermission(user, { type: 'journey', journey: slim }, 'journey.complete')) {
+    if (
+      !isVm(user) ||
+      !hasPermission(user, { type: 'journey', journey: slim }, 'journey.complete')
+    ) {
       throw new AccessDeniedException();
     }
 

@@ -33,13 +33,25 @@ export class AdminPothiController {
   }
 
   @Patch(':id')
-  @Audited({ action: 'admin.update_pothi_section', resourceType: 'pothi_section', resourceIdParam: 'id' })
-  update(@CurrentUser() user: SessionUser, @Param('id') id: string, @Body() dto: UpdatePothiSectionDto) {
+  @Audited({
+    action: 'admin.update_pothi_section',
+    resourceType: 'pothi_section',
+    resourceIdParam: 'id',
+  })
+  update(
+    @CurrentUser() user: SessionUser,
+    @Param('id') id: string,
+    @Body() dto: UpdatePothiSectionDto,
+  ) {
     return this.pothi.update(user, id, dto);
   }
 
   @Delete(':id')
-  @Audited({ action: 'admin.delete_pothi_section', resourceType: 'pothi_section', resourceIdParam: 'id' })
+  @Audited({
+    action: 'admin.delete_pothi_section',
+    resourceType: 'pothi_section',
+    resourceIdParam: 'id',
+  })
   remove(@CurrentUser() user: SessionUser, @Param('id') id: string) {
     return this.pothi.remove(user, id);
   }

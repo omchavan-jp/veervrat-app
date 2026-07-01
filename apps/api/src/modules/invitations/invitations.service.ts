@@ -19,11 +19,19 @@ import {
   PendingGlobalVmInviteException,
 } from '../../common/exceptions/app.exceptions';
 import type { SessionUser } from '../auth/types/auth.types';
-import { isVa } from '../../common/permissions/types';
 import { SendInvitationDto } from './dto/send-invitation.dto';
-import { VmInvitationEmail, getSubject as getVmInviteSubject } from '../email/templates/VmInvitationEmail';
-import { VmInvitationDeclinedEmail, getSubject as getDeclinedSubject } from '../email/templates/VmInvitationDeclinedEmail';
-import { PlatformInvitationEmail, getSubject as getPlatformInviteSubject } from '../email/templates/PlatformInvitationEmail';
+import {
+  VmInvitationEmail,
+  getSubject as getVmInviteSubject,
+} from '../email/templates/VmInvitationEmail';
+import {
+  VmInvitationDeclinedEmail,
+  getSubject as getDeclinedSubject,
+} from '../email/templates/VmInvitationDeclinedEmail';
+import {
+  PlatformInvitationEmail,
+  getSubject as getPlatformInviteSubject,
+} from '../email/templates/PlatformInvitationEmail';
 
 @Injectable()
 export class InvitationsService {
@@ -43,7 +51,10 @@ export class InvitationsService {
 
   async sendVmInvitation(user: SessionUser, dto: SendInvitationDto) {
     // Platform invites: any authenticated user (spec/13). VM invites: VA-only.
-    if (dto.type !== InvitationType.PLATFORM && !hasPermission(user, { type: 'platform' }, 'vm_invitation.send')) {
+    if (
+      dto.type !== InvitationType.PLATFORM &&
+      !hasPermission(user, { type: 'platform' }, 'vm_invitation.send')
+    ) {
       throw new AccessDeniedException();
     }
 
@@ -71,10 +82,10 @@ export class InvitationsService {
       inviteeEmail,
       inviteeId: invitee?.id ?? null,
       type: dto.type,
-      scopeId: dto.type === InvitationType.PLATFORM ? null : dto.scopeId ?? null,
+      scopeId: dto.type === InvitationType.PLATFORM ? null : (dto.scopeId ?? null),
     });
 
-    const lang = (invitee?.language ?? 'EN') as 'EN' | 'MR';
+    const lang = invitee?.language ?? 'EN';
     await this.sendInvitationEmail(invitation, user.displayName, lang);
 
     // Only an existing platform user gets an in-app notification; a VM invite to a
@@ -115,7 +126,7 @@ export class InvitationsService {
     if (invitation.reminderSentAt) throw new InvitationReminderAlreadySentException();
 
     const invitee = await this.usersService.findByEmail(invitation.inviteeEmail);
-    const lang = (invitee?.language ?? 'EN') as 'EN' | 'MR';
+    const lang = invitee?.language ?? 'EN';
     await this.sendInvitationEmail(invitation, user.displayName, lang);
     return this.invitationsRepository.markReminderSent(id);
   }
@@ -131,7 +142,12 @@ export class InvitationsService {
       const { html, text } = await this.emailService.renderTemplate(
         createElement(PlatformInvitationEmail, { inviterDisplayName, signupUrl, language: lang }),
       );
-      this.emailService.sendNotification(invitation.inviteeEmail, getPlatformInviteSubject(lang), html, text);
+      this.emailService.sendNotification(
+        invitation.inviteeEmail,
+        getPlatformInviteSubject(lang),
+        html,
+        text,
+      );
       return;
     }
     const acceptUrl = `${this.frontendUrl}/invitations/${invitation.token}/accept`;
@@ -143,11 +159,19 @@ export class InvitationsService {
         language: lang,
       }),
     );
-    this.emailService.sendNotification(invitation.inviteeEmail, getVmInviteSubject(lang), html, text);
+    this.emailService.sendNotification(
+      invitation.inviteeEmail,
+      getVmInviteSubject(lang),
+      html,
+      text,
+    );
   }
 
   // Auto-generated, copy/paste shareable message (spec/13) — editable client-side.
-  private buildShareMessage(invitation: { token: string; type: InvitationType }, inviterDisplayName: string): string {
+  private buildShareMessage(
+    invitation: { token: string; type: InvitationType },
+    inviterDisplayName: string,
+  ): string {
     const url =
       invitation.type === InvitationType.PLATFORM
         ? `${this.frontendUrl}/signup?invite=${invitation.token}`
@@ -161,7 +185,16 @@ export class InvitationsService {
     const invitation = await this.invitationsRepository.findByToken(token);
     if (!invitation) throw new EntityNotFoundException('Invitation', token);
 
-    if (!hasPermission(user, { type: 'invitation', invitation: { inviterId: invitation.inviterId, inviteeId: invitation.inviteeId } }, 'vm_invitation.accept')) {
+    if (
+      !hasPermission(
+        user,
+        {
+          type: 'invitation',
+          invitation: { inviterId: invitation.inviterId, inviteeId: invitation.inviteeId },
+        },
+        'vm_invitation.accept',
+      )
+    ) {
       throw new AccessDeniedException();
     }
 
@@ -172,7 +205,11 @@ export class InvitationsService {
 
     // Mark ACCEPTED first — if the relationship creation fails, the invitation can be retried by resetting to PENDING.
     // Inverse order risks a dangling ACTIVE relationship with a PENDING invitation and no duplicate constraint to catch retries.
-    const accepted = await this.invitationsRepository.updateStatus(invitation.id, InvitationStatus.ACCEPTED, { acceptedAt: now });
+    const accepted = await this.invitationsRepository.updateStatus(
+      invitation.id,
+      InvitationStatus.ACCEPTED,
+      { acceptedAt: now },
+    );
 
     if (invitation.type === InvitationType.VM_GLOBAL) {
       await this.vmRelationshipsService.createFromGlobalInvite(invitation.inviterId, user.id, now);
@@ -195,19 +232,34 @@ export class InvitationsService {
     const invitation = await this.invitationsRepository.findByToken(token);
     if (!invitation) throw new EntityNotFoundException('Invitation', token);
 
-    if (!hasPermission(user, { type: 'invitation', invitation: { inviterId: invitation.inviterId, inviteeId: invitation.inviteeId } }, 'vm_invitation.decline')) {
+    if (
+      !hasPermission(
+        user,
+        {
+          type: 'invitation',
+          invitation: { inviterId: invitation.inviterId, inviteeId: invitation.inviteeId },
+        },
+        'vm_invitation.decline',
+      )
+    ) {
       throw new AccessDeniedException();
     }
 
     if (invitation.status !== InvitationStatus.PENDING) throw new InvitationNotPendingException();
 
-    const updated = await this.invitationsRepository.updateStatus(invitation.id, InvitationStatus.DECLINED);
+    const updated = await this.invitationsRepository.updateStatus(
+      invitation.id,
+      InvitationStatus.DECLINED,
+    );
 
     const inviter = await this.usersService.findById(invitation.inviterId);
     if (inviter) {
-      const lang = inviter.language as 'EN' | 'MR';
+      const lang = inviter.language;
       const { html, text } = await this.emailService.renderTemplate(
-        createElement(VmInvitationDeclinedEmail, { vaDisplayName: inviter.displayName, language: lang }),
+        createElement(VmInvitationDeclinedEmail, {
+          vaDisplayName: inviter.displayName,
+          language: lang,
+        }),
       );
       this.emailService.sendNotification(inviter.email, getDeclinedSubject(lang), html, text);
     }
@@ -229,11 +281,21 @@ export class InvitationsService {
     const invitation = await this.invitationsRepository.findById(id);
     if (!invitation) throw new EntityNotFoundException('Invitation', id);
 
-    if (!hasPermission(user, { type: 'invitation', invitation: { inviterId: invitation.inviterId, inviteeId: invitation.inviteeId } }, 'vm_invitation.cancel')) {
+    if (
+      !hasPermission(
+        user,
+        {
+          type: 'invitation',
+          invitation: { inviterId: invitation.inviterId, inviteeId: invitation.inviteeId },
+        },
+        'vm_invitation.cancel',
+      )
+    ) {
       throw new AccessDeniedException();
     }
 
-    if (invitation.status !== InvitationStatus.PENDING) throw new InvitationNotCancellableException();
+    if (invitation.status !== InvitationStatus.PENDING)
+      throw new InvitationNotCancellableException();
 
     return this.invitationsRepository.updateStatus(invitation.id, InvitationStatus.CANCELLED);
   }

@@ -6,6 +6,21 @@ import { Button } from '@/components/ui/button';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
+// Module-scoped so it isn't recreated on every render (a component defined inside
+// render is flagged by react-hooks/static-components).
+function BackButton({ label }: { label: string }) {
+  return (
+    <Button
+      size="lg"
+      className="min-h-12 w-full text-[15px]"
+      nativeButton={false}
+      render={<Link href="/login" />}
+    >
+      {label}
+    </Button>
+  );
+}
+
 // 'network' is distinguished from a server-returned failure so the page can show a
 // localized network message rather than leaking the server's raw (English) string.
 async function verifyEmailToken(
@@ -45,17 +60,6 @@ export default async function VerifyEmailPage({
     devanagari: t('heroDevanagari'),
     gloss: t('heroGloss'),
   };
-
-  const BackButton = ({ label }: { label: string }) => (
-    <Button
-      size="lg"
-      className="min-h-12 w-full text-[15px]"
-      nativeButton={false}
-      render={<Link href="/login" />}
-    >
-      {label}
-    </Button>
-  );
 
   if (!token) {
     return (

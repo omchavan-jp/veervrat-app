@@ -9,13 +9,24 @@ import {
 import type { SessionUser } from '../auth/types/auth.types';
 
 const base: Omit<SessionUser, 'id' | 'roles'> = {
-  email: 'u@x.com', displayName: 'U', username: 'u', language: 'EN', gender: null, dob: null,
-  avatarUrl: null, emailVerifiedAt: new Date(), accountSetupCompletedAt: new Date(), onboardingCompletedAt: new Date(),
+  email: 'u@x.com',
+  displayName: 'U',
+  username: 'u',
+  language: 'EN',
+  gender: null,
+  dob: null,
+  avatarUrl: null,
+  emailVerifiedAt: new Date(),
+  accountSetupCompletedAt: new Date(),
+  onboardingCompletedAt: new Date(),
 };
 const ADMIN: SessionUser = { ...base, id: 'admin-1', roles: [Role.ADMIN] };
 const MOD: SessionUser = { ...base, id: 'mod-1', roles: [Role.MODERATOR] };
 
-const validDoc = { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'hi' }] }] };
+const validDoc = {
+  type: 'doc',
+  content: [{ type: 'paragraph', content: [{ type: 'text', text: 'hi' }] }],
+};
 
 function make(overrides: Record<string, any> = {}) {
   const repo = {

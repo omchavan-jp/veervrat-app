@@ -1,0 +1,57 @@
+name: CI
+
+# Fast gate: lint + typecheck + unit tests + build. No external services needed.
+# Runs on every push to the integration/production branches and on all PRs.
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+    branches: [dev, main]
+
+# A newer push to the same ref cancels the older in-flight run.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Lint · Typecheck · Unit · Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.1.3
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Prisma client is a generated import; api typecheck/build/test need it.
+      - name: Generate Prisma client
+        run: pnpm --filter api db:generate
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      # Unit tests only here — integration tests (real Postgres/Redis) run in a
+      # separate workflow with service containers.
+      - name: Unit tests (api)
+        run: pnpm --filter api test:unit
+
+      - name: Unit tests (web)
+        run: pnpm --filter web test
+
+      - name: Build
+        run: pnpm build

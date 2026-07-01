@@ -132,11 +132,18 @@ export class AuthRepository {
   }
 
   async setPendingEmail(userId: string, pendingEmail: string | null) {
-    return this.prisma.user.update({ where: { id: userId }, data: { pendingEmail }, select: { id: true } });
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { pendingEmail },
+      select: { id: true },
+    });
   }
 
   async getPendingEmail(userId: string): Promise<string | null> {
-    const u = await this.prisma.user.findUnique({ where: { id: userId }, select: { pendingEmail: true } });
+    const u = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { pendingEmail: true },
+    });
     return u?.pendingEmail ?? null;
   }
 
@@ -207,7 +214,11 @@ export class AuthRepository {
     });
   }
 
-  async addAuthAccount(params: { userId: string; provider: AuthProvider; providerAccountId: string }) {
+  async addAuthAccount(params: {
+    userId: string;
+    provider: AuthProvider;
+    providerAccountId: string;
+  }) {
     return this.prisma.authAccount.create({
       data: {
         userId: params.userId,
@@ -236,7 +247,13 @@ export class AuthRepository {
   // does that. Keeps the framework un-skippable (see markOnboardingComplete).
   async markAccountSetupComplete(
     userId: string,
-    fields?: { displayName?: string; username?: string; language?: 'EN' | 'MR'; gender?: string; dob?: Date },
+    fields?: {
+      displayName?: string;
+      username?: string;
+      language?: 'EN' | 'MR';
+      gender?: string;
+      dob?: Date;
+    },
   ) {
     return this.prisma.user.update({
       where: { id: userId },

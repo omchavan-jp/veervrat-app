@@ -37,11 +37,36 @@ export class ErcService {
     private readonly notificationsRepository: NotificationsRepository,
   ) {}
 
-  private async getJourneyAndCheckPermission(user: SessionUser, journeyId: string, action: 'journey.view' | 'erc.select' | 'erc.suggest' | 'erc.approve_closure' | 'erc.revisit' | 'erc.deactivate' | 'erc.remove' | 'custom_erc.create' | 'custom_erc.submit_for_review') {
+  private async getJourneyAndCheckPermission(
+    user: SessionUser,
+    journeyId: string,
+    action:
+      | 'journey.view'
+      | 'erc.select'
+      | 'erc.suggest'
+      | 'erc.approve_closure'
+      | 'erc.revisit'
+      | 'erc.deactivate'
+      | 'erc.remove'
+      | 'custom_erc.create'
+      | 'custom_erc.submit_for_review',
+  ) {
     const journey = await this.journeysRepository.findById(journeyId);
     if (!journey) throw new EntityNotFoundException('Journey', journeyId);
     const slim = this.journeysRepository.buildJourneySlim(journey);
-    if (!hasPermission(user, { type: action === 'journey.view' ? 'journey' : 'erc', journey: slim, ...(action !== 'journey.view' ? { erc: { journeyId, createdById: user.id, status: ErcStatus.NOT_STARTED } } : {}) } as Parameters<typeof hasPermission>[1], action)) {
+    if (
+      !hasPermission(
+        user,
+        {
+          type: action === 'journey.view' ? 'journey' : 'erc',
+          journey: slim,
+          ...(action !== 'journey.view'
+            ? { erc: { journeyId, createdById: user.id, status: ErcStatus.NOT_STARTED } }
+            : {}),
+        } as Parameters<typeof hasPermission>[1],
+        action,
+      )
+    ) {
       throw new AccessDeniedException();
     }
     return { journey, slim };
@@ -64,11 +89,18 @@ export class ErcService {
     return this.ercRepository.listJourneyItems(journeyId, ercType);
   }
 
-  async updateStatus(user: SessionUser, journeyId: string, itemId: string, targetStatusStr: 'in_progress' | 'submitted' | 'approved' | 'revisit', ercType: ErcType) {
+  async updateStatus(
+    user: SessionUser,
+    journeyId: string,
+    itemId: string,
+    targetStatusStr: 'in_progress' | 'submitted' | 'approved' | 'revisit',
+    ercType: ErcType,
+  ) {
     // Status update is a VA-owner action (erc.select is the broadest VA ownership check)
-    const { journey, slim } = await this.getJourneyAndCheckPermission(user, journeyId, 'erc.select');
+    const { slim } = await this.getJourneyAndCheckPermission(user, journeyId, 'erc.select');
     const item = await this.ercRepository.findById(itemId, ercType);
-    if (!item || item.journeyId !== journeyId) throw new EntityNotFoundException('ERC item', itemId);
+    if (!item || item.journeyId !== journeyId)
+      throw new EntityNotFoundException('ERC item', itemId);
 
     const targetStatus = STATUS_MAP[targetStatusStr];
     const allowed = VALID_TRANSITIONS[item.status] ?? [];
@@ -79,7 +111,17 @@ export class ErcService {
 
     // APPROVED: only when no active journey VM (self-approve)
     if (targetStatus === ErcStatus.APPROVED) {
-      if (!hasPermission(user, { type: 'erc', journey: slim, erc: { journeyId, createdById: user.id, status: item.status } }, 'erc.approve_closure')) {
+      if (
+        !hasPermission(
+          user,
+          {
+            type: 'erc',
+            journey: slim,
+            erc: { journeyId, createdById: user.id, status: item.status },
+          },
+          'erc.approve_closure',
+        )
+      ) {
         throw new AccessDeniedException();
       }
     }
@@ -109,7 +151,10 @@ export class ErcService {
   // global VM), excluding the actor. Used to signal VA-initiated events like a closure
   // submission so the VM knows work is waiting.
   private async notifyJourneyVms(
-    journey: { vmAssignments: { vmId: string; state: string }[]; globalVmRelationship: { vmId: string; state: string } | null },
+    journey: {
+      vmAssignments: { vmId: string; state: string }[];
+      globalVmRelationship: { vmId: string; state: string } | null;
+    },
     actorId: string,
     eventType: NotificationEventType,
     resourceType: string,
@@ -130,10 +175,15 @@ export class ErcService {
   }
 
   async approveItem(user: SessionUser, journeyId: string, itemId: string, ercType: ErcType) {
-    const { journey } = await this.getJourneyAndCheckPermission(user, journeyId, 'erc.approve_closure');
+    const { journey } = await this.getJourneyAndCheckPermission(
+      user,
+      journeyId,
+      'erc.approve_closure',
+    );
 
     const item = await this.ercRepository.findById(itemId, ercType);
-    if (!item || item.journeyId !== journeyId) throw new EntityNotFoundException('ERC item', itemId);
+    if (!item || item.journeyId !== journeyId)
+      throw new EntityNotFoundException('ERC item', itemId);
     if (item.isDeactivated || item.status !== ErcStatus.SUBMITTED) {
       throw new InvalidErcStatusTransitionException(item.status, ErcStatus.APPROVED);
     }
@@ -153,7 +203,8 @@ export class ErcService {
     const { journey } = await this.getJourneyAndCheckPermission(user, journeyId, 'erc.revisit');
 
     const item = await this.ercRepository.findById(itemId, ercType);
-    if (!item || item.journeyId !== journeyId) throw new EntityNotFoundException('ERC item', itemId);
+    if (!item || item.journeyId !== journeyId)
+      throw new EntityNotFoundException('ERC item', itemId);
     if (item.isDeactivated || item.status !== ErcStatus.SUBMITTED) {
       throw new InvalidErcStatusTransitionException(item.status, ErcStatus.REVISIT);
     }
@@ -172,28 +223,38 @@ export class ErcService {
   async deactivate(user: SessionUser, journeyId: string, itemId: string, ercType: ErcType) {
     await this.getJourneyAndCheckPermission(user, journeyId, 'erc.deactivate'); // VA owner only
     const item = await this.ercRepository.findById(itemId, ercType);
-    if (!item || item.journeyId !== journeyId) throw new EntityNotFoundException('ERC item', itemId);
+    if (!item || item.journeyId !== journeyId)
+      throw new EntityNotFoundException('ERC item', itemId);
     return this.ercRepository.setDeactivated(itemId, true, ercType);
   }
 
   async reactivate(user: SessionUser, journeyId: string, itemId: string, ercType: ErcType) {
     await this.getJourneyAndCheckPermission(user, journeyId, 'erc.deactivate'); // VA owner only
     const item = await this.ercRepository.findById(itemId, ercType);
-    if (!item || item.journeyId !== journeyId) throw new EntityNotFoundException('ERC item', itemId);
+    if (!item || item.journeyId !== journeyId)
+      throw new EntityNotFoundException('ERC item', itemId);
     return this.ercRepository.setDeactivated(itemId, false, ercType);
   }
 
   async remove(user: SessionUser, journeyId: string, itemId: string, ercType: ErcType) {
     await this.getJourneyAndCheckPermission(user, journeyId, 'erc.remove'); // VA owner only
     const item = await this.ercRepository.findById(itemId, ercType);
-    if (!item || item.journeyId !== journeyId) throw new EntityNotFoundException('ERC item', itemId);
+    if (!item || item.journeyId !== journeyId)
+      throw new EntityNotFoundException('ERC item', itemId);
     await this.ercRepository.remove(itemId, ercType);
   }
 
-  async suggestItem(user: SessionUser, journeyId: string, itemId: string, text: string, ercType: ErcType) {
+  async suggestItem(
+    user: SessionUser,
+    journeyId: string,
+    itemId: string,
+    text: string,
+    ercType: ErcType,
+  ) {
     const { journey } = await this.getJourneyAndCheckPermission(user, journeyId, 'erc.suggest');
     const item = await this.ercRepository.findById(itemId, ercType);
-    if (!item || item.journeyId !== journeyId) throw new EntityNotFoundException('ERC item', itemId);
+    if (!item || item.journeyId !== journeyId)
+      throw new EntityNotFoundException('ERC item', itemId);
     const sidenote = await this.ercRepository.upsertSidenote(itemId, user.id, text, ercType);
     await this.notificationsRepository.create(
       journey.vratarthiId,
@@ -208,7 +269,8 @@ export class ErcService {
   async unsuggestItem(user: SessionUser, journeyId: string, itemId: string, ercType: ErcType) {
     const { journey } = await this.getJourneyAndCheckPermission(user, journeyId, 'erc.suggest');
     const item = await this.ercRepository.findById(itemId, ercType);
-    if (!item || item.journeyId !== journeyId) throw new EntityNotFoundException('ERC item', itemId);
+    if (!item || item.journeyId !== journeyId)
+      throw new EntityNotFoundException('ERC item', itemId);
     const sidenote = await this.ercRepository.revokeSidenote(itemId, ercType);
     if (!sidenote) throw new EntityNotFoundException('VmSidenote', itemId);
     await this.notificationsRepository.create(
@@ -220,10 +282,16 @@ export class ErcService {
     );
   }
 
-  async acknowledgeSidenoteItem(user: SessionUser, journeyId: string, itemId: string, ercType: ErcType) {
+  async acknowledgeSidenoteItem(
+    user: SessionUser,
+    journeyId: string,
+    itemId: string,
+    ercType: ErcType,
+  ) {
     await this.getJourneyAndCheckPermission(user, journeyId, 'erc.select'); // VA owner only
     const item = await this.ercRepository.findById(itemId, ercType);
-    if (!item || item.journeyId !== journeyId) throw new EntityNotFoundException('ERC item', itemId);
+    if (!item || item.journeyId !== journeyId)
+      throw new EntityNotFoundException('ERC item', itemId);
     const sidenote = await this.ercRepository.acknowledgeSidenote(itemId, ercType);
     if (!sidenote) throw new EntityNotFoundException('VmSidenote', itemId);
     return sidenote;
@@ -232,7 +300,15 @@ export class ErcService {
   async createCustomItem(
     user: SessionUser,
     journeyId: string,
-    data: { titleEn: string; descriptionEn?: string; tier?: import('@prisma/client').ExposureTier; durationWeeks?: number; frequencyPerWeek?: number; frequencyLabel?: string; durationDays?: number },
+    data: {
+      titleEn: string;
+      descriptionEn?: string;
+      tier?: import('@prisma/client').ExposureTier;
+      durationWeeks?: number;
+      frequencyPerWeek?: number;
+      frequencyLabel?: string;
+      durationDays?: number;
+    },
     ercType: ErcType,
   ) {
     await this.getJourneyAndCheckPermission(user, journeyId, 'custom_erc.create');
@@ -243,7 +319,15 @@ export class ErcService {
     user: SessionUser,
     journeyId: string,
     itemId: string,
-    data: { titleEn?: string; descriptionEn?: string; tier?: import('@prisma/client').ExposureTier; durationWeeks?: number; frequencyPerWeek?: number; frequencyLabel?: string; durationDays?: number },
+    data: {
+      titleEn?: string;
+      descriptionEn?: string;
+      tier?: import('@prisma/client').ExposureTier;
+      durationWeeks?: number;
+      frequencyPerWeek?: number;
+      frequencyLabel?: string;
+      durationDays?: number;
+    },
     ercType: ErcType,
   ) {
     const journey = await this.journeysRepository.findById(journeyId);
@@ -251,7 +335,8 @@ export class ErcService {
     const slim = this.journeysRepository.buildJourneySlim(journey);
 
     const item = await this.ercRepository.findById(itemId, ercType);
-    if (!item || item.journeyId !== journeyId) throw new EntityNotFoundException('ERC item', itemId);
+    if (!item || item.journeyId !== journeyId)
+      throw new EntityNotFoundException('ERC item', itemId);
 
     if (!item.isCustom) throw new AccessDeniedException();
 
@@ -260,7 +345,17 @@ export class ErcService {
     // review. The author must withdraw/revisit before editing again.
     if (item.reviewStatus !== null) throw new CustomErcAlreadyPendingException();
 
-    if (!hasPermission(user, { type: 'erc', journey: slim, erc: { journeyId, createdById: item.createdById ?? undefined, status: item.status } }, 'custom_erc.edit')) {
+    if (
+      !hasPermission(
+        user,
+        {
+          type: 'erc',
+          journey: slim,
+          erc: { journeyId, createdById: item.createdById ?? undefined, status: item.status },
+        },
+        'custom_erc.edit',
+      )
+    ) {
       throw new AccessDeniedException();
     }
 
@@ -268,10 +363,15 @@ export class ErcService {
   }
 
   async submitForReview(user: SessionUser, journeyId: string, itemId: string, ercType: ErcType) {
-    const { journey } = await this.getJourneyAndCheckPermission(user, journeyId, 'custom_erc.submit_for_review');
+    const { journey } = await this.getJourneyAndCheckPermission(
+      user,
+      journeyId,
+      'custom_erc.submit_for_review',
+    );
 
     const item = await this.ercRepository.findById(itemId, ercType);
-    if (!item || item.journeyId !== journeyId) throw new EntityNotFoundException('ERC item', itemId);
+    if (!item || item.journeyId !== journeyId)
+      throw new EntityNotFoundException('ERC item', itemId);
 
     if (!item.isCustom) throw new AccessDeniedException();
     if (item.reviewStatus !== null) throw new CustomErcAlreadyPendingException();

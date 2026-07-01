@@ -52,14 +52,26 @@ export class CmsController {
 
   @Patch('admin/cms-pages/:key')
   @UseGuards(SessionGuard)
-  @Audited({ action: 'admin.update_cms_page', resourceType: 'cms_page', metadata: (c) => ({ key: c.params.key }) })
-  update(@CurrentUser() user: SessionUser, @Param('key') key: string, @Body() dto: UpdateCmsPageDto) {
+  @Audited({
+    action: 'admin.update_cms_page',
+    resourceType: 'cms_page',
+    metadata: (c) => ({ key: c.params.key }),
+  })
+  update(
+    @CurrentUser() user: SessionUser,
+    @Param('key') key: string,
+    @Body() dto: UpdateCmsPageDto,
+  ) {
     return this.cms.update(user, key, dto);
   }
 
   @Delete('admin/cms-pages/:key')
   @UseGuards(SessionGuard)
-  @Audited({ action: 'admin.delete_cms_page', resourceType: 'cms_page', metadata: (c) => ({ key: c.params.key }) })
+  @Audited({
+    action: 'admin.delete_cms_page',
+    resourceType: 'cms_page',
+    metadata: (c) => ({ key: c.params.key }),
+  })
   remove(@CurrentUser() user: SessionUser, @Param('key') key: string) {
     return this.cms.remove(user, key);
   }

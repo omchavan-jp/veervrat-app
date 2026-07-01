@@ -9,13 +9,28 @@ import {
 import type { SessionUser } from '../auth/types/auth.types';
 
 const base: Omit<SessionUser, 'id' | 'roles'> = {
-  email: 'u@x.com', displayName: 'U', username: 'u', language: 'EN', gender: null, dob: null,
-  avatarUrl: null, emailVerifiedAt: new Date(), accountSetupCompletedAt: new Date(), onboardingCompletedAt: new Date(),
+  email: 'u@x.com',
+  displayName: 'U',
+  username: 'u',
+  language: 'EN',
+  gender: null,
+  dob: null,
+  avatarUrl: null,
+  emailVerifiedAt: new Date(),
+  accountSetupCompletedAt: new Date(),
+  onboardingCompletedAt: new Date(),
 };
 const ADMIN: SessionUser = { ...base, id: 'admin-1', roles: [Role.ADMIN] };
 const MOD: SessionUser = { ...base, id: 'mod-1', roles: [Role.MODERATOR] };
 
-const shlokaDoc = { id: 'sh1', devanagariText: 'अ', transliteration: null, meaningEn: null, meaningMr: null, looseTags: [] };
+const shlokaDoc = {
+  id: 'sh1',
+  devanagariText: 'अ',
+  transliteration: null,
+  meaningEn: null,
+  meaningMr: null,
+  looseTags: [],
+};
 
 function make(overrides: Record<string, any> = {}) {
   const repo = {
@@ -37,7 +52,9 @@ function make(overrides: Record<string, any> = {}) {
 describe('AdminShlokasService', () => {
   it('NEGATIVE: non-admin cannot create a shloka', async () => {
     const { service } = make();
-    await expect(service.create(MOD, { devanagariText: 'अ' })).rejects.toBeInstanceOf(AccessDeniedException);
+    await expect(service.create(MOD, { devanagariText: 'अ' })).rejects.toBeInstanceOf(
+      AccessDeniedException,
+    );
   });
 
   it('create syncs the index', async () => {
@@ -54,7 +71,9 @@ describe('AdminShlokasService', () => {
 
   it('update 404 when shloka missing', async () => {
     const { service } = make({ findShloka: vi.fn().mockResolvedValue(null) });
-    await expect(service.update(ADMIN, 'sh1', { devanagariText: 'अ' })).rejects.toBeInstanceOf(EntityNotFoundException);
+    await expect(service.update(ADMIN, 'sh1', { devanagariText: 'अ' })).rejects.toBeInstanceOf(
+      EntityNotFoundException,
+    );
   });
 
   it('schedule parses date to UTC midnight', async () => {
@@ -66,12 +85,16 @@ describe('AdminShlokasService', () => {
 
   it('reorderQueue rejects duplicates', async () => {
     const { service } = make();
-    await expect(service.reorderQueue(ADMIN, { shlokaIds: ['a', 'a'] })).rejects.toBeInstanceOf(ValidationException);
+    await expect(service.reorderQueue(ADMIN, { shlokaIds: ['a', 'a'] })).rejects.toBeInstanceOf(
+      ValidationException,
+    );
   });
 
   it('reorderQueue rejects unknown shlokas', async () => {
     const { service } = make({ countShlokasByIds: vi.fn().mockResolvedValue(1) });
-    await expect(service.reorderQueue(ADMIN, { shlokaIds: ['a', 'b'] })).rejects.toBeInstanceOf(ValidationException);
+    await expect(service.reorderQueue(ADMIN, { shlokaIds: ['a', 'b'] })).rejects.toBeInstanceOf(
+      ValidationException,
+    );
   });
 
   it('reorderQueue replaces the queue in order', async () => {

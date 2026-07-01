@@ -52,10 +52,7 @@ import { CsrfGuard } from './common/guards/csrf.guard';
           autoLogging: false,
           redact: ['req.headers.cookie', 'req.body.password'],
           level: process.env.LOG_LEVEL ?? 'info',
-          transport:
-            process.env.NODE_ENV !== 'production'
-              ? { target: 'pino-pretty' }
-              : undefined,
+          transport: process.env.NODE_ENV !== 'production' ? { target: 'pino-pretty' } : undefined,
         },
       }),
     }),
@@ -100,7 +97,8 @@ import { CsrfGuard } from './common/guards/csrf.guard';
     },
     {
       provide: APP_INTERCEPTOR,
-      useFactory: (reflector: Reflector, audit: AuditService) => new AuditInterceptor(reflector, audit),
+      useFactory: (reflector: Reflector, audit: AuditService) =>
+        new AuditInterceptor(reflector, audit),
       inject: [Reflector, AuditService],
     },
   ],

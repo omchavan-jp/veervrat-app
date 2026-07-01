@@ -107,7 +107,13 @@ describe('Auth — integration', () => {
         .post('/api/v1/auth/complete-onboarding')
         .set('Cookie', `veervrat_session=${token}; csrf-token=${csrfToken}`)
         .set('X-CSRF-Token', csrfToken)
-        .send({ displayName: 'Updated Name', username: 'updated_unique', language: 'MR', gender: 'Male', dob: '1995-06-15' });
+        .send({
+          displayName: 'Updated Name',
+          username: 'updated_unique',
+          language: 'MR',
+          gender: 'Male',
+          dob: '1995-06-15',
+        });
 
       expect(res.status).toBe(200);
 

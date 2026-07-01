@@ -28,7 +28,10 @@ export class AdminContentRepository {
   }
 
   findVirtue(id: string) {
-    return this.prisma.virtue.findUnique({ where: { id }, include: { _count: { select: { subvirtues: true } } } });
+    return this.prisma.virtue.findUnique({
+      where: { id },
+      include: { _count: { select: { subvirtues: true } } },
+    });
   }
 
   deleteVirtue(id: string) {
@@ -36,11 +39,19 @@ export class AdminContentRepository {
   }
 
   // ─── Subvirtues ──────────────────────────────────────────────────────────────
-  createSubvirtue(data: { virtueId: string; nameEn: string; nameMr?: string; description?: string }) {
+  createSubvirtue(data: {
+    virtueId: string;
+    nameEn: string;
+    nameMr?: string;
+    description?: string;
+  }) {
     return this.prisma.subvirtue.create({ data });
   }
 
-  updateSubvirtue(id: string, data: { virtueId?: string; nameEn?: string; nameMr?: string; description?: string }) {
+  updateSubvirtue(
+    id: string,
+    data: { virtueId?: string; nameEn?: string; nameMr?: string; description?: string },
+  ) {
     return this.prisma.subvirtue.update({ where: { id }, data });
   }
 
@@ -56,11 +67,19 @@ export class AdminContentRepository {
   }
 
   // ─── Weaknesses ──────────────────────────────────────────────────────────────
-  createWeakness(data: { nameEn: string; nameMr?: string; description?: string; category?: string }) {
+  createWeakness(data: {
+    nameEn: string;
+    nameMr?: string;
+    description?: string;
+    category?: string;
+  }) {
     return this.prisma.weakness.create({ data });
   }
 
-  updateWeakness(id: string, data: { nameEn?: string; nameMr?: string; description?: string; category?: string }) {
+  updateWeakness(
+    id: string,
+    data: { nameEn?: string; nameMr?: string; description?: string; category?: string },
+  ) {
     return this.prisma.weakness.update({ where: { id }, data });
   }
 
@@ -236,7 +255,11 @@ export class AdminContentRepository {
         await tx.pothiSectionShloka.deleteMany({ where: { pothiSectionId: id } });
         if (shlokaIds.length > 0) {
           await tx.pothiSectionShloka.createMany({
-            data: shlokaIds.map((shlokaId, sortOrder) => ({ pothiSectionId: id, shlokaId, sortOrder })),
+            data: shlokaIds.map((shlokaId, sortOrder) => ({
+              pothiSectionId: id,
+              shlokaId,
+              sortOrder,
+            })),
           });
         }
       }
@@ -271,7 +294,9 @@ export class AdminContentRepository {
     return this.prisma.resource.create({
       data: {
         ...rest,
-        ...(description !== undefined ? { description: description as unknown as Prisma.InputJsonValue } : {}),
+        ...(description !== undefined
+          ? { description: description as unknown as Prisma.InputJsonValue }
+          : {}),
         formalTags: { create: formalTags },
       },
       select: { id: true },
@@ -297,14 +322,18 @@ export class AdminContentRepository {
       if (formalTags !== undefined) {
         await tx.resourceTag.deleteMany({ where: { resourceId: id } });
         if (formalTags.length > 0) {
-          await tx.resourceTag.createMany({ data: formalTags.map((t) => ({ ...t, resourceId: id })) });
+          await tx.resourceTag.createMany({
+            data: formalTags.map((t) => ({ ...t, resourceId: id })),
+          });
         }
       }
       return tx.resource.update({
         where: { id },
         data: {
           ...rest,
-          ...(description !== undefined ? { description: description as unknown as Prisma.InputJsonValue } : {}),
+          ...(description !== undefined
+            ? { description: description as unknown as Prisma.InputJsonValue }
+            : {}),
         },
         select: { id: true },
       });

@@ -7,7 +7,11 @@ import {
   EntityNotFoundException,
   ValidationException,
 } from '../../common/exceptions/app.exceptions';
-import { InvalidTiptapContentError, sanitizeTiptapDoc, type TiptapDoc } from '../../common/tiptap/sanitize';
+import {
+  InvalidTiptapContentError,
+  sanitizeTiptapDoc,
+  type TiptapDoc,
+} from '../../common/tiptap/sanitize';
 import { CreateResourceDto, UpdateResourceDto } from './dto/resource.dto';
 
 @Injectable()

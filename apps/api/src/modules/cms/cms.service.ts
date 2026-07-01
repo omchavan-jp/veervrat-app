@@ -7,7 +7,11 @@ import {
   EntityNotFoundException,
   ValidationException,
 } from '../../common/exceptions/app.exceptions';
-import { InvalidTiptapContentError, sanitizeTiptapDoc, type TiptapDoc } from '../../common/tiptap/sanitize';
+import {
+  InvalidTiptapContentError,
+  sanitizeTiptapDoc,
+  type TiptapDoc,
+} from '../../common/tiptap/sanitize';
 import { UpdateCmsPageDto, UpsertCmsPageDto } from './dto/cms-page.dto';
 
 @Injectable()

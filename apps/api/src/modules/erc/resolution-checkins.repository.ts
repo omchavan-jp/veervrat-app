@@ -41,14 +41,28 @@ export class ResolutionCheckinsRepository {
         status,
         note: note ?? null,
       },
-      select: { id: true, journeyResolutionId: true, status: true, note: true, checkedInAt: true, createdAt: true },
+      select: {
+        id: true,
+        journeyResolutionId: true,
+        status: true,
+        note: true,
+        checkedInAt: true,
+        createdAt: true,
+      },
     });
   }
 
   async listWithStreak(resolutionId: string): Promise<CheckinsWithStreak> {
     const checkins = await this.prisma.resolutionCheckin.findMany({
       where: { journeyResolutionId: resolutionId },
-      select: { id: true, journeyResolutionId: true, status: true, note: true, checkedInAt: true, createdAt: true },
+      select: {
+        id: true,
+        journeyResolutionId: true,
+        status: true,
+        note: true,
+        checkedInAt: true,
+        createdAt: true,
+      },
       orderBy: { checkedInAt: 'asc' },
     });
 

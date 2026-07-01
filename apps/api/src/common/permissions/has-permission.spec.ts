@@ -35,11 +35,18 @@ function makeUser(roles: Role[], overrides: Partial<SessionUser> = {}): SessionU
   };
 }
 
-function makeVmAssignment(vmId: string, state = VmRelationshipState.ACTIVE): JourneyVmAssignmentSlim {
+function makeVmAssignment(
+  vmId: string,
+  state = VmRelationshipState.ACTIVE,
+): JourneyVmAssignmentSlim {
   return { vmId, state };
 }
 
-function makeGlobalVmRel(vmId: string, vratarthiId: string, state = VmRelationshipState.ACTIVE): VmRelationshipSlim {
+function makeGlobalVmRel(
+  vmId: string,
+  vratarthiId: string,
+  state = VmRelationshipState.ACTIVE,
+): VmRelationshipSlim {
   return { vmId, vratarthiId, state };
 }
 
@@ -69,7 +76,6 @@ const ownJourney = makeJourney('user-1');
 const otherJourney = makeJourney('other-user');
 
 const journeyWithVm = makeJourney('user-1', [makeVmAssignment('vm-1')]);
-const journeyWithOtherVm = makeJourney('user-1', [makeVmAssignment('other-vm')]);
 
 const globalVmRel = makeGlobalVmRel('vm-1', 'user-1');
 const journeyWithGlobalVm = makeJourney('user-1', [], globalVmRel);
@@ -107,7 +113,6 @@ describe('journey.view', () => {
     expect(hasPermission(VM, withGlobal, 'journey.view')).toBe(true);
   });
   it('global VM from a different VA cannot view unrelated journey', () => {
-    const unrelatedGlobal = makeJourney('other-user', [], makeGlobalVmRel('vm-1', 'other-user'));
     // VM is assigned to other-user, not user-1 — should not see own journey
     expect(hasPermission(VM, { type: 'journey', journey: ownJourney }, 'journey.view')).toBe(false);
   });
@@ -118,28 +123,40 @@ describe('journey.pause', () => {
     expect(hasPermission(VA, { type: 'journey', journey: ownJourney }, 'journey.pause')).toBe(true);
   });
   it('VM cannot pause a journey', () => {
-    expect(hasPermission(VM, { type: 'journey', journey: journeyWithVm }, 'journey.pause')).toBe(false);
+    expect(hasPermission(VM, { type: 'journey', journey: journeyWithVm }, 'journey.pause')).toBe(
+      false,
+    );
   });
 });
 
 describe('journey.resume', () => {
   it('VA can resume their own journey', () => {
-    expect(hasPermission(VA, { type: 'journey', journey: ownJourney }, 'journey.resume')).toBe(true);
+    expect(hasPermission(VA, { type: 'journey', journey: ownJourney }, 'journey.resume')).toBe(
+      true,
+    );
   });
   it('VM cannot resume a journey', () => {
-    expect(hasPermission(VM, { type: 'journey', journey: journeyWithVm }, 'journey.resume')).toBe(false);
+    expect(hasPermission(VM, { type: 'journey', journey: journeyWithVm }, 'journey.resume')).toBe(
+      false,
+    );
   });
 });
 
 describe('journey.complete', () => {
   it('VA can submit their journey for completion', () => {
-    expect(hasPermission(VA, { type: 'journey', journey: ownJourney }, 'journey.complete')).toBe(true);
+    expect(hasPermission(VA, { type: 'journey', journey: ownJourney }, 'journey.complete')).toBe(
+      true,
+    );
   });
   it('assigned journey VM can approve journey completion', () => {
-    expect(hasPermission(VM, { type: 'journey', journey: journeyWithVm }, 'journey.complete')).toBe(true);
+    expect(hasPermission(VM, { type: 'journey', journey: journeyWithVm }, 'journey.complete')).toBe(
+      true,
+    );
   });
   it('unassigned VM cannot approve journey completion', () => {
-    expect(hasPermission(VM, { type: 'journey', journey: ownJourney }, 'journey.complete')).toBe(false);
+    expect(hasPermission(VM, { type: 'journey', journey: ownJourney }, 'journey.complete')).toBe(
+      false,
+    );
   });
 });
 
@@ -213,7 +230,11 @@ describe('erc.remove', () => {
 
 describe('custom_erc.create', () => {
   const ownErc: PermissionResource = { type: 'erc', journey: ownJourney, erc: makeErc('user-1') };
-  const assignedErc: PermissionResource = { type: 'erc', journey: journeyWithVm, erc: makeErc('vm-1') };
+  const assignedErc: PermissionResource = {
+    type: 'erc',
+    journey: journeyWithVm,
+    erc: makeErc('vm-1'),
+  };
   it('VA can create custom ERC in their own journey', () => {
     expect(hasPermission(VA, ownErc, 'custom_erc.create')).toBe(true);
   });
@@ -221,7 +242,11 @@ describe('custom_erc.create', () => {
     expect(hasPermission(VM, assignedErc, 'custom_erc.create')).toBe(true);
   });
   it('unassigned VM cannot create custom ERC', () => {
-    const unassigned: PermissionResource = { type: 'erc', journey: ownJourney, erc: makeErc('vm-1') };
+    const unassigned: PermissionResource = {
+      type: 'erc',
+      journey: ownJourney,
+      erc: makeErc('vm-1'),
+    };
     expect(hasPermission(VM, unassigned, 'custom_erc.create')).toBe(false);
   });
 });
@@ -232,15 +257,27 @@ describe('custom_erc.submit_for_review', () => {
     expect(hasPermission(VA, ownErc, 'custom_erc.submit_for_review')).toBe(true);
   });
   it('assigned VM can submit custom ERC for review', () => {
-    const assignedErc: PermissionResource = { type: 'erc', journey: journeyWithVm, erc: makeErc('vm-1') };
+    const assignedErc: PermissionResource = {
+      type: 'erc',
+      journey: journeyWithVm,
+      erc: makeErc('vm-1'),
+    };
     expect(hasPermission(VM, assignedErc, 'custom_erc.submit_for_review')).toBe(true);
   });
 });
 
 describe('custom_erc.edit', () => {
   const ownErc: PermissionResource = { type: 'erc', journey: ownJourney, erc: makeErc('user-1') };
-  const otherErc: PermissionResource = { type: 'erc', journey: ownJourney, erc: makeErc('other-user') };
-  const ownSubmitted: PermissionResource = { type: 'erc', journey: ownJourney, erc: makeSubmittedErc('user-1') };
+  const otherErc: PermissionResource = {
+    type: 'erc',
+    journey: ownJourney,
+    erc: makeErc('other-user'),
+  };
+  const ownSubmitted: PermissionResource = {
+    type: 'erc',
+    journey: ownJourney,
+    erc: makeSubmittedErc('user-1'),
+  };
   it('user can edit their own custom ERC (pre-submission)', () => {
     expect(hasPermission(VA, ownErc, 'custom_erc.edit')).toBe(true);
   });
@@ -254,8 +291,16 @@ describe('custom_erc.edit', () => {
 
 describe('custom_erc.delete', () => {
   const ownErc: PermissionResource = { type: 'erc', journey: ownJourney, erc: makeErc('user-1') };
-  const otherErc: PermissionResource = { type: 'erc', journey: ownJourney, erc: makeErc('other-user') };
-  const ownSubmitted: PermissionResource = { type: 'erc', journey: ownJourney, erc: makeSubmittedErc('user-1') };
+  const otherErc: PermissionResource = {
+    type: 'erc',
+    journey: ownJourney,
+    erc: makeErc('other-user'),
+  };
+  const ownSubmitted: PermissionResource = {
+    type: 'erc',
+    journey: ownJourney,
+    erc: makeSubmittedErc('user-1'),
+  };
   it('user can delete their own custom ERC (pre-submission)', () => {
     expect(hasPermission(VA, ownErc, 'custom_erc.delete')).toBe(true);
   });
@@ -344,25 +389,40 @@ describe('chat room resource', () => {
   const room = `chat:${['user-1', 'vm-1'].sort().join(':')}`;
 
   it('POSITIVE: participant with a verified relationship can view', () => {
-    expect(hasPermission(VA, { type: 'room', id: room, relationshipVerified: true }, 'chat.view')).toBe(true);
+    expect(
+      hasPermission(VA, { type: 'room', id: room, relationshipVerified: true }, 'chat.view'),
+    ).toBe(true);
   });
   it('POSITIVE: participant with a verified relationship can send', () => {
-    expect(hasPermission(VM, { type: 'room', id: room, relationshipVerified: true }, 'chat.send')).toBe(true);
+    expect(
+      hasPermission(VM, { type: 'room', id: room, relationshipVerified: true }, 'chat.send'),
+    ).toBe(true);
   });
   it('NEGATIVE: participant in the string but NO verified relationship is denied (forged room)', () => {
-    expect(hasPermission(VA, { type: 'room', id: room, relationshipVerified: false }, 'chat.view')).toBe(false);
-    expect(hasPermission(VM, { type: 'room', id: room, relationshipVerified: false }, 'chat.send')).toBe(false);
+    expect(
+      hasPermission(VA, { type: 'room', id: room, relationshipVerified: false }, 'chat.view'),
+    ).toBe(false);
+    expect(
+      hasPermission(VM, { type: 'room', id: room, relationshipVerified: false }, 'chat.send'),
+    ).toBe(false);
   });
   it('NEGATIVE: non-participant cannot use a room even if a relationship exists elsewhere', () => {
     const outsider = makeUser([Role.VRATARTHI], { id: 'outsider-9' });
-    expect(hasPermission(outsider, { type: 'room', id: room, relationshipVerified: true }, 'chat.view')).toBe(false);
+    expect(
+      hasPermission(outsider, { type: 'room', id: room, relationshipVerified: true }, 'chat.view'),
+    ).toBe(false);
   });
 });
 
 // ─── Layer 1: Experience log actions ─────────────────────────────────────────
 
 describe('experience_log.create', () => {
-  const log: ExperienceLogSlim = { authorId: 'user-1', journeyId: 'journey-1', visibility: ExperienceVisibility.ONLY_ME, isDraft: true };
+  const log: ExperienceLogSlim = {
+    authorId: 'user-1',
+    journeyId: 'journey-1',
+    visibility: ExperienceVisibility.ONLY_ME,
+    isDraft: true,
+  };
   it('VA can create an experience log for their own journey', () => {
     const res: PermissionResource = { type: 'experience_log', journey: ownJourney, log };
     expect(hasPermission(VA, res, 'experience_log.create')).toBe(true);
@@ -378,8 +438,16 @@ describe('experience_log.create', () => {
 });
 
 describe('experience_log.view', () => {
-  const ownLog: ExperienceLogSlim = { authorId: 'user-1', journeyId: 'journey-1', visibility: ExperienceVisibility.ONLY_ME, isDraft: false };
-  const otherPublished = (visibility: ExperienceVisibility, isDraft = false): ExperienceLogSlim => ({ authorId: 'other-user', journeyId: 'journey-1', visibility, isDraft });
+  const ownLog: ExperienceLogSlim = {
+    authorId: 'user-1',
+    journeyId: 'journey-1',
+    visibility: ExperienceVisibility.ONLY_ME,
+    isDraft: false,
+  };
+  const otherPublished = (
+    visibility: ExperienceVisibility,
+    isDraft = false,
+  ): ExperienceLogSlim => ({ authorId: 'other-user', journeyId: 'journey-1', visibility, isDraft });
   it('author can view their own experience log', () => {
     const res: PermissionResource = { type: 'experience_log', journey: ownJourney, log: ownLog };
     expect(hasPermission(VA, res, 'experience_log.view')).toBe(true);
@@ -390,54 +458,128 @@ describe('experience_log.view', () => {
     expect(hasPermission(VA, res, 'experience_log.view')).toBe(true);
   });
   it('anyone can view a PUBLIC published entry', () => {
-    const res: PermissionResource = { type: 'experience_log', journey: ownJourney, log: otherPublished(ExperienceVisibility.PUBLIC) };
+    const res: PermissionResource = {
+      type: 'experience_log',
+      journey: ownJourney,
+      log: otherPublished(ExperienceVisibility.PUBLIC),
+    };
     expect(hasPermission(VA, res, 'experience_log.view')).toBe(true);
   });
   it('assigned VM can view a journey-tagged entry', () => {
-    const res: PermissionResource = { type: 'experience_log', journey: journeyWithVm, log: otherPublished(ExperienceVisibility.ONLY_ME) };
+    const res: PermissionResource = {
+      type: 'experience_log',
+      journey: journeyWithVm,
+      log: otherPublished(ExperienceVisibility.ONLY_ME),
+    };
     expect(hasPermission(VM, res, 'experience_log.view')).toBe(true);
   });
   it('unassigned VM cannot view an ONLY_ME entry', () => {
-    const res: PermissionResource = { type: 'experience_log', journey: ownJourney, log: otherPublished(ExperienceVisibility.ONLY_ME) };
+    const res: PermissionResource = {
+      type: 'experience_log',
+      journey: ownJourney,
+      log: otherPublished(ExperienceVisibility.ONLY_ME),
+    };
     expect(hasPermission(VM, res, 'experience_log.view')).toBe(false);
   });
   it('NEGATIVE: a third party cannot view an ONLY_ME entry', () => {
-    const res: PermissionResource = { type: 'experience_log', journey: ownJourney, log: otherPublished(ExperienceVisibility.ONLY_ME) };
+    const res: PermissionResource = {
+      type: 'experience_log',
+      journey: ownJourney,
+      log: otherPublished(ExperienceVisibility.ONLY_ME),
+    };
     expect(hasPermission(VA, res, 'experience_log.view')).toBe(false);
   });
   it('mutual follower (viewerIsFriend) can view a FRIENDS entry', () => {
-    const res: PermissionResource = { type: 'experience_log', journey: ownJourney, log: otherPublished(ExperienceVisibility.FRIENDS), viewerIsFriend: true };
+    const res: PermissionResource = {
+      type: 'experience_log',
+      journey: ownJourney,
+      log: otherPublished(ExperienceVisibility.FRIENDS),
+      viewerIsFriend: true,
+    };
     expect(hasPermission(VA, res, 'experience_log.view')).toBe(true);
   });
   it('NEGATIVE: FRIENDS entry hidden when not a mutual follower', () => {
-    const res: PermissionResource = { type: 'experience_log', journey: ownJourney, log: otherPublished(ExperienceVisibility.FRIENDS), viewerIsFriend: false };
+    const res: PermissionResource = {
+      type: 'experience_log',
+      journey: ownJourney,
+      log: otherPublished(ExperienceVisibility.FRIENDS),
+      viewerIsFriend: false,
+    };
     expect(hasPermission(VA, res, 'experience_log.view')).toBe(false);
   });
   it('NEGATIVE: a PUBLIC but still-draft entry is not visible to non-authors', () => {
-    const res: PermissionResource = { type: 'experience_log', journey: ownJourney, log: otherPublished(ExperienceVisibility.PUBLIC, true) };
+    const res: PermissionResource = {
+      type: 'experience_log',
+      journey: ownJourney,
+      log: otherPublished(ExperienceVisibility.PUBLIC, true),
+    };
     expect(hasPermission(VA, res, 'experience_log.view')).toBe(false);
   });
 });
 
 describe('experience_log.edit', () => {
-  const ownLog: ExperienceLogSlim = { authorId: 'user-1', journeyId: 'journey-1', visibility: ExperienceVisibility.ONLY_ME, isDraft: false };
-  const otherLog: ExperienceLogSlim = { authorId: 'other-user', journeyId: 'journey-1', visibility: ExperienceVisibility.ONLY_ME, isDraft: false };
+  const ownLog: ExperienceLogSlim = {
+    authorId: 'user-1',
+    journeyId: 'journey-1',
+    visibility: ExperienceVisibility.ONLY_ME,
+    isDraft: false,
+  };
+  const otherLog: ExperienceLogSlim = {
+    authorId: 'other-user',
+    journeyId: 'journey-1',
+    visibility: ExperienceVisibility.ONLY_ME,
+    isDraft: false,
+  };
   it('author can edit their own experience log', () => {
-    expect(hasPermission(VA, { type: 'experience_log', journey: ownJourney, log: ownLog }, 'experience_log.edit')).toBe(true);
+    expect(
+      hasPermission(
+        VA,
+        { type: 'experience_log', journey: ownJourney, log: ownLog },
+        'experience_log.edit',
+      ),
+    ).toBe(true);
   });
   it("user cannot edit another user's experience log", () => {
-    expect(hasPermission(VA, { type: 'experience_log', journey: ownJourney, log: otherLog }, 'experience_log.edit')).toBe(false);
+    expect(
+      hasPermission(
+        VA,
+        { type: 'experience_log', journey: ownJourney, log: otherLog },
+        'experience_log.edit',
+      ),
+    ).toBe(false);
   });
 });
 
 describe('experience_log.delete', () => {
-  const ownLog: ExperienceLogSlim = { authorId: 'user-1', journeyId: 'journey-1', visibility: ExperienceVisibility.ONLY_ME, isDraft: false };
-  const otherLog: ExperienceLogSlim = { authorId: 'other-user', journeyId: 'journey-1', visibility: ExperienceVisibility.ONLY_ME, isDraft: false };
+  const ownLog: ExperienceLogSlim = {
+    authorId: 'user-1',
+    journeyId: 'journey-1',
+    visibility: ExperienceVisibility.ONLY_ME,
+    isDraft: false,
+  };
+  const otherLog: ExperienceLogSlim = {
+    authorId: 'other-user',
+    journeyId: 'journey-1',
+    visibility: ExperienceVisibility.ONLY_ME,
+    isDraft: false,
+  };
   it('author can delete their own experience log', () => {
-    expect(hasPermission(VA, { type: 'experience_log', journey: ownJourney, log: ownLog }, 'experience_log.delete')).toBe(true);
+    expect(
+      hasPermission(
+        VA,
+        { type: 'experience_log', journey: ownJourney, log: ownLog },
+        'experience_log.delete',
+      ),
+    ).toBe(true);
   });
   it("user cannot delete another user's experience log", () => {
-    expect(hasPermission(VA, { type: 'experience_log', journey: ownJourney, log: otherLog }, 'experience_log.delete')).toBe(false);
+    expect(
+      hasPermission(
+        VA,
+        { type: 'experience_log', journey: ownJourney, log: otherLog },
+        'experience_log.delete',
+      ),
+    ).toBe(false);
   });
 });
 
@@ -486,28 +628,70 @@ describe('comment.create', () => {
 
 describe('comment.delete', () => {
   it('comment author can delete their own comment', () => {
-    expect(hasPermission(VA, { type: 'blog_comment', blog: otherBlog, comment: ownComment }, 'comment.delete')).toBe(true);
+    expect(
+      hasPermission(
+        VA,
+        { type: 'blog_comment', blog: otherBlog, comment: ownComment },
+        'comment.delete',
+      ),
+    ).toBe(true);
   });
   it('blog author can delete a comment on their own blog (spec/16)', () => {
-    expect(hasPermission(VA, { type: 'blog_comment', blog: ownBlog, comment: otherComment }, 'comment.delete')).toBe(true);
+    expect(
+      hasPermission(
+        VA,
+        { type: 'blog_comment', blog: ownBlog, comment: otherComment },
+        'comment.delete',
+      ),
+    ).toBe(true);
   });
   it('moderator can delete any comment on any blog', () => {
-    expect(hasPermission(MOD, { type: 'blog_comment', blog: otherBlog, comment: otherComment }, 'comment.delete')).toBe(true);
+    expect(
+      hasPermission(
+        MOD,
+        { type: 'blog_comment', blog: otherBlog, comment: otherComment },
+        'comment.delete',
+      ),
+    ).toBe(true);
   });
   it('random user cannot delete an unrelated comment', () => {
-    expect(hasPermission(VA, { type: 'blog_comment', blog: otherBlog, comment: otherComment }, 'comment.delete')).toBe(false);
+    expect(
+      hasPermission(
+        VA,
+        { type: 'blog_comment', blog: otherBlog, comment: otherComment },
+        'comment.delete',
+      ),
+    ).toBe(false);
   });
 });
 
 describe('comment.hide', () => {
   it('blog author can hide a comment on their own blog', () => {
-    expect(hasPermission(VA, { type: 'blog_comment', blog: ownBlog, comment: otherComment }, 'comment.hide')).toBe(true);
+    expect(
+      hasPermission(
+        VA,
+        { type: 'blog_comment', blog: ownBlog, comment: otherComment },
+        'comment.hide',
+      ),
+    ).toBe(true);
   });
   it('moderator can hide any comment on any blog', () => {
-    expect(hasPermission(MOD, { type: 'blog_comment', blog: otherBlog, comment: otherComment }, 'comment.hide')).toBe(true);
+    expect(
+      hasPermission(
+        MOD,
+        { type: 'blog_comment', blog: otherBlog, comment: otherComment },
+        'comment.hide',
+      ),
+    ).toBe(true);
   });
   it('random user cannot hide a comment on another blog', () => {
-    expect(hasPermission(VA, { type: 'blog_comment', blog: otherBlog, comment: otherComment }, 'comment.hide')).toBe(false);
+    expect(
+      hasPermission(
+        VA,
+        { type: 'blog_comment', blog: otherBlog, comment: otherComment },
+        'comment.hide',
+      ),
+    ).toBe(false);
   });
 });
 
@@ -547,13 +731,19 @@ describe('vm_invitation.accept', () => {
   const inv: InvitationSlim = { inviterId: 'user-1', inviteeId: 'vm-1' };
   const wrongInv: InvitationSlim = { inviterId: 'user-1', inviteeId: 'other-vm' };
   it('the invited VM can accept the invitation', () => {
-    expect(hasPermission(VM, { type: 'invitation', invitation: inv }, 'vm_invitation.accept')).toBe(true);
+    expect(hasPermission(VM, { type: 'invitation', invitation: inv }, 'vm_invitation.accept')).toBe(
+      true,
+    );
   });
   it('a different VM cannot accept an invitation addressed to another VM', () => {
-    expect(hasPermission(VM, { type: 'invitation', invitation: wrongInv }, 'vm_invitation.accept')).toBe(false);
+    expect(
+      hasPermission(VM, { type: 'invitation', invitation: wrongInv }, 'vm_invitation.accept'),
+    ).toBe(false);
   });
   it('VA cannot accept a VM invitation', () => {
-    expect(hasPermission(VA, { type: 'invitation', invitation: inv }, 'vm_invitation.accept')).toBe(false);
+    expect(hasPermission(VA, { type: 'invitation', invitation: inv }, 'vm_invitation.accept')).toBe(
+      false,
+    );
   });
 });
 
@@ -562,40 +752,62 @@ describe('vm_invitation.cancel', () => {
   const otherInv: InvitationSlim = { inviterId: 'other-user', inviteeId: 'vm-1' };
   const vmInv: InvitationSlim = { inviterId: 'vm-1', inviteeId: 'other-vm' };
   it('VA can cancel their own pending invitation', () => {
-    expect(hasPermission(VA, { type: 'invitation', invitation: inv }, 'vm_invitation.cancel')).toBe(true);
+    expect(hasPermission(VA, { type: 'invitation', invitation: inv }, 'vm_invitation.cancel')).toBe(
+      true,
+    );
   });
   it("VA cannot cancel another VA's invitation", () => {
-    expect(hasPermission(VA, { type: 'invitation', invitation: otherInv }, 'vm_invitation.cancel')).toBe(false);
+    expect(
+      hasPermission(VA, { type: 'invitation', invitation: otherInv }, 'vm_invitation.cancel'),
+    ).toBe(false);
   });
   it('VM cannot cancel an invitation even if they are the inviter', () => {
-    expect(hasPermission(VM, { type: 'invitation', invitation: vmInv }, 'vm_invitation.cancel')).toBe(false);
+    expect(
+      hasPermission(VM, { type: 'invitation', invitation: vmInv }, 'vm_invitation.cancel'),
+    ).toBe(false);
   });
 });
 
 describe('vm_invitation.decline', () => {
   const inv: InvitationSlim = { inviterId: 'user-1', inviteeId: 'vm-1' };
   it('the invited VM can decline', () => {
-    expect(hasPermission(VM, { type: 'invitation', invitation: inv }, 'vm_invitation.decline')).toBe(true);
+    expect(
+      hasPermission(VM, { type: 'invitation', invitation: inv }, 'vm_invitation.decline'),
+    ).toBe(true);
   });
   it('VA cannot decline a VM invitation', () => {
-    expect(hasPermission(VA, { type: 'invitation', invitation: inv }, 'vm_invitation.decline')).toBe(false);
+    expect(
+      hasPermission(VA, { type: 'invitation', invitation: inv }, 'vm_invitation.decline'),
+    ).toBe(false);
   });
 });
 
 describe('vm_relationship.withdraw', () => {
   it('VM can withdraw their own assignment', () => {
     expect(
-      hasPermission(VM, { type: 'vm_relationship', relationship: { vmId: 'vm-1', vratarthiId: 'user-1' } }, 'vm_relationship.withdraw'),
+      hasPermission(
+        VM,
+        { type: 'vm_relationship', relationship: { vmId: 'vm-1', vratarthiId: 'user-1' } },
+        'vm_relationship.withdraw',
+      ),
     ).toBe(true);
   });
   it('different VM cannot withdraw an unrelated assignment', () => {
     expect(
-      hasPermission(VM, { type: 'vm_relationship', relationship: { vmId: 'other-vm', vratarthiId: 'user-1' } }, 'vm_relationship.withdraw'),
+      hasPermission(
+        VM,
+        { type: 'vm_relationship', relationship: { vmId: 'other-vm', vratarthiId: 'user-1' } },
+        'vm_relationship.withdraw',
+      ),
     ).toBe(false);
   });
   it('VA cannot withdraw a vm_relationship even if their id matches vmId', () => {
     expect(
-      hasPermission(VA, { type: 'vm_relationship', relationship: { vmId: 'user-1', vratarthiId: 'other-user' } }, 'vm_relationship.withdraw'),
+      hasPermission(
+        VA,
+        { type: 'vm_relationship', relationship: { vmId: 'user-1', vratarthiId: 'other-user' } },
+        'vm_relationship.withdraw',
+      ),
     ).toBe(false);
   });
 });
@@ -604,34 +816,58 @@ describe('vm_relationship.withdraw', () => {
 
 describe('weakness.attach', () => {
   it('VA can attach a weakness to their own journey', () => {
-    expect(hasPermission(VA, { type: 'journey', journey: ownJourney }, 'weakness.attach')).toBe(true);
+    expect(hasPermission(VA, { type: 'journey', journey: ownJourney }, 'weakness.attach')).toBe(
+      true,
+    );
   });
   it('VM cannot attach a weakness', () => {
-    expect(hasPermission(VM, { type: 'journey', journey: journeyWithVm }, 'weakness.attach')).toBe(false);
+    expect(hasPermission(VM, { type: 'journey', journey: journeyWithVm }, 'weakness.attach')).toBe(
+      false,
+    );
   });
 });
 
 describe('challenge.configure_threshold', () => {
   it('VA can configure threshold for their own journey', () => {
-    expect(hasPermission(VA, { type: 'journey', journey: ownJourney }, 'challenge.configure_threshold')).toBe(true);
+    expect(
+      hasPermission(VA, { type: 'journey', journey: ownJourney }, 'challenge.configure_threshold'),
+    ).toBe(true);
   });
   it('assigned VM can configure threshold', () => {
-    expect(hasPermission(VM, { type: 'journey', journey: journeyWithVm }, 'challenge.configure_threshold')).toBe(true);
+    expect(
+      hasPermission(
+        VM,
+        { type: 'journey', journey: journeyWithVm },
+        'challenge.configure_threshold',
+      ),
+    ).toBe(true);
   });
   it('unassigned VM cannot configure threshold', () => {
-    expect(hasPermission(VM, { type: 'journey', journey: ownJourney }, 'challenge.configure_threshold')).toBe(false);
+    expect(
+      hasPermission(VM, { type: 'journey', journey: ownJourney }, 'challenge.configure_threshold'),
+    ).toBe(false);
   });
 });
 
 describe('global_vm.view_va_guidance', () => {
   it('global VM can view VA guidance', () => {
-    expect(hasPermission(VM, { type: 'journey', journey: journeyWithGlobalVm }, 'global_vm.view_va_guidance')).toBe(true);
+    expect(
+      hasPermission(
+        VM,
+        { type: 'journey', journey: journeyWithGlobalVm },
+        'global_vm.view_va_guidance',
+      ),
+    ).toBe(true);
   });
   it('journey VM (not global) cannot view VA guidance', () => {
-    expect(hasPermission(VM, { type: 'journey', journey: journeyWithVm }, 'global_vm.view_va_guidance')).toBe(false);
+    expect(
+      hasPermission(VM, { type: 'journey', journey: journeyWithVm }, 'global_vm.view_va_guidance'),
+    ).toBe(false);
   });
   it('VA cannot view VA guidance via this action', () => {
-    expect(hasPermission(VA, { type: 'journey', journey: ownJourney }, 'global_vm.view_va_guidance')).toBe(false);
+    expect(
+      hasPermission(VA, { type: 'journey', journey: ownJourney }, 'global_vm.view_va_guidance'),
+    ).toBe(false);
   });
 });
 
@@ -681,7 +917,9 @@ describe('moderator.review_custom_erc', () => {
 
 describe('moderator.manage_display_content', () => {
   it('admin can manage display content', () => {
-    expect(hasPermission(ADMIN, { type: 'platform' }, 'moderator.manage_display_content')).toBe(true);
+    expect(hasPermission(ADMIN, { type: 'platform' }, 'moderator.manage_display_content')).toBe(
+      true,
+    );
   });
   it('moderator can manage display content', () => {
     expect(hasPermission(MOD, { type: 'platform' }, 'moderator.manage_display_content')).toBe(true);

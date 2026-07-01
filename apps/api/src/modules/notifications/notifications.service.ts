@@ -3,7 +3,10 @@ import { ConfigService } from '@nestjs/config';
 import { createElement } from 'react';
 import type { NotificationEventType } from '@prisma/client';
 import { NotificationsRepository, NotificationPage } from './notifications.repository';
-import { AccessDeniedException, EntityNotFoundException } from '../../common/exceptions/app.exceptions';
+import {
+  AccessDeniedException,
+  EntityNotFoundException,
+} from '../../common/exceptions/app.exceptions';
 import { EmailService } from '../email/email.service';
 import { NotificationEmail, getNotificationSubject } from '../email/templates/NotificationEmail';
 import { notificationLinkPath } from './notification-link';
@@ -77,9 +80,18 @@ export class NotificationsService {
       const { html, text } = await this.emailService.renderTemplate(
         createElement(NotificationEmail, { event, language, link }),
       );
-      this.emailService.sendNotification(recipient.email, getNotificationSubject(event, language), html, text);
+      this.emailService.sendNotification(
+        recipient.email,
+        getNotificationSubject(event, language),
+        html,
+        text,
+      );
     } catch (err) {
-      this.logger.warn({ msg: 'Notification email dispatch failed', event, error: (err as Error).message });
+      this.logger.warn({
+        msg: 'Notification email dispatch failed',
+        event,
+        error: (err as Error).message,
+      });
     }
   }
 

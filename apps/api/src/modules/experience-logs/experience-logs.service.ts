@@ -40,7 +40,19 @@ export class ExperienceLogsService {
     if (journeyId && !journey) throw new EntityNotFoundException('Journey', journeyId);
 
     // create permission: VA globally, or VA owner for a journey-scoped entry.
-    if (!isVa(user) || !hasPermission(user, this.resource(journey, { authorId: user.id, journeyId, visibility: ExperienceVisibility.ONLY_ME, isDraft: true }), 'experience_log.create')) {
+    if (
+      !isVa(user) ||
+      !hasPermission(
+        user,
+        this.resource(journey, {
+          authorId: user.id,
+          journeyId,
+          visibility: ExperienceVisibility.ONLY_ME,
+          isDraft: true,
+        }),
+        'experience_log.create',
+      )
+    ) {
       throw new AccessDeniedException();
     }
 
@@ -57,7 +69,9 @@ export class ExperienceLogsService {
     const slim = await this.repository.findSlim(id);
     if (!slim) throw new EntityNotFoundException('ExperienceLog', id);
 
-    const journey = slim.journeyId ? await this.journeysService.getJourneySlim(slim.journeyId) : null;
+    const journey = slim.journeyId
+      ? await this.journeysService.getJourneySlim(slim.journeyId)
+      : null;
     if (!hasPermission(user, this.resource(journey, slim), 'experience_log.edit')) {
       throw new AccessDeniedException();
     }
@@ -76,7 +90,9 @@ export class ExperienceLogsService {
     const slim = await this.repository.findSlim(id);
     if (!slim) throw new EntityNotFoundException('ExperienceLog', id);
 
-    const journey = slim.journeyId ? await this.journeysService.getJourneySlim(slim.journeyId) : null;
+    const journey = slim.journeyId
+      ? await this.journeysService.getJourneySlim(slim.journeyId)
+      : null;
     if (!hasPermission(user, this.resource(journey, slim), 'experience_log.delete')) {
       throw new AccessDeniedException();
     }
@@ -132,7 +148,9 @@ export class ExperienceLogsService {
     return { type: 'experience_log' as const, journey, log, viewerIsFriend };
   }
 
-  private toTags(tags?: { entityType: ExperienceTagInput['entityType']; entityId: string }[]): ExperienceTagInput[] {
+  private toTags(
+    tags?: { entityType: ExperienceTagInput['entityType']; entityId: string }[],
+  ): ExperienceTagInput[] {
     return (tags ?? []).map((t) => ({ entityType: t.entityType, entityId: t.entityId }));
   }
 }

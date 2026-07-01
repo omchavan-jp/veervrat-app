@@ -1,12 +1,23 @@
 import { describe, it, expect, vi } from 'vitest';
 import { Role } from '@prisma/client';
 import { DisplayContentService } from './display-content.service';
-import { AccessDeniedException, EntityNotFoundException } from '../../common/exceptions/app.exceptions';
+import {
+  AccessDeniedException,
+  EntityNotFoundException,
+} from '../../common/exceptions/app.exceptions';
 import type { SessionUser } from '../auth/types/auth.types';
 
 const base: Omit<SessionUser, 'id' | 'roles'> = {
-  email: 'u@x.com', displayName: 'U', username: 'u', language: 'EN', gender: null, dob: null,
-  avatarUrl: null, emailVerifiedAt: new Date(), accountSetupCompletedAt: new Date(), onboardingCompletedAt: new Date(),
+  email: 'u@x.com',
+  displayName: 'U',
+  username: 'u',
+  language: 'EN',
+  gender: null,
+  dob: null,
+  avatarUrl: null,
+  emailVerifiedAt: new Date(),
+  accountSetupCompletedAt: new Date(),
+  onboardingCompletedAt: new Date(),
 };
 const MOD: SessionUser = { ...base, id: 'mod-1', roles: [Role.MODERATOR] };
 const ADMIN: SessionUser = { ...base, id: 'admin-1', roles: [Role.ADMIN] };
@@ -26,7 +37,9 @@ function make(overrides: Record<string, any> = {}) {
 describe('DisplayContentService', () => {
   it('NEGATIVE: vratarthi cannot feature a blog', async () => {
     const { service } = make();
-    await expect(service.setBlogFeatured(VA, 'b1', true)).rejects.toBeInstanceOf(AccessDeniedException);
+    await expect(service.setBlogFeatured(VA, 'b1', true)).rejects.toBeInstanceOf(
+      AccessDeniedException,
+    );
   });
 
   it('moderator features a blog', async () => {
@@ -43,6 +56,8 @@ describe('DisplayContentService', () => {
 
   it('404 when blog missing', async () => {
     const { service } = make({ findBlog: vi.fn().mockResolvedValue(null) });
-    await expect(service.setBlogFeatured(MOD, 'b1', true)).rejects.toBeInstanceOf(EntityNotFoundException);
+    await expect(service.setBlogFeatured(MOD, 'b1', true)).rejects.toBeInstanceOf(
+      EntityNotFoundException,
+    );
   });
 });

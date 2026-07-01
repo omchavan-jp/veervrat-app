@@ -34,7 +34,9 @@ export class VirtuesService {
 
     // Active-journey indicator only for an authenticated VA (spec/21).
     const hasActiveJourney =
-      user && isVa(user) ? await this.journeysService.hasActiveJourneyForSentence(user.id, id) : false;
+      user && isVa(user)
+        ? await this.journeysService.hasActiveJourneyForSentence(user.id, id)
+        : false;
 
     return { ...sentence, hasActiveJourney };
   }

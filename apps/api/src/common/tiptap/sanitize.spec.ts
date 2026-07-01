@@ -15,24 +15,36 @@ describe('sanitizeTiptapDoc — structure', () => {
   });
 
   it('keeps allowlisted text + marks', () => {
-    const out = sanitizeTiptapDoc(doc(para({ type: 'text', text: 'hi', marks: [{ type: 'bold' }] })));
-    expect(out.content[0].content?.[0]).toEqual({ type: 'text', text: 'hi', marks: [{ type: 'bold' }] });
+    const out = sanitizeTiptapDoc(
+      doc(para({ type: 'text', text: 'hi', marks: [{ type: 'bold' }] })),
+    );
+    expect(out.content[0].content?.[0]).toEqual({
+      type: 'text',
+      text: 'hi',
+      marks: [{ type: 'bold' }],
+    });
   });
 
   it('drops disallowed marks but keeps the text', () => {
-    const out = sanitizeTiptapDoc(doc(para({ type: 'text', text: 'hi', marks: [{ type: 'evil' }] })));
+    const out = sanitizeTiptapDoc(
+      doc(para({ type: 'text', text: 'hi', marks: [{ type: 'evil' }] })),
+    );
     expect(out.content[0].content?.[0]).toEqual({ type: 'text', text: 'hi' });
   });
 });
 
 describe('sanitizeTiptapDoc — images', () => {
   it('keeps an image with a safe https URL', () => {
-    const out = sanitizeTiptapDoc(doc(para(), { type: 'image', attrs: { src: 'https://cdn.example.com/a.png' } }));
+    const out = sanitizeTiptapDoc(
+      doc(para(), { type: 'image', attrs: { src: 'https://cdn.example.com/a.png' } }),
+    );
     expect(out.content.some((n) => n.type === 'image')).toBe(true);
   });
 
   it('drops an image with a javascript: URL', () => {
-    const out = sanitizeTiptapDoc(doc(para(text('x')), { type: 'image', attrs: { src: 'javascript:alert(1)' } }));
+    const out = sanitizeTiptapDoc(
+      doc(para(text('x')), { type: 'image', attrs: { src: 'javascript:alert(1)' } }),
+    );
     expect(out.content.some((n) => n.type === 'image')).toBe(false);
   });
 });
@@ -41,9 +53,10 @@ describe('sanitizeTiptapDoc — entity-reference (mention) nodes', () => {
   it('keeps a valid mention and strips unknown attrs', () => {
     const out = sanitizeTiptapDoc(
       doc(
-        para(
-          { type: 'entityHash', attrs: { entityType: 'weakness', entityId: 'w-1', label: 'आळस', evil: '<script>' } },
-        ),
+        para({
+          type: 'entityHash',
+          attrs: { entityType: 'weakness', entityId: 'w-1', label: 'आळस', evil: '<script>' },
+        }),
       ),
     );
     const mention = out.content[0].content?.[0];
@@ -54,7 +67,12 @@ describe('sanitizeTiptapDoc — entity-reference (mention) nodes', () => {
 
   it('rejects a mention with an unknown entityType', () => {
     const out = sanitizeTiptapDoc(
-      doc(para(text('hi'), { type: 'entityHash', attrs: { entityType: 'admin_panel', entityId: 'x', label: 'y' } })),
+      doc(
+        para(text('hi'), {
+          type: 'entityHash',
+          attrs: { entityType: 'admin_panel', entityId: 'x', label: 'y' },
+        }),
+      ),
     );
     // mention dropped, text kept
     const kinds = out.content[0].content?.map((n) => n.type);
@@ -63,14 +81,24 @@ describe('sanitizeTiptapDoc — entity-reference (mention) nodes', () => {
 
   it('rejects a mention with a missing or oversized entityId', () => {
     const out = sanitizeTiptapDoc(
-      doc(para(text('hi'), { type: 'entityHash', attrs: { entityType: 'weakness', entityId: 'x'.repeat(65), label: 'y' } })),
+      doc(
+        para(text('hi'), {
+          type: 'entityHash',
+          attrs: { entityType: 'weakness', entityId: 'x'.repeat(65), label: 'y' },
+        }),
+      ),
     );
     expect(out.content[0].content?.map((n) => n.type)).toEqual(['text']);
   });
 
   it('clamps an over-long label', () => {
     const out = sanitizeTiptapDoc(
-      doc(para({ type: 'entityHash', attrs: { entityType: 'virtue', entityId: 'v-1', label: 'a'.repeat(500) } })),
+      doc(
+        para({
+          type: 'entityHash',
+          attrs: { entityType: 'virtue', entityId: 'v-1', label: 'a'.repeat(500) },
+        }),
+      ),
     );
     const label = out.content[0].content?.[0]?.attrs?.label as string;
     expect(label.length).toBe(120);

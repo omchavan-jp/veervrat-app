@@ -20,7 +20,10 @@ const baseUser: Omit<SessionUser, 'id' | 'roles'> = {
 
 const VA: SessionUser = { ...baseUser, id: 'va-1', roles: [Role.VRATARTHI] };
 
-function make(repoOverrides: Record<string, any> = {}, target: any = { id: 'target-1', username: 'target' }) {
+function make(
+  repoOverrides: Record<string, any> = {},
+  target: any = { id: 'target-1', username: 'target' },
+) {
   const repo = {
     exists: vi.fn().mockResolvedValue(false),
     follow: vi.fn().mockResolvedValue(undefined),
@@ -69,8 +72,9 @@ describe('FollowsService', () => {
   });
 
   it('getStatus reports both directions', async () => {
-    const exists = vi.fn()
-      .mockResolvedValueOnce(true)   // viewer → target
+    const exists = vi
+      .fn()
+      .mockResolvedValueOnce(true) // viewer → target
       .mockResolvedValueOnce(false); // target → viewer
     const { service } = make({ exists });
     const status = await service.getStatus('va-1', 'target-1');

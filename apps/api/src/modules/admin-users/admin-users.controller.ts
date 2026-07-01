@@ -42,9 +42,16 @@ export class AdminUsersController {
     action: 'admin.manage_user_role',
     resourceType: 'user',
     resourceIdParam: 'id',
-    metadata: (c) => ({ added: (c.body as UpdateRolesDto)?.add ?? [], removed: (c.body as UpdateRolesDto)?.remove ?? [] }),
+    metadata: (c) => ({
+      added: (c.body as UpdateRolesDto)?.add ?? [],
+      removed: (c.body as UpdateRolesDto)?.remove ?? [],
+    }),
   })
-  updateRoles(@CurrentUser() user: SessionUser, @Param('id') id: string, @Body() dto: UpdateRolesDto) {
+  updateRoles(
+    @CurrentUser() user: SessionUser,
+    @Param('id') id: string,
+    @Body() dto: UpdateRolesDto,
+  ) {
     return this.admin.updateRoles(user, id, dto);
   }
 
@@ -75,7 +82,11 @@ export class AdminUsersController {
     resourceIdParam: 'id',
     metadata: (c) => ({ reason: (c.body as AnonymiseUserDto)?.reason }),
   })
-  anonymise(@CurrentUser() user: SessionUser, @Param('id') id: string, @Body() dto: AnonymiseUserDto) {
+  anonymise(
+    @CurrentUser() user: SessionUser,
+    @Param('id') id: string,
+    @Body() dto: AnonymiseUserDto,
+  ) {
     return this.admin.anonymise(user, id, dto);
   }
 
@@ -86,10 +97,18 @@ export class AdminUsersController {
     resourceIdParam: 'id',
     metadata: (c) => {
       const r = c.result as { from?: string; to?: string } | undefined;
-      return { from_state: r?.from, to_state: r?.to, reason: (c.body as OverrideJourneyStateDto)?.reason };
+      return {
+        from_state: r?.from,
+        to_state: r?.to,
+        reason: (c.body as OverrideJourneyStateDto)?.reason,
+      };
     },
   })
-  overrideJourneyState(@CurrentUser() user: SessionUser, @Param('id') id: string, @Body() dto: OverrideJourneyStateDto) {
+  overrideJourneyState(
+    @CurrentUser() user: SessionUser,
+    @Param('id') id: string,
+    @Body() dto: OverrideJourneyStateDto,
+  ) {
     return this.admin.overrideJourneyState(user, id, dto);
   }
 }

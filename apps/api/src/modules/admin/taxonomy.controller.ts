@@ -33,14 +33,22 @@ export class TaxonomyController {
   // ─── Virtues ───────────────────────────────────────────────────────────────
   @Post('virtues')
   @HttpCode(HttpStatus.CREATED)
-  @Audited({ action: 'admin.create_virtue', resourceType: 'virtue', resourceId: (c) => (c.result as { id?: string })?.id })
+  @Audited({
+    action: 'admin.create_virtue',
+    resourceType: 'virtue',
+    resourceId: (c) => (c.result as { id?: string })?.id,
+  })
   createVirtue(@CurrentUser() user: SessionUser, @Body() dto: CreateVirtueDto) {
     return this.taxonomy.createVirtue(user, dto);
   }
 
   @Patch('virtues/:id')
   @Audited({ action: 'admin.update_virtue', resourceType: 'virtue', resourceIdParam: 'id' })
-  updateVirtue(@CurrentUser() user: SessionUser, @Param('id') id: string, @Body() dto: UpdateVirtueDto) {
+  updateVirtue(
+    @CurrentUser() user: SessionUser,
+    @Param('id') id: string,
+    @Body() dto: UpdateVirtueDto,
+  ) {
     return this.taxonomy.updateVirtue(user, id, dto);
   }
 
@@ -53,14 +61,22 @@ export class TaxonomyController {
   // ─── Subvirtues ──────────────────────────────────────────────────────────────
   @Post('subvirtues')
   @HttpCode(HttpStatus.CREATED)
-  @Audited({ action: 'admin.create_subvirtue', resourceType: 'subvirtue', resourceId: (c) => (c.result as { id?: string })?.id })
+  @Audited({
+    action: 'admin.create_subvirtue',
+    resourceType: 'subvirtue',
+    resourceId: (c) => (c.result as { id?: string })?.id,
+  })
   createSubvirtue(@CurrentUser() user: SessionUser, @Body() dto: CreateSubvirtueDto) {
     return this.taxonomy.createSubvirtue(user, dto);
   }
 
   @Patch('subvirtues/:id')
   @Audited({ action: 'admin.update_subvirtue', resourceType: 'subvirtue', resourceIdParam: 'id' })
-  updateSubvirtue(@CurrentUser() user: SessionUser, @Param('id') id: string, @Body() dto: UpdateSubvirtueDto) {
+  updateSubvirtue(
+    @CurrentUser() user: SessionUser,
+    @Param('id') id: string,
+    @Body() dto: UpdateSubvirtueDto,
+  ) {
     return this.taxonomy.updateSubvirtue(user, id, dto);
   }
 
@@ -73,14 +89,22 @@ export class TaxonomyController {
   // ─── Weaknesses ──────────────────────────────────────────────────────────────
   @Post('weaknesses')
   @HttpCode(HttpStatus.CREATED)
-  @Audited({ action: 'admin.create_weakness', resourceType: 'weakness', resourceId: (c) => (c.result as { id?: string })?.id })
+  @Audited({
+    action: 'admin.create_weakness',
+    resourceType: 'weakness',
+    resourceId: (c) => (c.result as { id?: string })?.id,
+  })
   createWeakness(@CurrentUser() user: SessionUser, @Body() dto: CreateWeaknessDto) {
     return this.taxonomy.createWeakness(user, dto);
   }
 
   @Patch('weaknesses/:id')
   @Audited({ action: 'admin.update_weakness', resourceType: 'weakness', resourceIdParam: 'id' })
-  updateWeakness(@CurrentUser() user: SessionUser, @Param('id') id: string, @Body() dto: UpdateWeaknessDto) {
+  updateWeakness(
+    @CurrentUser() user: SessionUser,
+    @Param('id') id: string,
+    @Body() dto: UpdateWeaknessDto,
+  ) {
     return this.taxonomy.updateWeakness(user, id, dto);
   }
 

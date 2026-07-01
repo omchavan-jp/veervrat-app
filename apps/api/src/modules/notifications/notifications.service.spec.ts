@@ -1,6 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { NotificationsService } from './notifications.service';
-import { AccessDeniedException, EntityNotFoundException } from '../../common/exceptions/app.exceptions';
+import {
+  AccessDeniedException,
+  EntityNotFoundException,
+} from '../../common/exceptions/app.exceptions';
 import { NotificationEventType } from '@prisma/client';
 
 const NOTIF_ID = 'notif-1';
@@ -26,7 +29,9 @@ function makeNotif(overrides: Record<string, unknown> = {}) {
 function makeRepo(overrides: Record<string, unknown> = {}) {
   return {
     create: vi.fn().mockResolvedValue({ id: NOTIF_ID }),
-    findEmailRecipient: vi.fn().mockResolvedValue({ email: 'r@test.com', language: 'EN', notificationPrefs: {} }),
+    findEmailRecipient: vi
+      .fn()
+      .mockResolvedValue({ email: 'r@test.com', language: 'EN', notificationPrefs: {} }),
     listForUser: vi.fn().mockResolvedValue({ items: [], nextCursor: null }),
     countUnread: vi.fn().mockResolvedValue(0),
     findById: vi.fn().mockResolvedValue(makeNotif()),
@@ -45,7 +50,10 @@ function makeEmail(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function makeService(repoOverrides: Record<string, unknown> = {}, emailOverrides: Record<string, unknown> = {}) {
+function makeService(
+  repoOverrides: Record<string, unknown> = {},
+  emailOverrides: Record<string, unknown> = {},
+) {
   const repo = makeRepo(repoOverrides);
   const email = makeEmail(emailOverrides);
   const service = Object.create(NotificationsService.prototype) as NotificationsService;
@@ -63,7 +71,13 @@ describe('NotificationsService', () => {
   describe('create — email delivery', () => {
     it('sends an email for an emailable event when the recipient is active and not opted out', async () => {
       const { service, repo, email } = makeService();
-      await service.create(USER_A, USER_B, NotificationEventType.ERC_CLOSURE_APPROVED, 'exposure', 'item-1');
+      await service.create(
+        USER_A,
+        USER_B,
+        NotificationEventType.ERC_CLOSURE_APPROVED,
+        'exposure',
+        'item-1',
+      );
       await flush();
       expect(repo.create).toHaveBeenCalledOnce();
       expect(repo.findEmailRecipient).toHaveBeenCalledWith(USER_A);
@@ -85,23 +99,44 @@ describe('NotificationsService', () => {
           notificationPrefs: { ERC_CLOSURE_APPROVED: false },
         }),
       });
-      await service.create(USER_A, USER_B, NotificationEventType.ERC_CLOSURE_APPROVED, 'exposure', 'item-1');
+      await service.create(
+        USER_A,
+        USER_B,
+        NotificationEventType.ERC_CLOSURE_APPROVED,
+        'exposure',
+        'item-1',
+      );
       await flush();
       expect(email.sendNotification).not.toHaveBeenCalled();
     });
 
     it('does NOT email an inactive (deleted/suspended) recipient', async () => {
-      const { service, email } = makeService({ findEmailRecipient: vi.fn().mockResolvedValue(null) });
-      await service.create(USER_A, USER_B, NotificationEventType.ERC_CLOSURE_APPROVED, 'exposure', 'item-1');
+      const { service, email } = makeService({
+        findEmailRecipient: vi.fn().mockResolvedValue(null),
+      });
+      await service.create(
+        USER_A,
+        USER_B,
+        NotificationEventType.ERC_CLOSURE_APPROVED,
+        'exposure',
+        'item-1',
+      );
       await flush();
       expect(email.sendNotification).not.toHaveBeenCalled();
     });
 
     it('skips email when skipEmail is set (caller sends its own bespoke email)', async () => {
       const { service, repo, email } = makeService();
-      await service.create(USER_A, USER_B, NotificationEventType.VM_INVITATION_RECEIVED, 'invitation', 'inv-1', {
-        skipEmail: true,
-      });
+      await service.create(
+        USER_A,
+        USER_B,
+        NotificationEventType.VM_INVITATION_RECEIVED,
+        'invitation',
+        'inv-1',
+        {
+          skipEmail: true,
+        },
+      );
       await flush();
       expect(repo.create).toHaveBeenCalledOnce();
       expect(repo.findEmailRecipient).not.toHaveBeenCalled();
@@ -110,9 +145,17 @@ describe('NotificationsService', () => {
 
     it('renders in Marathi when the recipient language is mr', async () => {
       const { service, email } = makeService({
-        findEmailRecipient: vi.fn().mockResolvedValue({ email: 'r@test.com', language: 'mr', notificationPrefs: {} }),
+        findEmailRecipient: vi
+          .fn()
+          .mockResolvedValue({ email: 'r@test.com', language: 'mr', notificationPrefs: {} }),
       });
-      await service.create(USER_A, USER_B, NotificationEventType.JOURNEY_COMPLETION_APPROVED, 'journey', 'j-1');
+      await service.create(
+        USER_A,
+        USER_B,
+        NotificationEventType.JOURNEY_COMPLETION_APPROVED,
+        'journey',
+        'j-1',
+      );
       await flush();
       expect(email.sendNotification).toHaveBeenCalledOnce();
       // subject is the MR subject for this event
@@ -121,10 +164,19 @@ describe('NotificationsService', () => {
     });
 
     it('still creates the in-app notification when email rendering throws', async () => {
-      const { service, repo, email } = makeService({}, {
-        renderTemplate: vi.fn().mockRejectedValue(new Error('render boom')),
-      });
-      const result = await service.create(USER_A, USER_B, NotificationEventType.ERC_CLOSURE_APPROVED, 'exposure', 'i');
+      const { service, repo, email } = makeService(
+        {},
+        {
+          renderTemplate: vi.fn().mockRejectedValue(new Error('render boom')),
+        },
+      );
+      const result = await service.create(
+        USER_A,
+        USER_B,
+        NotificationEventType.ERC_CLOSURE_APPROVED,
+        'exposure',
+        'i',
+      );
       await flush();
       expect(repo.create).toHaveBeenCalledOnce();
       expect(result).toEqual({ id: NOTIF_ID });

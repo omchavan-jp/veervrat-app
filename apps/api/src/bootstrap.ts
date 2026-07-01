@@ -7,10 +7,7 @@ import { ValidationException } from './common/exceptions/app.exceptions';
 
 type ValidationDetail = { field: string; message: string };
 
-function flattenValidationErrors(
-  errors: ValidationError[],
-  parentPath = '',
-): ValidationDetail[] {
+function flattenValidationErrors(errors: ValidationError[], parentPath = ''): ValidationDetail[] {
   return errors.flatMap((error) => {
     const field = parentPath ? `${parentPath}.${error.property}` : error.property;
     const ownDetails: ValidationDetail[] = error.constraints

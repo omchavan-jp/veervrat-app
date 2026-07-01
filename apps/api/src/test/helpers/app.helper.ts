@@ -57,18 +57,22 @@ export function getTestPrisma(): PrismaService {
  *   });
  */
 export async function withRollback<T>(
-  fn: (tx: Omit<PrismaService, '$connect' | '$disconnect' | '$on' | '$transaction' | '$extends'>) => Promise<T>,
+  fn: (
+    tx: Omit<PrismaService, '$connect' | '$disconnect' | '$on' | '$transaction' | '$extends'>,
+  ) => Promise<T>,
 ): Promise<T | undefined> {
   const p = getTestPrisma();
   let result: T | undefined;
-  await p.$transaction(async (tx) => {
-    result = await fn(tx as Parameters<typeof fn>[0]);
-    // Always roll back by throwing — Prisma rolls back on any thrown error
-    throw new RollbackSignal();
-  }).catch((e) => {
-    if (e instanceof RollbackSignal) return; // expected — swallow
-    throw e; // real error — rethrow
-  });
+  await p
+    .$transaction(async (tx) => {
+      result = await fn(tx as Parameters<typeof fn>[0]);
+      // Always roll back by throwing — Prisma rolls back on any thrown error
+      throw new RollbackSignal();
+    })
+    .catch((e) => {
+      if (e instanceof RollbackSignal) return; // expected — swallow
+      throw e; // real error — rethrow
+    });
   return result;
 }
 

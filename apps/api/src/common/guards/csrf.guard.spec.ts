@@ -25,7 +25,7 @@ function makeContext(
 
 function makeGuard(skipCsrfForContext = false): CsrfGuard {
   const reflector = {
-    getAllAndOverride: (_key: string, _targets: unknown[]) => skipCsrfForContext,
+    getAllAndOverride: () => skipCsrfForContext,
   } as unknown as Reflector;
   return new CsrfGuard(reflector);
 }
@@ -74,11 +74,7 @@ describe('CsrfGuard', () => {
   });
 
   it('throws on POST with mismatched CSRF token', () => {
-    const ctx = makeContext(
-      'POST',
-      { 'csrf-token': TOKEN },
-      { 'x-csrf-token': 'wrongtoken' },
-    );
+    const ctx = makeContext('POST', { 'csrf-token': TOKEN }, { 'x-csrf-token': 'wrongtoken' });
     expect(() => guard.canActivate(ctx)).toThrow(AccessDeniedException);
   });
 

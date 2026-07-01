@@ -9,29 +9,65 @@ import {
 import type { SessionUser } from '../auth/types/auth.types';
 
 const base: Omit<SessionUser, 'id' | 'roles'> = {
-  email: 'u@x.com', displayName: 'U', username: 'u', language: 'EN', gender: null, dob: null,
-  avatarUrl: null, emailVerifiedAt: new Date(), accountSetupCompletedAt: new Date(), onboardingCompletedAt: new Date(),
+  email: 'u@x.com',
+  displayName: 'U',
+  username: 'u',
+  language: 'EN',
+  gender: null,
+  dob: null,
+  avatarUrl: null,
+  emailVerifiedAt: new Date(),
+  accountSetupCompletedAt: new Date(),
+  onboardingCompletedAt: new Date(),
 };
 const ADMIN: SessionUser = { ...base, id: 'admin-1', roles: [Role.ADMIN] };
 const MOD: SessionUser = { ...base, id: 'mod-1', roles: [Role.MODERATOR] };
 const VA: SessionUser = { ...base, id: 'va-1', roles: [Role.VRATARTHI] };
 
-function make(overrides: Record<string, any> = {}, authOverrides: Record<string, any> = {}, journeyOverrides: Record<string, any> = {}) {
+function make(
+  overrides: Record<string, any> = {},
+  authOverrides: Record<string, any> = {},
+  journeyOverrides: Record<string, any> = {},
+) {
   const repo = {
     list: vi.fn().mockResolvedValue({ items: [], nextCursor: null }),
-    findDetail: vi.fn().mockResolvedValue({ id: 'u9', journeys: [], testAttempts: [], experienceLogs: [] }),
-    findById: vi.fn().mockResolvedValue({ id: 'u9', displayName: 'Target', suspendedAt: null, anonymisedAt: null, deletedAt: null, roles: [{ role: Role.VRATARTHI }] }),
+    findDetail: vi
+      .fn()
+      .mockResolvedValue({ id: 'u9', journeys: [], testAttempts: [], experienceLogs: [] }),
+    findById: vi.fn().mockResolvedValue({
+      id: 'u9',
+      displayName: 'Target',
+      suspendedAt: null,
+      anonymisedAt: null,
+      deletedAt: null,
+      roles: [{ role: Role.VRATARTHI }],
+    }),
     addRoles: vi.fn().mockResolvedValue(undefined),
     removeRoles: vi.fn().mockResolvedValue(undefined),
     setSuspended: vi.fn().mockResolvedValue({ id: 'u9', suspendedAt: new Date() }),
-    anonymise: vi.fn().mockResolvedValue({ id: 'u9', anonymisedAt: new Date(), deletedAt: new Date() }),
+    anonymise: vi
+      .fn()
+      .mockResolvedValue({ id: 'u9', anonymisedAt: new Date(), deletedAt: new Date() }),
     cancelPendingInvitations: vi.fn().mockResolvedValue({ count: 1 }),
     ...overrides,
   } as any;
   const auth = { forceLogout: vi.fn().mockResolvedValue(undefined), ...authOverrides } as any;
-  const journeys = { adminOverrideState: vi.fn().mockResolvedValue({ from: JourneyState.ACTIVE, to: JourneyState.PAUSED }), ...journeyOverrides } as any;
-  const users = { anonymiseAccount: vi.fn().mockResolvedValue({ id: 'u9', anonymisedAt: new Date() }) } as any;
-  return { service: new AdminUsersService(repo, auth, journeys, users), repo, auth, journeys, users };
+  const journeys = {
+    adminOverrideState: vi
+      .fn()
+      .mockResolvedValue({ from: JourneyState.ACTIVE, to: JourneyState.PAUSED }),
+    ...journeyOverrides,
+  } as any;
+  const users = {
+    anonymiseAccount: vi.fn().mockResolvedValue({ id: 'u9', anonymisedAt: new Date() }),
+  } as any;
+  return {
+    service: new AdminUsersService(repo, auth, journeys, users),
+    repo,
+    auth,
+    journeys,
+    users,
+  };
 }
 
 describe('AdminUsersService', () => {
@@ -66,7 +102,9 @@ describe('AdminUsersService', () => {
 
   it('admin cannot remove their own ADMIN role', async () => {
     const { service } = make();
-    await expect(service.updateRoles(ADMIN, 'admin-1', { remove: [Role.ADMIN] })).rejects.toBeInstanceOf(EntityInUseException);
+    await expect(
+      service.updateRoles(ADMIN, 'admin-1', { remove: [Role.ADMIN] }),
+    ).rejects.toBeInstanceOf(EntityInUseException);
   });
 
   it('suspend sets flag and force-logs-out', async () => {
@@ -85,7 +123,9 @@ describe('AdminUsersService', () => {
 
   it('admin cannot suspend self', async () => {
     const { service } = make();
-    await expect(service.setSuspended(ADMIN, 'admin-1', true)).rejects.toBeInstanceOf(EntityInUseException);
+    await expect(service.setSuspended(ADMIN, 'admin-1', true)).rejects.toBeInstanceOf(
+      EntityInUseException,
+    );
   });
 
   it('anonymise delegates to the shared UsersService.anonymiseAccount seam', async () => {
@@ -95,24 +135,35 @@ describe('AdminUsersService', () => {
   });
 
   it('anonymise rejects already-anonymised', async () => {
-    const { service } = make({ findById: vi.fn().mockResolvedValue({ id: 'u9', anonymisedAt: new Date() }) });
-    await expect(service.anonymise(ADMIN, 'u9', { reason: 'again please' })).rejects.toBeInstanceOf(EntityInUseException);
+    const { service } = make({
+      findById: vi.fn().mockResolvedValue({ id: 'u9', anonymisedAt: new Date() }),
+    });
+    await expect(service.anonymise(ADMIN, 'u9', { reason: 'again please' })).rejects.toBeInstanceOf(
+      EntityInUseException,
+    );
   });
 
   it('admin cannot anonymise self', async () => {
     const { service } = make();
-    await expect(service.anonymise(ADMIN, 'admin-1', { reason: 'self delete' })).rejects.toBeInstanceOf(EntityInUseException);
+    await expect(
+      service.anonymise(ADMIN, 'admin-1', { reason: 'self delete' }),
+    ).rejects.toBeInstanceOf(EntityInUseException);
   });
 
   it('journey override returns from/to', async () => {
     const { service, journeys } = make();
-    const r = await service.overrideJourneyState(ADMIN, 'j1', { state: JourneyState.PAUSED, reason: 'stuck' });
+    const r = await service.overrideJourneyState(ADMIN, 'j1', {
+      state: JourneyState.PAUSED,
+      reason: 'stuck',
+    });
     expect(journeys.adminOverrideState).toHaveBeenCalledWith('j1', JourneyState.PAUSED);
     expect(r).toEqual({ id: 'j1', from: JourneyState.ACTIVE, to: JourneyState.PAUSED });
   });
 
   it('NEGATIVE: non-admin cannot override journey state', async () => {
     const { service } = make();
-    await expect(service.overrideJourneyState(MOD, 'j1', { state: JourneyState.PAUSED, reason: 'x' })).rejects.toBeInstanceOf(AccessDeniedException);
+    await expect(
+      service.overrideJourneyState(MOD, 'j1', { state: JourneyState.PAUSED, reason: 'x' }),
+    ).rejects.toBeInstanceOf(AccessDeniedException);
   });
 });

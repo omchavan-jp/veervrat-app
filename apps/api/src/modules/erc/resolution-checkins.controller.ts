@@ -1,6 +1,12 @@
 import {
-  Controller, Get, Post,
-  Param, Body, UseGuards, HttpCode, HttpStatus,
+  Controller,
+  Get,
+  Post,
+  Param,
+  Body,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { ResolutionCheckinsService } from './resolution-checkins.service';
 import { CreateCheckinDto } from './dto/create-checkin.dto';

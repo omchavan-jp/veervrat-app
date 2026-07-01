@@ -21,7 +21,8 @@ export class AdminPothiService {
 
   private async assertShlokas(ids: string[]): Promise<void> {
     if (ids.length === 0) return;
-    if (new Set(ids).size !== ids.length) throw new ValidationException('Section has duplicate shlokas');
+    if (new Set(ids).size !== ids.length)
+      throw new ValidationException('Section has duplicate shlokas');
     const found = await this.repo.countShlokasByIds(ids);
     if (found !== ids.length) throw new ValidationException('Section references unknown shlokas');
   }
@@ -45,7 +46,8 @@ export class AdminPothiService {
 
   async update(user: SessionUser, id: string, dto: UpdatePothiSectionDto) {
     this.assert(user);
-    if (!(await this.repo.findPothiSection(id))) throw new EntityNotFoundException('PothiSection', id);
+    if (!(await this.repo.findPothiSection(id)))
+      throw new EntityNotFoundException('PothiSection', id);
     if (dto.shlokaIds !== undefined) await this.assertShlokas(dto.shlokaIds);
     return this.repo.updatePothiSection(
       id,
@@ -63,7 +65,8 @@ export class AdminPothiService {
 
   async remove(user: SessionUser, id: string) {
     this.assert(user);
-    if (!(await this.repo.findPothiSection(id))) throw new EntityNotFoundException('PothiSection', id);
+    if (!(await this.repo.findPothiSection(id)))
+      throw new EntityNotFoundException('PothiSection', id);
     return this.repo.deletePothiSection(id);
   }
 }

@@ -64,7 +64,8 @@ export class TaxonomyService {
     const sv = await this.repo.findSubvirtue(id);
     if (!sv) throw new EntityNotFoundException('Subvirtue', id);
     if (sv._count.sentences > 0) throw new EntityInUseException('Subvirtue', 'it has sentences');
-    if (sv._count.weaknesses > 0) throw new EntityInUseException('Subvirtue', 'it is linked to weaknesses');
+    if (sv._count.weaknesses > 0)
+      throw new EntityInUseException('Subvirtue', 'it is linked to weaknesses');
     return this.repo.deleteSubvirtue(id);
   }
 
@@ -86,8 +87,16 @@ export class TaxonomyService {
     if (!w) throw new EntityNotFoundException('Weakness', id);
     const c = w._count;
     const refs =
-      c.journeyWeaknesses + c.exposureWeaknesses + c.resolutionWeaknesses + c.challengeWeaknesses + c.testAttempts;
-    if (refs > 0) throw new EntityInUseException('Weakness', 'it is referenced by journeys, ERC content, or tests');
+      c.journeyWeaknesses +
+      c.exposureWeaknesses +
+      c.resolutionWeaknesses +
+      c.challengeWeaknesses +
+      c.testAttempts;
+    if (refs > 0)
+      throw new EntityInUseException(
+        'Weakness',
+        'it is referenced by journeys, ERC content, or tests',
+      );
     return this.repo.deleteWeakness(id);
   }
 

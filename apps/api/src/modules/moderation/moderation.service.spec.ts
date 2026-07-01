@@ -2,25 +2,43 @@ import { describe, it, expect, vi } from 'vitest';
 import { BadRequestException, ConflictException } from '@nestjs/common';
 import { ErcEntityType, Role } from '@prisma/client';
 import { ModerationService } from './moderation.service';
-import { AccessDeniedException, EntityNotFoundException } from '../../common/exceptions/app.exceptions';
+import {
+  AccessDeniedException,
+  EntityNotFoundException,
+} from '../../common/exceptions/app.exceptions';
 import type { SessionUser } from '../auth/types/auth.types';
 
 const base: Omit<SessionUser, 'id' | 'roles'> = {
-  email: 'u@x.com', displayName: 'U', username: 'u', language: 'EN', gender: null, dob: null,
-  avatarUrl: null, emailVerifiedAt: new Date(), accountSetupCompletedAt: new Date(), onboardingCompletedAt: new Date(),
+  email: 'u@x.com',
+  displayName: 'U',
+  username: 'u',
+  language: 'EN',
+  gender: null,
+  dob: null,
+  avatarUrl: null,
+  emailVerifiedAt: new Date(),
+  accountSetupCompletedAt: new Date(),
+  onboardingCompletedAt: new Date(),
 };
 const MOD: SessionUser = { ...base, id: 'mod-1', roles: [Role.MODERATOR] };
 const VA: SessionUser = { ...base, id: 'va-1', roles: [Role.VRATARTHI] };
 
 const pendingReview = {
-  id: 'r1', entityType: ErcEntityType.EXPOSURE, status: 'pending', submittedById: 'submitter-1',
-  journeyExposureId: 'je1', journeyResolutionId: null, journeyChallengeId: null,
+  id: 'r1',
+  entityType: ErcEntityType.EXPOSURE,
+  status: 'pending',
+  submittedById: 'submitter-1',
+  journeyExposureId: 'je1',
+  journeyResolutionId: null,
+  journeyChallengeId: null,
 };
 
 function make(repoOverrides: Record<string, any> = {}, ercOverrides: Record<string, any> = {}) {
   const repo = {
     listPending: vi.fn().mockResolvedValue({ items: [], nextCursor: null }),
-    findReviewDetail: vi.fn().mockResolvedValue({ id: 'r1', ercType: 'exposure', item: {}, journey: {}, submitter: {} }),
+    findReviewDetail: vi
+      .fn()
+      .mockResolvedValue({ id: 'r1', ercType: 'exposure', item: {}, journey: {}, submitter: {} }),
     findReviewById: vi.fn().mockResolvedValue(pendingReview),
     approveAndPromote: vi.fn().mockResolvedValue({ poolId: 'pool-1' }),
     setRejected: vi.fn().mockResolvedValue({ id: 'r1' }),
@@ -52,9 +70,22 @@ describe('ModerationService', () => {
   it('approve promotes to pool, sets status, notifies submitter', async () => {
     const { service, repo, erc, notifications } = make();
     const res = await service.approve(MOD, 'r1', {});
-    expect(repo.approveAndPromote).toHaveBeenCalledWith(expect.objectContaining({ reviewId: 'r1', ercType: 'exposure', itemId: 'je1', journeyId: 'j1' }));
+    expect(repo.approveAndPromote).toHaveBeenCalledWith(
+      expect.objectContaining({
+        reviewId: 'r1',
+        ercType: 'exposure',
+        itemId: 'je1',
+        journeyId: 'j1',
+      }),
+    );
     expect(erc.setReviewStatus).toHaveBeenCalledWith('je1', 'approved', 'exposure');
-    expect(notifications.create).toHaveBeenCalledWith('submitter-1', 'mod-1', 'CUSTOM_ERC_APPROVED', 'exposure', 'je1');
+    expect(notifications.create).toHaveBeenCalledWith(
+      'submitter-1',
+      'mod-1',
+      'CUSTOM_ERC_APPROVED',
+      'exposure',
+      'je1',
+    );
     expect(res.poolId).toBe('pool-1');
   });
 
@@ -65,7 +96,9 @@ describe('ModerationService', () => {
   });
 
   it('NEGATIVE: approving an already-decided review is rejected', async () => {
-    const { service } = make({ findReviewById: vi.fn().mockResolvedValue({ ...pendingReview, status: 'approved' }) });
+    const { service } = make({
+      findReviewById: vi.fn().mockResolvedValue({ ...pendingReview, status: 'approved' }),
+    });
     await expect(service.approve(MOD, 'r1', {})).rejects.toBeInstanceOf(ConflictException);
   });
 
@@ -80,7 +113,13 @@ describe('ModerationService', () => {
     expect(repo.setRejected).toHaveBeenCalledWith('r1', 'mod-1', 'Not specific enough');
     expect(repo.approveAndPromote).not.toHaveBeenCalled();
     expect(erc.setReviewStatus).toHaveBeenCalledWith('je1', 'rejected', 'exposure');
-    expect(notifications.create).toHaveBeenCalledWith('submitter-1', 'mod-1', 'CUSTOM_ERC_REJECTED', 'exposure', 'je1');
+    expect(notifications.create).toHaveBeenCalledWith(
+      'submitter-1',
+      'mod-1',
+      'CUSTOM_ERC_REJECTED',
+      'exposure',
+      'je1',
+    );
   });
 
   it('NEGATIVE: unknown review → 404', async () => {

@@ -34,10 +34,15 @@ export class BlogsService implements OnModuleInit {
     try {
       const blogs = await this.repository.listPublishedForIndex();
       await Promise.all(
-        blogs.map((b) => this.blogsIndex.upsert({ id: b.id, title: b.title, bodyText: tiptapToPlainText(b.body) })),
+        blogs.map((b) =>
+          this.blogsIndex.upsert({ id: b.id, title: b.title, bodyText: tiptapToPlainText(b.body) }),
+        ),
       );
     } catch (error) {
-      this.logger.warn({ msg: 'blog index seed failed', error: error instanceof Error ? error.message : String(error) });
+      this.logger.warn({
+        msg: 'blog index seed failed',
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
   }
 
@@ -54,14 +59,19 @@ export class BlogsService implements OnModuleInit {
     if (blog.isDraft) {
       void this.blogsIndex.remove(blog.id);
     } else {
-      void this.blogsIndex.upsert({ id: blog.id, title: blog.title, bodyText: tiptapToPlainText(blog.body) });
+      void this.blogsIndex.upsert({
+        id: blog.id,
+        title: blog.title,
+        bodyText: tiptapToPlainText(blog.body),
+      });
     }
   }
 
   // ─── Blogs ───────────────────────────────────────────────────────────────────
 
   async create(user: SessionUser, dto: CreateBlogDto) {
-    if (!hasPermission(user, { type: 'platform' }, 'blog.create')) throw new AccessDeniedException();
+    if (!hasPermission(user, { type: 'platform' }, 'blog.create'))
+      throw new AccessDeniedException();
     const body = this.sanitize(dto.body);
     return this.repository.create(user.id, dto.title, body);
   }
@@ -125,21 +135,38 @@ export class BlogsService implements OnModuleInit {
   // ─── Comments ──────────────────────────────────────────────────────────────────
 
   async addComment(user: SessionUser, blogId: string, body: string) {
-    if (!hasPermission(user, { type: 'platform' }, 'comment.create')) throw new AccessDeniedException();
+    if (!hasPermission(user, { type: 'platform' }, 'comment.create'))
+      throw new AccessDeniedException();
     const blog = await this.repository.findById(blogId);
     if (!blog || blog.isDraft) throw new EntityNotFoundException('Blog', blogId);
 
     const comment = await this.repository.createComment(blogId, user.id, body);
     // Notify the blog author of a new comment (unless they commented on their own blog).
     if (blog.authorId !== user.id) {
-      void this.notifications.create(blog.authorId, user.id, NotificationEventType.BLOG_COMMENT_NEW, 'blog', blogId);
+      void this.notifications.create(
+        blog.authorId,
+        user.id,
+        NotificationEventType.BLOG_COMMENT_NEW,
+        'blog',
+        blogId,
+      );
     }
     return comment;
   }
 
   async deleteComment(user: SessionUser, blogId: string, commentId: string) {
     const { comment, blog } = await this.loadCommentContext(blogId, commentId);
-    if (!hasPermission(user, { type: 'blog_comment', blog: { authorId: blog.authorId }, comment: { blogId, authorId: comment.authorId } }, 'comment.delete')) {
+    if (
+      !hasPermission(
+        user,
+        {
+          type: 'blog_comment',
+          blog: { authorId: blog.authorId },
+          comment: { blogId, authorId: comment.authorId },
+        },
+        'comment.delete',
+      )
+    ) {
       throw new AccessDeniedException();
     }
     await this.repository.softDeleteComment(commentId);
@@ -148,14 +175,25 @@ export class BlogsService implements OnModuleInit {
 
   async hideComment(user: SessionUser, blogId: string, commentId: string) {
     const { comment, blog } = await this.loadCommentContext(blogId, commentId);
-    if (!hasPermission(user, { type: 'blog_comment', blog: { authorId: blog.authorId }, comment: { blogId, authorId: comment.authorId } }, 'comment.hide')) {
+    if (
+      !hasPermission(
+        user,
+        {
+          type: 'blog_comment',
+          blog: { authorId: blog.authorId },
+          comment: { blogId, authorId: comment.authorId },
+        },
+        'comment.hide',
+      )
+    ) {
       throw new AccessDeniedException();
     }
     return this.repository.hideComment(commentId, user.id);
   }
 
   async reportComment(user: SessionUser, blogId: string, commentId: string) {
-    if (!hasPermission(user, { type: 'platform' }, 'comment.report')) throw new AccessDeniedException();
+    if (!hasPermission(user, { type: 'platform' }, 'comment.report'))
+      throw new AccessDeniedException();
     const { comment } = await this.loadCommentContext(blogId, commentId);
     if (comment.reportedAt) return { id: commentId, reported: true }; // idempotent
 
@@ -163,7 +201,13 @@ export class BlogsService implements OnModuleInit {
     const moderatorIds = await this.repository.findModeratorIds();
     await Promise.all(
       moderatorIds.map((modId) =>
-        this.notifications.create(modId, user.id, NotificationEventType.COMMENT_REPORTED, 'blog_comment', commentId),
+        this.notifications.create(
+          modId,
+          user.id,
+          NotificationEventType.COMMENT_REPORTED,
+          'blog_comment',
+          commentId,
+        ),
       ),
     );
     return { id: commentId, reported: true };
@@ -171,7 +215,8 @@ export class BlogsService implements OnModuleInit {
 
   private async loadCommentContext(blogId: string, commentId: string) {
     const comment = await this.repository.findCommentById(commentId);
-    if (!comment || comment.blogId !== blogId) throw new EntityNotFoundException('BlogComment', commentId);
+    if (!comment || comment.blogId !== blogId)
+      throw new EntityNotFoundException('BlogComment', commentId);
     const blog = await this.repository.findById(blogId);
     if (!blog) throw new EntityNotFoundException('Blog', blogId);
     return { comment, blog };

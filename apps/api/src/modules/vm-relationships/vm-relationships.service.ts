@@ -31,7 +31,10 @@ export class VmRelationshipsService {
     const relationship = await this.vmRelationshipsRepository.findActiveGlobalVm(user.id);
     if (!relationship) throw new EntityNotFoundException('GlobalVmRelationship', user.id);
 
-    const affectedJourneys = await this.vmRelationshipsRepository.findActiveJourneyAssignmentsForVm(relationship.vmId, user.id);
+    const affectedJourneys = await this.vmRelationshipsRepository.findActiveJourneyAssignmentsForVm(
+      relationship.vmId,
+      user.id,
+    );
     await this.vmRelationshipsRepository.endGlobalVm(relationship.id);
 
     if (cascade === 'unassign') {
@@ -58,10 +61,22 @@ export class VmRelationshipsService {
     const journey = await this.journeysRepository.findById(journeyId);
     if (!journey) throw new EntityNotFoundException('Journey', journeyId);
 
-    const assignment = await this.vmRelationshipsRepository.findActiveJourneyAssignment(journeyId, user.id);
+    const assignment = await this.vmRelationshipsRepository.findActiveJourneyAssignment(
+      journeyId,
+      user.id,
+    );
     if (!assignment) throw new AccessDeniedException();
 
-    if (!hasPermission(user, { type: 'vm_relationship', relationship: { vmId: assignment.vmId, vratarthiId: journey.vratarthiId } }, 'vm_relationship.withdraw')) {
+    if (
+      !hasPermission(
+        user,
+        {
+          type: 'vm_relationship',
+          relationship: { vmId: assignment.vmId, vratarthiId: journey.vratarthiId },
+        },
+        'vm_relationship.withdraw',
+      )
+    ) {
       throw new AccessDeniedException();
     }
 
@@ -79,19 +94,11 @@ export class VmRelationshipsService {
     return { journeyId, vmId: user.id };
   }
 
-  async createFromGlobalInvite(
-    vratarthiId: string,
-    vmId: string,
-    acceptedAt: Date,
-  ) {
+  async createFromGlobalInvite(vratarthiId: string, vmId: string, acceptedAt: Date) {
     return this.vmRelationshipsRepository.createGlobalRelationship(vratarthiId, vmId, acceptedAt);
   }
 
-  async createFromJourneyInvite(
-    journeyId: string,
-    vmId: string,
-    acceptedAt: Date,
-  ) {
+  async createFromJourneyInvite(journeyId: string, vmId: string, acceptedAt: Date) {
     return this.vmRelationshipsRepository.createJourneyAssignment(journeyId, vmId, acceptedAt);
   }
 

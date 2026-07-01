@@ -1,0 +1,81 @@
+name: Integration
+
+# Integration tests hit a real Postgres + Redis. Spun up as service containers,
+# migrated, then the api integration suite runs against them. Separate from the fast
+# CI workflow so a DB blip never blocks lint/typecheck feedback.
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+    branches: [dev, main]
+
+concurrency:
+  group: integration-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration:
+    name: API integration (Postgres + Redis)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: veervrat
+          POSTGRES_PASSWORD: veervrat_local
+          POSTGRES_DB: veervrat_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U veervrat"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    # Override the localhost:5434/6380 values in .env.test to reach the CI service
+    # containers (standard ports). NODE_ENV=test so config validation passes.
+    env:
+      DATABASE_URL: postgresql://veervrat:veervrat_local@localhost:5432/veervrat_test?schema=public
+      REDIS_URL: redis://localhost:6379
+      NODE_ENV: test
+      SESSION_SECRET: ci_session_secret_at_least_32_chars_long_xx
+      FRONTEND_URL: http://localhost:3000
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.1.3
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter api db:generate
+
+      - name: Apply migrations to test DB
+        run: pnpm --filter api db:migrate:deploy
+
+      # The integration suite loads apps/api/.env.test via setup.ts; the job-level env
+      # above overrides DATABASE_URL/REDIS_URL to the service-container ports.
+      - name: Integration tests (api)
+        run: pnpm --filter api test:integration

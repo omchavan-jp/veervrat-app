@@ -25,9 +25,7 @@ interface AuthenticatedSocket extends Socket {
   },
 })
 @Injectable()
-export class ChatsGateway
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
-{
+export class ChatsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
@@ -40,7 +38,7 @@ export class ChatsGateway
     private configService: ConfigService,
   ) {}
 
-  afterInit(server: Server) {
+  afterInit(_server: Server) {
     this.logger.log('WebSocket Gateway initialized');
   }
 
@@ -50,14 +48,16 @@ export class ChatsGateway
       socket.user = user;
 
       const roomIds = await this.deriveRoomIds(user.id);
-      roomIds.forEach((room) => socket.join(room));
-      socket.join(`notifications:${user.id}`);
+      // socket.join returns a promise in socket.io; join is fire-and-forget here, so
+      // use a block body to discard it (avoids no-misused-promises on the void callback).
+      roomIds.forEach((room) => {
+        void socket.join(room);
+      });
+      void socket.join(`notifications:${user.id}`);
 
-      this.logger.log(
-        `User ${user.id} connected and joined ${roomIds.length} chat rooms`,
-      );
+      this.logger.log(`User ${user.id} connected and joined ${roomIds.length} chat rooms`);
     } catch (err) {
-      this.logger.warn(`Connection auth failed: ${err.message}`);
+      this.logger.warn(`Connection auth failed: ${this.errorMessage(err)}`);
       socket.disconnect();
     }
   }
@@ -97,11 +97,7 @@ export class ChatsGateway
     }
 
     try {
-      const message = await this.chatsService.sendMessage(
-        data.roomId,
-        socket.user,
-        data.content,
-      );
+      const message = await this.chatsService.sendMessage(data.roomId, socket.user, data.content);
 
       // Broadcast to the OTHER sockets in the room — the sender reconciles its own
       // optimistic message via the `ack` below, so echoing back to it would surface
@@ -125,18 +121,16 @@ export class ChatsGateway
         seqNo: message.seqNo,
       });
     } catch (err) {
-      this.logger.warn(`Message send failed: ${err.message}`);
+      this.logger.warn(`Message send failed: ${this.errorMessage(err)}`);
       socket.emit('error', {
         type: 'error',
         tempId: data.tempId,
-        message: err.message || 'Failed to send message',
+        message: this.errorMessage(err) || 'Failed to send message',
       });
     }
   }
 
-  private async authenticateSocket(
-    socket: AuthenticatedSocket,
-  ): Promise<SessionUser> {
+  private async authenticateSocket(socket: AuthenticatedSocket): Promise<SessionUser> {
     const cookies = socket.handshake.headers.cookie || '';
     const sessionToken = this.extractSessionCookie(cookies);
 
@@ -153,10 +147,7 @@ export class ChatsGateway
   }
 
   private extractSessionCookie(cookieString: string): string | null {
-    const cookieName = this.configService.get<string>(
-      'SESSION_COOKIE_NAME',
-      'veervrat_session',
-    );
+    const cookieName = this.configService.get<string>('SESSION_COOKIE_NAME', 'veervrat_session');
     const cookies = cookieString.split(';');
     for (const cookie of cookies) {
       const [name, value] = cookie.trim().split('=');
@@ -178,5 +169,10 @@ export class ChatsGateway
 
     return Array.from(roomIds);
   }
-}
 
+  // Narrow an unknown catch value to a message string (errors in catch clauses are
+  // `unknown` under strict typing).
+  private errorMessage(err: unknown): string {
+    return err instanceof Error ? err.message : String(err);
+  }
+}

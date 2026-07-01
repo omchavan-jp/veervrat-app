@@ -15,9 +15,7 @@ import * as Joi from 'joi';
         LOG_LEVEL: Joi.string()
           .valid('trace', 'debug', 'info', 'warn', 'error', 'fatal')
           .default('info'),
-        NODE_ENV: Joi.string()
-          .valid('development', 'test', 'production')
-          .default('development'),
+        NODE_ENV: Joi.string().valid('development', 'test', 'production').default('development'),
         // Object storage (MinIO / S3-compatible) — optional; uploads fail gracefully if unset
         S3_ENDPOINT: Joi.string().optional(),
         S3_REGION: Joi.string().default('us-east-1'),

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { of, lastValueFrom } from 'rxjs';
 import { AuditInterceptor } from './audit.interceptor';
-import { AUDIT_METADATA_KEY, type AuditOptions } from './audited.decorator';
+import { type AuditOptions } from './audited.decorator';
 
 function makeCtx(req: Record<string, unknown>) {
   return {
@@ -33,7 +33,11 @@ describe('AuditInterceptor', () => {
     });
     const ctx = makeCtx({ method: 'PATCH', params: {}, body: {}, ip: '1.2.3.4', headers: {} });
     // Handler returned { id, from, to }; ResponseInterceptor wrapped it as { data: {...} }.
-    await lastValueFrom(interceptor.intercept(ctx, { handle: () => of({ data: { id: 'j1', from: 'ACTIVE', to: 'PAUSED' } }) }));
+    await lastValueFrom(
+      interceptor.intercept(ctx, {
+        handle: () => of({ data: { id: 'j1', from: 'ACTIVE', to: 'PAUSED' } }),
+      }),
+    );
     expect(audit.record).toHaveBeenCalledWith(
       expect.objectContaining({ resourceId: 'j1', metadata: { to: 'PAUSED' } }),
     );

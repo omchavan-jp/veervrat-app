@@ -12,8 +12,19 @@ import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [AuthModule, JourneysModule, NotificationsModule],
-  controllers: [ExposuresController, ResolutionsController, ChallengesController, ResolutionCheckinsController],
-  providers: [ErcService, ErcRepository, CustomErcReviewsRepository, ResolutionCheckinsService, ResolutionCheckinsRepository],
+  controllers: [
+    ExposuresController,
+    ResolutionsController,
+    ChallengesController,
+    ResolutionCheckinsController,
+  ],
+  providers: [
+    ErcService,
+    ErcRepository,
+    CustomErcReviewsRepository,
+    ResolutionCheckinsService,
+    ResolutionCheckinsRepository,
+  ],
   exports: [ErcService, ErcRepository],
 })
 export class ErcModule {}

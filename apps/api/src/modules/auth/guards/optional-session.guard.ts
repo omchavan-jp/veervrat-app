@@ -20,7 +20,7 @@ export class OptionalSessionGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
-    const token = request.cookies?.[this.cookieName];
+    const token = (request.cookies as Record<string, string> | undefined)?.[this.cookieName];
     if (token) {
       const user = await this.authService.validateSession(token).catch(() => null);
       if (user) request.user = user;

@@ -9,15 +9,33 @@ import {
 import type { SessionUser } from '../auth/types/auth.types';
 
 const VA: SessionUser = {
-  id: 'va-1', email: 'va@x.com', displayName: 'VA', username: 'va',
-  roles: [Role.VRATARTHI], language: 'EN', gender: null, dob: null, avatarUrl: null,
-  emailVerifiedAt: new Date(), accountSetupCompletedAt: new Date(), onboardingCompletedAt: new Date(),
+  id: 'va-1',
+  email: 'va@x.com',
+  displayName: 'VA',
+  username: 'va',
+  roles: [Role.VRATARTHI],
+  language: 'EN',
+  gender: null,
+  dob: null,
+  avatarUrl: null,
+  emailVerifiedAt: new Date(),
+  accountSetupCompletedAt: new Date(),
+  onboardingCompletedAt: new Date(),
 };
 const OTHER_VA: SessionUser = { ...VA, id: 'other-1' };
 const VM: SessionUser = {
-  id: 'vm-1', email: 'vm@x.com', displayName: 'VM', username: 'vm',
-  roles: [Role.VRATMITRA], language: 'EN', gender: null, dob: null, avatarUrl: null,
-  emailVerifiedAt: new Date(), accountSetupCompletedAt: new Date(), onboardingCompletedAt: new Date(),
+  id: 'vm-1',
+  email: 'vm@x.com',
+  displayName: 'VM',
+  username: 'vm',
+  roles: [Role.VRATMITRA],
+  language: 'EN',
+  gender: null,
+  dob: null,
+  avatarUrl: null,
+  emailVerifiedAt: new Date(),
+  accountSetupCompletedAt: new Date(),
+  onboardingCompletedAt: new Date(),
 };
 const STRANGER: SessionUser = { ...OTHER_VA, id: 'stranger-1' };
 
@@ -41,14 +59,29 @@ const JOURNEY_DETAIL = {
     challenges: { total: 0, active: 0, approved: 0 },
   },
   sentence: {
-    id: 's-1', textEn: 'T', textMr: null,
-    subvirtue: { id: 'sv-1', nameEn: 'SV', nameMr: null, virtue: { id: 'v-1', nameEn: 'V', nameMr: null }, sentences: [] },
+    id: 's-1',
+    textEn: 'T',
+    textMr: null,
+    subvirtue: {
+      id: 'sv-1',
+      nameEn: 'SV',
+      nameMr: null,
+      virtue: { id: 'v-1', nameEn: 'V', nameMr: null },
+      sentences: [],
+    },
   },
   deletedAt: null,
-  startedAt: new Date(), completedAt: null, pausedAt: null, dormantSince: null,
-  thresholdExposures: 1, thresholdResolutions: 1,
-  createdAt: new Date(), updatedAt: new Date(),
-  title: 'J', sentenceId: 's-1', vratarthiId: VA.id,
+  startedAt: new Date(),
+  completedAt: null,
+  pausedAt: null,
+  dormantSince: null,
+  thresholdExposures: 1,
+  thresholdResolutions: 1,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  title: 'J',
+  sentenceId: 's-1',
+  vratarthiId: VA.id,
 };
 
 const RESOLUTION_IN_PROGRESS = {
@@ -107,44 +140,57 @@ describe('ResolutionCheckinsService — logCheckin', () => {
 
   it('AUTH MATRIX NEGATIVE: non-owner VA gets 403', async () => {
     const svc = makeService(makeCheckinsRepo(), makeJourneyRepo());
-    await expect(svc.logCheckin(OTHER_VA, JOURNEY_ID, RESOLUTION_ID, CheckinStatus.DONE))
-      .rejects.toThrow(AccessDeniedException);
+    await expect(
+      svc.logCheckin(OTHER_VA, JOURNEY_ID, RESOLUTION_ID, CheckinStatus.DONE),
+    ).rejects.toThrow(AccessDeniedException);
   });
 
   it('NEGATIVE: throws InvalidCheckinStateException when resolution is NOT_STARTED', async () => {
     const checkinsRepo = makeCheckinsRepo({
-      findResolutionById: vi.fn().mockResolvedValue({ ...RESOLUTION_IN_PROGRESS, status: ErcStatus.NOT_STARTED }),
+      findResolutionById: vi
+        .fn()
+        .mockResolvedValue({ ...RESOLUTION_IN_PROGRESS, status: ErcStatus.NOT_STARTED }),
     });
     const svc = makeService(checkinsRepo, makeJourneyRepo());
-    await expect(svc.logCheckin(VA, JOURNEY_ID, RESOLUTION_ID, CheckinStatus.DONE))
-      .rejects.toThrow(InvalidCheckinStateException);
+    await expect(svc.logCheckin(VA, JOURNEY_ID, RESOLUTION_ID, CheckinStatus.DONE)).rejects.toThrow(
+      InvalidCheckinStateException,
+    );
   });
 
   it('NEGATIVE: throws InvalidCheckinStateException when resolution is SUBMITTED', async () => {
     const checkinsRepo = makeCheckinsRepo({
-      findResolutionById: vi.fn().mockResolvedValue({ ...RESOLUTION_IN_PROGRESS, status: ErcStatus.SUBMITTED }),
+      findResolutionById: vi
+        .fn()
+        .mockResolvedValue({ ...RESOLUTION_IN_PROGRESS, status: ErcStatus.SUBMITTED }),
     });
     const svc = makeService(checkinsRepo, makeJourneyRepo());
-    await expect(svc.logCheckin(VA, JOURNEY_ID, RESOLUTION_ID, CheckinStatus.DONE))
-      .rejects.toThrow(InvalidCheckinStateException);
+    await expect(svc.logCheckin(VA, JOURNEY_ID, RESOLUTION_ID, CheckinStatus.DONE)).rejects.toThrow(
+      InvalidCheckinStateException,
+    );
   });
 
   it('NEGATIVE: throws InvalidCheckinStateException when resolution is APPROVED', async () => {
     const checkinsRepo = makeCheckinsRepo({
-      findResolutionById: vi.fn().mockResolvedValue({ ...RESOLUTION_IN_PROGRESS, status: ErcStatus.APPROVED }),
+      findResolutionById: vi
+        .fn()
+        .mockResolvedValue({ ...RESOLUTION_IN_PROGRESS, status: ErcStatus.APPROVED }),
     });
     const svc = makeService(checkinsRepo, makeJourneyRepo());
-    await expect(svc.logCheckin(VA, JOURNEY_ID, RESOLUTION_ID, CheckinStatus.DONE))
-      .rejects.toThrow(InvalidCheckinStateException);
+    await expect(svc.logCheckin(VA, JOURNEY_ID, RESOLUTION_ID, CheckinStatus.DONE)).rejects.toThrow(
+      InvalidCheckinStateException,
+    );
   });
 
   it('NEGATIVE: throws InvalidCheckinStateException when resolution is deactivated (even if IN_PROGRESS)', async () => {
     const checkinsRepo = makeCheckinsRepo({
-      findResolutionById: vi.fn().mockResolvedValue({ ...RESOLUTION_IN_PROGRESS, isDeactivated: true }),
+      findResolutionById: vi
+        .fn()
+        .mockResolvedValue({ ...RESOLUTION_IN_PROGRESS, isDeactivated: true }),
     });
     const svc = makeService(checkinsRepo, makeJourneyRepo());
-    await expect(svc.logCheckin(VA, JOURNEY_ID, RESOLUTION_ID, CheckinStatus.DONE))
-      .rejects.toThrow(InvalidCheckinStateException);
+    await expect(svc.logCheckin(VA, JOURNEY_ID, RESOLUTION_ID, CheckinStatus.DONE)).rejects.toThrow(
+      InvalidCheckinStateException,
+    );
   });
 
   it('NEGATIVE: throws EntityNotFoundException when resolution not found', async () => {
@@ -152,24 +198,32 @@ describe('ResolutionCheckinsService — logCheckin', () => {
       findResolutionById: vi.fn().mockResolvedValue(null),
     });
     const svc = makeService(checkinsRepo, makeJourneyRepo());
-    await expect(svc.logCheckin(VA, JOURNEY_ID, RESOLUTION_ID, CheckinStatus.DONE))
-      .rejects.toThrow(EntityNotFoundException);
+    await expect(svc.logCheckin(VA, JOURNEY_ID, RESOLUTION_ID, CheckinStatus.DONE)).rejects.toThrow(
+      EntityNotFoundException,
+    );
   });
 
   it('NEGATIVE: throws EntityNotFoundException when resolution belongs to a different journey', async () => {
     const checkinsRepo = makeCheckinsRepo({
-      findResolutionById: vi.fn().mockResolvedValue({ ...RESOLUTION_IN_PROGRESS, journeyId: 'other-journey' }),
+      findResolutionById: vi
+        .fn()
+        .mockResolvedValue({ ...RESOLUTION_IN_PROGRESS, journeyId: 'other-journey' }),
     });
     const svc = makeService(checkinsRepo, makeJourneyRepo());
-    await expect(svc.logCheckin(VA, JOURNEY_ID, RESOLUTION_ID, CheckinStatus.DONE))
-      .rejects.toThrow(EntityNotFoundException);
+    await expect(svc.logCheckin(VA, JOURNEY_ID, RESOLUTION_ID, CheckinStatus.DONE)).rejects.toThrow(
+      EntityNotFoundException,
+    );
   });
 
   it('POSITIVE: passes note through to repository', async () => {
     const checkinsRepo = makeCheckinsRepo();
     const svc = makeService(checkinsRepo, makeJourneyRepo());
     await svc.logCheckin(VA, JOURNEY_ID, RESOLUTION_ID, CheckinStatus.PARTIAL, 'Half done');
-    expect(checkinsRepo.create).toHaveBeenCalledWith(RESOLUTION_ID, CheckinStatus.PARTIAL, 'Half done');
+    expect(checkinsRepo.create).toHaveBeenCalledWith(
+      RESOLUTION_ID,
+      CheckinStatus.PARTIAL,
+      'Half done',
+    );
   });
 });
 
@@ -192,8 +246,9 @@ describe('ResolutionCheckinsService — listCheckins', () => {
 
   it('NEGATIVE: non-participant gets 403', async () => {
     const svc = makeService(makeCheckinsRepo(), makeJourneyRepo());
-    await expect(svc.listCheckins(STRANGER, JOURNEY_ID, RESOLUTION_ID))
-      .rejects.toThrow(AccessDeniedException);
+    await expect(svc.listCheckins(STRANGER, JOURNEY_ID, RESOLUTION_ID)).rejects.toThrow(
+      AccessDeniedException,
+    );
   });
 
   it('NEGATIVE: throws EntityNotFoundException when resolution not found', async () => {
@@ -201,16 +256,20 @@ describe('ResolutionCheckinsService — listCheckins', () => {
       findResolutionById: vi.fn().mockResolvedValue(null),
     });
     const svc = makeService(checkinsRepo, makeJourneyRepo());
-    await expect(svc.listCheckins(VA, JOURNEY_ID, RESOLUTION_ID))
-      .rejects.toThrow(EntityNotFoundException);
+    await expect(svc.listCheckins(VA, JOURNEY_ID, RESOLUTION_ID)).rejects.toThrow(
+      EntityNotFoundException,
+    );
   });
 
   it('NEGATIVE: throws EntityNotFoundException when resolution belongs to different journey', async () => {
     const checkinsRepo = makeCheckinsRepo({
-      findResolutionById: vi.fn().mockResolvedValue({ ...RESOLUTION_IN_PROGRESS, journeyId: 'other-journey' }),
+      findResolutionById: vi
+        .fn()
+        .mockResolvedValue({ ...RESOLUTION_IN_PROGRESS, journeyId: 'other-journey' }),
     });
     const svc = makeService(checkinsRepo, makeJourneyRepo());
-    await expect(svc.listCheckins(VA, JOURNEY_ID, RESOLUTION_ID))
-      .rejects.toThrow(EntityNotFoundException);
+    await expect(svc.listCheckins(VA, JOURNEY_ID, RESOLUTION_ID)).rejects.toThrow(
+      EntityNotFoundException,
+    );
   });
 });

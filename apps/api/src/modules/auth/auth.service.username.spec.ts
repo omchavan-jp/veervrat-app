@@ -3,9 +3,11 @@ import { AuthService } from './auth.service';
 
 function makeRepo(takenUsernames: string[] = []) {
   return {
-    findUserByUsername: vi.fn().mockImplementation(async (u: string) =>
-      takenUsernames.includes(u) ? { id: 'some-user' } : null,
-    ),
+    findUserByUsername: vi
+      .fn()
+      .mockImplementation((u: string) =>
+        Promise.resolve(takenUsernames.includes(u) ? { id: 'some-user' } : null),
+      ),
   };
 }
 
@@ -18,7 +20,9 @@ function makeService(repo: ReturnType<typeof makeRepo>) {
 // Access private method via prototype cast for unit testing
 async function gen(email: string, taken: string[] = []) {
   const service = makeService(makeRepo(taken));
-  return (service as unknown as { generateUsername(e: string): Promise<string> }).generateUsername(email);
+  return (service as unknown as { generateUsername(e: string): Promise<string> }).generateUsername(
+    email,
+  );
 }
 
 describe('AuthService — generateUsername', () => {
@@ -48,7 +52,9 @@ describe('AuthService — generateUsername', () => {
   });
 
   it('falls back to base_3 when base and base_2 are taken', async () => {
-    expect(await gen('omchavan.dev@gmail.com', ['omchavan_dev', 'omchavan_dev_2'])).toBe('omchavan_dev_3');
+    expect(await gen('omchavan.dev@gmail.com', ['omchavan_dev', 'omchavan_dev_2'])).toBe(
+      'omchavan_dev_3',
+    );
   });
 
   it('falls back to "user" when local part produces empty string', async () => {

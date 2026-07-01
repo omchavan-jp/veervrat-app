@@ -29,11 +29,18 @@ export class ModerationRepository {
   }
 
   setBlogFeatured(id: string, featured: boolean) {
-    return this.prisma.blog.update({ where: { id }, data: { featured }, select: { id: true, featured: true } });
+    return this.prisma.blog.update({
+      where: { id },
+      data: { featured },
+      select: { id: true, featured: true },
+    });
   }
 
   findExperienceLog(id: string) {
-    return this.prisma.experienceLog.findFirst({ where: { id, deletedAt: null }, select: { id: true } });
+    return this.prisma.experienceLog.findFirst({
+      where: { id, deletedAt: null },
+      select: { id: true },
+    });
   }
 
   setExperienceLogFeatured(id: string, featured: boolean) {
@@ -80,7 +87,11 @@ export class ModerationRepository {
     const items = reviews.map((r) => ({
       id: r.id,
       entityType: r.entityType,
-      title: r.journeyExposure?.titleEn ?? r.journeyResolution?.titleEn ?? r.journeyChallenge?.titleEn ?? '',
+      title:
+        r.journeyExposure?.titleEn ??
+        r.journeyResolution?.titleEn ??
+        r.journeyChallenge?.titleEn ??
+        '',
       submitter: submitters.get(r.submittedById) ?? null,
       createdAt: r.createdAt,
     }));
@@ -123,7 +134,8 @@ export class ModerationRepository {
     const item = review.journeyExposure ?? review.journeyResolution ?? review.journeyChallenge;
     if (!item) return null;
     const ercType = entityTypeToErcType(review.entityType);
-    const submitter = (await this.submittersByIds([review.submittedById])).get(review.submittedById) ?? null;
+    const submitter =
+      (await this.submittersByIds([review.submittedById])).get(review.submittedById) ?? null;
 
     // Journey context — title, sentence, subvirtue→virtue, weakness tags only.
     const journey = await this.prisma.journey.findUnique({
@@ -136,7 +148,11 @@ export class ModerationRepository {
             textEn: true,
             textMr: true,
             subvirtue: {
-              select: { nameEn: true, nameMr: true, virtue: { select: { nameEn: true, nameMr: true } } },
+              select: {
+                nameEn: true,
+                nameMr: true,
+                virtue: { select: { nameEn: true, nameMr: true } },
+              },
             },
           },
         },
@@ -184,12 +200,19 @@ export class ModerationRepository {
       if (ercType === 'exposure') {
         const item = await tx.journeyExposure.findUniqueOrThrow({
           where: { id: itemId },
-          select: { titleEn: true, titleMr: true, descriptionEn: true, descriptionMr: true, tier: true, journey: { select: { sentenceId: true } } },
+          select: {
+            titleEn: true,
+            titleMr: true,
+            descriptionEn: true,
+            descriptionMr: true,
+            tier: true,
+            journey: { select: { sentenceId: true } },
+          },
         });
         const pool = await tx.exposure.create({
           data: {
             sentenceId: item.journey.sentenceId,
-            tier: item.tier!,
+            tier: item.tier,
             titleEn: item.titleEn,
             titleMr: item.titleMr,
             descriptionEn: item.descriptionEn,
@@ -202,7 +225,16 @@ export class ModerationRepository {
       } else if (ercType === 'resolution') {
         const item = await tx.journeyResolution.findUniqueOrThrow({
           where: { id: itemId },
-          select: { titleEn: true, titleMr: true, descriptionEn: true, descriptionMr: true, durationWeeks: true, frequencyPerWeek: true, frequencyLabel: true, journey: { select: { sentenceId: true } } },
+          select: {
+            titleEn: true,
+            titleMr: true,
+            descriptionEn: true,
+            descriptionMr: true,
+            durationWeeks: true,
+            frequencyPerWeek: true,
+            frequencyLabel: true,
+            journey: { select: { sentenceId: true } },
+          },
         });
         const pool = await tx.resolution.create({
           data: {
@@ -222,7 +254,14 @@ export class ModerationRepository {
       } else {
         const item = await tx.journeyChallenge.findUniqueOrThrow({
           where: { id: itemId },
-          select: { titleEn: true, titleMr: true, descriptionEn: true, descriptionMr: true, durationDays: true, journey: { select: { sentenceId: true } } },
+          select: {
+            titleEn: true,
+            titleMr: true,
+            descriptionEn: true,
+            descriptionMr: true,
+            durationDays: true,
+            journey: { select: { sentenceId: true } },
+          },
         });
         const pool = await tx.challenge.create({
           data: {
@@ -251,7 +290,12 @@ export class ModerationRepository {
   async setRejected(reviewId: string, reviewerId: string, reason: string) {
     return this.prisma.customErcReview.update({
       where: { id: reviewId },
-      data: { status: 'rejected', reviewedById: reviewerId, reviewedAt: new Date(), reviewNote: reason },
+      data: {
+        status: 'rejected',
+        reviewedById: reviewerId,
+        reviewedAt: new Date(),
+        reviewNote: reason,
+      },
       select: { id: true },
     });
   }

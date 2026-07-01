@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { ErcStatus, JourneyState, Role } from '@prisma/client';
 import { ActionsService } from './actions.service';
 import { AccessDeniedException } from '../../common/exceptions/app.exceptions';
@@ -32,7 +32,10 @@ function makeRepo(overrides: Partial<Record<string, any>> = {}) {
   } as any;
 }
 
-function makeVmService(scope: { journeyId: string; vratarthiId: string }[] = [], hasAssignments?: boolean) {
+function makeVmService(
+  scope: { journeyId: string; vratarthiId: string }[] = [],
+  hasAssignments?: boolean,
+) {
   return {
     getVmAssignedJourneys: vi.fn().mockResolvedValue(scope),
     hasAnyVmAssignment: vi.fn().mockResolvedValue(hasAssignments ?? scope.length > 0),
@@ -84,7 +87,9 @@ describe('ActionsService', () => {
   describe('getVmActions (scoping)', () => {
     it('aggregates over the VM-assigned journeys only', async () => {
       const repo = makeRepo({
-        findErcItemsByStatus: vi.fn().mockResolvedValue([{ id: 'e1', status: ErcStatus.SUBMITTED }]),
+        findErcItemsByStatus: vi
+          .fn()
+          .mockResolvedValue([{ id: 'e1', status: ErcStatus.SUBMITTED }]),
       });
       const vmService = makeVmService([{ journeyId: 'j-assigned', vratarthiId: 'va-x' }]);
       const service = new ActionsService(repo, vmService);
@@ -124,14 +129,17 @@ describe('ActionsService', () => {
       expect(repo.findErcItemsByStatus).toHaveBeenCalledWith([], [ErcStatus.SUBMITTED]);
     });
 
-    it('only surfaces the calling VM\'s own suggestions as status updates', async () => {
+    it("only surfaces the calling VM's own suggestions as status updates", async () => {
       const repo = makeRepo({
         findActiveSidenotes: vi.fn().mockResolvedValue([
           { id: 's-mine', vmId: 'vm-1' },
           { id: 's-other', vmId: 'vm-2' },
         ]),
       });
-      const service = new ActionsService(repo, makeVmService([{ journeyId: 'j1', vratarthiId: 'va-x' }]));
+      const service = new ActionsService(
+        repo,
+        makeVmService([{ journeyId: 'j1', vratarthiId: 'va-x' }]),
+      );
 
       const result = await service.getVmActions(VM);
 

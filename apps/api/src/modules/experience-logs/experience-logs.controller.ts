@@ -50,7 +50,7 @@ export class ExperienceLogsController {
   @HttpCode(HttpStatus.OK)
   async getOne(@CurrentUser() user: SessionUser | undefined, @Param('id') id: string) {
     // user may be undefined (guest) — the service authorizes view by visibility.
-    return this.service.getOne(user as SessionUser, id);
+    return this.service.getOne(user, id);
   }
 
   @Patch(':id')

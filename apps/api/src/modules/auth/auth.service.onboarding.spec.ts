@@ -20,11 +20,13 @@ const userFixture = {
   deletedAt: null,
 };
 
-function makeRepo(overrides: Partial<{
-  findUserByUsername: (username: string) => Promise<{ id: string } | null>;
-  markAccountSetupComplete: () => Promise<unknown>;
-  markOnboardingComplete: () => Promise<unknown>;
-}> = {}) {
+function makeRepo(
+  overrides: Partial<{
+    findUserByUsername: (username: string) => Promise<{ id: string } | null>;
+    markAccountSetupComplete: () => Promise<unknown>;
+    markOnboardingComplete: () => Promise<unknown>;
+  }> = {},
+) {
   return {
     findUserByUsername: vi.fn().mockResolvedValue(null),
     markAccountSetupComplete: vi.fn().mockResolvedValue(userFixture),
@@ -40,7 +42,9 @@ function makeService(repo: ReturnType<typeof makeRepo>) {
   (service as unknown as Record<string, unknown>)['authRepository'] = repo;
   (service as unknown as Record<string, unknown>)['redis'] = { del: vi.fn() };
   (service as unknown as Record<string, unknown>)['logger'] = { warn: vi.fn() };
-  (service as unknown as Record<string, unknown>)['usersIndex'] = { upsert: vi.fn().mockResolvedValue(undefined) };
+  (service as unknown as Record<string, unknown>)['usersIndex'] = {
+    upsert: vi.fn().mockResolvedValue(undefined),
+  };
   return service;
 }
 
@@ -49,7 +53,14 @@ describe('AuthService — completeOnboarding', () => {
     const repo = makeRepo();
     const service = makeService(repo);
 
-    await service.completeOnboarding('user-1', 'New Name', 'new_username', 'MR', 'Male', '1995-06-15');
+    await service.completeOnboarding(
+      'user-1',
+      'New Name',
+      'new_username',
+      'MR',
+      'Male',
+      '1995-06-15',
+    );
 
     expect(repo.markAccountSetupComplete).toHaveBeenCalledWith('user-1', {
       displayName: 'New Name',

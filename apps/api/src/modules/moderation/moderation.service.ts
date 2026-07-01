@@ -4,7 +4,10 @@ import { ModerationRepository } from './moderation.repository';
 import { ErcRepository } from '../erc/erc.repository';
 import { NotificationsService } from '../notifications/notifications.service';
 import { hasPermission } from '../../common/permissions/has-permission';
-import { AccessDeniedException, EntityNotFoundException } from '../../common/exceptions/app.exceptions';
+import {
+  AccessDeniedException,
+  EntityNotFoundException,
+} from '../../common/exceptions/app.exceptions';
 import type { SessionUser } from '../auth/types/auth.types';
 import type { ApproveCustomErcDto } from './dto/approve-custom-erc.dto';
 
@@ -38,7 +41,8 @@ export class ModerationService {
     this.assertModerator(user);
     const review = await this.repository.findReviewById(id);
     if (!review) throw new EntityNotFoundException('CustomErcReview', id);
-    if (review.status !== 'pending') throw new ConflictException('This submission has already been reviewed.');
+    if (review.status !== 'pending')
+      throw new ConflictException('This submission has already been reviewed.');
 
     const ercType = this.ercType(review);
     const itemId = this.repository.reviewItemId(review);
@@ -58,34 +62,55 @@ export class ModerationService {
     });
 
     await this.ercRepository.setReviewStatus(itemId, 'approved', ercType);
-    void this.notifications.create(review.submittedById, user.id, NotificationEventType.CUSTOM_ERC_APPROVED, ercType, itemId);
+    void this.notifications.create(
+      review.submittedById,
+      user.id,
+      NotificationEventType.CUSTOM_ERC_APPROVED,
+      ercType,
+      itemId,
+    );
 
     return { id, status: 'approved', poolId };
   }
 
   async reject(user: SessionUser, id: string, reason: string) {
     this.assertModerator(user);
-    if (!reason || reason.trim().length === 0) throw new BadRequestException('A reason is required to reject.');
+    if (!reason || reason.trim().length === 0)
+      throw new BadRequestException('A reason is required to reject.');
 
     const review = await this.repository.findReviewById(id);
     if (!review) throw new EntityNotFoundException('CustomErcReview', id);
-    if (review.status !== 'pending') throw new ConflictException('This submission has already been reviewed.');
+    if (review.status !== 'pending')
+      throw new ConflictException('This submission has already been reviewed.');
 
     const ercType = this.ercType(review);
     const itemId = this.repository.reviewItemId(review);
 
     await this.repository.setRejected(id, user.id, reason.trim());
     await this.ercRepository.setReviewStatus(itemId, 'rejected', ercType);
-    void this.notifications.create(review.submittedById, user.id, NotificationEventType.CUSTOM_ERC_REJECTED, ercType, itemId);
+    void this.notifications.create(
+      review.submittedById,
+      user.id,
+      NotificationEventType.CUSTOM_ERC_REJECTED,
+      ercType,
+      itemId,
+    );
 
     return { id, status: 'rejected' };
   }
 
   private ercType(review: { entityType: import('@prisma/client').ErcEntityType }) {
-    return review.entityType === 'EXPOSURE' ? 'exposure' : review.entityType === 'RESOLUTION' ? 'resolution' : 'challenge';
+    return review.entityType === 'EXPOSURE'
+      ? 'exposure'
+      : review.entityType === 'RESOLUTION'
+        ? 'resolution'
+        : 'challenge';
   }
 
-  private async journeyIdOf(itemId: string, ercType: 'exposure' | 'resolution' | 'challenge'): Promise<string> {
+  private async journeyIdOf(
+    itemId: string,
+    ercType: 'exposure' | 'resolution' | 'challenge',
+  ): Promise<string> {
     const item = await this.ercRepository.findById(itemId, ercType);
     if (!item) throw new EntityNotFoundException('ERC item', itemId);
     return item.journeyId;

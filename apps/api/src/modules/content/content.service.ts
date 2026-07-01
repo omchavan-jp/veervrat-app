@@ -19,7 +19,10 @@ export class ContentService implements OnModuleInit {
       const shlokas = await this.repository.allShlokasForIndex();
       await Promise.all(shlokas.map((s) => this.shlokasIndex.upsert(this.toIndexDoc(s))));
     } catch (error) {
-      this.logger.warn({ msg: 'shloka index seed failed', error: error instanceof Error ? error.message : String(error) });
+      this.logger.warn({
+        msg: 'shloka index seed failed',
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
   }
 
@@ -66,7 +69,14 @@ export class ContentService implements OnModuleInit {
   }
 
   // Exposed so admin shloka CRUD (Item 30) can keep the index current.
-  syncShlokaToIndex(shloka: { id: string; devanagariText: string; transliteration: string | null; meaningEn: string | null; meaningMr: string | null; looseTags: string[] }): void {
+  syncShlokaToIndex(shloka: {
+    id: string;
+    devanagariText: string;
+    transliteration: string | null;
+    meaningEn: string | null;
+    meaningMr: string | null;
+    looseTags: string[];
+  }): void {
     void this.shlokasIndex.upsert(this.toIndexDoc(shloka));
   }
 
@@ -74,7 +84,14 @@ export class ContentService implements OnModuleInit {
     void this.shlokasIndex.remove(id);
   }
 
-  private toIndexDoc(s: { id: string; devanagariText: string; transliteration: string | null; meaningEn: string | null; meaningMr: string | null; looseTags: string[] }) {
+  private toIndexDoc(s: {
+    id: string;
+    devanagariText: string;
+    transliteration: string | null;
+    meaningEn: string | null;
+    meaningMr: string | null;
+    looseTags: string[];
+  }) {
     return {
       id: s.id,
       devanagariText: s.devanagariText,

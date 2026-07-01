@@ -1,4 +1,12 @@
-import { IsOptional, IsString, MaxLength, MinLength, Matches, IsIn, IsDateString } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  MaxLength,
+  MinLength,
+  Matches,
+  IsIn,
+  IsDateString,
+} from 'class-validator';
 
 export class CompleteOnboardingDto {
   @IsOptional()
@@ -11,7 +19,9 @@ export class CompleteOnboardingDto {
   @IsString()
   @MinLength(3)
   @MaxLength(30)
-  @Matches(/^[a-z0-9_]+$/, { message: 'Username may only contain lowercase letters, numbers, and underscores' })
+  @Matches(/^[a-z0-9_]+$/, {
+    message: 'Username may only contain lowercase letters, numbers, and underscores',
+  })
   username?: string;
 
   @IsOptional()

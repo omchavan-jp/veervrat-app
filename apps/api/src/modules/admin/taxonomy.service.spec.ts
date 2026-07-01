@@ -9,8 +9,16 @@ import {
 import type { SessionUser } from '../auth/types/auth.types';
 
 const base: Omit<SessionUser, 'id' | 'roles'> = {
-  email: 'u@x.com', displayName: 'U', username: 'u', language: 'EN', gender: null, dob: null,
-  avatarUrl: null, emailVerifiedAt: new Date(), accountSetupCompletedAt: new Date(), onboardingCompletedAt: new Date(),
+  email: 'u@x.com',
+  displayName: 'U',
+  username: 'u',
+  language: 'EN',
+  gender: null,
+  dob: null,
+  avatarUrl: null,
+  emailVerifiedAt: new Date(),
+  accountSetupCompletedAt: new Date(),
+  onboardingCompletedAt: new Date(),
 };
 const ADMIN: SessionUser = { ...base, id: 'admin-1', roles: [Role.ADMIN] };
 const MOD: SessionUser = { ...base, id: 'mod-1', roles: [Role.MODERATOR] };
@@ -25,7 +33,13 @@ function make(overrides: Record<string, any> = {}) {
     deleteSubvirtue: vi.fn().mockResolvedValue({ id: 's1' }),
     findWeakness: vi.fn().mockResolvedValue({
       id: 'w1',
-      _count: { journeyWeaknesses: 0, exposureWeaknesses: 0, resolutionWeaknesses: 0, challengeWeaknesses: 0, testAttempts: 0 },
+      _count: {
+        journeyWeaknesses: 0,
+        exposureWeaknesses: 0,
+        resolutionWeaknesses: 0,
+        challengeWeaknesses: 0,
+        testAttempts: 0,
+      },
     }),
     deleteWeakness: vi.fn().mockResolvedValue({ id: 'w1' }),
     upsertWeaknessSubvirtue: vi.fn().mockResolvedValue({}),
@@ -37,12 +51,16 @@ function make(overrides: Record<string, any> = {}) {
 describe('TaxonomyService', () => {
   it('NEGATIVE: moderator cannot create a virtue', async () => {
     const { service } = make();
-    await expect(service.createVirtue(MOD, { nameEn: 'Courage' })).rejects.toBeInstanceOf(AccessDeniedException);
+    await expect(service.createVirtue(MOD, { nameEn: 'Courage' })).rejects.toBeInstanceOf(
+      AccessDeniedException,
+    );
   });
 
   it('NEGATIVE: vratarthi cannot create a virtue', async () => {
     const { service } = make();
-    await expect(service.createVirtue(VA, { nameEn: 'Courage' })).rejects.toBeInstanceOf(AccessDeniedException);
+    await expect(service.createVirtue(VA, { nameEn: 'Courage' })).rejects.toBeInstanceOf(
+      AccessDeniedException,
+    );
   });
 
   it('admin creates a virtue', async () => {
@@ -52,7 +70,9 @@ describe('TaxonomyService', () => {
   });
 
   it('delete virtue blocked when it has subvirtues', async () => {
-    const { service } = make({ findVirtue: vi.fn().mockResolvedValue({ id: 'v1', _count: { subvirtues: 2 } }) });
+    const { service } = make({
+      findVirtue: vi.fn().mockResolvedValue({ id: 'v1', _count: { subvirtues: 2 } }),
+    });
     await expect(service.deleteVirtue(ADMIN, 'v1')).rejects.toBeInstanceOf(EntityInUseException);
   });
 
@@ -62,7 +82,11 @@ describe('TaxonomyService', () => {
   });
 
   it('delete subvirtue blocked when linked to weaknesses', async () => {
-    const { service } = make({ findSubvirtue: vi.fn().mockResolvedValue({ id: 's1', _count: { sentences: 0, weaknesses: 1 } }) });
+    const { service } = make({
+      findSubvirtue: vi
+        .fn()
+        .mockResolvedValue({ id: 's1', _count: { sentences: 0, weaknesses: 1 } }),
+    });
     await expect(service.deleteSubvirtue(ADMIN, 's1')).rejects.toBeInstanceOf(EntityInUseException);
   });
 
@@ -70,7 +94,13 @@ describe('TaxonomyService', () => {
     const { service } = make({
       findWeakness: vi.fn().mockResolvedValue({
         id: 'w1',
-        _count: { journeyWeaknesses: 1, exposureWeaknesses: 0, resolutionWeaknesses: 0, challengeWeaknesses: 0, testAttempts: 0 },
+        _count: {
+          journeyWeaknesses: 1,
+          exposureWeaknesses: 0,
+          resolutionWeaknesses: 0,
+          challengeWeaknesses: 0,
+          testAttempts: 0,
+        },
       }),
     });
     await expect(service.deleteWeakness(ADMIN, 'w1')).rejects.toBeInstanceOf(EntityInUseException);

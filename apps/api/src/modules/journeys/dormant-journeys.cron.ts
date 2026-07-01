@@ -41,7 +41,9 @@ export class DormantJourneysCron {
         }
       }
 
-      this.logger.log(`Dormant journey detection complete — marked ${stale.length} journeys dormant`);
+      this.logger.log(
+        `Dormant journey detection complete — marked ${stale.length} journeys dormant`,
+      );
     } catch (err) {
       this.logger.error('Dormant journey detection job failed', err);
       throw err;

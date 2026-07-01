@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Get,
-  Query,
-  Param,
-  UseGuards,
-  BadRequestException,
-} from '@nestjs/common';
+import { Controller, Get, Query, Param, UseGuards, BadRequestException } from '@nestjs/common';
 import { ChatsService } from './chats.service';
 import { SessionGuard } from '../auth/guards/session.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -30,12 +23,7 @@ export class ChatsController {
       throw new BadRequestException('Invalid query parameters');
     }
 
-    const messages = await this.chatsService.getMessages(
-      roomId,
-      user!,
-      afterSeqNo,
-      pageLimit,
-    );
+    const messages = await this.chatsService.getMessages(roomId, user!, afterSeqNo, pageLimit);
 
     return {
       data: messages.map((msg) => ({

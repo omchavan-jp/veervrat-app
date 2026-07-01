@@ -17,7 +17,7 @@ export class SessionGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
-    const token = request.cookies?.[this.cookieName];
+    const token = (request.cookies as Record<string, string> | undefined)?.[this.cookieName];
 
     if (!token) {
       throw new SessionExpiredException();

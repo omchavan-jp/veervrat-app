@@ -124,7 +124,9 @@ export class NotificationsRepository {
     });
   }
 
-  async findById(id: string): Promise<{ id: string; recipientId: string; readAt: Date | null } | null> {
+  async findById(
+    id: string,
+  ): Promise<{ id: string; recipientId: string; readAt: Date | null } | null> {
     return this.prisma.notification.findUnique({
       where: { id },
       select: { id: true, recipientId: true, readAt: true },

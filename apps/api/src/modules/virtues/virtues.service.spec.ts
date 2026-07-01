@@ -5,9 +5,18 @@ import { EntityNotFoundException } from '../../common/exceptions/app.exceptions'
 import type { SessionUser } from '../auth/types/auth.types';
 
 const VA: SessionUser = {
-  id: 'va-1', email: 'v@x.com', displayName: 'V', username: 'v', language: 'EN',
-  gender: null, dob: null, avatarUrl: null, emailVerifiedAt: new Date(),
-  accountSetupCompletedAt: new Date(), onboardingCompletedAt: new Date(), roles: [Role.VRATARTHI],
+  id: 'va-1',
+  email: 'v@x.com',
+  displayName: 'V',
+  username: 'v',
+  language: 'EN',
+  gender: null,
+  dob: null,
+  avatarUrl: null,
+  emailVerifiedAt: new Date(),
+  accountSetupCompletedAt: new Date(),
+  onboardingCompletedAt: new Date(),
+  roles: [Role.VRATARTHI],
 };
 
 function make(repo: Record<string, any>, journeys: Record<string, any> = {}) {
@@ -34,7 +43,11 @@ describe('VirtuesService', () => {
   });
 
   it('subvirtue detail includes weaknesses + sentences', async () => {
-    const repo = { findSubvirtueById: vi.fn().mockResolvedValue({ id: 's1', weaknesses: [{ id: 'w1' }], sentences: [{ id: 'se1' }] }) };
+    const repo = {
+      findSubvirtueById: vi
+        .fn()
+        .mockResolvedValue({ id: 's1', weaknesses: [{ id: 'w1' }], sentences: [{ id: 'se1' }] }),
+    };
     const res = await make(repo).getSubvirtue('s1');
     expect(res.weaknesses).toHaveLength(1);
     expect(res.sentences).toHaveLength(1);
@@ -46,13 +59,17 @@ describe('VirtuesService', () => {
   });
 
   it('sentence info for a guest has no active-journey indicator', async () => {
-    const repo = { findSentenceById: vi.fn().mockResolvedValue({ id: 'se1', textEn: 'x', subvirtue: {} }) };
+    const repo = {
+      findSentenceById: vi.fn().mockResolvedValue({ id: 'se1', textEn: 'x', subvirtue: {} }),
+    };
     const res = await make(repo).getSentence(undefined, 'se1');
     expect(res.hasActiveJourney).toBe(false);
   });
 
   it('sentence info for an authed VA reflects the active-journey indicator', async () => {
-    const repo = { findSentenceById: vi.fn().mockResolvedValue({ id: 'se1', textEn: 'x', subvirtue: {} }) };
+    const repo = {
+      findSentenceById: vi.fn().mockResolvedValue({ id: 'se1', textEn: 'x', subvirtue: {} }),
+    };
     const svc = make(repo, { hasActiveJourneyForSentence: vi.fn().mockResolvedValue(true) });
     const res = await svc.getSentence(VA, 'se1');
     expect(res.hasActiveJourney).toBe(true);
@@ -60,6 +77,8 @@ describe('VirtuesService', () => {
 
   it('NEGATIVE: unknown sentence → 404', async () => {
     const repo = { findSentenceById: vi.fn().mockResolvedValue(null) };
-    await expect(make(repo).getSentence(VA, 'nope')).rejects.toBeInstanceOf(EntityNotFoundException);
+    await expect(make(repo).getSentence(VA, 'nope')).rejects.toBeInstanceOf(
+      EntityNotFoundException,
+    );
   });
 });

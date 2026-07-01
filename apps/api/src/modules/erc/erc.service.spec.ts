@@ -11,14 +11,32 @@ import {
 import type { SessionUser } from '../auth/types/auth.types';
 
 const VA: SessionUser = {
-  id: 'va-1', email: 'va@x.com', displayName: 'VA', username: 'va',
-  roles: [Role.VRATARTHI], language: 'EN', gender: null, dob: null, avatarUrl: null,
-  emailVerifiedAt: new Date(), accountSetupCompletedAt: new Date(), onboardingCompletedAt: new Date(),
+  id: 'va-1',
+  email: 'va@x.com',
+  displayName: 'VA',
+  username: 'va',
+  roles: [Role.VRATARTHI],
+  language: 'EN',
+  gender: null,
+  dob: null,
+  avatarUrl: null,
+  emailVerifiedAt: new Date(),
+  accountSetupCompletedAt: new Date(),
+  onboardingCompletedAt: new Date(),
 };
 const VM: SessionUser = {
-  id: 'vm-1', email: 'vm@x.com', displayName: 'VM', username: 'vm',
-  roles: [Role.VRATMITRA], language: 'EN', gender: null, dob: null, avatarUrl: null,
-  emailVerifiedAt: new Date(), accountSetupCompletedAt: new Date(), onboardingCompletedAt: new Date(),
+  id: 'vm-1',
+  email: 'vm@x.com',
+  displayName: 'VM',
+  username: 'vm',
+  roles: [Role.VRATMITRA],
+  language: 'EN',
+  gender: null,
+  dob: null,
+  avatarUrl: null,
+  emailVerifiedAt: new Date(),
+  accountSetupCompletedAt: new Date(),
+  onboardingCompletedAt: new Date(),
 };
 const OTHER_VM: SessionUser = { ...VM, id: 'other-vm-1' };
 const OTHER_VA: SessionUser = { ...VA, id: 'other-1' };
@@ -26,26 +44,74 @@ const JOURNEY_ID = 'j-1';
 const ITEM_ID = 'item-1';
 const POOL_ID = 'pool-1';
 
-const JOURNEY_SLIM = { id: JOURNEY_ID, vratarthiId: VA.id, vmAssignments: [], globalVmRelationship: null };
+const JOURNEY_SLIM = {
+  id: JOURNEY_ID,
+  vratarthiId: VA.id,
+  vmAssignments: [],
+  globalVmRelationship: null,
+};
 const JOURNEY_SLIM_WITH_VM = {
-  id: JOURNEY_ID, vratarthiId: VA.id,
+  id: JOURNEY_ID,
+  vratarthiId: VA.id,
   vmAssignments: [{ vmId: VM.id, state: VmRelationshipState.ACTIVE }],
   globalVmRelationship: null,
 };
 const JOURNEY_DETAIL = {
-  ...JOURNEY_SLIM, state: 'ACTIVE', weaknesses: [], vratarthiId: VA.id,
-  ercCounts: { exposures: { total: 0, active: 0, approved: 0 }, resolutions: { total: 0, active: 0, approved: 0 }, challenges: { total: 0, active: 0, approved: 0 } },
-  sentence: { id: 's-1', textEn: 'T', textMr: null, subvirtue: { id: 'sv-1', nameEn: 'SV', nameMr: null, virtue: { id: 'v-1', nameEn: 'V', nameMr: null }, sentences: [] } },
-  deletedAt: null, startedAt: new Date(), completedAt: null, pausedAt: null, dormantSince: null,
-  thresholdExposures: 1, thresholdResolutions: 1, createdAt: new Date(), updatedAt: new Date(),
-  title: 'J', sentenceId: 's-1',
+  ...JOURNEY_SLIM,
+  state: 'ACTIVE',
+  weaknesses: [],
+  vratarthiId: VA.id,
+  ercCounts: {
+    exposures: { total: 0, active: 0, approved: 0 },
+    resolutions: { total: 0, active: 0, approved: 0 },
+    challenges: { total: 0, active: 0, approved: 0 },
+  },
+  sentence: {
+    id: 's-1',
+    textEn: 'T',
+    textMr: null,
+    subvirtue: {
+      id: 'sv-1',
+      nameEn: 'SV',
+      nameMr: null,
+      virtue: { id: 'v-1', nameEn: 'V', nameMr: null },
+      sentences: [],
+    },
+  },
+  deletedAt: null,
+  startedAt: new Date(),
+  completedAt: null,
+  pausedAt: null,
+  dormantSince: null,
+  thresholdExposures: 1,
+  thresholdResolutions: 1,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  title: 'J',
+  sentenceId: 's-1',
 };
-const JOURNEY_DETAIL_WITH_VM = { ...JOURNEY_DETAIL, vmAssignments: JOURNEY_SLIM_WITH_VM.vmAssignments };
+const JOURNEY_DETAIL_WITH_VM = {
+  ...JOURNEY_DETAIL,
+  vmAssignments: JOURNEY_SLIM_WITH_VM.vmAssignments,
+};
 
-const makeItem = (status: ErcStatus, isDeactivated = false, overrides: Record<string, unknown> = {}) => ({
-  id: ITEM_ID, journeyId: JOURNEY_ID, status, isDeactivated, isCustom: false,
-  titleEn: 'T', descriptionEn: null, startedAt: null, submittedAt: null, approvedAt: null,
-  createdById: null, reviewStatus: null,
+const makeItem = (
+  status: ErcStatus,
+  isDeactivated = false,
+  overrides: Record<string, unknown> = {},
+) => ({
+  id: ITEM_ID,
+  journeyId: JOURNEY_ID,
+  status,
+  isDeactivated,
+  isCustom: false,
+  titleEn: 'T',
+  descriptionEn: null,
+  startedAt: null,
+  submittedAt: null,
+  approvedAt: null,
+  createdById: null,
+  reviewStatus: null,
   tier: 'LOCAL' as const,
   ...overrides,
 });
@@ -53,7 +119,13 @@ const makeItem = (status: ErcStatus, isDeactivated = false, overrides: Record<st
 const makeCustomItem = (status: ErcStatus, creatorId: string, reviewStatus: string | null = null) =>
   makeItem(status, false, { isCustom: true, createdById: creatorId, reviewStatus });
 
-const SIDENOTE = { id: 'sn-1', vmId: VM.id, text: 'Try this', acknowledgedAt: null, createdAt: new Date() };
+const SIDENOTE = {
+  id: 'sn-1',
+  vmId: VM.id,
+  text: 'Try this',
+  acknowledgedAt: null,
+  createdAt: new Date(),
+};
 
 function makeRepo(overrides: Record<string, unknown> = {}) {
   return {
@@ -68,9 +140,19 @@ function makeRepo(overrides: Record<string, unknown> = {}) {
     upsertSidenote: vi.fn().mockResolvedValue(SIDENOTE),
     revokeSidenote: vi.fn().mockResolvedValue(SIDENOTE),
     acknowledgeSidenote: vi.fn().mockResolvedValue({ ...SIDENOTE, acknowledgedAt: new Date() }),
-    createCustomItem: vi.fn().mockImplementation((_jId, createdById) => makeCustomItem(ErcStatus.NOT_STARTED, createdById)),
-    updateCustomItem: vi.fn().mockImplementation((_id) => makeCustomItem(ErcStatus.NOT_STARTED, VA.id)),
-    setReviewStatus: vi.fn().mockImplementation((_id, reviewStatus) => makeCustomItem(ErcStatus.NOT_STARTED, VA.id, reviewStatus)),
+    createCustomItem: vi
+      .fn()
+      .mockImplementation((_jId, createdById) =>
+        makeCustomItem(ErcStatus.NOT_STARTED, createdById),
+      ),
+    updateCustomItem: vi
+      .fn()
+      .mockImplementation((_id) => makeCustomItem(ErcStatus.NOT_STARTED, VA.id)),
+    setReviewStatus: vi
+      .fn()
+      .mockImplementation((_id, reviewStatus) =>
+        makeCustomItem(ErcStatus.NOT_STARTED, VA.id, reviewStatus),
+      ),
     ercTypeToEntityType: vi.fn().mockImplementation((t: string) => t.toUpperCase()),
     ...overrides,
   };
@@ -114,7 +196,10 @@ function makeServiceWithVm(
 ) {
   return makeService(
     ercRepo,
-    { findById: vi.fn().mockResolvedValue(JOURNEY_DETAIL_WITH_VM), buildJourneySlim: vi.fn().mockReturnValue(JOURNEY_SLIM_WITH_VM) },
+    {
+      findById: vi.fn().mockResolvedValue(JOURNEY_DETAIL_WITH_VM),
+      buildJourneySlim: vi.fn().mockReturnValue(JOURNEY_SLIM_WITH_VM),
+    },
     notifRepo,
     customReviewsRepo,
   );
@@ -130,15 +215,17 @@ describe('ErcService — selectItem', () => {
 
   it('AUTH MATRIX NEGATIVE: non-owner VA gets 403', async () => {
     const service = makeService(makeRepo(), makeJourneyRepo());
-    await expect(service.selectItem(OTHER_VA, JOURNEY_ID, POOL_ID, 'exposure'))
-      .rejects.toThrow(AccessDeniedException);
+    await expect(service.selectItem(OTHER_VA, JOURNEY_ID, POOL_ID, 'exposure')).rejects.toThrow(
+      AccessDeniedException,
+    );
   });
 
   it('NEGATIVE: throws ErcAlreadySelectedException when already selected', async () => {
     const ercRepo = makeRepo({ findByPoolItemId: vi.fn().mockResolvedValue({ id: ITEM_ID }) });
     const service = makeService(ercRepo, makeJourneyRepo());
-    await expect(service.selectItem(VA, JOURNEY_ID, POOL_ID, 'exposure'))
-      .rejects.toThrow(ErcAlreadySelectedException);
+    await expect(service.selectItem(VA, JOURNEY_ID, POOL_ID, 'exposure')).rejects.toThrow(
+      ErcAlreadySelectedException,
+    );
   });
 });
 
@@ -151,21 +238,28 @@ describe('ErcService — updateStatus', () => {
   });
 
   it('NEGATIVE: IN_PROGRESS → APPROVED (skipping SUBMITTED) throws InvalidTransition', async () => {
-    const ercRepo = makeRepo({ findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.IN_PROGRESS)) });
+    const ercRepo = makeRepo({
+      findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.IN_PROGRESS)),
+    });
     const service = makeService(ercRepo, makeJourneyRepo());
-    await expect(service.updateStatus(VA, JOURNEY_ID, ITEM_ID, 'approved', 'exposure'))
-      .rejects.toThrow(InvalidErcStatusTransitionException);
+    await expect(
+      service.updateStatus(VA, JOURNEY_ID, ITEM_ID, 'approved', 'exposure'),
+    ).rejects.toThrow(InvalidErcStatusTransitionException);
   });
 
   it('POSITIVE: SUBMITTED → APPROVED self-approve when no VM', async () => {
-    const ercRepo = makeRepo({ findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.SUBMITTED)) });
+    const ercRepo = makeRepo({
+      findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.SUBMITTED)),
+    });
     const service = makeService(ercRepo, makeJourneyRepo());
     await service.updateStatus(VA, JOURNEY_ID, ITEM_ID, 'approved', 'exposure');
     expect(ercRepo.updateStatus).toHaveBeenCalledWith(ITEM_ID, ErcStatus.APPROVED, 'exposure');
   });
 
   it('POSITIVE: IN_PROGRESS → SUBMITTED notifies the assigned VM (ERC_CLOSURE_SUBMITTED)', async () => {
-    const ercRepo = makeRepo({ findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.IN_PROGRESS)) });
+    const ercRepo = makeRepo({
+      findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.IN_PROGRESS)),
+    });
     const notifRepo = makeNotificationsRepo();
     const service = makeServiceWithVm(ercRepo, notifRepo);
     await service.updateStatus(VA, JOURNEY_ID, ITEM_ID, 'submitted', 'exposure');
@@ -180,7 +274,9 @@ describe('ErcService — updateStatus', () => {
   });
 
   it('SUBMITTED with no VM fires no notification', async () => {
-    const ercRepo = makeRepo({ findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.IN_PROGRESS)) });
+    const ercRepo = makeRepo({
+      findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.IN_PROGRESS)),
+    });
     const notifRepo = makeNotificationsRepo();
     const service = makeService(ercRepo, makeJourneyRepo(), notifRepo);
     await service.updateStatus(VA, JOURNEY_ID, ITEM_ID, 'submitted', 'exposure');
@@ -188,17 +284,23 @@ describe('ErcService — updateStatus', () => {
   });
 
   it('AUTH MATRIX NEGATIVE: VA cannot set REVISIT via PATCH /status → 403', async () => {
-    const ercRepo = makeRepo({ findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.SUBMITTED)) });
+    const ercRepo = makeRepo({
+      findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.SUBMITTED)),
+    });
     const service = makeService(ercRepo, makeJourneyRepo());
-    await expect(service.updateStatus(VA, JOURNEY_ID, ITEM_ID, 'revisit', 'exposure'))
-      .rejects.toThrow(AccessDeniedException);
+    await expect(
+      service.updateStatus(VA, JOURNEY_ID, ITEM_ID, 'revisit', 'exposure'),
+    ).rejects.toThrow(AccessDeniedException);
   });
 
   it('NEGATIVE: deactivated item cannot change status', async () => {
-    const ercRepo = makeRepo({ findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.NOT_STARTED, true)) });
+    const ercRepo = makeRepo({
+      findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.NOT_STARTED, true)),
+    });
     const service = makeService(ercRepo, makeJourneyRepo());
-    await expect(service.updateStatus(VA, JOURNEY_ID, ITEM_ID, 'in_progress', 'exposure'))
-      .rejects.toThrow(InvalidErcStatusTransitionException);
+    await expect(
+      service.updateStatus(VA, JOURNEY_ID, ITEM_ID, 'in_progress', 'exposure'),
+    ).rejects.toThrow(InvalidErcStatusTransitionException);
   });
 });
 
@@ -222,16 +324,26 @@ describe('ErcService — deactivate / reactivate', () => {
 
 describe('ErcService — approveItem', () => {
   it('AUTH MATRIX POSITIVE: VM with active assignment can approve SUBMITTED item → APPROVED + notification written', async () => {
-    const ercRepo = makeRepo({ findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.SUBMITTED)) });
+    const ercRepo = makeRepo({
+      findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.SUBMITTED)),
+    });
     const notifRepo = makeNotificationsRepo();
     const service = makeServiceWithVm(ercRepo, notifRepo);
     const result = await service.approveItem(VM, JOURNEY_ID, ITEM_ID, 'exposure');
     expect(result.status).toBe(ErcStatus.APPROVED);
-    expect(notifRepo.create).toHaveBeenCalledWith(VA.id, VM.id, 'ERC_CLOSURE_APPROVED', 'exposure', ITEM_ID);
+    expect(notifRepo.create).toHaveBeenCalledWith(
+      VA.id,
+      VM.id,
+      'ERC_CLOSURE_APPROVED',
+      'exposure',
+      ITEM_ID,
+    );
   });
 
   it('AUTH MATRIX POSITIVE: VA self-approves (no VM assigned) via approveItem → APPROVED + notification', async () => {
-    const ercRepo = makeRepo({ findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.SUBMITTED)) });
+    const ercRepo = makeRepo({
+      findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.SUBMITTED)),
+    });
     const notifRepo = makeNotificationsRepo();
     const service = makeService(ercRepo, makeJourneyRepo(), notifRepo);
     const result = await service.approveItem(VA, JOURNEY_ID, ITEM_ID, 'exposure');
@@ -240,24 +352,33 @@ describe('ErcService — approveItem', () => {
   });
 
   it('AUTH MATRIX NEGATIVE: VA cannot approve when VM is assigned → 403', async () => {
-    const ercRepo = makeRepo({ findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.SUBMITTED)) });
+    const ercRepo = makeRepo({
+      findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.SUBMITTED)),
+    });
     const service = makeServiceWithVm(ercRepo);
-    await expect(service.approveItem(VA, JOURNEY_ID, ITEM_ID, 'exposure'))
-      .rejects.toThrow(AccessDeniedException);
+    await expect(service.approveItem(VA, JOURNEY_ID, ITEM_ID, 'exposure')).rejects.toThrow(
+      AccessDeniedException,
+    );
   });
 
   it('AUTH MATRIX NEGATIVE: non-assigned VM cannot approve → 403', async () => {
-    const ercRepo = makeRepo({ findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.SUBMITTED)) });
+    const ercRepo = makeRepo({
+      findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.SUBMITTED)),
+    });
     const service = makeServiceWithVm(ercRepo);
-    await expect(service.approveItem(OTHER_VM, JOURNEY_ID, ITEM_ID, 'exposure'))
-      .rejects.toThrow(AccessDeniedException);
+    await expect(service.approveItem(OTHER_VM, JOURNEY_ID, ITEM_ID, 'exposure')).rejects.toThrow(
+      AccessDeniedException,
+    );
   });
 
   it('NEGATIVE: item not SUBMITTED → 409 InvalidErcStatusTransitionException', async () => {
-    const ercRepo = makeRepo({ findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.IN_PROGRESS)) });
+    const ercRepo = makeRepo({
+      findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.IN_PROGRESS)),
+    });
     const service = makeServiceWithVm(ercRepo);
-    await expect(service.approveItem(VM, JOURNEY_ID, ITEM_ID, 'exposure'))
-      .rejects.toThrow(InvalidErcStatusTransitionException);
+    await expect(service.approveItem(VM, JOURNEY_ID, ITEM_ID, 'exposure')).rejects.toThrow(
+      InvalidErcStatusTransitionException,
+    );
   });
 });
 
@@ -265,33 +386,50 @@ describe('ErcService — approveItem', () => {
 
 describe('ErcService — revisitItem', () => {
   it('AUTH MATRIX POSITIVE: VM with active assignment can revisit SUBMITTED item → REVISIT + notification written', async () => {
-    const ercRepo = makeRepo({ findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.SUBMITTED)) });
+    const ercRepo = makeRepo({
+      findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.SUBMITTED)),
+    });
     const notifRepo = makeNotificationsRepo();
     const service = makeServiceWithVm(ercRepo, notifRepo);
     const result = await service.revisitItem(VM, JOURNEY_ID, ITEM_ID, 'exposure');
     expect(result.status).toBe(ErcStatus.REVISIT);
-    expect(notifRepo.create).toHaveBeenCalledWith(VA.id, VM.id, 'ERC_RETURNED_FOR_REVISIT', 'exposure', ITEM_ID);
+    expect(notifRepo.create).toHaveBeenCalledWith(
+      VA.id,
+      VM.id,
+      'ERC_RETURNED_FOR_REVISIT',
+      'exposure',
+      ITEM_ID,
+    );
   });
 
   it('AUTH MATRIX NEGATIVE: VA cannot call revisitItem → 403', async () => {
-    const ercRepo = makeRepo({ findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.SUBMITTED)) });
+    const ercRepo = makeRepo({
+      findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.SUBMITTED)),
+    });
     const service = makeServiceWithVm(ercRepo);
-    await expect(service.revisitItem(VA, JOURNEY_ID, ITEM_ID, 'exposure'))
-      .rejects.toThrow(AccessDeniedException);
+    await expect(service.revisitItem(VA, JOURNEY_ID, ITEM_ID, 'exposure')).rejects.toThrow(
+      AccessDeniedException,
+    );
   });
 
   it('AUTH MATRIX NEGATIVE: non-assigned VM cannot revisit → 403', async () => {
-    const ercRepo = makeRepo({ findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.SUBMITTED)) });
+    const ercRepo = makeRepo({
+      findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.SUBMITTED)),
+    });
     const service = makeServiceWithVm(ercRepo);
-    await expect(service.revisitItem(OTHER_VM, JOURNEY_ID, ITEM_ID, 'exposure'))
-      .rejects.toThrow(AccessDeniedException);
+    await expect(service.revisitItem(OTHER_VM, JOURNEY_ID, ITEM_ID, 'exposure')).rejects.toThrow(
+      AccessDeniedException,
+    );
   });
 
   it('NEGATIVE: item not SUBMITTED → 409 InvalidErcStatusTransitionException', async () => {
-    const ercRepo = makeRepo({ findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.IN_PROGRESS)) });
+    const ercRepo = makeRepo({
+      findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.IN_PROGRESS)),
+    });
     const service = makeServiceWithVm(ercRepo);
-    await expect(service.revisitItem(VM, JOURNEY_ID, ITEM_ID, 'exposure'))
-      .rejects.toThrow(InvalidErcStatusTransitionException);
+    await expect(service.revisitItem(VM, JOURNEY_ID, ITEM_ID, 'exposure')).rejects.toThrow(
+      InvalidErcStatusTransitionException,
+    );
   });
 });
 
@@ -304,27 +442,36 @@ describe('ErcService — suggestItem', () => {
     const service = makeServiceWithVm(ercRepo, notifRepo);
     const result = await service.suggestItem(VM, JOURNEY_ID, ITEM_ID, 'Try this', 'exposure');
     expect(ercRepo.upsertSidenote).toHaveBeenCalledWith(ITEM_ID, VM.id, 'Try this', 'exposure');
-    expect(notifRepo.create).toHaveBeenCalledWith(VA.id, VM.id, 'VM_SUGGESTION_NEW', 'exposure', ITEM_ID);
+    expect(notifRepo.create).toHaveBeenCalledWith(
+      VA.id,
+      VM.id,
+      'VM_SUGGESTION_NEW',
+      'exposure',
+      ITEM_ID,
+    );
     expect(result.id).toBe(SIDENOTE.id);
   });
 
   it('AUTH MATRIX NEGATIVE: VA cannot suggest → 403', async () => {
     const service = makeServiceWithVm();
-    await expect(service.suggestItem(VA, JOURNEY_ID, ITEM_ID, 'Try this', 'exposure'))
-      .rejects.toThrow(AccessDeniedException);
+    await expect(
+      service.suggestItem(VA, JOURNEY_ID, ITEM_ID, 'Try this', 'exposure'),
+    ).rejects.toThrow(AccessDeniedException);
   });
 
   it('AUTH MATRIX NEGATIVE: non-assigned VM cannot suggest → 403', async () => {
     const service = makeServiceWithVm();
-    await expect(service.suggestItem(OTHER_VM, JOURNEY_ID, ITEM_ID, 'Try this', 'exposure'))
-      .rejects.toThrow(AccessDeniedException);
+    await expect(
+      service.suggestItem(OTHER_VM, JOURNEY_ID, ITEM_ID, 'Try this', 'exposure'),
+    ).rejects.toThrow(AccessDeniedException);
   });
 
   it('NEGATIVE: ERC item not found → 404 EntityNotFoundException', async () => {
     const ercRepo = makeRepo({ findById: vi.fn().mockResolvedValue(null) });
     const service = makeServiceWithVm(ercRepo);
-    await expect(service.suggestItem(VM, JOURNEY_ID, ITEM_ID, 'Try this', 'exposure'))
-      .rejects.toThrow(EntityNotFoundException);
+    await expect(
+      service.suggestItem(VM, JOURNEY_ID, ITEM_ID, 'Try this', 'exposure'),
+    ).rejects.toThrow(EntityNotFoundException);
   });
 });
 
@@ -337,26 +484,35 @@ describe('ErcService — unsuggestItem', () => {
     const service = makeServiceWithVm(ercRepo, notifRepo);
     await service.unsuggestItem(VM, JOURNEY_ID, ITEM_ID, 'exposure');
     expect(ercRepo.revokeSidenote).toHaveBeenCalledWith(ITEM_ID, 'exposure');
-    expect(notifRepo.create).toHaveBeenCalledWith(VA.id, VM.id, 'VM_SUGGESTION_DISMISSED', 'exposure', ITEM_ID);
+    expect(notifRepo.create).toHaveBeenCalledWith(
+      VA.id,
+      VM.id,
+      'VM_SUGGESTION_DISMISSED',
+      'exposure',
+      ITEM_ID,
+    );
   });
 
   it('AUTH MATRIX NEGATIVE: VA cannot unsuggest → 403', async () => {
     const service = makeServiceWithVm();
-    await expect(service.unsuggestItem(VA, JOURNEY_ID, ITEM_ID, 'exposure'))
-      .rejects.toThrow(AccessDeniedException);
+    await expect(service.unsuggestItem(VA, JOURNEY_ID, ITEM_ID, 'exposure')).rejects.toThrow(
+      AccessDeniedException,
+    );
   });
 
   it('AUTH MATRIX NEGATIVE: non-assigned VM cannot unsuggest → 403', async () => {
     const service = makeServiceWithVm();
-    await expect(service.unsuggestItem(OTHER_VM, JOURNEY_ID, ITEM_ID, 'exposure'))
-      .rejects.toThrow(AccessDeniedException);
+    await expect(service.unsuggestItem(OTHER_VM, JOURNEY_ID, ITEM_ID, 'exposure')).rejects.toThrow(
+      AccessDeniedException,
+    );
   });
 
   it('NEGATIVE: no active sidenote exists → 404 EntityNotFoundException', async () => {
     const ercRepo = makeRepo({ revokeSidenote: vi.fn().mockResolvedValue(null) });
     const service = makeServiceWithVm(ercRepo);
-    await expect(service.unsuggestItem(VM, JOURNEY_ID, ITEM_ID, 'exposure'))
-      .rejects.toThrow(EntityNotFoundException);
+    await expect(service.unsuggestItem(VM, JOURNEY_ID, ITEM_ID, 'exposure')).rejects.toThrow(
+      EntityNotFoundException,
+    );
   });
 });
 
@@ -373,21 +529,24 @@ describe('ErcService — acknowledgeSidenoteItem', () => {
 
   it('AUTH MATRIX NEGATIVE: VM cannot acknowledge → 403', async () => {
     const service = makeServiceWithVm();
-    await expect(service.acknowledgeSidenoteItem(VM, JOURNEY_ID, ITEM_ID, 'exposure'))
-      .rejects.toThrow(AccessDeniedException);
+    await expect(
+      service.acknowledgeSidenoteItem(VM, JOURNEY_ID, ITEM_ID, 'exposure'),
+    ).rejects.toThrow(AccessDeniedException);
   });
 
   it('AUTH MATRIX NEGATIVE: non-owner VA cannot acknowledge → 403', async () => {
     const service = makeService(makeRepo(), makeJourneyRepo());
-    await expect(service.acknowledgeSidenoteItem(OTHER_VA, JOURNEY_ID, ITEM_ID, 'exposure'))
-      .rejects.toThrow(AccessDeniedException);
+    await expect(
+      service.acknowledgeSidenoteItem(OTHER_VA, JOURNEY_ID, ITEM_ID, 'exposure'),
+    ).rejects.toThrow(AccessDeniedException);
   });
 
   it('NEGATIVE: no active sidenote exists → 404 EntityNotFoundException', async () => {
     const ercRepo = makeRepo({ acknowledgeSidenote: vi.fn().mockResolvedValue(null) });
     const service = makeService(ercRepo, makeJourneyRepo());
-    await expect(service.acknowledgeSidenoteItem(VA, JOURNEY_ID, ITEM_ID, 'exposure'))
-      .rejects.toThrow(EntityNotFoundException);
+    await expect(
+      service.acknowledgeSidenoteItem(VA, JOURNEY_ID, ITEM_ID, 'exposure'),
+    ).rejects.toThrow(EntityNotFoundException);
   });
 });
 
@@ -397,29 +556,57 @@ describe('ErcService — createCustomItem', () => {
   it('AUTH MATRIX POSITIVE: VA owner can create custom item → createdById is VA.id', async () => {
     const ercRepo = makeRepo();
     const service = makeService(ercRepo, makeJourneyRepo());
-    const result = await service.createCustomItem(VA, JOURNEY_ID, { titleEn: 'My custom' }, 'exposure');
-    expect(ercRepo.createCustomItem).toHaveBeenCalledWith(JOURNEY_ID, VA.id, { titleEn: 'My custom' }, 'exposure');
+    const result = await service.createCustomItem(
+      VA,
+      JOURNEY_ID,
+      { titleEn: 'My custom' },
+      'exposure',
+    );
+    expect(ercRepo.createCustomItem).toHaveBeenCalledWith(
+      JOURNEY_ID,
+      VA.id,
+      { titleEn: 'My custom' },
+      'exposure',
+    );
     expect(result.createdById).toBe(VA.id);
   });
 
   it('AUTH MATRIX POSITIVE: assigned VM can create custom item → createdById is VM.id', async () => {
-    const ercRepo = makeRepo({ createCustomItem: vi.fn().mockImplementation((_jId, createdById) => makeCustomItem(ErcStatus.NOT_STARTED, createdById)) });
+    const ercRepo = makeRepo({
+      createCustomItem: vi
+        .fn()
+        .mockImplementation((_jId, createdById) =>
+          makeCustomItem(ErcStatus.NOT_STARTED, createdById),
+        ),
+    });
     const service = makeServiceWithVm(ercRepo);
-    const result = await service.createCustomItem(VM, JOURNEY_ID, { titleEn: 'VM custom' }, 'resolution');
-    expect(ercRepo.createCustomItem).toHaveBeenCalledWith(JOURNEY_ID, VM.id, { titleEn: 'VM custom' }, 'resolution');
+    const result = await service.createCustomItem(
+      VM,
+      JOURNEY_ID,
+      { titleEn: 'VM custom' },
+      'resolution',
+    );
+    expect(ercRepo.createCustomItem).toHaveBeenCalledWith(
+      JOURNEY_ID,
+      VM.id,
+      { titleEn: 'VM custom' },
+      'resolution',
+    );
     expect(result.createdById).toBe(VM.id);
   });
 
   it('AUTH MATRIX NEGATIVE: non-owner VA gets 403', async () => {
     const service = makeService(makeRepo(), makeJourneyRepo());
-    await expect(service.createCustomItem(OTHER_VA, JOURNEY_ID, { titleEn: 'X' }, 'exposure'))
-      .rejects.toThrow(AccessDeniedException);
+    await expect(
+      service.createCustomItem(OTHER_VA, JOURNEY_ID, { titleEn: 'X' }, 'exposure'),
+    ).rejects.toThrow(AccessDeniedException);
   });
 
   it('AUTH MATRIX NEGATIVE: non-assigned VM gets 403', async () => {
     const service = makeServiceWithVm();
-    await expect(service.createCustomItem(OTHER_VM, JOURNEY_ID, { titleEn: 'X' }, 'challenge'))
-      .rejects.toThrow(AccessDeniedException);
+    await expect(
+      service.createCustomItem(OTHER_VM, JOURNEY_ID, { titleEn: 'X' }, 'challenge'),
+    ).rejects.toThrow(AccessDeniedException);
   });
 });
 
@@ -427,38 +614,59 @@ describe('ErcService — createCustomItem', () => {
 
 describe('ErcService — editCustomItem', () => {
   it('AUTH MATRIX POSITIVE: creator VA can edit pre-submission custom item', async () => {
-    const ercRepo = makeRepo({ findById: vi.fn().mockResolvedValue(makeCustomItem(ErcStatus.NOT_STARTED, VA.id)) });
+    const ercRepo = makeRepo({
+      findById: vi.fn().mockResolvedValue(makeCustomItem(ErcStatus.NOT_STARTED, VA.id)),
+    });
     const service = makeService(ercRepo, makeJourneyRepo());
     await service.editCustomItem(VA, JOURNEY_ID, ITEM_ID, { titleEn: 'Updated' }, 'exposure');
-    expect(ercRepo.updateCustomItem).toHaveBeenCalledWith(ITEM_ID, { titleEn: 'Updated' }, 'exposure');
+    expect(ercRepo.updateCustomItem).toHaveBeenCalledWith(
+      ITEM_ID,
+      { titleEn: 'Updated' },
+      'exposure',
+    );
   });
 
   it('AUTH MATRIX POSITIVE: creator VM can edit pre-submission custom item they created', async () => {
-    const ercRepo = makeRepo({ findById: vi.fn().mockResolvedValue(makeCustomItem(ErcStatus.IN_PROGRESS, VM.id)) });
+    const ercRepo = makeRepo({
+      findById: vi.fn().mockResolvedValue(makeCustomItem(ErcStatus.IN_PROGRESS, VM.id)),
+    });
     const service = makeServiceWithVm(ercRepo);
     await service.editCustomItem(VM, JOURNEY_ID, ITEM_ID, { titleEn: 'VM updated' }, 'resolution');
-    expect(ercRepo.updateCustomItem).toHaveBeenCalledWith(ITEM_ID, { titleEn: 'VM updated' }, 'resolution');
+    expect(ercRepo.updateCustomItem).toHaveBeenCalledWith(
+      ITEM_ID,
+      { titleEn: 'VM updated' },
+      'resolution',
+    );
   });
 
   it('AUTH MATRIX NEGATIVE: non-creator VA cannot edit → 403', async () => {
-    const ercRepo = makeRepo({ findById: vi.fn().mockResolvedValue(makeCustomItem(ErcStatus.NOT_STARTED, VM.id)) });
+    const ercRepo = makeRepo({
+      findById: vi.fn().mockResolvedValue(makeCustomItem(ErcStatus.NOT_STARTED, VM.id)),
+    });
     const service = makeService(ercRepo, makeJourneyRepo());
-    await expect(service.editCustomItem(VA, JOURNEY_ID, ITEM_ID, { titleEn: 'X' }, 'exposure'))
-      .rejects.toThrow(AccessDeniedException);
+    await expect(
+      service.editCustomItem(VA, JOURNEY_ID, ITEM_ID, { titleEn: 'X' }, 'exposure'),
+    ).rejects.toThrow(AccessDeniedException);
   });
 
   it('AUTH MATRIX NEGATIVE: pool item (isCustom=false) cannot be edited → 403', async () => {
-    const ercRepo = makeRepo({ findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.NOT_STARTED)) });
+    const ercRepo = makeRepo({
+      findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.NOT_STARTED)),
+    });
     const service = makeService(ercRepo, makeJourneyRepo());
-    await expect(service.editCustomItem(VA, JOURNEY_ID, ITEM_ID, { titleEn: 'X' }, 'exposure'))
-      .rejects.toThrow(AccessDeniedException);
+    await expect(
+      service.editCustomItem(VA, JOURNEY_ID, ITEM_ID, { titleEn: 'X' }, 'exposure'),
+    ).rejects.toThrow(AccessDeniedException);
   });
 
   it('NEGATIVE: post-submission custom item cannot be edited → 403', async () => {
-    const ercRepo = makeRepo({ findById: vi.fn().mockResolvedValue(makeCustomItem(ErcStatus.SUBMITTED, VA.id)) });
+    const ercRepo = makeRepo({
+      findById: vi.fn().mockResolvedValue(makeCustomItem(ErcStatus.SUBMITTED, VA.id)),
+    });
     const service = makeService(ercRepo, makeJourneyRepo());
-    await expect(service.editCustomItem(VA, JOURNEY_ID, ITEM_ID, { titleEn: 'X' }, 'exposure'))
-      .rejects.toThrow(AccessDeniedException);
+    await expect(
+      service.editCustomItem(VA, JOURNEY_ID, ITEM_ID, { titleEn: 'X' }, 'exposure'),
+    ).rejects.toThrow(AccessDeniedException);
   });
 });
 
@@ -466,56 +674,83 @@ describe('ErcService — editCustomItem', () => {
 
 describe('ErcService — submitForReview', () => {
   it('AUTH MATRIX POSITIVE: VA submits custom item → review created + reviewStatus=pending + notification', async () => {
-    const ercRepo = makeRepo({ findById: vi.fn().mockResolvedValue(makeCustomItem(ErcStatus.IN_PROGRESS, VA.id)) });
+    const ercRepo = makeRepo({
+      findById: vi.fn().mockResolvedValue(makeCustomItem(ErcStatus.IN_PROGRESS, VA.id)),
+    });
     const notifRepo = makeNotificationsRepo();
     const customReviewsRepo = makeCustomErcReviewsRepo();
     const service = makeService(ercRepo, makeJourneyRepo(), notifRepo, customReviewsRepo);
     const result = await service.submitForReview(VA, JOURNEY_ID, ITEM_ID, 'exposure');
-    expect(customReviewsRepo.create).toHaveBeenCalledWith(expect.objectContaining({ submittedById: VA.id, journeyExposureId: ITEM_ID }));
+    expect(customReviewsRepo.create).toHaveBeenCalledWith(
+      expect.objectContaining({ submittedById: VA.id, journeyExposureId: ITEM_ID }),
+    );
     expect(ercRepo.setReviewStatus).toHaveBeenCalledWith(ITEM_ID, 'pending', 'exposure');
-    expect(notifRepo.create).toHaveBeenCalledWith(VA.id, VA.id, 'CUSTOM_ERC_REVIEW_REQUESTED', 'exposure', ITEM_ID);
+    expect(notifRepo.create).toHaveBeenCalledWith(
+      VA.id,
+      VA.id,
+      'CUSTOM_ERC_REVIEW_REQUESTED',
+      'exposure',
+      ITEM_ID,
+    );
     expect(result.reviewStatus).toBe('pending');
   });
 
   it('AUTH MATRIX POSITIVE: assigned VM submits custom challenge for review', async () => {
-    const ercRepo = makeRepo({ findById: vi.fn().mockResolvedValue(makeCustomItem(ErcStatus.NOT_STARTED, VM.id)) });
+    const ercRepo = makeRepo({
+      findById: vi.fn().mockResolvedValue(makeCustomItem(ErcStatus.NOT_STARTED, VM.id)),
+    });
     const customReviewsRepo = makeCustomErcReviewsRepo();
     const service = makeServiceWithVm(ercRepo, makeNotificationsRepo(), customReviewsRepo);
     await service.submitForReview(VM, JOURNEY_ID, ITEM_ID, 'challenge');
-    expect(customReviewsRepo.create).toHaveBeenCalledWith(expect.objectContaining({ submittedById: VM.id, journeyChallengeId: ITEM_ID }));
+    expect(customReviewsRepo.create).toHaveBeenCalledWith(
+      expect.objectContaining({ submittedById: VM.id, journeyChallengeId: ITEM_ID }),
+    );
   });
 
   it('AUTH MATRIX NEGATIVE: non-participant cannot submit for review → 403', async () => {
     const service = makeService(makeRepo(), makeJourneyRepo());
-    await expect(service.submitForReview(OTHER_VA, JOURNEY_ID, ITEM_ID, 'exposure'))
-      .rejects.toThrow(AccessDeniedException);
+    await expect(
+      service.submitForReview(OTHER_VA, JOURNEY_ID, ITEM_ID, 'exposure'),
+    ).rejects.toThrow(AccessDeniedException);
   });
 
   it('NEGATIVE: pool item (isCustom=false) cannot be submitted → 403', async () => {
-    const ercRepo = makeRepo({ findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.IN_PROGRESS)) });
+    const ercRepo = makeRepo({
+      findById: vi.fn().mockResolvedValue(makeItem(ErcStatus.IN_PROGRESS)),
+    });
     const service = makeService(ercRepo, makeJourneyRepo());
-    await expect(service.submitForReview(VA, JOURNEY_ID, ITEM_ID, 'exposure'))
-      .rejects.toThrow(AccessDeniedException);
+    await expect(service.submitForReview(VA, JOURNEY_ID, ITEM_ID, 'exposure')).rejects.toThrow(
+      AccessDeniedException,
+    );
   });
 
   it('NEGATIVE: already-pending item cannot be re-submitted → 409', async () => {
-    const ercRepo = makeRepo({ findById: vi.fn().mockResolvedValue(makeCustomItem(ErcStatus.IN_PROGRESS, VA.id, 'pending')) });
+    const ercRepo = makeRepo({
+      findById: vi.fn().mockResolvedValue(makeCustomItem(ErcStatus.IN_PROGRESS, VA.id, 'pending')),
+    });
     const service = makeService(ercRepo, makeJourneyRepo());
-    await expect(service.submitForReview(VA, JOURNEY_ID, ITEM_ID, 'exposure'))
-      .rejects.toThrow(CustomErcAlreadyPendingException);
+    await expect(service.submitForReview(VA, JOURNEY_ID, ITEM_ID, 'exposure')).rejects.toThrow(
+      CustomErcAlreadyPendingException,
+    );
   });
 
   it('NEGATIVE: approved item cannot be re-submitted (would overwrite decision) → 409', async () => {
-    const ercRepo = makeRepo({ findById: vi.fn().mockResolvedValue(makeCustomItem(ErcStatus.APPROVED, VA.id, 'approved')) });
+    const ercRepo = makeRepo({
+      findById: vi.fn().mockResolvedValue(makeCustomItem(ErcStatus.APPROVED, VA.id, 'approved')),
+    });
     const service = makeService(ercRepo, makeJourneyRepo());
-    await expect(service.submitForReview(VA, JOURNEY_ID, ITEM_ID, 'exposure'))
-      .rejects.toThrow(CustomErcAlreadyPendingException);
+    await expect(service.submitForReview(VA, JOURNEY_ID, ITEM_ID, 'exposure')).rejects.toThrow(
+      CustomErcAlreadyPendingException,
+    );
   });
 
   it('NEGATIVE: rejected item cannot be re-submitted → 409', async () => {
-    const ercRepo = makeRepo({ findById: vi.fn().mockResolvedValue(makeCustomItem(ErcStatus.IN_PROGRESS, VA.id, 'rejected')) });
+    const ercRepo = makeRepo({
+      findById: vi.fn().mockResolvedValue(makeCustomItem(ErcStatus.IN_PROGRESS, VA.id, 'rejected')),
+    });
     const service = makeService(ercRepo, makeJourneyRepo());
-    await expect(service.submitForReview(VA, JOURNEY_ID, ITEM_ID, 'exposure'))
-      .rejects.toThrow(CustomErcAlreadyPendingException);
+    await expect(service.submitForReview(VA, JOURNEY_ID, ITEM_ID, 'exposure')).rejects.toThrow(
+      CustomErcAlreadyPendingException,
+    );
   });
 });

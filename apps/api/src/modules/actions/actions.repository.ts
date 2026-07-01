@@ -134,13 +134,31 @@ export class ActionsRepository {
         revokedAt: true,
         createdAt: true,
         journeyExposure: {
-          select: { id: true, titleEn: true, titleMr: true, journeyId: true, journey: { select: { title: true, vratarthiId: true } } },
+          select: {
+            id: true,
+            titleEn: true,
+            titleMr: true,
+            journeyId: true,
+            journey: { select: { title: true, vratarthiId: true } },
+          },
         },
         journeyResolution: {
-          select: { id: true, titleEn: true, titleMr: true, journeyId: true, journey: { select: { title: true, vratarthiId: true } } },
+          select: {
+            id: true,
+            titleEn: true,
+            titleMr: true,
+            journeyId: true,
+            journey: { select: { title: true, vratarthiId: true } },
+          },
         },
         journeyChallenge: {
-          select: { id: true, titleEn: true, titleMr: true, journeyId: true, journey: { select: { title: true, vratarthiId: true } } },
+          select: {
+            id: true,
+            titleEn: true,
+            titleMr: true,
+            journeyId: true,
+            journey: { select: { title: true, vratarthiId: true } },
+          },
         },
       },
       orderBy: { createdAt: 'desc' },
@@ -176,7 +194,12 @@ export class ActionsRepository {
   async findJourneysPendingCompletion(journeyIds: string[]): Promise<ActionJourney[]> {
     if (journeyIds.length === 0) return [];
     const rows = await this.prisma.journey.findMany({
-      where: { id: { in: journeyIds }, completionSubmittedAt: { not: null }, completedAt: null, deletedAt: null },
+      where: {
+        id: { in: journeyIds },
+        completionSubmittedAt: { not: null },
+        completedAt: null,
+        deletedAt: null,
+      },
       select: { id: true, title: true, vratarthiId: true, completionSubmittedAt: true },
       orderBy: { completionSubmittedAt: 'asc' },
     });
@@ -187,7 +210,9 @@ export class ActionsRepository {
 
   async findCustomErcReviews(journeyIds: string[]): Promise<ActionCustomReview[]> {
     if (journeyIds.length === 0) return [];
-    const itemJourney = { select: { journeyId: true, journey: { select: { title: true, vratarthiId: true } } } };
+    const itemJourney = {
+      select: { journeyId: true, journey: { select: { title: true, vratarthiId: true } } },
+    };
     const rows = await this.prisma.customErcReview.findMany({
       where: {
         OR: [
@@ -232,7 +257,9 @@ export class ActionsRepository {
 
   // ─── VA-owned journey ids ─────────────────────────────────────────────────────
 
-  async findOwnedJourneys(vratarthiId: string): Promise<{ id: string; title: string; state: JourneyState }[]> {
+  async findOwnedJourneys(
+    vratarthiId: string,
+  ): Promise<{ id: string; title: string; state: JourneyState }[]> {
     return this.prisma.journey.findMany({
       where: { vratarthiId, deletedAt: null },
       select: { id: true, title: true, state: true },
@@ -258,18 +285,42 @@ export class ActionsRepository {
         if (weaknessIds.length === 0) return null;
 
         const [selExp, selRes, selChal] = await Promise.all([
-          this.prisma.journeyExposure.findMany({ where: { journeyId: j.id, poolExposureId: { not: null } }, select: { poolExposureId: true } }),
-          this.prisma.journeyResolution.findMany({ where: { journeyId: j.id, poolResolutionId: { not: null } }, select: { poolResolutionId: true } }),
-          this.prisma.journeyChallenge.findMany({ where: { journeyId: j.id, poolChallengeId: { not: null } }, select: { poolChallengeId: true } }),
+          this.prisma.journeyExposure.findMany({
+            where: { journeyId: j.id, poolExposureId: { not: null } },
+            select: { poolExposureId: true },
+          }),
+          this.prisma.journeyResolution.findMany({
+            where: { journeyId: j.id, poolResolutionId: { not: null } },
+            select: { poolResolutionId: true },
+          }),
+          this.prisma.journeyChallenge.findMany({
+            where: { journeyId: j.id, poolChallengeId: { not: null } },
+            select: { poolChallengeId: true },
+          }),
         ]);
         const expIds = selExp.map((s) => s.poolExposureId!);
         const resIds = selRes.map((s) => s.poolResolutionId!);
         const chalIds = selChal.map((s) => s.poolChallengeId!);
 
         const [expAvail, resAvail, chalAvail] = await Promise.all([
-          this.prisma.exposure.count({ where: { weaknessTags: { some: { weaknessId: { in: weaknessIds } } }, ...(expIds.length ? { id: { notIn: expIds } } : {}) } }),
-          this.prisma.resolution.count({ where: { weaknessTags: { some: { weaknessId: { in: weaknessIds } } }, ...(resIds.length ? { id: { notIn: resIds } } : {}) } }),
-          this.prisma.challenge.count({ where: { weaknessTags: { some: { weaknessId: { in: weaknessIds } } }, ...(chalIds.length ? { id: { notIn: chalIds } } : {}) } }),
+          this.prisma.exposure.count({
+            where: {
+              weaknessTags: { some: { weaknessId: { in: weaknessIds } } },
+              ...(expIds.length ? { id: { notIn: expIds } } : {}),
+            },
+          }),
+          this.prisma.resolution.count({
+            where: {
+              weaknessTags: { some: { weaknessId: { in: weaknessIds } } },
+              ...(resIds.length ? { id: { notIn: resIds } } : {}),
+            },
+          }),
+          this.prisma.challenge.count({
+            where: {
+              weaknessTags: { some: { weaknessId: { in: weaknessIds } } },
+              ...(chalIds.length ? { id: { notIn: chalIds } } : {}),
+            },
+          }),
         ]);
 
         if (expAvail + resAvail + chalAvail === 0) return null;

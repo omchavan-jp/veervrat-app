@@ -1,4 +1,11 @@
-import { IsArray, IsObject, IsOptional, IsUUID, ValidateNested, ArrayMaxSize } from 'class-validator';
+import {
+  IsArray,
+  IsObject,
+  IsOptional,
+  IsUUID,
+  ValidateNested,
+  ArrayMaxSize,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { ExperienceTagDto } from './experience-tag.dto';
 

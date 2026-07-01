@@ -40,7 +40,11 @@ export class ModerationController {
     resourceIdParam: 'id',
     metadata: (ctx) => ({ edits_made: !!(ctx.body as ApproveCustomErcDto)?.edits }),
   })
-  approve(@CurrentUser() user: SessionUser, @Param('id') id: string, @Body() dto: ApproveCustomErcDto) {
+  approve(
+    @CurrentUser() user: SessionUser,
+    @Param('id') id: string,
+    @Body() dto: ApproveCustomErcDto,
+  ) {
     return this.moderationService.approve(user, id, dto);
   }
 
@@ -52,7 +56,11 @@ export class ModerationController {
     resourceIdParam: 'id',
     metadata: (ctx) => ({ reason: (ctx.body as RejectCustomErcDto)?.reason }),
   })
-  reject(@CurrentUser() user: SessionUser, @Param('id') id: string, @Body() dto: RejectCustomErcDto) {
+  reject(
+    @CurrentUser() user: SessionUser,
+    @Param('id') id: string,
+    @Body() dto: RejectCustomErcDto,
+  ) {
     return this.moderationService.reject(user, id, dto.reason);
   }
 }

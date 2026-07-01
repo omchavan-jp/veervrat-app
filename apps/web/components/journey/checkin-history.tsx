@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations, useFormatter } from 'next-intl';
 import { Check, CircleDot, X, ChevronDown, Flame } from 'lucide-react';
 import { Collapsible, CollapsibleTrigger, CollapsiblePanel } from '@/components/ui/collapsible';
@@ -38,15 +38,17 @@ export function CheckinHistory({ journeyId, resolutionId }: Props) {
   const [open, setOpen] = useState(false);
   const { data, isLoading, isError } = useCheckins(journeyId, resolutionId);
 
+  // `now` is captured once after mount (not during render — Date.now() in render is
+  // impure/non-deterministic and mismatches SSR). Recomputed only per mount, which is
+  // fine for a check-in history timestamp.
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => setNow(Date.now()), []);
+
   function formatRelative(dateStr: string): string {
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const minutes = Math.floor(diff / 60000);
-    if (minutes < 1) return t('justNow');
-    if (minutes < 60) return t('minutesAgo', { count: minutes });
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return t('hoursAgo', { count: hours });
-    const days = Math.floor(hours / 24);
-    if (days < 7) return t('daysAgo', { count: days });
+    if (now === null) return ''; // pre-mount: avoid SSR/client mismatch
+    const target = new Date(dateStr).getTime();
+    const days = Math.floor((now - target) / 86_400_000);
+    if (days < 7) return format.relativeTime(new Date(dateStr), now);
     return format.dateTime(new Date(dateStr), { year: 'numeric', month: 'short', day: 'numeric' });
   }
 
