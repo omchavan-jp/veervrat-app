@@ -27,6 +27,8 @@ import * as Joi from 'joi';
         S3_PUBLIC_URL: Joi.string().optional(),
         MEILI_HOST: Joi.string().optional(),
         MEILI_MASTER_KEY: Joi.string().optional(),
+        // Error tracking (GlitchTip / Sentry-compatible) — optional; disabled when unset.
+        GLITCHTIP_DSN: Joi.string().optional(),
       }),
       validationOptions: {
         abortEarly: false,

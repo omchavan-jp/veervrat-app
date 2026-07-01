@@ -1,5 +1,6 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { Request, Response } from 'express';
+import * as Sentry from '@sentry/node';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -42,6 +43,9 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         },
         stack,
       );
+      // Forward to GlitchTip/Sentry (no-op when DSN unset). Only 5xx — 4xx are
+      // expected client errors, not incidents.
+      Sentry.captureException(exception);
     }
 
     response.status(statusCode).json({

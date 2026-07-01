@@ -1,3 +1,5 @@
+// MUST be the first import — instruments the runtime before other modules load.
+import './instrument';
 import { NestFactory } from '@nestjs/core';
 import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';

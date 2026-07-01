@@ -36,6 +36,7 @@ This document is the canonical reference for all library, tooling, and architect
 | Config validation | Joi | `joi` | Validates required env vars at startup via ConfigModule validationSchema. Fail-fast on missing config. |
 | Redis client | ioredis | `ioredis` | Used for account lockout, OG cache TTL, and future BullMQ upgrade. Injected as `REDIS_CLIENT` provider. |
 | Rate limiting | @nestjs/throttler | `@nestjs/throttler` | NestJS-native, per-route overrides via `@Throttle()`, global guard in AppModule. |
+| HTTP security headers | helmet | `helmet` | Sets X-Frame-Options, X-Content-Type-Options, HSTS, Referrer-Policy, etc. Applied once in `configureApp`. API serves JSON only, so CSP is left to the frontend layer. |
 
 ---
 

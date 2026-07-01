@@ -30,6 +30,25 @@ describe('App Foundation', () => {
     });
   });
 
+  describe('GET /ready (readiness)', () => {
+    it('returns 200 with db + redis up when dependencies are reachable', async () => {
+      const res = await getRequest().get('/ready');
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual({
+        data: { status: 'ok', checks: { database: 'up', redis: 'up' } },
+      });
+    });
+  });
+
+  describe('Security headers (helmet)', () => {
+    it('sets baseline hardening headers', async () => {
+      const res = await getRequest().get('/health');
+      expect(res.headers['x-content-type-options']).toBe('nosniff');
+      // helmet sets X-Frame-Options to SAMEORIGIN by default
+      expect(res.headers['x-frame-options']).toBeTruthy();
+    });
+  });
+
   describe('Response interceptor', () => {
     it('wraps auth endpoint responses in { data } shape', async () => {
       // POST /api/v1/auth/login with invalid body — produces 401 error shape

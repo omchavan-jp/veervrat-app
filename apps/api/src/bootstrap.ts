@@ -1,5 +1,6 @@
 import { INestApplication, RequestMethod, ValidationError, ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { ValidationException } from './common/exceptions/app.exceptions';
@@ -23,9 +24,20 @@ function flattenValidationErrors(
 }
 
 export function configureApp(app: INestApplication): void {
+  // HTTP security headers. The API serves JSON only, so disable the default CSP
+  // (that's the frontend's concern) and COEP (would block cross-origin image/CDN use).
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+      crossOriginEmbedderPolicy: false,
+    }),
+  );
   app.use(cookieParser());
   app.setGlobalPrefix('api/v1', {
-    exclude: [{ path: 'health', method: RequestMethod.GET }],
+    exclude: [
+      { path: 'health', method: RequestMethod.GET },
+      { path: 'ready', method: RequestMethod.GET },
+    ],
   });
   app.useGlobalPipes(
     new ValidationPipe({
