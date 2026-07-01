@@ -1,0 +1,33 @@
+# Keep the Docker build context small and prevent secrets/artifacts from entering images.
+# node_modules are installed fresh inside the image from the lockfile.
+**/node_modules
+**/.next
+**/dist
+**/.turbo
+**/coverage
+**/.vitest
+
+# env + secrets — NEVER bake into an image (Railway injects env at runtime)
+**/.env
+**/.env.*
+!**/.env.example
+
+# vcs + tooling
+.git
+.github
+**/.DS_Store
+
+# tests / e2e / docs not needed at build
+e2e
+playwright-report
+test-results
+**/*.spec.ts
+**/*.integration.spec.ts
+documentation
+spec
+openspec
+prototypes
+
+# local-only
+docker-compose.yml
+*.md
