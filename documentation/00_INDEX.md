@@ -37,6 +37,7 @@ numbered by purpose so the reading order is obvious:
 | 17 | [Audit Schema](17_Audit-Schema.md) | Audit event contract, mandatory events, `@Audited` pattern. |
 | 18 | [Observability Standard](18_Observability-Standard.md) | Structured logging schema, error tracking, alert thresholds. |
 | 19 | [Email Strategy](19_Email-Strategy.md) | Transactional vs notification email, templates, bilingual strategy. |
+| 20 | [Solo-Dev Operations](20_Solo-Dev-Operations.md) | Feedback capture → triage (GitHub Issues) → implement → changelog/doc loop. |
 
 ## 90+ · Historical handoffs
 
