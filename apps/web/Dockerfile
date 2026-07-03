@@ -23,6 +23,10 @@ FROM base AS build
 # variable. Falls back to same-origin /api/v1 if omitted.
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+# API_ORIGIN is the proxy target for the /api/v1 rewrite (next.config.ts), baked
+# into the build. Set it as a Railway build-time variable on the web service.
+ARG API_ORIGIN
+ENV API_ORIGIN=${API_ORIGIN}
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 COPY . .
