@@ -1,7 +1,8 @@
-# feedback-widget — delta spec
+# feedback-widget Specification
 
-## ADDED Requirements
-
+## Purpose
+TBD - created by archiving change beta-feedback-widget. Update Purpose after archive.
+## Requirements
 ### Requirement: Floating feedback button on authenticated pages
 The web app SHALL render a floating feedback button on all authenticated pages (the
 (app), (vratmitra), (moderation), and (admin) route groups) when
@@ -62,10 +63,11 @@ When submitting feedback, the widget SHALL automatically attach the current rout
 - **THEN** the created item records `route=/journeys/123`, `locale=mr`, the viewport size, and the build SHA, none of which appeared in the form
 
 ### Requirement: Widget is fully bilingual
-All widget strings (button label/aria, tab names, form labels, validation messages,
-status/tag chips, confirmations) SHALL come from next-intl messages with both `en` and
-`mr` translations — no hardcoded UI text.
+The widget SHALL source every visible string from next-intl messages with both `en`
+and `mr` translations (button label/aria, tab names, form labels, validation messages,
+status/tag chips, confirmations) — no hardcoded UI text.
 
 #### Scenario: Marathi locale
 - **WHEN** a user with locale `mr` opens the widget
 - **THEN** every visible string renders from the `mr` message catalog
+

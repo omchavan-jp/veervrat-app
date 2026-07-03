@@ -29,6 +29,6 @@
 
 - [x] 5.1 `pnpm test` (api + web) green; lint + typecheck green
 - [x] 5.2 Local end-to-end: raise item as one user, +1 as another, PATCH status as admin, confirm list ordering/filtering and corner-snap persistence across reload
-- [ ] 5.3 Apply migration to prod manually (docker build-stage image, direct Neon host) per hard rule
+- [x] 5.3 Apply migration to prod manually (docker build-stage image, direct Neon host) per hard rule
 - [ ] 5.4 Set Railway build vars (`NEXT_PUBLIC_FEEDBACK_MODE=test`, `NEXT_PUBLIC_COMMIT_SHA=${{RAILWAY_GIT_COMMIT_SHA}}`), deploy, verify live widget end-to-end
 - [x] 5.5 Update DEPLOYMENT.md (new build vars), CHANGELOG.md entry, close GitHub issue #5
