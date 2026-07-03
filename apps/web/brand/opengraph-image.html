@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:wght@500;600&family=Tiro+Devanagari+Marathi&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { width:1200px; height:630px; }
+  .card {
+    position:relative; width:1200px; height:630px; background:#FAF7F2;
+    overflow:hidden; font-family:'Newsreader',serif; font-weight:600;
+  }
+  .ring { position:absolute; border-radius:50%; }
+  .content {
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    justify-content:space-between; padding:84px 96px;
+  }
+  .deva { font-family:'Tiro Devanagari Marathi', serif; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="ring" style="width:1180px;height:1180px;left:-440px;top:10px;border:2px solid rgba(47,91,79,0.09)"></div>
+    <div class="ring" style="width:920px;height:920px;left:-310px;top:140px;border:2px solid rgba(192,81,47,0.10)"></div>
+    <div class="ring" style="width:660px;height:660px;left:-180px;top:270px;border:2px solid rgba(47,91,79,0.13)"></div>
+    <div class="ring" style="width:420px;height:420px;left:-60px;top:390px;border:2px solid rgba(192,81,47,0.14)"></div>
+
+    <div class="content">
+      <div style="display:flex;align-items:center;gap:26px;">
+        <div style="width:104px;height:104px;border-radius:50%;background:#1C1A17;border:3px solid #C0512F;display:flex;align-items:center;justify-content:center;">
+          <span class="deva" style="font-size:54px;color:#FAF7F2;line-height:1;transform:translateY(3px)">वी</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <div class="deva" style="font-size:29px;color:#2F5B4F;line-height:1.1">ज्ञान प्रबोधिनी</div>
+          <div style="font-size:20px;letter-spacing:7px;color:#8A817A;font-weight:500">JNANA PRABODHINI</div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;">
+        <div style="display:flex;align-items:flex-end;gap:30px;">
+          <div style="font-size:124px;line-height:1"><span style="color:#C0512F">Veer</span><span style="color:#1C1A17">vrat</span></div>
+          <div class="deva" style="font-size:66px;color:#2F5B4F;padding-bottom:16px;line-height:1">वीरव्रत</div>
+        </div>
+        <div style="width:150px;height:8px;background:#C0512F;border-radius:4px;margin-top:22px"></div>
+      </div>
+
+      <div style="font-size:40px;color:#1C1A17">A platform for self-reliance and personal growth</div>
+    </div>
+  </div>
+</body>
+</html>
