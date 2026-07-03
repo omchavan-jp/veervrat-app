@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <circle cx="32" cy="32" r="32" fill="#1C1A17"/>
+  <circle cx="32" cy="32" r="28.5" fill="none" stroke="#C0512F" stroke-width="2.5"/>
+  <text x="31" y="49" text-anchor="middle" fill="#FAF7F2"
+        font-family="'Tiro Devanagari Marathi','Noto Sans Devanagari','Mangal',sans-serif"
+        font-size="38">वी</text>
+</svg>

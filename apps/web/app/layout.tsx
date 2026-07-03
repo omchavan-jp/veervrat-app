@@ -4,9 +4,29 @@ import { geistSans, geistMono, newsreader, tiroDevanagari } from './fonts';
 import { Providers } from '@/lib/providers';
 import './globals.css';
 
+// Absolute base for og:image / canonical URLs. Set NEXT_PUBLIC_SITE_URL to the
+// public web origin (update it when you move to a custom domain).
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://web-production-1fec3.up.railway.app';
+const description = 'A platform for self-reliance and personal growth — Jnana Prabodhini.';
+
 export const metadata: Metadata = {
-  title: 'Veervrat',
-  description: 'A platform for self-reliance and personal growth',
+  metadataBase: new URL(siteUrl),
+  title: { default: 'Veervrat', template: '%s · Veervrat' },
+  description,
+  applicationName: 'Veervrat',
+  openGraph: {
+    type: 'website',
+    siteName: 'Veervrat',
+    title: 'Veervrat',
+    description,
+    url: siteUrl,
+    // og:image is provided automatically by app/opengraph-image.tsx
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Veervrat',
+    description,
+  },
 };
 
 export default async function RootLayout({
