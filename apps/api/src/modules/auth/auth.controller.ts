@@ -25,6 +25,7 @@ import { SessionGuard } from './guards/session.guard';
 import { GoogleOAuthGuard } from './guards/google-oauth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { SkipCsrf } from '../../common/guards/csrf.guard';
+import { cookieSameSite } from '../../common/http/cookie';
 import { Audited } from '../audit/audited.decorator';
 import { LinkGoogleDto } from './dto/link-google.dto';
 import type { SessionUser, GoogleProfile } from './types/auth.types';
@@ -238,11 +239,12 @@ export class AuthController {
   }
 
   @Get('csrf')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  csrf() {
-    // CsrfMiddleware sets the csrf-token cookie on this response.
-    // Clients call this once before the first mutation to bootstrap the cookie
-    // on cold sessions where no prior GET has been made to the API.
+  csrf(@Res({ passthrough: true }) res: Response) {
+    // CsrfMiddleware sets the csrf-token cookie and stashes the token on
+    // res.locals. We also return it in the body so a web app on a different
+    // origin (which can't read the api-domain cookie) can echo it back in the
+    // x-csrf-token header for the double-submit check.
+    return { csrfToken: res.locals.csrfToken as string };
   }
 
   @Get('me')
@@ -255,7 +257,7 @@ export class AuthController {
     res.cookie(this.cookieName, token, {
       httpOnly: true,
       secure: this.isProduction,
-      sameSite: 'lax',
+      sameSite: cookieSameSite(),
       maxAge: this.cookieMaxAgeMs,
       path: '/',
     });
@@ -265,7 +267,7 @@ export class AuthController {
     res.clearCookie(this.cookieName, {
       httpOnly: true,
       secure: this.isProduction,
-      sameSite: 'lax',
+      sameSite: cookieSameSite(),
       path: '/',
     });
   }

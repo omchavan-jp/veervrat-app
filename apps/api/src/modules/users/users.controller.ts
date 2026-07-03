@@ -21,6 +21,7 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateVisibilityDto } from './dto/update-visibility.dto';
 import { UpdateSettingsDto } from './dto/update-settings.dto';
 import { ChangePasswordDto, DeleteAccountDto } from './dto/change-password.dto';
+import { cookieSameSite } from '../../common/http/cookie';
 import { SessionGuard } from '../auth/guards/session.guard';
 import { OptionalSessionGuard } from '../auth/guards/optional-session.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -115,7 +116,7 @@ export class UsersController {
     res.cookie(this.cookieName, sessionToken, {
       httpOnly: true,
       secure: this.isProduction,
-      sameSite: 'lax',
+      sameSite: cookieSameSite(),
       maxAge: this.cookieMaxAgeMs,
       path: '/',
     });
@@ -157,7 +158,7 @@ export class UsersController {
     res.clearCookie(this.cookieName, {
       httpOnly: true,
       secure: this.isProduction,
-      sameSite: 'lax',
+      sameSite: cookieSameSite(),
       path: '/',
     });
     return result;
