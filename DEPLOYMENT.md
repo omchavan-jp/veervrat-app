@@ -4,9 +4,53 @@ Stack (decided 2026-07-01): **Railway** (web + api) · **Neon** (Postgres) · **
 (Redis) · **Cloudflare R2** (object storage) · **Cloudflare** (CDN/DNS). Meilisearch
 **deferred** (search hidden/degraded in beta). MinIO is local-dev only — never deployed.
 
-> Do these in order. Steps marked **[you]** require dashboard clicks / credentials and
-> can only be done by a human on a network-connected device. Everything the repo needs
-> (Dockerfiles, railway.json, .dockerignore) is already committed.
+---
+
+## Current live state (as of 2026-07-04)
+
+Deployed 2026-07-03. **Deploy branch is `dev`** (both services), not `main` — revisit
+when a real staging/prod split is needed.
+
+| Piece | Live value |
+|---|---|
+| web | `https://web-production-1fec3.up.railway.app` (Railway, US West) |
+| api | `https://api-production-496bd.up.railway.app` (Railway, US West) |
+| Postgres | Neon, us-east-1, pooled connection — migrated (18 migrations) + seeded |
+| Redis | Upstash, us-east-1 |
+| Object storage | Cloudflare R2 bucket `veervrat-uploads-dev`, public via `pub-*.r2.dev` |
+| Search | **Meilisearch NOT deployed** — search features hidden/degraded |
+| Email | **Resend NOT wired** — signup verification / password reset don't deliver |
+
+**Same-origin proxy (important architectural deviation):** web and api are separate
+`up.railway.app` subdomains (a public-suffix domain), so browsers block the api's session
+cookie as third-party. Fix: `apps/web/next.config.ts` rewrites `/api/v1/:path*` →
+`API_ORIGIN` (the api service). Consequences:
+- web build vars: `NEXT_PUBLIC_API_URL=/api/v1` (**relative**), `API_ORIGIN=<api URL>`,
+  `NEXT_PUBLIC_SITE_URL=<web URL>` (og/canonical URLs).
+- `GOOGLE_CALLBACK_URL` points at the **web** origin (`https://<web-url>/api/v1/auth/google/callback`)
+  so the OAuth callback's Set-Cookie is first-party. The Google console lists the web-origin
+  callback.
+- Auth cookies are `SameSite=None` in prod via `cookieSameSite()`
+  (`apps/api/src/common/http/cookie.ts`); set `COOKIE_SAMESITE=lax` once web+api share a
+  custom domain.
+- **WebSocket chat does not work** — Next rewrites don't proxy Socket.IO. Needs the
+  custom-domain setup (step 8) to fix.
+
+**Migrations/seed against prod** run from the local Docker build stage image
+(`veervrat-api-build:local`, which has the Prisma CLI + ts-node), never automated:
+```bash
+docker build -f apps/api/Dockerfile --target build -t veervrat-api-build:local .
+docker run --rm -e DATABASE_URL="<neon-DIRECT-url>" veervrat-api-build:local \
+  npx prisma migrate deploy --schema prisma/schema.prisma
+# seed (idempotent):
+docker run --rm -e DATABASE_URL="<neon-pooled-url>" -w /app/apps/api veervrat-api-build:local \
+  ./node_modules/.bin/ts-node --transpile-only src/database/seed.ts
+```
+Use the **direct** (non-pooler) Neon host for `migrate deploy`; the pooled host for runtime.
+
+> The sections below are the original provisioning runbook, kept for re-provisioning or
+> staging setup. Steps marked **[you]** require dashboard clicks / credentials. Where
+> reality diverged, the live-state section above wins.
 
 ---
 
@@ -85,7 +129,9 @@ Set these in Railway per service (Settings → Variables). Never commit real val
 ### web service
 | Var | Value | Notes |
 |---|---|---|
-| `NEXT_PUBLIC_API_URL` | `https://<api-url>/api/v1` | **BUILD-TIME** var — set it as a Railway *build variable*; it's inlined into the browser bundle. Changing it requires a rebuild. |
+| `NEXT_PUBLIC_API_URL` | `/api/v1` | **BUILD-TIME** var, inlined into the browser bundle. Relative because of the same-origin proxy (see live-state section). Changing it requires a rebuild. |
+| `API_ORIGIN` | `https://<api-url>` | **BUILD-TIME** — target of the `/api/v1/*` rewrite proxy. |
+| `NEXT_PUBLIC_SITE_URL` | `https://<web-url>` | **BUILD-TIME** — og:image / canonical URL base. |
 
 > Chicken-and-egg: web needs the api URL and api needs the web URL. Deploy api first
 > (step 5) to get its URL, set `NEXT_PUBLIC_API_URL`, deploy web (step 6), then set the
@@ -155,6 +201,10 @@ DATABASE_URL="<neon-prod-url>" pnpm --filter api seed
 ---
 
 ## Known gaps to close before/around launch
+- **WebSocket chat:** Socket.IO is not proxied by the Next.js rewrites, so real-time chat
+  is broken on the railway.app URLs. Fixed by moving web+api onto a shared custom domain
+  (`app.<domain>` / `api.<domain>`), after which the proxy and `SameSite=None` can both be
+  retired (`COOKIE_SAMESITE=lax`).
 - **Email (Resend):** verification / password-reset emails are console-logged in dev and
   not wired to a provider — signup verification + password recovery won't deliver until
   Resend is integrated (approved in the platform standard, not yet implemented).
