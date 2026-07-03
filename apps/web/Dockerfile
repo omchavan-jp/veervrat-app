@@ -14,7 +14,7 @@ FROM base AS deps
 COPY pnpm-lock.yaml pnpm-workspace.yaml .npmrc package.json ./
 COPY apps/web/package.json apps/web/
 COPY packages/types/package.json packages/types/
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile
 
 # ---- Build ----
 FROM base AS build
