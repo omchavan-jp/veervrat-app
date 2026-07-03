@@ -174,6 +174,22 @@ enum NotificationEventType {
   @@map("notification_event_type")
 }
 
+enum FeedbackType {
+  ISSUE       @map("issue")
+  IMPROVEMENT @map("improvement")
+
+  @@map("feedback_type")
+}
+
+enum FeedbackStatus {
+  NEW      @map("new")
+  TRIAGED  @map("triaged")
+  DONE     @map("done")
+  DECLINED @map("declined")
+
+  @@map("feedback_status")
+}
+
 // ═══════════════════════════════════════════════════
 // IDENTITY & AUTH
 // ═══════════════════════════════════════════════════
@@ -231,6 +247,8 @@ model User {
   auditEvents        AuditEvent[]          @relation("AuditActor")
   chatMessages       ChatMessage[]
   uploads            Upload[]
+  feedbackItems      FeedbackItem[]        @relation("FeedbackReporter")
+  feedbackUpvotes    FeedbackUpvote[]      @relation("FeedbackUpvoter")
 
   @@index([username])
   @@index([email])
@@ -1061,6 +1079,49 @@ model Notification {
 
   @@index([recipientId, readAt])
   @@map("notifications")
+}
+
+// ═══════════════════════════════════════════════════
+// FEEDBACK (beta observations widget)
+// ═══════════════════════════════════════════════════
+
+model FeedbackItem {
+  id           String         @id @default(uuid()) @db.Uuid
+  reporterId   String         @map("reporter_id") @db.Uuid
+  // Role snapshot at report time — the reporter's roles can change later.
+  reporterRole String         @map("reporter_role")
+  type         FeedbackType
+  status       FeedbackStatus @default(NEW)
+  title        String
+  description  String?
+  // Client-supplied diagnostics (validated + length-capped, never trusted for authz)
+  route         String?
+  locale        String?
+  viewport      String?
+  userAgent     String?  @map("user_agent")
+  commitSha     String?  @map("commit_sha")
+  declineReason String?  @map("decline_reason")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  reporter User             @relation("FeedbackReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  upvotes  FeedbackUpvote[]
+
+  @@index([status, createdAt])
+  @@map("feedback_items")
+}
+
+model FeedbackUpvote {
+  id             String   @id @default(uuid()) @db.Uuid
+  feedbackItemId String   @map("feedback_item_id") @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  feedbackItem FeedbackItem @relation(fields: [feedbackItemId], references: [id], onDelete: Cascade)
+  user         User         @relation("FeedbackUpvoter", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([feedbackItemId, userId])
+  @@map("feedback_upvotes")
 }
 
 // ═══════════════════════════════════════════════════

@@ -132,6 +132,8 @@ Set these in Railway per service (Settings → Variables). Never commit real val
 | `NEXT_PUBLIC_API_URL` | `/api/v1` | **BUILD-TIME** var, inlined into the browser bundle. Relative because of the same-origin proxy (see live-state section). Changing it requires a rebuild. |
 | `API_ORIGIN` | `https://<api-url>` | **BUILD-TIME** — target of the `/api/v1/*` rewrite proxy. |
 | `NEXT_PUBLIC_SITE_URL` | `https://<web-url>` | **BUILD-TIME** — og:image / canonical URL base. |
+| `NEXT_PUBLIC_FEEDBACK_MODE` | `test` | **BUILD-TIME** — feedback widget: `test` (list + form), `public` (form only), unset = hidden. |
+| `NEXT_PUBLIC_COMMIT_SHA` | `${{RAILWAY_GIT_COMMIT_SHA}}` | **BUILD-TIME** — build id attached to feedback reports (falls back to `dev`). |
 
 > Chicken-and-egg: web needs the api URL and api needs the web URL. Deploy api first
 > (step 5) to get its URL, set `NEXT_PUBLIC_API_URL`, deploy web (step 6), then set the

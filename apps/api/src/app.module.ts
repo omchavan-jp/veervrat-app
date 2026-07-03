@@ -15,6 +15,7 @@ import { ErcModule } from './modules/erc/erc.module';
 import { InvitationsModule } from './modules/invitations/invitations.module';
 import { VmRelationshipsModule } from './modules/vm-relationships/vm-relationships.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { FeedbackModule } from './modules/feedback/feedback.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { ChatsModule } from './modules/chats/chats.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
@@ -69,6 +70,7 @@ import { CsrfGuard } from './common/guards/csrf.guard';
     InvitationsModule,
     VmRelationshipsModule,
     NotificationsModule,
+    FeedbackModule,
     DashboardModule,
     ChatsModule,
     UploadsModule,

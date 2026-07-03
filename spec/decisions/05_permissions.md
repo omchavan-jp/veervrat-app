@@ -65,6 +65,9 @@ VA and VM acting as participants. A user who is also admin holds these only for 
 | `vm_invitation.decline` | ❌ | ✅ (as invitee) |
 | `vm_relationship.withdraw` | ❌ | ✅ (own assignments) |
 | `global_vm.view_va_guidance` | ❌ | ✅ (assigned VA only, global VM only) |
+| `feedback.create` | ✅ (any authenticated user) | ✅ (any authenticated user) |
+| `feedback.read` | ✅ (any authenticated user) | ✅ (any authenticated user) |
+| `feedback.upvote` | ✅ (any authenticated user, one per item) | ✅ (any authenticated user, one per item) |
 
 #### Layer 2 — Platform permissions (admin/moderator actions)
 Acting *on* data, not *as* participants.
@@ -86,6 +89,7 @@ Acting *on* data, not *as* participants.
 | `admin.manage_shlokas` | ✅ | ❌ (shlokas CRUD — admin only) |
 | `admin.manage_resources` | ✅ | ❌ (resources CRUD — admin only) |
 | `comment.moderate` | ✅ | ✅ (hide or delete any comment) |
+| `feedback.manage` | ✅ (status lifecycle NEW→TRIAGED→DONE/DECLINED; DECLINED requires reason; audit-logged) | ❌ |
 
 ### Scoping Rules
 - **Global VM**: sees all of a VA's journeys, test results, experience logs — full picture. When also assigned as journey VM for a specific journey, their role in that journey is to interact specifically around it, but their view scope remains global.

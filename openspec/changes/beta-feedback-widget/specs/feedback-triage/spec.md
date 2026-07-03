@@ -8,7 +8,7 @@ with `status` (`TRIAGED` | `DONE` | `DECLINED`) and, when declining, a required
 `declineReason` (1–500 chars). Authorization SHALL be enforced in two layers: the auth
 guard (identity) and `hasPermission(user, resource, action)` for the `feedback` resource
 `manage` action (admin-only per the permission matrix). Non-admin callers SHALL receive
-`403`. Declining without a `declineReason` SHALL respond `400`.
+`403`. Declining without a `declineReason` SHALL be rejected (`422`, platform validation convention).
 
 #### Scenario: Admin triages an item
 - **WHEN** an admin PATCHes an item in status `NEW` with `status=TRIAGED`
@@ -20,7 +20,7 @@ guard (identity) and `hasPermission(user, resource, action)` for the `feedback` 
 
 #### Scenario: Decline without reason rejected
 - **WHEN** an admin PATCHes an item with `status=DECLINED` and no `declineReason`
-- **THEN** the system responds `400` and the item is unchanged
+- **THEN** the system responds `422` and the item is unchanged
 
 #### Scenario: Non-admin denied
 - **WHEN** a vratarthi, vratmitra, or moderator PATCHes any feedback item

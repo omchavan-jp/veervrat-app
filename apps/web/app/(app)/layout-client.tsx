@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '@/hooks/use-auth';
 import { AppShell } from '@/components/layout/app-shell';
 import { Spinner } from '@/components/ui/spinner';
+import { FeedbackWidget } from '@/components/shared/feedback/feedback-widget';
 
 export function AppLayoutClient({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -35,5 +36,12 @@ export function AppLayoutClient({ children }: { children: React.ReactNode }) {
     return null;
   }
 
-  return <AppShell user={user}>{children}</AppShell>;
+  // All four authenticated route groups ((app), (vratmitra), (moderation), (admin))
+  // share this shell, so the feedback widget mounts once here — never on public pages.
+  return (
+    <AppShell user={user}>
+      {children}
+      <FeedbackWidget />
+    </AppShell>
+  );
 }

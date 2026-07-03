@@ -58,6 +58,8 @@ type ChallengeAction = 'challenge.configure_threshold';
 
 type GlobalVmAction = 'global_vm.view_va_guidance';
 
+type FeedbackAction = 'feedback.create' | 'feedback.read' | 'feedback.upvote' | 'feedback.manage';
+
 // Layer 2 — platform actions
 type AdminAction =
   | 'admin.view_any_journey'
@@ -92,6 +94,7 @@ export type PermissionAction =
   | WeaknessAction
   | ChallengeAction
   | GlobalVmAction
+  | FeedbackAction
   | AdminAction
   | ModeratorAction;
 

@@ -19,7 +19,7 @@ created item.
 
 #### Scenario: Validation failure
 - **WHEN** a request omits `title` or supplies a `type` outside the enum
-- **THEN** the system responds `400` with the standard error shape and creates nothing
+- **THEN** the system responds `422` (platform validation convention) with the standard error shape and creates nothing
 
 #### Scenario: Unauthenticated request
 - **WHEN** a request without a valid session calls `POST /api/v1/feedback`
@@ -27,7 +27,7 @@ created item.
 
 #### Scenario: Reporter identity cannot be spoofed
 - **WHEN** the request body includes a `reporterId` or `reporterRole` field
-- **THEN** the system ignores those values and uses the session identity
+- **THEN** the system rejects the request with `422` (non-whitelisted fields are forbidden platform-wide); identity always comes from the session
 
 ### Requirement: Feedback creation is rate-limited
 The system SHALL throttle `POST /api/v1/feedback` per user (10 per hour) and

@@ -1339,5 +1339,43 @@
     "exposure": "Exposure",
     "resolution": "Resolution",
     "challenge": "Challenge"
+  },
+  "feedback": {
+    "buttonLabel": "Share feedback",
+    "title": "Beta feedback",
+    "subtitle": "Spotted a problem or have an idea? Tell us — it goes straight to the team.",
+    "tabs": {
+      "observations": "Observations",
+      "raise": "Raise new"
+    },
+    "type": {
+      "ISSUE": "Issue",
+      "IMPROVEMENT": "Improvement"
+    },
+    "status": {
+      "NEW": "New",
+      "TRIAGED": "Triaged",
+      "DONE": "Done",
+      "DECLINED": "Declined"
+    },
+    "list": {
+      "loading": "Loading observations…",
+      "error": "Could not load observations. Try again later.",
+      "empty": "No observations yet — be the first to raise one.",
+      "upvote": "Me too"
+    },
+    "form": {
+      "typeLabel": "Type",
+      "titleLabel": "Title",
+      "titlePlaceholder": "Short summary of what you noticed",
+      "titleRequired": "Please enter a title",
+      "descriptionLabel": "Details (optional)",
+      "descriptionPlaceholder": "What happened? What did you expect?",
+      "submit": "Submit",
+      "submitting": "Submitting…",
+      "successTitle": "Thank you!",
+      "successDescription": "Your observation has been recorded.",
+      "errorTitle": "Could not submit — please try again."
+    }
   }
 }

@@ -5,6 +5,9 @@ User-visible changes, most recent first. Dated sections (continuous deploy to th
 behaviour adds a line here (see `documentation/20_Solo-Dev-Operations.md`).
 
 ## Unreleased
+- Beta feedback widget: floating corner-snapping button on all signed-in pages —
+  raise an issue/improvement, see open observations, +1 existing ones (bilingual en/mr).
+  Admins triage via the API with audited status changes.
 
 ## 2026-07-04
 - Brand: new favicon and Open Graph link-preview image (proper Devanagari rendering).

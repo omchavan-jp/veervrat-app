@@ -27,6 +27,13 @@ ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 # into the build. Set it as a Railway build-time variable on the web service.
 ARG API_ORIGIN
 ENV API_ORIGIN=${API_ORIGIN}
+# Feedback widget mode: 'test' (list + form), 'public' (form only), unset = hidden.
+ARG NEXT_PUBLIC_FEEDBACK_MODE
+ENV NEXT_PUBLIC_FEEDBACK_MODE=${NEXT_PUBLIC_FEEDBACK_MODE}
+# Build identifier attached to feedback reports. On Railway set the build variable
+# NEXT_PUBLIC_COMMIT_SHA=${{RAILWAY_GIT_COMMIT_SHA}}.
+ARG NEXT_PUBLIC_COMMIT_SHA=dev
+ENV NEXT_PUBLIC_COMMIT_SHA=${NEXT_PUBLIC_COMMIT_SHA}
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 COPY . .

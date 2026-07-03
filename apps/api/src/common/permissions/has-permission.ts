@@ -305,6 +305,15 @@ function checkLayerOne(
       return isVm(user) && isGlobalVmForJourney(user, resource.journey);
     }
 
+    // ── Feedback actions (beta observations widget) ─────────────────────────
+    // Any authenticated user may raise, read, and upvote feedback — identity is
+    // established by the guard; no role or resource scoping applies.
+
+    case 'feedback.create':
+    case 'feedback.read':
+    case 'feedback.upvote':
+      return resource.type === 'platform';
+
     // Layer 2 actions — not handled here
     default:
       return false;
@@ -341,6 +350,10 @@ function checkLayerTwo(
     // comment.moderate — shared between admin and moderator
     case 'comment.moderate':
       return isAdminOrModerator(user);
+
+    // Feedback triage — admin only
+    case 'feedback.manage':
+      return isAdmin(user);
 
     default:
       return false;
