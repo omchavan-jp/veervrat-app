@@ -1,7 +1,10 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { SUPPORTED_LOCALES, type Locale } from '@/lib/i18n-constants';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+// Server-side fetch needs an ABSOLUTE URL. NEXT_PUBLIC_API_URL is relative (/api/v1)
+// in production (same-origin proxy), so resolve against API_ORIGIN — the same origin
+// the next.config.ts rewrite already proxies to. Falls back to the local dev API.
+const API_BASE = `${process.env.API_ORIGIN || 'http://localhost:3001'}/api/v1`;
 
 function parseAcceptLanguage(header: string | null): Locale {
   if (!header) return 'en';

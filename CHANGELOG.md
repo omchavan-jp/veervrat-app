@@ -5,6 +5,8 @@ User-visible changes, most recent first. Dated sections (continuous deploy to th
 behaviour adds a line here (see `documentation/20_Solo-Dev-Operations.md`).
 
 ## Unreleased
+- Fixed: the en/मराठी language toggle now works on the deployed app (locale
+  resolution failed behind the same-origin proxy).
 - Beta feedback widget: floating corner-snapping button on all signed-in pages —
   raise an issue/improvement, see open observations, +1 existing ones (bilingual en/mr).
   Admins triage via the API with audited status changes.
