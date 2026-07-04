@@ -5,6 +5,8 @@ User-visible changes, most recent first. Dated sections (continuous deploy to th
 behaviour adds a line here (see `documentation/20_Solo-Dev-Operations.md`).
 
 ## Unreleased
+- Settings → Profile now lets you edit your username (with availability check and a
+  profile-URL warning), gender, and birthdate — fixing wrong-birthdate signups.
 - Fixed: the en/मराठी language toggle now works on the deployed app (locale
   resolution failed behind the same-origin proxy).
 - Beta feedback widget: floating corner-snapping button on all signed-in pages —

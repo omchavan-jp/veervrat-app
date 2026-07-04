@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ExternalLink, RotateCcw } from 'lucide-react';
+import { ExternalLink, Pencil, RotateCcw } from 'lucide-react';
 import { usersApi, type OwnProfile, type ProfileField, type UpdateVisibilityInput } from '@/lib/api/users';
 import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
@@ -80,13 +80,22 @@ export default function ProfilePage() {
           <h1 className="font-display text-[30px] font-medium tracking-tight">{t('title')}</h1>
           <p className="mt-1 text-[14px] text-muted">{t('subtitle')}</p>
         </div>
-        <Link
-          href={`/u/${p.username}`}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border-strong px-3 py-2 text-[13px] transition-colors hover:border-accent"
-        >
-          <ExternalLink className="h-3.5 w-3.5" />
-          {t('viewPublic')}
-        </Link>
+        <div className="flex shrink-0 gap-2">
+          <Link
+            href="/settings"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border-strong px-3 py-2 text-[13px] transition-colors hover:border-accent"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+            {t('editInSettings')}
+          </Link>
+          <Link
+            href={`/u/${p.username}`}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border-strong px-3 py-2 text-[13px] transition-colors hover:border-accent"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            {t('viewPublic')}
+          </Link>
+        </div>
       </div>
 
       {/* Account */}

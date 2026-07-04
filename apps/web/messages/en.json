@@ -736,7 +736,8 @@
     "loading": "Loading profile…",
     "loadError": "Couldn't load your profile",
     "loadErrorHint": "Something went wrong. Please try again.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "editInSettings": "Edit in settings"
   },
   "invitation": {
     "title": "Vratmitra invitation",
@@ -1320,7 +1321,20 @@
     "loadErrorHint": "Something went wrong. Please try again.",
     "retry": "Try again",
     "saveError": "Couldn't save. Please try again.",
-    "disconnectError": "Couldn't disconnect this account. Please try again."
+    "disconnectError": "Couldn't disconnect this account. Please try again.",
+    "profileSaved": "Profile updated",
+    "usernameChecking": "Checking availability…",
+    "usernameAvailable": "Username available",
+    "usernameTaken": "That username is taken",
+    "usernameInvalid": "3–30 characters: lowercase letters, digits, underscores",
+    "usernameUrlWarning": "Changing your username changes your public profile link to /u/{username}. Old links will stop working.",
+    "gender": "Gender",
+    "genderMale": "Male",
+    "genderFemale": "Female",
+    "genderOther": "Other",
+    "genderCustomPlaceholder": "Describe your gender (optional)",
+    "dob": "Birthdate",
+    "dobPlaceholder": "Pick your birthdate"
   },
   "confirmEmailChange": {
     "title": "Confirm email change",

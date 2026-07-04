@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -9,6 +9,7 @@ import { usersApi, type OwnProfile } from '@/lib/api/users';
 import { vmRelationshipsApi, type MyVm, type GlobalVmCascade } from '@/lib/api/vm-relationships';
 import { authApi } from '@/lib/api/auth';
 import { queryKeys } from '@/lib/api/query-keys';
+import { ApiError } from '@/lib/api/client';
 import { useAuth, useLogout } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Spinner } from '@/components/ui/spinner';
 import { Dialog } from '@/components/ui/dialog';
+import { DatePicker } from '@/components/ui/date-picker';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useToast } from '@/hooks/use-toast';
 import { EMAILABLE_EVENTS } from '@/lib/notification-events';
@@ -89,15 +91,85 @@ export default function SettingsPage() {
   );
 }
 
+const INPUT_STYLE = 'mt-1 h-auto rounded-xl border-border bg-bg px-3 py-2 text-[14px] focus-visible:border-accent focus-visible:ring-0';
+
+// Splits a stored gender into the radio choice + custom text (mirrors onboarding,
+// where 'Male'/'Female' are canonical and anything else was typed under 'other').
+function splitGender(stored: string | null): { choice: '' | 'Male' | 'Female' | 'other'; custom: string } {
+  if (!stored) return { choice: '', custom: '' };
+  if (stored === 'Male' || stored === 'Female') return { choice: stored, custom: '' };
+  return { choice: 'other', custom: stored };
+}
+
 function ProfileSection({ profile, onSaved }: { profile: OwnProfile; onSaved: () => void }) {
   const t = useTranslations('settings');
+  const { toast } = useToast();
+  const initialGender = splitGender(profile.gender);
   const [displayName, setDisplayName] = useState(profile.displayName);
+  const [username, setUsername] = useState(profile.username);
+  const [genderChoice, setGenderChoice] = useState(initialGender.choice);
+  const [genderCustom, setGenderCustom] = useState(initialGender.custom);
+  const [dob, setDob] = useState(profile.dob ? profile.dob.slice(0, 10) : '');
+  const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
   const [error, setError] = useState<string | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const usernameChanged = username.trim() !== profile.username;
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    const value = username.trim();
+    if (!usernameChanged || value.length < 3) {
+      setUsernameStatus('idle');
+      return;
+    }
+    setUsernameStatus('checking');
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const result = await authApi.checkUsername(value);
+        setUsernameStatus(result.available ? 'available' : result.reason === 'invalid' ? 'invalid' : 'taken');
+      } catch {
+        setUsernameStatus('idle');
+      }
+    }, 400);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [username, usernameChanged]);
+
+  const resolvedGender = genderChoice === 'other' ? genderCustom.trim() || null : genderChoice || null;
+
   const save = useMutation({
-    mutationFn: () => usersApi.updateMe({ displayName: displayName.trim() }),
-    onSuccess: () => { setError(null); onSaved(); },
-    onError: (e: Error) => setError(e.message),
+    mutationFn: () => {
+      // Only changed fields go in the PATCH body.
+      const body: Parameters<typeof usersApi.updateMe>[0] = {};
+      if (displayName.trim() !== profile.displayName) body.displayName = displayName.trim();
+      if (usernameChanged) body.username = username.trim();
+      if (resolvedGender !== profile.gender) body.gender = resolvedGender;
+      const initialDob = profile.dob ? profile.dob.slice(0, 10) : '';
+      if (dob !== initialDob) body.dob = dob || null;
+      return usersApi.updateMe(body);
+    },
+    onSuccess: () => {
+      setError(null);
+      toast({ title: t('profileSaved') });
+      onSaved();
+    },
+    onError: (e: Error) => {
+      if (e instanceof ApiError && e.statusCode === 409) {
+        setUsernameStatus('taken');
+        setError(t('usernameTaken'));
+      } else {
+        setError(e.message);
+      }
+    },
   });
+
+  const usernameBlocked = usernameChanged && usernameStatus !== 'available';
+  const dirty =
+    displayName.trim() !== profile.displayName ||
+    usernameChanged ||
+    resolvedGender !== profile.gender ||
+    dob !== (profile.dob ? profile.dob.slice(0, 10) : '');
+
   return (
     <Section icon={<UserIcon className="h-4 w-4" />} title={t('profileTitle')} desc={t('profileDesc')}>
       <div className="grid gap-3">
@@ -107,15 +179,81 @@ function ProfileSection({ profile, onSaved }: { profile: OwnProfile; onSaved: ()
             id="settings-displayName"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            aria-invalid={error ? true : undefined}
-            aria-describedby={error ? 'settings-displayName-error' : undefined}
-            className="mt-1 h-auto rounded-xl border-border bg-bg px-3 py-2 text-[14px] focus-visible:border-accent focus-visible:ring-0"
+            className={INPUT_STYLE}
           />
         </div>
-        <div className="text-[12px] text-muted">{t('username')}: <span className="text-fg">@{profile.username}</span></div>
+
+        <div>
+          <Label htmlFor="settings-username" className="text-[12px] font-normal text-muted">{t('username')}</Label>
+          <Input
+            id="settings-username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value.toLowerCase())}
+            aria-invalid={usernameStatus === 'taken' || usernameStatus === 'invalid' ? true : undefined}
+            aria-describedby="settings-username-status"
+            className={INPUT_STYLE}
+          />
+          <div id="settings-username-status" aria-live="polite" className="mt-1 min-h-4">
+            {usernameStatus === 'checking' && <p className="text-[12px] text-muted">{t('usernameChecking')}</p>}
+            {usernameStatus === 'available' && <p className="text-[12px] text-success">{t('usernameAvailable')}</p>}
+            {usernameStatus === 'taken' && <p className="text-[12px] text-danger">{t('usernameTaken')}</p>}
+            {usernameStatus === 'invalid' && <p className="text-[12px] text-danger">{t('usernameInvalid')}</p>}
+          </div>
+          {usernameChanged && (
+            <p className="rounded-lg bg-warning/10 px-2.5 py-1.5 text-[12px] text-fg">{t('usernameUrlWarning', { username: username.trim() || '…' })}</p>
+          )}
+        </div>
+
+        <div>
+          <span className="text-[12px] font-normal text-muted">{t('gender')}</span>
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-5 gap-y-2" role="radiogroup" aria-label={t('gender')}>
+            {(['Male', 'Female', 'other'] as const).map((val) => (
+              <label key={val} className="flex cursor-pointer items-center gap-2 text-[14px]">
+                <input
+                  type="radio"
+                  name="settings-gender"
+                  checked={genderChoice === val}
+                  onChange={() => setGenderChoice(val)}
+                  className="h-4 w-4 accent-[var(--accent)]"
+                />
+                {val === 'Male' ? t('genderMale') : val === 'Female' ? t('genderFemale') : t('genderOther')}
+              </label>
+            ))}
+          </div>
+          {genderChoice === 'other' && (
+            <Input
+              value={genderCustom}
+              onChange={(e) => setGenderCustom(e.target.value)}
+              placeholder={t('genderCustomPlaceholder')}
+              aria-label={t('genderCustomPlaceholder')}
+              className={INPUT_STYLE}
+            />
+          )}
+        </div>
+
+        <div>
+          <span className="text-[12px] font-normal text-muted">{t('dob')}</span>
+          <div className="mt-1">
+            <DatePicker
+              value={dob}
+              onChange={setDob}
+              placeholder={t('dobPlaceholder')}
+              max={new Date().toISOString().split('T')[0]}
+            />
+          </div>
+        </div>
+
         <div className="text-[12px] text-muted">{t('email')}: <span className="text-fg">{profile.email}</span>{profile.pendingEmail && <span className="ml-1 text-accent-2">({t('pendingEmail', { email: profile.pendingEmail })})</span>}</div>
-        {error && <p id="settings-displayName-error" role="alert" className="text-[12px] text-danger">{error}</p>}
-        <div><Button onClick={() => save.mutate()} loading={save.isPending} disabled={!displayName.trim() || save.isPending}>{t('save')}</Button></div>
+        {error && <p role="alert" className="text-[12px] text-danger">{error}</p>}
+        <div>
+          <Button
+            onClick={() => save.mutate()}
+            loading={save.isPending}
+            disabled={!displayName.trim() || !username.trim() || usernameBlocked || !dirty || save.isPending}
+          >
+            {t('save')}
+          </Button>
+        </div>
       </div>
     </Section>
   );
