@@ -3,6 +3,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 // Capture the request headers passed to NextResponse.next({ request: { headers } })
 // — the middleware now sets X-Next-Locale on the forwarded request headers, not response headers.
 let capturedRequestHeaders: Headers | null = null;
+// Captures response.cookies.set(...) calls (the NEXT_LOCALE self-heal).
+let setResponseCookies: Array<{ name: string; value: string }> = [];
 
 vi.mock('next/server', () => {
   class MockNextRequest {
@@ -27,7 +29,14 @@ vi.mock('next/server', () => {
   const NextResponse = {
     next: (opts?: { request?: { headers?: Headers } }) => {
       capturedRequestHeaders = opts?.request?.headers ?? null;
-      return { headers: { set: () => {}, get: () => undefined } };
+      return {
+        headers: { set: () => {}, get: () => undefined },
+        cookies: {
+          set: (name: string, value: string) => {
+            setResponseCookies.push({ name, value });
+          },
+        },
+      };
     },
   };
 
@@ -40,6 +49,7 @@ describe('middleware locale resolution', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     capturedRequestHeaders = null;
+    setResponseCookies = [];
   });
 
   afterEach(() => {
@@ -127,5 +137,38 @@ describe('middleware locale resolution', () => {
 
     await middleware(req as Parameters<typeof middleware>[0]);
     expect(capturedRequestHeaders?.get('X-Next-Locale')).toBe('en');
+  });
+
+  it('uses the NEXT_LOCALE cookie without calling the API (fast path)', async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal('fetch', fetchSpy);
+
+    const { NextRequest } = await import('next/server');
+    const req = new (NextRequest as unknown as new (url: string, init?: { cookies?: Record<string, string> }) => unknown)(
+      'http://localhost/dashboard',
+      { cookies: { veervrat_session: 'valid-token', NEXT_LOCALE: 'mr' } },
+    );
+
+    await middleware(req as Parameters<typeof middleware>[0]);
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(capturedRequestHeaders?.get('X-Next-Locale')).toBe('mr');
+    expect(setResponseCookies).toHaveLength(0);
+  });
+
+  it('ignores an invalid NEXT_LOCALE cookie and self-heals it from the API', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: { language: 'mr' } }),
+    }));
+
+    const { NextRequest } = await import('next/server');
+    const req = new (NextRequest as unknown as new (url: string, init?: { cookies?: Record<string, string> }) => unknown)(
+      'http://localhost/dashboard',
+      { cookies: { veervrat_session: 'valid-token', NEXT_LOCALE: 'xx' } },
+    );
+
+    await middleware(req as Parameters<typeof middleware>[0]);
+    expect(capturedRequestHeaders?.get('X-Next-Locale')).toBe('mr');
+    expect(setResponseCookies).toEqual([{ name: 'NEXT_LOCALE', value: 'mr' }]);
   });
 });

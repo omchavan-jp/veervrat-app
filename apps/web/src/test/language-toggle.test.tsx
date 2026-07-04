@@ -87,12 +87,15 @@ describe('LanguageToggle', () => {
     await waitFor(() => expect(mockUpdateMe).toHaveBeenCalledWith({ language: 'EN' }));
   });
 
-  it('does NOT refresh when updateMe throws', async () => {
+  // The cookie is the immediate source of truth for this device — the flip happens
+  // (cookie + refresh) even if persisting the DB preference fails.
+  it('still refreshes (cookie flip) when updateMe throws', async () => {
     mockUpdateMe.mockRejectedValue(new Error('Network error'));
     mockLocale.value = 'en';
     render(<LanguageToggle />);
     fireEvent.click(screen.getByRole('button'));
     await waitFor(() => expect(mockUpdateMe).toHaveBeenCalled());
-    expect(mockRouterRefresh).not.toHaveBeenCalled();
+    expect(mockRouterRefresh).toHaveBeenCalled();
+    expect(document.cookie).toContain('NEXT_LOCALE=mr');
   });
 });
