@@ -1334,7 +1334,9 @@
     "genderOther": "इतर",
     "genderCustomPlaceholder": "तुमचे लिंग लिहा (ऐच्छिक)",
     "dob": "जन्मतारीख",
-    "dobPlaceholder": "तुमची जन्मतारीख निवडा"
+    "dobPlaceholder": "तुमची जन्मतारीख निवडा",
+    "connectGoogle": "जोडा",
+    "connectGoogleHint": "जोडणीसाठी या खात्याच्या ईमेलशी जुळणारे Google खाते वापरले जाते; तुम्ही पासवर्डने खात्री कराल."
   },
   "confirmEmailChange": {
     "title": "ईमेल बदल निश्चित करा",

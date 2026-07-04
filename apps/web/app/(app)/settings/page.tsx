@@ -92,6 +92,7 @@ export default function SettingsPage() {
 }
 
 const INPUT_STYLE = 'mt-1 h-auto rounded-xl border-border bg-bg px-3 py-2 text-[14px] focus-visible:border-accent focus-visible:ring-0';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
 // Splits a stored gender into the radio choice + custom text (mirrors onboarding,
 // where 'Male'/'Female' are canonical and anything else was typed under 'other').
@@ -497,7 +498,18 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
               )}
             </div>
           ))}
+          {connected.data && !connected.data.some((acc) => acc.provider === 'GOOGLE') && (
+            <div className="flex items-center justify-between rounded-lg border border-dashed border-border bg-bg px-3 py-2 text-[13px]">
+              <span className="text-muted">Google</span>
+              {/* Full-page navigation into the OAuth flow; the callback recognises the
+                  matching email and routes through /link-account (password confirm). */}
+              <Button variant="outline" size="sm" nativeButton={false} render={<a href={`${API_URL}/auth/google`} />}>
+                {t('connectGoogle')}
+              </Button>
+            </div>
+          )}
         </div>
+        <p className="mt-1.5 text-[11px] text-muted">{t('connectGoogleHint')}</p>
       </div>
 
       {/* Delete account */}

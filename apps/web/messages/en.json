@@ -1334,7 +1334,9 @@
     "genderOther": "Other",
     "genderCustomPlaceholder": "Describe your gender (optional)",
     "dob": "Birthdate",
-    "dobPlaceholder": "Pick your birthdate"
+    "dobPlaceholder": "Pick your birthdate",
+    "connectGoogle": "Connect",
+    "connectGoogleHint": "Linking uses the Google account with the same email as this account; you'll confirm with your password."
   },
   "confirmEmailChange": {
     "title": "Confirm email change",

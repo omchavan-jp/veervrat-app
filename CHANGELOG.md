@@ -5,6 +5,8 @@ User-visible changes, most recent first. Dated sections (continuous deploy to th
 behaviour adds a line here (see `documentation/20_Solo-Dev-Operations.md`).
 
 ## Unreleased
+- Settings → Connected accounts now offers "Connect" for Google, so credential
+  users can link Google sign-in (unlink already existed).
 - Settings → Profile now lets you edit your username (with availability check and a
   profile-URL warning), gender, and birthdate — fixing wrong-birthdate signups.
 - Fixed: the en/मराठी language toggle now works on the deployed app (locale
