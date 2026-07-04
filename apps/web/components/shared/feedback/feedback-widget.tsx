@@ -14,15 +14,25 @@ const MODE: FeedbackMode | null = RAW_MODE === 'test' || RAW_MODE === 'public' ?
 type Corner = 'tl' | 'tr' | 'bl' | 'br';
 const STORAGE_KEY = 'veervrat.feedback.corner';
 const BUTTON_SIZE = 48;
-const MARGIN = 16;
+const EDGE_MARGIN = 16;
+// Below `md` a floating pill nav sits at bottom-center (~72px tall from the bottom
+// edge). Lift the widget's bottom-corner rest positions above it so it can never
+// hide behind the nav; on `md`+ (no bottom nav) the normal edge margin applies.
+const BOTTOM_NAV_CLEARANCE = 84;
 const SNAP_SPRING = { type: 'spring', stiffness: 400, damping: 30 } as const;
 
+function bottomInset(): number {
+  return typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches
+    ? BOTTOM_NAV_CLEARANCE
+    : EDGE_MARGIN;
+}
+
 function cornerCoords(corner: Corner): { x: number; y: number } {
-  const maxX = window.innerWidth - BUTTON_SIZE - MARGIN;
-  const maxY = window.innerHeight - BUTTON_SIZE - MARGIN;
+  const left = corner === 'tl' || corner === 'bl';
+  const top = corner === 'tl' || corner === 'tr';
   return {
-    x: corner === 'tl' || corner === 'bl' ? MARGIN : maxX,
-    y: corner === 'tl' || corner === 'tr' ? MARGIN : maxY,
+    x: left ? EDGE_MARGIN : window.innerWidth - BUTTON_SIZE - EDGE_MARGIN,
+    y: top ? EDGE_MARGIN : window.innerHeight - BUTTON_SIZE - bottomInset(),
   };
 }
 
@@ -108,7 +118,8 @@ function FeedbackWidgetInner({ mode }: { mode: FeedbackMode }) {
           setOpen(true);
         }}
         style={{ x, y, width: BUTTON_SIZE, height: BUTTON_SIZE, touchAction: 'none' }}
-        className={`fixed left-0 top-0 z-40 flex cursor-grab items-center justify-center rounded-full bg-accent text-bg shadow-modal transition-opacity active:cursor-grabbing ${
+        // z-[45] rides above the bottom pill nav (z-40) but below the modal backdrop (z-50).
+        className={`fixed left-0 top-0 z-[45] flex cursor-grab items-center justify-center rounded-full bg-accent text-bg shadow-modal transition-opacity active:cursor-grabbing ${
           mounted ? 'opacity-100' : 'opacity-0'
         }`}
       >
