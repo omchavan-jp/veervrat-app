@@ -47,12 +47,28 @@ Labels:
 - Priority: `p0` (broken for everyone / data loss) `p1` (broken for some, no
   workaround) `p2` (annoying, workaround exists) `p3` (nice to have)
 - Process: `needs-spec` — must go through an openspec change before any code.
+- Lifecycle: `deferred` — an **icebox** item: a real idea, deliberately not
+  scheduled. Act on it only if it recurs or a tester actually hits it.
 
 **The ritual** (weekly, or when ~10 items accumulate): open a session, say
 "triage". Claude pulls new feedback rows + scratch notes, dedupes, proposes
 type/priority per item; maintainer accepts/overrides in one pass; Claude creates
 the GH issues and marks feedback rows `triaged` with the issue link. Declines
 get a one-line reason on the feedback row (visible to the reporter in test mode).
+
+**One backlog, three homes — don't invent a fourth.** Deferred/"someday" ideas
+belong in the *same* canonical backlog as everything else, so they stay
+searchable and linkable — not in a growing section of the scratch inbox (which is
+meant to drain to zero). Route by kind:
+- **Post-launch product / UX / perf idea, deliberately not now** → a **`p3`
+  GitHub issue**, add the `deferred` label. That open issue *is* the icebox.
+- **Build-time technical deferral** (a seam left for a later implementation item,
+  with a "paid back by" owner) → `documentation/05_Deferral-Ledger.md`. Different
+  schema (item numbers, payback tracking); not for tester-driven ideas.
+- **Raw, still-untriaged note** → `backlog.md`, which is transient and always
+  drains to empty at the next triage.
+Keep `backlog.md` free of long-lived "future" sections — file them as `deferred`
+issues instead.
 
 ## Loop 3 — Implement
 
