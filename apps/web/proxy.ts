@@ -42,12 +42,29 @@ async function resolveLocale(request: NextRequest): Promise<Locale> {
 }
 
 export async function proxy(request: NextRequest) {
-  const locale = await resolveLocale(request);
+  // Fast path: a NEXT_LOCALE cookie skips the per-request /auth/me round-trip
+  // (which added cross-service latency to EVERY page load). The cookie is a cache
+  // of the DB preference — the language toggle writes it client-side, and we
+  // self-heal it below whenever it's absent.
+  const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value;
+  const cached = (SUPPORTED_LOCALES as readonly string[]).includes(cookieLocale ?? '')
+    ? (cookieLocale as Locale)
+    : null;
+
+  const locale = cached ?? (await resolveLocale(request));
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('X-Next-Locale', locale);
-  return NextResponse.next({
+  const response = NextResponse.next({
     request: { headers: requestHeaders },
   });
+  if (!cached) {
+    response.cookies.set('NEXT_LOCALE', locale, {
+      path: '/',
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: 'lax',
+    });
+  }
+  return response;
 }
 
 export const config = {

@@ -10,6 +10,7 @@ import { vmRelationshipsApi, type MyVm, type GlobalVmCascade } from '@/lib/api/v
 import { authApi } from '@/lib/api/auth';
 import { queryKeys } from '@/lib/api/query-keys';
 import { ApiError } from '@/lib/api/client';
+import { setLocaleCookie } from '@/lib/locale';
 import { useAuth, useLogout } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -281,9 +282,14 @@ function PrivacySection({ profile }: { profile: OwnProfile }) {
 function LanguageSection({ profile }: { profile: OwnProfile }) {
   const t = useTranslations('settings');
   const qc = useQueryClient();
+  const router = useRouter();
   const { toast } = useToast();
   const m = useMutation({
-    mutationFn: (language: string) => usersApi.updateSettings({ language }),
+    mutationFn: (language: string) => {
+      setLocaleCookie(language);
+      router.refresh();
+      return usersApi.updateSettings({ language });
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.auth.me }),
     onError: () => toast({ title: t('saveError'), variant: 'destructive' }),
   });

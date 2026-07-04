@@ -5,6 +5,8 @@ User-visible changes, most recent first. Dated sections (continuous deploy to th
 behaviour adds a line here (see `documentation/20_Solo-Dev-Operations.md`).
 
 ## Unreleased
+- Language switching is now instant: the chosen language is cached in a cookie, so
+  pages no longer wait on a per-request preference lookup.
 - Settings → Connected accounts now offers "Connect" for Google, so credential
   users can link Google sign-in (unlink already existed).
 - Settings → Profile now lets you edit your username (with availability check and a

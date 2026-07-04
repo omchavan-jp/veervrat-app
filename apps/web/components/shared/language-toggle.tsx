@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Languages } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { usersApi } from '@/lib/api/users';
+import { setLocaleCookie } from '@/lib/locale';
 
 type Display = 'label' | 'icon' | 'reveal';
 
@@ -42,11 +43,14 @@ export function LanguageToggle({
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => setRevealed(false), 1500);
     }
+    // Cookie first for an instant flip — the middleware reads it without an API
+    // round-trip; the PATCH then persists the durable preference.
+    setLocaleCookie(next);
+    router.refresh();
     try {
       await usersApi.updateMe({ language: next.toUpperCase() });
-      router.refresh();
     } catch {
-      // Preference not saved — leave locale as-is.
+      // DB preference not saved — the cookie still applies on this device.
     }
   }
 
