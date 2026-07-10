@@ -1,5 +1,6 @@
 {
   "contentEditor": {
+    "drag": "Move",
     "editContent": "Edit content",
     "editingOn": "Editing — ⌥-click text",
     "hint": "⌥-click any text to edit it",
