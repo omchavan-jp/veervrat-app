@@ -516,7 +516,7 @@
     "greetingWithName": "Namaskar, {name}",
     "sakaDate": "{weekday}, Saur {month} {day}, Saka {year}",
     "hero": {
-      "continueEyebrow": "Continue your journey",
+      "continueEyebrow": "Continue your journey - testing",
       "continueCta": "Continue",
       "startEyebrow": "Begin here",
       "startTitle": "Find a weakness to work on",
