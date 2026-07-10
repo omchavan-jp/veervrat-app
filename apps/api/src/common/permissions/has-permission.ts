@@ -314,6 +314,13 @@ function checkLayerOne(
     case 'feedback.upvote':
       return resource.type === 'platform';
 
+    // ── Content editing (dev-only in-context editor) ─────────────────────────
+    // Allowlist-backed: the content-overrides service computes membership from
+    // CONTENT_EDITOR_USER_IDS and passes it as resource.isContentEditor. Deliberately
+    // not granted by any role (not even admin) — least privilege for an outside editor.
+    case 'content.edit':
+      return resource.type === 'platform' && resource.isContentEditor === true;
+
     // Layer 2 actions — not handled here
     default:
       return false;

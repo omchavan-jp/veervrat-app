@@ -60,6 +60,9 @@ type GlobalVmAction = 'global_vm.view_va_guidance';
 
 type FeedbackAction = 'feedback.create' | 'feedback.read' | 'feedback.upvote' | 'feedback.manage';
 
+// Content editing (dev-only in-context editor) — allowlist-backed, not role-based.
+type ContentAction = 'content.edit';
+
 // Layer 2 — platform actions
 type AdminAction =
   | 'admin.view_any_journey'
@@ -95,6 +98,7 @@ export type PermissionAction =
   | ChallengeAction
   | GlobalVmAction
   | FeedbackAction
+  | ContentAction
   | AdminAction
   | ModeratorAction;
 
@@ -158,7 +162,10 @@ export type VmRelationshipResourceSlim = {
 // ─── Discriminated union resource ─────────────────────────────────────────────
 
 export type PermissionResource =
-  | { type: 'platform' }
+  // `isContentEditor` is computed by the content-overrides service from the configured
+  // allowlist (like `viewerIsFriend` / `relationshipVerified` elsewhere) so hasPermission
+  // stays pure and synchronous; only the `content.edit` action reads it.
+  | { type: 'platform'; isContentEditor?: boolean }
   | { type: 'journey'; journey: JourneySlim }
   | { type: 'erc'; journey: JourneySlim; erc: ErcSlim }
   | {
