@@ -202,6 +202,37 @@ DATABASE_URL="<neon-prod-url>" pnpm --filter api seed
 
 ---
 
+## 9. Content-editing deployment (dev-only) **[you]**
+A separate, access-restricted deployment lets a content editor edit all UI copy (en/mr)
+in-context and publish changes as a PR. It is **off everywhere by default** — never enable
+it on the production services. (Design: archived openspec change `in-context-content-editor`.)
+
+Stand up a second Railway service (same project or a new one) that builds the same repo:
+
+**web (content-edit)** — all the normal web build vars, plus:
+| Var | Value | Notes |
+|---|---|---|
+| `NEXT_PUBLIC_CONTENT_EDIT` | `on` | **BUILD-TIME** — mounts the editor + enables the i18n overlay merge. Unset/anything-else = feature absent (production default). |
+
+**api (content-edit)** — all the normal api vars (incl. S3/R2 — overrides stage in the same
+bucket under `content-overrides/`), plus:
+| Var | Value | Notes |
+|---|---|---|
+| `CONTENT_EDIT_ENABLED` | `true` | master gate; the `content-overrides` routes 404 when false (production default) |
+| `CONTENT_EDITOR_USER_IDS` | comma-separated user UUIDs | allowlist of who may edit/publish (`content.edit`). Empty = nobody (fail-closed) |
+| `CONTENT_EDIT_GITHUB_TOKEN` | fine-grained PAT | this repo only, **Contents + Pull requests: write** |
+| `CONTENT_EDIT_GITHUB_REPO` | `veer-vrat/veervrat-app` | publish target |
+| `CONTENT_EDIT_GITHUB_BASE_BRANCH` | `dev` | branch PRs open against |
+
+- Restrict who can reach the deployment (private networking / auth proxy / an unshared URL)
+  — defence in depth on top of the server-side `content.edit` check.
+- Flow: editor logs in → **Edit content** → ⌥-click text → edit en/mr → **Save** (stages to
+  R2, shows live via `router.refresh`) → **Publish** → review + squash-merge the PR →
+  production redeploys from the merged message files. Clear the staged overrides once merged.
+- Production stays untouched: flag off → no editor UI, no overlay fetch, routes 404.
+
+---
+
 ## Known gaps to close before/around launch
 - **WebSocket chat:** Socket.IO is not proxied by the Next.js rewrites, so real-time chat
   is broken on the railway.app URLs. Fixed by moving web+api onto a shared custom domain
