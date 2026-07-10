@@ -8,6 +8,7 @@
     "stagedError": "Couldn't load staged edits",
     "stagedEmpty": "No staged edits yet.",
     "stagedBy": "Edited by {name}",
+    "originalLabel": "Original",
     "editContent": "Edit content",
     "editingOn": "Editing — ⌥-click text",
     "hint": "⌥-click any text to edit it",
