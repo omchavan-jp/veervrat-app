@@ -52,7 +52,7 @@ export function AppLayoutClient({ children }: { children: React.ReactNode }) {
     <AppShell user={user}>
       {children}
       <FeedbackWidget />
-      <ContentEditor />
+      {user.isContentEditor && <ContentEditor />}
     </AppShell>
   );
 }

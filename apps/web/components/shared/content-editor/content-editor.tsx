@@ -122,6 +122,13 @@ function ContentEditorInner() {
     };
   }, [editMode, onDocClick]);
 
+  // This component mounts only for allowlisted editors (gated in the layout), so the marker
+  // tells the server-side i18n merge to overlay staged edits for this session only — regular
+  // users never set it, so they pay no latency and only ever see published copy.
+  useEffect(() => {
+    document.cookie = `ve_ce=1; path=/; max-age=${60 * 60 * 24 * 30}; samesite=lax`;
+  }, []);
+
   const publish = useMutation({
     mutationFn: () => contentOverridesApi.publish(),
     onSuccess: ({ prUrl }) => {

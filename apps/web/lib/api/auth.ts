@@ -13,6 +13,8 @@ export type User = {
   emailVerifiedAt: string | null;
   accountSetupCompletedAt: string | null;
   onboardingCompletedAt: string | null;
+  // Present on /auth/me only — true when the user may use the in-context content editor.
+  isContentEditor?: boolean;
 };
 
 type AuthResponse = User & { message: string };
