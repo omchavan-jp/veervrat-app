@@ -7,6 +7,16 @@ import { useAuth } from '@/hooks/use-auth';
 import { AppShell } from '@/components/layout/app-shell';
 import { Spinner } from '@/components/ui/spinner';
 import { FeedbackWidget } from '@/components/shared/feedback/feedback-widget';
+import dynamic from 'next/dynamic';
+
+// Dev-only in-context content editor: dynamically imported, and only when the build flag is
+// on, so it is completely excluded from the production bundle.
+const ContentEditor =
+  process.env.NEXT_PUBLIC_CONTENT_EDIT === 'on'
+    ? dynamic(() =>
+        import('@/components/shared/content-editor/content-editor').then((m) => m.ContentEditor),
+      )
+    : () => null;
 
 export function AppLayoutClient({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -42,6 +52,7 @@ export function AppLayoutClient({ children }: { children: React.ReactNode }) {
     <AppShell user={user}>
       {children}
       <FeedbackWidget />
+      <ContentEditor />
     </AppShell>
   );
 }
