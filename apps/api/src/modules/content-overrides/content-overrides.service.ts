@@ -49,7 +49,12 @@ export class ContentOverridesService {
     }
 
     const map = await this.repository.readLocale(dto.locale);
-    map[dto.key] = dto.value;
+    map[dto.key] = {
+      value: dto.value,
+      editedById: user.id,
+      editedByName: user.displayName,
+      editedAt: new Date().toISOString(),
+    };
     await this.repository.writeLocale(dto.locale, map);
     return { key: dto.key, locale: dto.locale };
   }
@@ -69,34 +74,39 @@ export class ContentOverridesService {
 
     const baked = await this.publisher.getMessageFiles();
     const files: PublishFile[] = [];
+    const changeLines: string[] = [];
     for (const locale of OVERRIDE_LOCALES) {
       const overrides = staged[locale];
       if (Object.keys(overrides).length === 0) continue;
 
-      // Authoritative ICU parity check against the canonical git files.
       const bakedFlat = flatten(baked[locale]);
-      for (const [key, value] of Object.entries(overrides)) {
-        const current = bakedFlat[key];
-        if (current !== undefined && !placeholdersEqual(current, value)) {
+      const values: Record<string, string> = {};
+      for (const [key, entry] of Object.entries(overrides)) {
+        // Authoritative ICU parity check against the canonical git files.
+        if (bakedFlat[key] !== undefined && !placeholdersEqual(bakedFlat[key], entry.value)) {
           throw new ValidationException(
             `Override for "${key}" (${locale}) changes its placeholders`,
             { key, locale },
           );
         }
+        values[key] = entry.value;
+        changeLines.push(`- \`${key}\` (${locale}) — edited by ${entry.editedByName}`);
       }
 
-      const merged = applyOverrides(baked[locale], overrides);
+      const merged = applyOverrides(baked[locale], values);
       files.push({
         path: `apps/web/messages/${locale}.json`,
         content: `${JSON.stringify(merged, null, 2)}\n`,
       });
     }
 
-    const total = OVERRIDE_LOCALES.reduce((n, l) => n + Object.keys(staged[l]).length, 0);
+    const body = `Applies ${changeLines.length} staged content override(s) from the in-context editor.\n\n${changeLines.join(
+      '\n',
+    )}\n\nOpened automatically; review and squash-merge as usual.`;
     return this.publisher.openPullRequest({
       branch: `content/edits-${Date.now()}`,
       title: 'content: apply in-context copy edits',
-      body: `Applies ${total} staged content override(s) from the in-context editor.\n\nOpened automatically; review and squash-merge as usual.`,
+      body,
       files,
     });
   }

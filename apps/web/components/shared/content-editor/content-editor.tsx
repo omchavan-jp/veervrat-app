@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { animate, motion, useDragControls, useMotionValue } from 'framer-motion';
 import { useMessages, useTranslations } from 'next-intl';
 import { useMutation } from '@tanstack/react-query';
-import { Check, GripVertical, Pencil, UploadCloud } from 'lucide-react';
+import { Check, GripVertical, History, Pencil, UploadCloud } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
 import { cn } from '@/lib/utils';
 import { contentOverridesApi } from '@/lib/api/content-overrides';
@@ -15,6 +15,7 @@ import {
   type NestedMessages,
 } from '@/lib/content-editor/messages';
 import { ContentEditPanel } from './content-edit-panel';
+import { ContentStagedList } from './content-staged-list';
 
 const ENABLED = process.env.NEXT_PUBLIC_CONTENT_EDIT === 'on';
 
@@ -40,6 +41,7 @@ function ContentEditorInner() {
 
   const [editMode, setEditMode] = useState(false);
   const [selection, setSelection] = useState<{ keys: string[] } | null>(null);
+  const [stagedOpen, setStagedOpen] = useState(false);
 
   // ── Draggable toolbar ──────────────────────────────────────────────────────
   // Drag by the grip; on release snap to the nearer of the top/bottom edge and keep the
@@ -179,6 +181,14 @@ function ContentEditorInner() {
         </button>
         <button
           type="button"
+          onClick={() => setStagedOpen(true)}
+          className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] text-muted transition-colors hover:text-fg"
+        >
+          <History className="h-4 w-4" aria-hidden />
+          {t('staged')}
+        </button>
+        <button
+          type="button"
           onClick={() => publish.mutate()}
           disabled={publish.isPending}
           className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] text-muted transition-colors hover:text-fg disabled:opacity-50"
@@ -189,6 +199,7 @@ function ContentEditorInner() {
       </motion.div>
 
       <ContentEditPanel selection={selection} onClose={() => setSelection(null)} />
+      <ContentStagedList open={stagedOpen} onOpenChange={setStagedOpen} />
     </>
   );
 }

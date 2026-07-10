@@ -1,6 +1,13 @@
 {
   "contentEditor": {
     "drag": "Move",
+    "staged": "Staged edits",
+    "stagedTitle": "Staged edits",
+    "stagedSubtitle": "Unpublished changes — visible to editors until published.",
+    "stagedLoading": "Loading…",
+    "stagedError": "Couldn't load staged edits",
+    "stagedEmpty": "No staged edits yet.",
+    "stagedBy": "Edited by {name}",
     "editContent": "Edit content",
     "editingOn": "Editing — ⌥-click text",
     "hint": "⌥-click any text to edit it",

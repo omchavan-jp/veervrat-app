@@ -22,6 +22,10 @@ function makeUser(id = EDITOR_ID, roles: Role[] = [Role.VRATARTHI]): SessionUser
   } as SessionUser;
 }
 
+function entry(value: string, name = 'U', id = EDITOR_ID) {
+  return { value, editedById: id, editedByName: name, editedAt: '2026-01-01T00:00:00.000Z' };
+}
+
 function makeRepo(over: Record<string, unknown> = {}) {
   return {
     readLocale: vi.fn().mockResolvedValue({}),
@@ -79,10 +83,10 @@ describe('ContentOverridesService', () => {
     });
 
     it('returns staged overrides for an allowlisted editor', async () => {
-      const readAll = vi.fn().mockResolvedValue({ en: { 'a.b': 'Hi' }, mr: {} });
+      const readAll = vi.fn().mockResolvedValue({ en: { 'a.b': entry('Hi') }, mr: {} });
       const { service } = makeService({ repo: makeRepo({ readAll }) });
       await expect(service.getAllForMerge(makeUser())).resolves.toEqual({
-        en: { 'a.b': 'Hi' },
+        en: { 'a.b': entry('Hi') },
         mr: {},
       });
     });
@@ -105,7 +109,9 @@ describe('ContentOverridesService', () => {
         baseValue: 'Junā',
       });
       expect(res).toEqual({ key: 'feedback.buttonLabel', locale: 'mr' });
-      expect(repo.writeLocale).toHaveBeenCalledWith('mr', { 'feedback.buttonLabel': 'Navīn' });
+      expect(repo.writeLocale).toHaveBeenCalledWith('mr', {
+        'feedback.buttonLabel': expect.objectContaining({ value: 'Navīn', editedById: EDITOR_ID }),
+      });
     });
 
     it('denies a non-allowlisted authenticated user', async () => {
@@ -161,7 +167,7 @@ describe('ContentOverridesService', () => {
   describe('publish', () => {
     it('opens a PR with the merged files for an allowlisted editor', async () => {
       const repo = makeRepo({
-        readAll: vi.fn().mockResolvedValue({ en: { 'a.b': 'New' }, mr: {} }),
+        readAll: vi.fn().mockResolvedValue({ en: { 'a.b': entry('New') }, mr: {} }),
       });
       const publisher = makePublisher({
         getMessageFiles: vi.fn().mockResolvedValue({ en: { a: { b: 'Old' } }, mr: {} }),
@@ -171,8 +177,12 @@ describe('ContentOverridesService', () => {
       const res = await service.publish(makeUser());
       expect(res.prUrl).toContain('/pull/');
       expect(publisher.openPullRequest).toHaveBeenCalledTimes(1);
-      const arg = publisher.openPullRequest.mock.calls[0][0] as { files: { path: string }[] };
+      const arg = publisher.openPullRequest.mock.calls[0][0] as {
+        files: { path: string }[];
+        body: string;
+      };
       expect(arg.files.map((f) => f.path)).toContain('apps/web/messages/en.json');
+      expect(arg.body).toContain('edited by');
     });
 
     it('denies a non-allowlisted user', async () => {
@@ -190,7 +200,7 @@ describe('ContentOverridesService', () => {
 
     it('refuses to open a PR when an override breaks placeholders vs the git baseline', async () => {
       const repo = makeRepo({
-        readAll: vi.fn().mockResolvedValue({ en: { greeting: 'Hi' }, mr: {} }),
+        readAll: vi.fn().mockResolvedValue({ en: { greeting: entry('Hi') }, mr: {} }),
       });
       const publisher = makePublisher({
         getMessageFiles: vi.fn().mockResolvedValue({ en: { greeting: 'Hi {name}' }, mr: {} }),
@@ -202,7 +212,7 @@ describe('ContentOverridesService', () => {
 
     it('fails clearly when publishing is not configured', async () => {
       const repo = makeRepo({
-        readAll: vi.fn().mockResolvedValue({ en: { 'a.b': 'New' }, mr: {} }),
+        readAll: vi.fn().mockResolvedValue({ en: { 'a.b': entry('New') }, mr: {} }),
       });
       const publisher = makePublisher({ configured: false });
       const { service } = makeService({ repo, publisher });
