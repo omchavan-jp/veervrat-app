@@ -34,6 +34,11 @@ ENV NEXT_PUBLIC_FEEDBACK_MODE=${NEXT_PUBLIC_FEEDBACK_MODE}
 # NEXT_PUBLIC_COMMIT_SHA=${{RAILWAY_GIT_COMMIT_SHA}}.
 ARG NEXT_PUBLIC_COMMIT_SHA=dev
 ENV NEXT_PUBLIC_COMMIT_SHA=${NEXT_PUBLIC_COMMIT_SHA}
+# In-context content editor: 'on' makes the editor available in the build (it stays
+# allowlist-gated per user via /auth/me). Build-time because NEXT_PUBLIC_* is inlined into
+# the browser bundle; unset/anything else = feature absent (production default).
+ARG NEXT_PUBLIC_CONTENT_EDIT
+ENV NEXT_PUBLIC_CONTENT_EDIT=${NEXT_PUBLIC_CONTENT_EDIT}
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 COPY . .
