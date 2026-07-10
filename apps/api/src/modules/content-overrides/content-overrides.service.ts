@@ -6,7 +6,7 @@ import { parseContentEditorIds } from '../../common/content-editor-allowlist';
 import type { SessionUser } from '../auth/types/auth.types';
 import { ContentOverridesRepository, OverridesByLocale } from './content-overrides.repository';
 import { GithubPublisher, type PublishFile } from './github-publisher';
-import { UpsertOverrideDto, OVERRIDE_LOCALES } from './dto/upsert-override.dto';
+import { UpsertOverrideDto, OVERRIDE_LOCALES, type OverrideLocale } from './dto/upsert-override.dto';
 import { flatten, applyOverrides } from './messages.util';
 import { placeholdersEqual } from './icu-placeholders';
 
@@ -57,6 +57,22 @@ export class ContentOverridesService {
     };
     await this.repository.writeLocale(dto.locale, map);
     return { key: dto.key, locale: dto.locale };
+  }
+
+  // Removes a single staged edit (reverts that key/locale to the published value).
+  async discard(
+    user: SessionUser,
+    key: string,
+    locale: OverrideLocale,
+  ): Promise<{ key: string; locale: string }> {
+    this.ensureEnabled();
+    this.assertEditor(user);
+    const map = await this.repository.readLocale(locale);
+    if (key in map) {
+      delete map[key];
+      await this.repository.writeLocale(locale, map);
+    }
+    return { key, locale };
   }
 
   async publish(user: SessionUser): Promise<{ prUrl: string; branch: string }> {

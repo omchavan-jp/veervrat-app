@@ -219,4 +219,28 @@ describe('ContentOverridesService', () => {
       await expect(service.publish(makeUser())).rejects.toBeInstanceOf(ServiceUnavailableException);
     });
   });
+
+  describe('discard', () => {
+    it('removes a staged edit for an allowlisted editor', async () => {
+      const readLocale = vi.fn().mockResolvedValue({ 'a.b': entry('X'), 'c.d': entry('Y') });
+      const { service, repo } = makeService({ repo: makeRepo({ readLocale }) });
+      await service.discard(makeUser(), 'a.b', 'en');
+      expect(repo.writeLocale).toHaveBeenCalledWith('en', { 'c.d': entry('Y') });
+    });
+
+    it('denies a non-allowlisted user', async () => {
+      const { service, repo } = makeService({ editorIds: 'someone-else' });
+      await expect(service.discard(makeUser('outsider'), 'a.b', 'en')).rejects.toBeInstanceOf(
+        AccessDeniedException,
+      );
+      expect(repo.writeLocale).not.toHaveBeenCalled();
+    });
+
+    it('is not-found when disabled', async () => {
+      const { service } = makeService({ enabled: false });
+      await expect(service.discard(makeUser(), 'a.b', 'en')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+    });
+  });
 });
