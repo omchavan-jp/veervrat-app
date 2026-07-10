@@ -27,6 +27,13 @@ import * as Joi from 'joi';
         MEILI_MASTER_KEY: Joi.string().optional(),
         // Error tracking (GlitchTip / Sentry-compatible) — optional; disabled when unset.
         GLITCHTIP_DSN: Joi.string().optional(),
+        // In-context content editor (dev-only tooling; hard-off in production). All default
+        // off/empty so production, CI, and local dev are unaffected unless explicitly enabled.
+        CONTENT_EDIT_ENABLED: Joi.boolean().default(false),
+        CONTENT_EDITOR_USER_IDS: Joi.string().default(''),
+        CONTENT_EDIT_GITHUB_TOKEN: Joi.string().optional(),
+        CONTENT_EDIT_GITHUB_REPO: Joi.string().optional(),
+        CONTENT_EDIT_GITHUB_BASE_BRANCH: Joi.string().default('dev'),
       }),
       validationOptions: {
         abortEarly: false,

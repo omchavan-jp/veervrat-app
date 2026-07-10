@@ -91,6 +91,13 @@ Acting *on* data, not *as* participants.
 | `comment.moderate` | ✅ | ✅ (hide or delete any comment) |
 | `feedback.manage` | ✅ (status lifecycle NEW→TRIAGED→DONE/DECLINED; DECLINED requires reason; audit-logged) | ❌ |
 
+#### Special — allowlist-gated (not role-based)
+Acting on platform copy through the dev-only in-context content editor.
+
+| Permission | Granted to |
+|---|---|
+| `content.edit` | Only users whose ID is listed in `CONTENT_EDITOR_USER_IDS`. **Not** implied by any role, including admin (least privilege for an outside content editor). Fail-closed when the allowlist is empty — the production default. Enforced via `hasPermission(user, { type: 'platform', isContentEditor }, 'content.edit')` where the service computes `isContentEditor` from the allowlist; publish actions are audit-logged. |
+
 ### Scoping Rules
 - **Global VM**: sees all of a VA's journeys, test results, experience logs — full picture. When also assigned as journey VM for a specific journey, their role in that journey is to interact specifically around it, but their view scope remains global.
 - **Journey-level VM only** (not global VM): sees only the journey(s) they are explicitly assigned to. Nothing else.

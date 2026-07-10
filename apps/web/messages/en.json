@@ -1,4 +1,27 @@
 {
+  "contentEditor": {
+    "drag": "Move",
+    "editContent": "Edit content",
+    "editingOn": "Editing — ⌥-click text",
+    "hint": "⌥-click any text to edit it",
+    "publish": "Publish",
+    "publishing": "Publishing…",
+    "publishedTitle": "Pull request opened",
+    "publishError": "Could not publish the edits",
+    "noKey": "Couldn't match that text to a message key",
+    "panelTitle": "Edit text",
+    "panelPickHint": "Pick which key to edit",
+    "ambiguous": "This text matches several keys — pick one:",
+    "english": "English",
+    "marathi": "मराठी",
+    "missingLocale": "No translation yet for this language",
+    "placeholderMismatch": "Keep the same placeholders as the original text",
+    "savedTitle": "Saved",
+    "saveError": "Could not save",
+    "saving": "Saving…",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
   "common": {
     "nav": {
       "dashboard": "Dashboard",
