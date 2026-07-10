@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Patch, Post, UseGuards } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { SessionGuard } from '../auth/guards/session.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -18,7 +18,7 @@ export class ContentOverridesController {
     return this.service.getAllForMerge();
   }
 
-  @Put()
+  @Patch()
   @UseGuards(SessionGuard)
   @Throttle({ default: { ttl: 60000, limit: 120 } })
   async upsert(@CurrentUser() user: SessionUser, @Body() dto: UpsertOverrideDto) {
