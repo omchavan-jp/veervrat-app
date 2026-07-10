@@ -112,11 +112,30 @@ export function ContentEditPanel({
     onError: () => toast.add({ title: t('saveError'), type: 'error' }),
   });
 
+  const discard = useMutation({
+    mutationFn: async () => {
+      if (!activeKey) return;
+      for (const locale of LOCALES) {
+        if (staged?.[locale]?.[activeKey]) {
+          await contentOverridesApi.discard({ key: activeKey, locale });
+        }
+      }
+    },
+    onSuccess: () => {
+      toast.add({ title: t('discarded'), type: 'success' });
+      void queryClient.invalidateQueries({ queryKey: STAGED_KEY });
+      router.refresh();
+      onClose();
+    },
+    onError: () => toast.add({ title: t('discardError'), type: 'error' }),
+  });
+
   const open = selection !== null;
   const ambiguous = selection !== null && selection.keys.length > 1 && !activeKey;
   const invalidLocale = LOCALES.find(
     (l) => values[l].length > 0 && !placeholdersEqual(baked[l], values[l]),
   );
+  const hasStaged = Boolean(activeKey && (staged?.en?.[activeKey] || staged?.mr?.[activeKey]));
 
   return (
     <Dialog
@@ -178,6 +197,16 @@ export function ContentEditPanel({
           })}
           {invalidLocale && <p className="text-[12px] text-danger">{t('placeholderMismatch')}</p>}
           <div className="flex justify-end gap-2">
+            {hasStaged && (
+              <button
+                type="button"
+                onClick={() => discard.mutate()}
+                disabled={discard.isPending}
+                className="mr-auto rounded-full px-3 py-1.5 text-[13px] text-danger transition-colors hover:bg-danger/10 disabled:opacity-50"
+              >
+                {discard.isPending ? t('discarding') : t('discard')}
+              </button>
+            )}
             <button
               type="button"
               onClick={onClose}

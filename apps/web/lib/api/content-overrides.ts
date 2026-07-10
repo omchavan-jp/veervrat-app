@@ -33,4 +33,13 @@ export const contentOverridesApi = {
   // The current staged edits (with attribution) — powers the "Staged edits" list.
   list: (): Promise<StagedOverrides> =>
     api.get<Wrapped<StagedOverrides>>('/content-overrides').then((r) => r.data),
+
+  // Discard a single staged edit (revert that key/locale to the published value).
+  discard: (input: {
+    key: string;
+    locale: OverrideLocale;
+  }): Promise<{ key: string; locale: string }> =>
+    api
+      .delete<Wrapped<{ key: string; locale: string }>>('/content-overrides', input)
+      .then((r) => r.data),
 };

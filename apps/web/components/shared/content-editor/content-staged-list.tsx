@@ -1,7 +1,9 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Trash2 } from 'lucide-react';
 import { Dialog } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { contentOverridesApi, type OverrideLocale } from '@/lib/api/content-overrides';
@@ -21,6 +23,16 @@ export function ContentStagedList({
     queryKey: ['content-overrides', 'staged'],
     queryFn: () => contentOverridesApi.list(),
     enabled: open,
+  });
+
+  const queryClient = useQueryClient();
+  const router = useRouter();
+  const discard = useMutation({
+    mutationFn: (v: { key: string; locale: OverrideLocale }) => contentOverridesApi.discard(v),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['content-overrides', 'staged'] });
+      router.refresh();
+    },
   });
 
   const items = data
@@ -54,9 +66,20 @@ export function ContentStagedList({
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="truncate font-mono text-[11px] text-muted">{it.key}</span>
-                <span className="shrink-0 rounded-full bg-fg/5 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-muted">
-                  {it.locale}
-                </span>
+                <div className="flex shrink-0 items-center gap-1.5">
+                  <span className="rounded-full bg-fg/5 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-muted">
+                    {it.locale}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label={t('discard')}
+                    onClick={() => discard.mutate({ key: it.key, locale: it.locale })}
+                    disabled={discard.isPending}
+                    className="rounded-full p-1 text-muted transition-colors hover:bg-danger/10 hover:text-danger disabled:opacity-50"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                  </button>
+                </div>
               </div>
               <p className="mt-1 text-[14px] leading-snug">{it.value}</p>
               <p className="mt-1.5 text-[12px] text-muted">

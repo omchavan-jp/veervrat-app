@@ -1,4 +1,14 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { SessionGuard } from '../auth/guards/session.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -6,6 +16,7 @@ import type { SessionUser } from '../auth/types/auth.types';
 import { Audited } from '../audit/audited.decorator';
 import { ContentOverridesService } from './content-overrides.service';
 import { UpsertOverrideDto } from './dto/upsert-override.dto';
+import { DiscardOverrideDto } from './dto/discard-override.dto';
 
 @Controller('content-overrides')
 export class ContentOverridesController {
@@ -32,6 +43,21 @@ export class ContentOverridesController {
   })
   async upsert(@CurrentUser() user: SessionUser, @Body() dto: UpsertOverrideDto) {
     return this.service.upsert(user, dto);
+  }
+
+  @Delete()
+  @UseGuards(SessionGuard)
+  @Throttle({ default: { ttl: 60000, limit: 120 } })
+  @Audited({
+    action: 'content.discard',
+    resourceType: 'content_override',
+    metadata: (c) => ({
+      key: (c.body as DiscardOverrideDto)?.key,
+      locale: (c.body as DiscardOverrideDto)?.locale,
+    }),
+  })
+  async discard(@CurrentUser() user: SessionUser, @Body() dto: DiscardOverrideDto) {
+    return this.service.discard(user, dto.key, dto.locale);
   }
 
   @Post('publish')
