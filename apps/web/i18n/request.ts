@@ -45,8 +45,15 @@ async function fetchOverrides(locale: Locale): Promise<Record<string, string> | 
       headers: { Cookie: `veervrat_session=${session}` },
     });
     if (!res.ok) return null;
-    const body = (await res.json()) as { data?: Partial<Record<Locale, Record<string, string>>> };
-    return body.data?.[locale] ?? null;
+    // The endpoint returns attributed entries ({ value, editedBy… }); extract just the values.
+    const body = (await res.json()) as {
+      data?: Partial<Record<Locale, Record<string, { value: string }>>>;
+    };
+    const entries = body.data?.[locale];
+    if (!entries) return null;
+    const flat: Record<string, string> = {};
+    for (const [key, entry] of Object.entries(entries)) flat[key] = entry.value;
+    return flat;
   } catch {
     return null;
   }

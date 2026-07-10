@@ -4,6 +4,14 @@ type Wrapped<T> = { data: T };
 
 export type OverrideLocale = 'en' | 'mr';
 
+export type OverrideEntry = {
+  value: string;
+  editedById: string;
+  editedByName: string;
+  editedAt: string;
+};
+export type StagedOverrides = Record<OverrideLocale, Record<string, OverrideEntry>>;
+
 export type UpsertOverrideInput = {
   key: string;
   locale: OverrideLocale;
@@ -21,4 +29,8 @@ export const contentOverridesApi = {
     api
       .post<Wrapped<{ prUrl: string; branch: string }>>('/content-overrides/publish')
       .then((r) => r.data),
+
+  // The current staged edits (with attribution) — powers the "Staged edits" list.
+  list: (): Promise<StagedOverrides> =>
+    api.get<Wrapped<StagedOverrides>>('/content-overrides').then((r) => r.data),
 };

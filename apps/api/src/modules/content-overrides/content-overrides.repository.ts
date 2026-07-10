@@ -3,8 +3,15 @@ import { ConfigService } from '@nestjs/config';
 import { S3Client, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import { OVERRIDE_LOCALES, type OverrideLocale } from './dto/upsert-override.dto';
 
-// A staged-override map: dotted message key → edited value.
-export type OverrideMap = Record<string, string>;
+// A staged override entry: the edited value plus who staged it and when.
+export type OverrideEntry = {
+  value: string;
+  editedById: string;
+  editedByName: string;
+  editedAt: string; // ISO timestamp
+};
+// dotted message key → staged entry
+export type OverrideMap = Record<string, OverrideEntry>;
 export type OverridesByLocale = Record<OverrideLocale, OverrideMap>;
 
 const KEY_PREFIX = 'content-overrides';
@@ -49,7 +56,12 @@ export class ContentOverridesRepository {
         new GetObjectCommand({ Bucket: this.bucket, Key: this.objectKey(locale) }),
       );
       const body = await res.Body?.transformToString();
-      return body ? (JSON.parse(body) as OverrideMap) : {};
+      if (!body) return {};
+      const parsed = JSON.parse(body) as Record<string, unknown>;
+      // Normalize on read so the pre-attribution format (plain string values) still works.
+      const map: OverrideMap = {};
+      for (const [key, value] of Object.entries(parsed)) map[key] = normalizeEntry(value);
+      return map;
     } catch (err) {
       if (isNotFound(err)) return {};
       this.logger.error({ msg: 'read overrides failed', locale, error: errMessage(err) });
@@ -89,6 +101,19 @@ export class ContentOverridesRepository {
       throw new ServiceUnavailableException('Failed to store content override');
     }
   }
+}
+
+function normalizeEntry(value: unknown): OverrideEntry {
+  if (typeof value === 'string') {
+    return { value, editedById: '', editedByName: 'unknown', editedAt: '' };
+  }
+  const e = (value ?? {}) as Partial<OverrideEntry>;
+  return {
+    value: typeof e.value === 'string' ? e.value : '',
+    editedById: e.editedById ?? '',
+    editedByName: e.editedByName ?? 'unknown',
+    editedAt: e.editedAt ?? '',
+  };
 }
 
 function isNotFound(err: unknown): boolean {

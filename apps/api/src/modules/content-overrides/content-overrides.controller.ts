@@ -22,6 +22,14 @@ export class ContentOverridesController {
   @Patch()
   @UseGuards(SessionGuard)
   @Throttle({ default: { ttl: 60000, limit: 120 } })
+  @Audited({
+    action: 'content.edit',
+    resourceType: 'content_override',
+    metadata: (c) => ({
+      key: (c.body as UpsertOverrideDto)?.key,
+      locale: (c.body as UpsertOverrideDto)?.locale,
+    }),
+  })
   async upsert(@CurrentUser() user: SessionUser, @Body() dto: UpsertOverrideDto) {
     return this.service.upsert(user, dto);
   }
