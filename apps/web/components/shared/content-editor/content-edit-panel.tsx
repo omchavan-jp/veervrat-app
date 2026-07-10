@@ -1,13 +1,14 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Dialog } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Spinner } from '@/components/ui/spinner';
 import { useToast } from '@/components/ui/toast';
 import { cn } from '@/lib/utils';
 import enMessages from '@/messages/en.json';
@@ -22,6 +23,7 @@ const EN_FLAT = flattenMessages(enMessages as NestedMessages);
 const MR_FLAT = flattenMessages(mrMessages as NestedMessages);
 const FLAT_BY_LOCALE: Record<OverrideLocale, Record<string, string>> = { en: EN_FLAT, mr: MR_FLAT };
 const LOCALES: OverrideLocale[] = ['en', 'mr'];
+const STAGED_KEY = ['content-overrides', 'staged'];
 const FIELD_LABEL = 'mb-2 block font-mono text-[11px] uppercase tracking-[0.1em] text-muted';
 
 export function ContentEditPanel({
@@ -34,22 +36,29 @@ export function ContentEditPanel({
   const t = useTranslations('contentEditor');
   const toast = useToast();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const [activeKey, setActiveKey] = useState<string | null>(null);
   const [values, setValues] = useState<Record<OverrideLocale, string>>({ en: '', mr: '' });
+  const initedKeyRef = useRef<string | null>(null);
+
+  // Current staged overrides (with attribution) so re-opening a key shows the unpublished
+  // value and who last edited it — not just the baked original.
+  const { data: staged, isLoading } = useQuery({
+    queryKey: STAGED_KEY,
+    queryFn: () => contentOverridesApi.list(),
+    enabled: selection !== null,
+  });
 
   // A unique selection opens straight into editing; an ambiguous one waits for a pick.
   useEffect(() => {
-    if (!selection) {
-      setActiveKey(null);
-    } else if (selection.keys.length === 1) {
-      setActiveKey(selection.keys[0]);
-    } else {
-      setActiveKey(null);
-    }
+    if (!selection) setActiveKey(null);
+    else if (selection.keys.length === 1) setActiveKey(selection.keys[0]);
+    else setActiveKey(null);
   }, [selection]);
 
-  const base = useMemo<Record<OverrideLocale, string>>(
+  // Canonical published values — the ICU-parity baseline and the "original" reference.
+  const baked = useMemo<Record<OverrideLocale, string>>(
     () => ({
       en: activeKey ? (EN_FLAT[activeKey] ?? '') : '',
       mr: activeKey ? (MR_FLAT[activeKey] ?? '') : '',
@@ -57,26 +66,45 @@ export function ContentEditPanel({
     [activeKey],
   );
 
+  // What the fields start from: the staged (unpublished) value if any, else the baked one.
+  const effective = useMemo<Record<OverrideLocale, string>>(
+    () => ({
+      en: (activeKey ? staged?.en?.[activeKey]?.value : undefined) ?? baked.en,
+      mr: (activeKey ? staged?.mr?.[activeKey]?.value : undefined) ?? baked.mr,
+    }),
+    [activeKey, staged, baked],
+  );
+
+  // Seed the fields once per key (after staged settles) — never mid-edit on a background refetch.
   useEffect(() => {
-    setValues(base);
-  }, [base]);
+    if (!activeKey) {
+      initedKeyRef.current = null;
+      return;
+    }
+    if (initedKeyRef.current !== activeKey && !isLoading) {
+      setValues(effective);
+      initedKeyRef.current = activeKey;
+    }
+  }, [activeKey, isLoading, effective]);
 
   const save = useMutation({
     mutationFn: async () => {
       if (!activeKey) return;
       for (const locale of LOCALES) {
-        if (values[locale].length > 0 && values[locale] !== base[locale]) {
+        // Save only locales actually changed, so untouched ones keep their existing author.
+        if (values[locale].length > 0 && values[locale] !== effective[locale]) {
           await contentOverridesApi.upsert({
             key: activeKey,
             locale,
             value: values[locale],
-            baseValue: base[locale],
+            baseValue: baked[locale],
           });
         }
       }
     },
     onSuccess: () => {
       toast.add({ title: t('savedTitle'), type: 'success' });
+      void queryClient.invalidateQueries({ queryKey: STAGED_KEY });
       // Re-render server components so getRequestConfig re-merges and the edit shows live.
       router.refresh();
       onClose();
@@ -87,7 +115,7 @@ export function ContentEditPanel({
   const open = selection !== null;
   const ambiguous = selection !== null && selection.keys.length > 1 && !activeKey;
   const invalidLocale = LOCALES.find(
-    (l) => values[l].length > 0 && !placeholdersEqual(base[l], values[l]),
+    (l) => values[l].length > 0 && !placeholdersEqual(baked[l], values[l]),
   );
 
   return (
@@ -112,11 +140,16 @@ export function ContentEditPanel({
             </button>
           ))}
         </div>
+      ) : activeKey && isLoading ? (
+        <div className="flex justify-center py-8">
+          <Spinner size="md" label={t('stagedLoading')} />
+        </div>
       ) : activeKey ? (
         <div className="flex flex-col gap-4">
           {LOCALES.map((locale) => {
+            const entry = staged?.[locale]?.[activeKey];
             const mismatch =
-              values[locale].length > 0 && !placeholdersEqual(base[locale], values[locale]);
+              values[locale].length > 0 && !placeholdersEqual(baked[locale], values[locale]);
             return (
               <div key={locale}>
                 <Label className={FIELD_LABEL}>{t(locale === 'en' ? 'english' : 'marathi')}</Label>
@@ -128,6 +161,17 @@ export function ContentEditPanel({
                 />
                 {FLAT_BY_LOCALE[locale][activeKey] === undefined && (
                   <p className="mt-1 text-[12px] text-muted">{t('missingLocale')}</p>
+                )}
+                {entry && (
+                  <div className="mt-1.5 space-y-0.5 text-[12px] text-muted">
+                    <p>
+                      {t('stagedBy', { name: entry.editedByName })}
+                      {entry.editedAt ? ` · ${formatWhen(entry.editedAt)}` : ''}
+                    </p>
+                    <p>
+                      {t('originalLabel')}: <span className="italic">{baked[locale] || '—'}</span>
+                    </p>
+                  </div>
                 )}
               </div>
             );
@@ -153,4 +197,9 @@ export function ContentEditPanel({
       ) : null}
     </Dialog>
   );
+}
+
+function formatWhen(iso: string): string {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleString();
 }
