@@ -69,7 +69,7 @@ describe('ContentOverridesService', () => {
   describe('feature gate', () => {
     it('behaves as not-found when disabled', async () => {
       const { service, repo, publisher } = makeService({ enabled: false });
-      await expect(service.getAllForMerge()).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.getAllForMerge(makeUser())).rejects.toBeInstanceOf(NotFoundException);
       await expect(
         service.upsert(makeUser(), { key: 'a.b', locale: 'en', value: 'x', baseValue: 'x' }),
       ).rejects.toBeInstanceOf(NotFoundException);
@@ -78,10 +78,20 @@ describe('ContentOverridesService', () => {
       expect(publisher.openPullRequest).not.toHaveBeenCalled();
     });
 
-    it('returns staged overrides for merge when enabled', async () => {
+    it('returns staged overrides for an allowlisted editor', async () => {
       const readAll = vi.fn().mockResolvedValue({ en: { 'a.b': 'Hi' }, mr: {} });
       const { service } = makeService({ repo: makeRepo({ readAll }) });
-      await expect(service.getAllForMerge()).resolves.toEqual({ en: { 'a.b': 'Hi' }, mr: {} });
+      await expect(service.getAllForMerge(makeUser())).resolves.toEqual({
+        en: { 'a.b': 'Hi' },
+        mr: {},
+      });
+    });
+
+    it('denies a non-allowlisted user from reading staged overrides', async () => {
+      const { service } = makeService({ editorIds: 'someone-else' });
+      await expect(service.getAllForMerge(makeUser('outsider'))).rejects.toBeInstanceOf(
+        AccessDeniedException,
+      );
     });
   });
 

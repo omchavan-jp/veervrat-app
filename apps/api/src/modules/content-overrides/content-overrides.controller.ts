@@ -11,11 +11,12 @@ import { UpsertOverrideDto } from './dto/upsert-override.dto';
 export class ContentOverridesController {
   constructor(private readonly service: ContentOverridesService) {}
 
-  // Read is feature-gated (not session-gated) so the edit deployment's server can fetch the
-  // staged overrides while rendering. Returns 404 when the feature is disabled (production).
+  // Read requires an allowlisted editor session (the web forwards the editor's cookie), so
+  // staged drafts are never returned to other users. Returns 404 when the feature is disabled.
   @Get()
-  async getAll() {
-    return this.service.getAllForMerge();
+  @UseGuards(SessionGuard)
+  async getAll(@CurrentUser() user: SessionUser) {
+    return this.service.getAllForMerge(user);
   }
 
   @Patch()

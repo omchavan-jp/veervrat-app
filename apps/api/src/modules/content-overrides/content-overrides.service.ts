@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, ServiceUnavailableException } from '@nes
 import { ConfigService } from '@nestjs/config';
 import { AccessDeniedException, ValidationException } from '../../common/exceptions/app.exceptions';
 import { hasPermission } from '../../common/permissions';
+import { parseContentEditorIds } from '../../common/content-editor-allowlist';
 import type { SessionUser } from '../auth/types/auth.types';
 import { ContentOverridesRepository, OverridesByLocale } from './content-overrides.repository';
 import { GithubPublisher, type PublishFile } from './github-publisher';
@@ -20,19 +21,15 @@ export class ContentOverridesService {
     private readonly config: ConfigService,
   ) {
     this.enabled = this.config.get<boolean>('CONTENT_EDIT_ENABLED', false);
-    this.editorIds = new Set(
-      (this.config.get<string>('CONTENT_EDITOR_USER_IDS', '') ?? '')
-        .split(',')
-        .map((id) => id.trim())
-        .filter(Boolean),
-    );
+    this.editorIds = parseContentEditorIds(this.config.get<string>('CONTENT_EDITOR_USER_IDS', ''));
   }
 
-  // The staged overrides for the web app to merge over its baked messages. Read-only and
-  // feature-gated (not per-user) so the edit deployment's server can fetch it while
-  // rendering; production has the feature disabled and returns 404.
-  async getAllForMerge(): Promise<OverridesByLocale> {
+  // The staged overrides for the web to merge over its baked messages, returned only to an
+  // allowlisted editor (the web forwards the editor's session). This keeps staged, unpublished
+  // copy from ever reaching other users — even if the feature flag is on. Disabled ⇒ 404.
+  async getAllForMerge(user: SessionUser): Promise<OverridesByLocale> {
     this.ensureEnabled();
+    this.assertEditor(user);
     return this.repository.readAll();
   }
 

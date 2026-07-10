@@ -250,7 +250,8 @@ export class AuthController {
   @Get('me')
   @UseGuards(SessionGuard)
   async me(@CurrentUser() user: SessionUser) {
-    return this.authService.getCurrentUser(user.id);
+    const me = await this.authService.getCurrentUser(user.id);
+    return { ...me, isContentEditor: this.authService.isContentEditor(me.id) };
   }
 
   private setSessionCookie(res: Response, token: string): void {

@@ -1,5 +1,5 @@
 import { getRequestConfig } from 'next-intl/server';
-import { headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { SUPPORTED_LOCALES, type Locale } from '@/lib/i18n-constants';
 import { applyOverrides, type NestedMessages } from '@/lib/content-editor/messages';
 
@@ -32,9 +32,18 @@ export default getRequestConfig(async () => {
 // Best-effort fetch of staged overrides for a locale; any failure falls back to the baked
 // messages so the page always renders.
 async function fetchOverrides(locale: Locale): Promise<Record<string, string> | null> {
+  const jar = await cookies();
+  // Only an allowlisted editor's client sets `ve_ce`; skip entirely otherwise so regular
+  // users pay no latency and never receive staged (unpublished) copy.
+  if (jar.get('ve_ce')?.value !== '1') return null;
+  const session = jar.get('veervrat_session')?.value;
+  if (!session) return null;
   const origin = process.env.API_ORIGIN || 'http://localhost:3001';
   try {
-    const res = await fetch(`${origin}/api/v1/content-overrides`, { cache: 'no-store' });
+    const res = await fetch(`${origin}/api/v1/content-overrides`, {
+      cache: 'no-store',
+      headers: { Cookie: `veervrat_session=${session}` },
+    });
     if (!res.ok) return null;
     const body = (await res.json()) as { data?: Partial<Record<Locale, Record<string, string>>> };
     return body.data?.[locale] ?? null;
