@@ -620,9 +620,9 @@ export class AuthService {
   // Whether the user is on the content-editor allowlist (CONTENT_EDITOR_USER_IDS). Surfaced
   // on /auth/me so the web shows the dev-only in-context editor UI to these users only.
   isContentEditor(userId: string): boolean {
-    return parseContentEditorIds(
-      this.configService.get<string>('CONTENT_EDITOR_USER_IDS', ''),
-    ).has(userId);
+    return parseContentEditorIds(this.configService.get<string>('CONTENT_EDITOR_USER_IDS', '')).has(
+      userId,
+    );
   }
 
   // ─── Account lockout ────────────────────────────────────────────────────────
