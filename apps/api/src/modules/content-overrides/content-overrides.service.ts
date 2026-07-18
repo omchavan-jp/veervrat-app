@@ -6,7 +6,11 @@ import { parseContentEditorIds } from '../../common/content-editor-allowlist';
 import type { SessionUser } from '../auth/types/auth.types';
 import { ContentOverridesRepository, OverridesByLocale } from './content-overrides.repository';
 import { GithubPublisher, type PublishFile } from './github-publisher';
-import { UpsertOverrideDto, OVERRIDE_LOCALES, type OverrideLocale } from './dto/upsert-override.dto';
+import {
+  UpsertOverrideDto,
+  OVERRIDE_LOCALES,
+  type OverrideLocale,
+} from './dto/upsert-override.dto';
 import { flatten, applyOverrides } from './messages.util';
 import { placeholdersEqual } from './icu-placeholders';
 
