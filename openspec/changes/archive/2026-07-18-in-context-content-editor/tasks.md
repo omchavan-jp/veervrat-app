@@ -52,18 +52,26 @@ clean). Remaining: the content-edit deployment (§5, requires Railway + a GitHub
 - [x] 4.7 Web unit tests for the pure logic (reverse-lookup unique + ambiguous, ICU guard,
       deep-merge). Interactive overlay behaviour is verified on the deployment (§5.2)
 
-## 5. Deploy & verify **[you — needs Railway + a GitHub PAT]**
+## 5. Deploy & verify
 
-- [ ] 5.1 Stand up the separate content-edit Railway service (web + api in content-edit mode,
-      `NEXT_PUBLIC_CONTENT_EDIT=on`, allowlist + GitHub token set, access restricted);
-      production services keep the flag off (see DEPLOYMENT.md §9)
-- [ ] 5.2 End-to-end on the edit deployment: ⌥-click → edit en+mr → save → live merge →
-      publish → PR → review/squash-merge → production redeploys from merged JSON
-- [ ] 5.3 Confirm production is unaffected (no editor UI, no override fetch, routes 404)
+Approach evolved during rollout: instead of a separate access-restricted deployment, the
+editor was **allowlist-gated per user** (PR #12) so it is safe to enable directly on the
+existing production services. Follow-ups shipped beyond the original scope: attribution
+(who/when) + audit + staged-edits list (#15), edit panel reflects staged value (#16),
+discard staged edits (#17), and a web Docker build-arg fix (#13).
+
+- [x] 5.1 Enabled on the existing Railway web+api services with `NEXT_PUBLIC_CONTENT_EDIT=on`,
+      `CONTENT_EDIT_ENABLED=true`, the editor allowlist, and a GitHub PAT — gated per user
+      rather than by a separate deployment (see DEPLOYMENT.md §9 + allowlist gating)
+- [x] 5.2 End-to-end verified live: ⌥-click → edit → save → live merge → publish → PR
+      (the test PR #14 was the proof, since closed)
+- [x] 5.3 Production confirmed unaffected for non-editors: pill not mounted, no override
+      fetch, `/content-overrides` returns 401/404 without an allowlisted editor session
 
 ## 6. Docs & close the loop
 
 - [x] 6.1 DEPLOYMENT.md §9 (content-edit deployment + env vars); `.env.example` (api + web)
 - [x] 6.2 No CHANGELOG entry — the editor is dev-only, not user-visible (CHANGELOG is
       user-facing); tracked via issue #10 + this change
-- [ ] 6.3 `/code-review` → fix → `/opsx:archive`; close issue #10
+- [x] 6.3 Verified (typecheck/lint/667 api + 131 web tests green; CI lint greened in #18),
+      archived, and issue #10 closed

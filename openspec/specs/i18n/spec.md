@@ -1,12 +1,10 @@
 # i18n Spec
 
-## Overview
+## Purpose
 Session-aware locale detection for the Veervrat Next.js frontend. Middleware resolves locale from the authenticated user's stored `language` field (`'en'` or `'mr'`), injects it as a request header, and all layouts provide `NextIntlClientProvider` so every client component can call `useTranslations()`.
 
 No URL-based locale routing (`/mr/dashboard`) — locale is a user preference stored in the DB and applied at the layout level.
-
 ## Requirements
-
 ### Requirement: Middleware resolves locale from user session
 The system SHALL intercept all non-static, non-API HTML requests via Next.js middleware. When a `veervrat_session` cookie is present, middleware SHALL call `GET /api/v1/auth/me` with that cookie and extract the `language` field (`'en'` or `'mr'`). The resolved locale SHALL be set as a `X-Next-Locale` **request** header forwarded to the Next.js rendering pipeline via `NextResponse.next({ request: { headers: requestHeaders } })`. When no session cookie is present, or when the API call fails, middleware SHALL fall back to the `Accept-Language` request header (matching `'mr'`) or default to `'en'`.
 
@@ -27,15 +25,27 @@ The system SHALL intercept all non-static, non-API HTML requests via Next.js mid
 - **THEN** middleware does NOT run (excluded by matcher config)
 
 ### Requirement: getRequestConfig reads locale from middleware header
-`i18n/request.ts` SHALL call `headers()` from `next/headers` and read `X-Next-Locale`. The returned `locale` SHALL be either `'en'` or `'mr'` (validated against `SUPPORTED_LOCALES` from `lib/i18n-constants.ts`). Messages SHALL be loaded from `apps/web/messages/{locale}.json`.
+`i18n/request.ts` SHALL call `headers()` from `next/headers` and read `X-Next-Locale`. The
+returned `locale` SHALL be either `'en'` or `'mr'` (validated against `SUPPORTED_LOCALES`
+from `lib/i18n-constants.ts`). Messages SHALL be loaded from
+`apps/web/messages/{locale}.json`. When — and only when — `NEXT_PUBLIC_CONTENT_EDIT` is
+`on`, `getRequestConfig` SHALL additionally fetch the current staged content overrides for
+the resolved locale and deep-merge them over the baked messages (an override value wins per
+key) before returning. When the flag is unset or any other value (the production default),
+message loading SHALL be exactly the baked `{locale}.json` with no override fetch and no
+behavioural change.
 
-#### Scenario: Locale header present
-- **WHEN** `X-Next-Locale` header is set to `'mr'`
-- **THEN** `getRequestConfig` returns `{ locale: 'mr', messages: <mr.json contents> }`
+#### Scenario: Locale header present (production, no overrides)
+- **WHEN** `X-Next-Locale` header is set to `'mr'` and `NEXT_PUBLIC_CONTENT_EDIT` is unset
+- **THEN** `getRequestConfig` returns `{ locale: 'mr', messages: <mr.json contents> }` with no override fetch
 
 #### Scenario: Locale header absent (fallback)
 - **WHEN** `X-Next-Locale` header is not present
 - **THEN** `getRequestConfig` defaults to `locale: 'en'`
+
+#### Scenario: Overrides merged in content-edit mode
+- **WHEN** `NEXT_PUBLIC_CONTENT_EDIT` is `on` and a staged override exists for key `feedback.buttonLabel` in `mr`
+- **THEN** the messages returned for `mr` contain the overridden value for `feedback.buttonLabel`, and every other key is unchanged
 
 ### Requirement: All route group layouts provide NextIntlClientProvider
 Every route group layout (`(public)`, `(app)`, `(moderation)`, `(admin)`, `(vratmitra)`) SHALL wrap its children with `NextIntlClientProvider` with the messages fetched via `getMessages()`. This ensures client components anywhere in the tree can call `useTranslations()`.
