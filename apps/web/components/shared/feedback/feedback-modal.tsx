@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { usePathname } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ThumbsUp } from 'lucide-react';
+import { ChevronDown, ThumbsUp } from 'lucide-react';
 import { Dialog } from '@/components/ui/dialog';
 import { Tabs } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/components/ui/toast';
 import { cn } from '@/lib/utils';
 import { queryKeys } from '@/lib/api/query-keys';
@@ -26,8 +27,10 @@ import {
 } from '@/lib/api/feedback';
 import type { FeedbackMode } from './feedback-widget';
 
+const FEEDBACK_TYPES: FeedbackItemType[] = ['ISSUE', 'IMPROVEMENT', 'MODIFICATION', 'ADDITION'];
+
 const feedbackFormSchema = z.object({
-  type: z.enum(['ISSUE', 'IMPROVEMENT']),
+  type: z.enum(['ISSUE', 'IMPROVEMENT', 'MODIFICATION', 'ADDITION']),
   title: z.string().min(1).max(120),
   description: z.string().max(2000).optional(),
 });
@@ -86,6 +89,19 @@ export function FeedbackModal({
 function ObservationsList({ enabled }: { enabled: boolean }) {
   const t = useTranslations('feedback');
   const queryClient = useQueryClient();
+  // Global toggle: ON shows every item's details inline. OFF (default) collapses details;
+  // tapping an individual item expands just that one via expandedIds.
+  const [showAllDetails, setShowAllDetails] = useState(false);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  const toggleExpanded = (id: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const { data, isPending, isError } = useQuery({
     queryKey: queryKeys.feedback.list,
@@ -144,46 +160,85 @@ function ObservationsList({ enabled }: { enabled: boolean }) {
   }
 
   return (
-    <ul className="flex max-h-[50dvh] flex-col gap-2 overflow-y-auto pr-1">
-      {data.items.map((item) => (
-        <li
-          key={item.id}
-          className="flex items-start justify-between gap-3 rounded-[14px] border border-border bg-surface p-3"
-        >
-          <div className="min-w-0">
-            <p className="text-[14px] font-medium leading-snug">{item.title}</p>
-            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-              <span className="inline-flex items-center rounded-full bg-fg/5 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-muted">
-                {t(`type.${item.type}`)}
-              </span>
-              <span
+    <div className="flex flex-col gap-2">
+      <label className="flex items-center justify-end gap-2 text-[12px] text-muted">
+        {t('list.showDetails')}
+        <Switch
+          aria-label={t('list.showDetails')}
+          checked={showAllDetails}
+          onCheckedChange={setShowAllDetails}
+        />
+      </label>
+
+      <ul className="flex max-h-[50dvh] flex-col gap-2 overflow-y-auto pr-1">
+        {data.items.map((item) => {
+          const hasDetails = Boolean(item.description);
+          const expanded = showAllDetails || expandedIds.has(item.id);
+          return (
+            <li
+              key={item.id}
+              onClick={() => hasDetails && !showAllDetails && toggleExpanded(item.id)}
+              className={cn(
+                'flex items-start justify-between gap-3 rounded-[14px] border border-border bg-surface p-3',
+                hasDetails && !showAllDetails && 'cursor-pointer',
+              )}
+            >
+              <div className="min-w-0 flex-1">
+                <p className="text-[14px] font-medium leading-snug">{item.title}</p>
+                <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                  <span className="inline-flex items-center rounded-full bg-fg/5 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-muted">
+                    {t(`type.${item.type}`)}
+                  </span>
+                  <span
+                    className={cn(
+                      'inline-flex items-center rounded-full px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide',
+                      STATUS_STYLES[item.status],
+                    )}
+                  >
+                    {t(`status.${item.status}`)}
+                  </span>
+                  <span className="text-[12px] text-muted">
+                    {t('list.reportedBy', { name: item.reporter.displayName })}
+                  </span>
+                  {hasDetails && !showAllDetails && (
+                    <ChevronDown
+                      className={cn(
+                        'h-3.5 w-3.5 text-muted transition-transform',
+                        expanded && 'rotate-180',
+                      )}
+                      aria-hidden
+                    />
+                  )}
+                </div>
+                {expanded && item.description && (
+                  <p className="mt-2 whitespace-pre-wrap text-[13px] text-muted">
+                    {item.description}
+                  </p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  upvote.mutate(item.id);
+                }}
+                aria-pressed={item.hasUpvoted}
+                aria-label={t('list.upvote')}
                 className={cn(
-                  'inline-flex items-center rounded-full px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide',
-                  STATUS_STYLES[item.status],
+                  'flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-[12px] transition-colors',
+                  item.hasUpvoted
+                    ? 'border-accent bg-accent/10 text-accent'
+                    : 'border-border text-muted hover:text-fg',
                 )}
               >
-                {t(`status.${item.status}`)}
-              </span>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => upvote.mutate(item.id)}
-            aria-pressed={item.hasUpvoted}
-            aria-label={t('list.upvote')}
-            className={cn(
-              'flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-[12px] transition-colors',
-              item.hasUpvoted
-                ? 'border-accent bg-accent/10 text-accent'
-                : 'border-border text-muted hover:text-fg',
-            )}
-          >
-            <ThumbsUp className="h-3.5 w-3.5" aria-hidden />
-            {item.upvoteCount}
-          </button>
-        </li>
-      ))}
-    </ul>
+                <ThumbsUp className="h-3.5 w-3.5" aria-hidden />
+                {item.upvoteCount}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }
 
@@ -233,7 +288,7 @@ function RaiseForm({ onDone }: { onDone: () => void }) {
       <div>
         <Label className={FIELD_LABEL}>{t('form.typeLabel')}</Label>
         <div className="flex gap-2" role="radiogroup" aria-label={t('form.typeLabel')}>
-          {(['ISSUE', 'IMPROVEMENT'] as FeedbackItemType[]).map((option) => (
+          {FEEDBACK_TYPES.map((option) => (
             <button
               key={option}
               type="button"

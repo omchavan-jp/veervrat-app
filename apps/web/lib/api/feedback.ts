@@ -2,7 +2,7 @@ import { api } from './client';
 
 type Wrapped<T> = { data: T };
 
-export type FeedbackItemType = 'ISSUE' | 'IMPROVEMENT';
+export type FeedbackItemType = 'ISSUE' | 'IMPROVEMENT' | 'MODIFICATION' | 'ADDITION';
 export type FeedbackItemStatus = 'NEW' | 'TRIAGED' | 'DONE' | 'DECLINED';
 
 export type FeedbackItem = {
