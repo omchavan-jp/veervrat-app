@@ -84,6 +84,15 @@ describe('FeedbackService', () => {
       const arg = repo.create.mock.calls[0][0] as { userAgent: string };
       expect(arg.userAgent).toHaveLength(300);
     });
+
+    it.each([FeedbackType.MODIFICATION, FeedbackType.ADDITION])(
+      'accepts the %s type',
+      async (type) => {
+        const { service, repo } = makeService();
+        await service.create(makeUser(), { type, title: 'T' }, undefined);
+        expect(repo.create).toHaveBeenCalledWith(expect.objectContaining({ type }), 'user-1');
+      },
+    );
   });
 
   describe('toggleUpvote', () => {

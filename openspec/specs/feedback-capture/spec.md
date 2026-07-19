@@ -5,8 +5,9 @@ TBD - created by archiving change beta-feedback-widget. Update Purpose after arc
 ## Requirements
 ### Requirement: Authenticated user can raise a feedback item
 The system SHALL allow any authenticated user to create a feedback item via
-`POST /api/v1/feedback` with a required `type` (`ISSUE` | `IMPROVEMENT`), a required
-`title` (1–120 chars), and an optional `description` (≤2000 chars). The request MAY
+`POST /api/v1/feedback` with a required `type` (`ISSUE` | `IMPROVEMENT` |
+`MODIFICATION` | `ADDITION`), a required `title` (1–120 chars), and an optional
+`description` (≤2000 chars). The request MAY
 include client context fields — `route` (≤300), `locale` (≤10), `viewport` (≤20),
 `commitSha` (≤64) — each validated and length-capped. The system SHALL stamp
 `reporterId` and a `reporterRole` snapshot from the session (never from the body) and

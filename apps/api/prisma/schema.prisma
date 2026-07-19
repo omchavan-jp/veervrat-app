@@ -175,8 +175,10 @@ enum NotificationEventType {
 }
 
 enum FeedbackType {
-  ISSUE       @map("issue")
-  IMPROVEMENT @map("improvement")
+  ISSUE        @map("issue")
+  IMPROVEMENT  @map("improvement")
+  MODIFICATION @map("modification")
+  ADDITION     @map("addition")
 
   @@map("feedback_type")
 }

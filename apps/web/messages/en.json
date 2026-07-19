@@ -1401,7 +1401,9 @@
     },
     "type": {
       "ISSUE": "Issue",
-      "IMPROVEMENT": "Improvement"
+      "IMPROVEMENT": "Improvement",
+      "MODIFICATION": "Modification",
+      "ADDITION": "Addition"
     },
     "status": {
       "NEW": "New",
@@ -1413,7 +1415,9 @@
       "loading": "Loading observations…",
       "error": "Could not load observations. Try again later.",
       "empty": "No observations yet — be the first to raise one.",
-      "upvote": "Me too"
+      "upvote": "Me too",
+      "reportedBy": "by {name}",
+      "showDetails": "Show details"
     },
     "form": {
       "typeLabel": "Type",

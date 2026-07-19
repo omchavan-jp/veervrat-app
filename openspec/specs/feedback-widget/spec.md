@@ -35,15 +35,20 @@ SHALL open the feedback modal, never trigger a drag.
 
 ### Requirement: Feedback modal — observations list and raise form
 In `test` mode the modal SHALL have two tabs: an **Observations** tab listing open
-feedback items (title, `ISSUE`/`IMPROVEMENT` tag chip, status chip, upvote count with a
-+1 toggle reflecting the user's own upvote state) and a **Raise new** tab with a form
-(type required, title required, description optional; React Hook Form + Zod validation).
-In `public` mode the modal SHALL show only the raise form. Successful submission SHALL
-show a confirmation and refresh the observations list.
+feedback items (title, type tag chip — `ISSUE`, `IMPROVEMENT`, `MODIFICATION`, or
+`ADDITION` — status chip, reporter's display name, upvote count with a +1 toggle
+reflecting the user's own upvote state) and a **Raise new** tab with a form (type
+required — one of the four types, title required, description optional; React Hook
+Form + Zod validation). In `public` mode the modal SHALL show only the raise form.
+Successful submission SHALL show a confirmation and refresh the observations list.
 
 #### Scenario: Raising an observation from the modal
 - **WHEN** a tester submits the form with `type=IMPROVEMENT` and a title
 - **THEN** the item is created via the API, a confirmation is shown, and the new item appears in the Observations tab
+
+#### Scenario: Raising a modification or addition
+- **WHEN** a tester submits the form with `type=MODIFICATION` or `type=ADDITION` and a title
+- **THEN** the item is created via the API with that type and appears in the Observations tab tagged accordingly
 
 #### Scenario: Public mode hides the list
 - **WHEN** the app is built with `NEXT_PUBLIC_FEEDBACK_MODE=public` and a user opens the modal
@@ -52,6 +57,25 @@ show a confirmation and refresh the observations list.
 #### Scenario: Upvote from the list
 - **WHEN** a tester taps +1 on an observation they haven't upvoted
 - **THEN** the count increments optimistically and the toggle reflects their upvoted state
+
+### Requirement: Observation detail visibility is togglable
+The Observations tab SHALL show each item's reporter (display name) alongside its type
+and status chips at all times. A "show details" toggle, default OFF, SHALL control
+whether each item's description renders inline: when ON, every item's description (if
+any) SHALL be shown; when OFF, items SHALL render collapsed and tapping/clicking an item
+with a description SHALL expand just that item, independent of the others.
+
+#### Scenario: Reporter shown on every item
+- **WHEN** a tester opens the Observations tab
+- **THEN** each item displays who raised it, alongside its type and status chips
+
+#### Scenario: Global toggle expands all descriptions
+- **WHEN** a tester turns the "show details" toggle on
+- **THEN** every item with a description shows it inline, without needing to tap each one
+
+#### Scenario: Tapping a collapsed item expands only that item
+- **WHEN** the "show details" toggle is off and a tester taps an item that has a description
+- **THEN** only that item's description expands; other items remain collapsed
 
 ### Requirement: Reports auto-capture client context
 When submitting feedback, the widget SHALL automatically attach the current route
