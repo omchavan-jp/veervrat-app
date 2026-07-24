@@ -7,6 +7,7 @@ import { ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import { useWeakness } from '@/hooks/use-weaknesses';
 import { useTest, useSubmitTest } from '@/hooks/use-tests';
 import { Button } from '@/components/ui/button';
+import { Dialog } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { Alert, AlertTitle } from '@/components/ui/alert';
 import {
@@ -41,6 +42,7 @@ export default function TestPreviewPage() {
   const { data: testData, isError: testError, refetch: refetchTest } = useTest(testId);
   const submitTest = useSubmitTest();
   const [unansweredExpanded, setUnansweredExpanded] = useState(false);
+  const [showUnansweredConfirm, setShowUnansweredConfirm] = useState(false);
 
   // If this test is already submitted, the preview (an edit-before-submit step) is
   // stale — send the user to the immutable report. Covers back/forward or a copied
@@ -67,11 +69,24 @@ export default function TestPreviewPage() {
   const answered = sentences.filter((s) => answerMap.has(s.sentenceId));
   const unanswered = sentences.filter((s) => !answerMap.has(s.sentenceId));
 
-  const handleConfirm = () => {
+  const doSubmit = () => {
+    setShowUnansweredConfirm(false);
     submitTest.mutate(testId, {
       onSuccess: () => router.push(`/study/${id}/test/${testId}/report`),
       onError: () => toast({ title: t('submitError'), variant: 'destructive' }),
     });
+  };
+
+  // Submitting is final — there's no way back into a draft once it happens (confirmed:
+  // markSubmitted is the only place isDraft ever becomes false). Nothing to lose when
+  // everything's answered, but leaving sentences blank warrants an explicit "are you sure",
+  // since testers were reaching the report page without realizing they'd just submitted.
+  const handleConfirm = () => {
+    if (unanswered.length > 0) {
+      setShowUnansweredConfirm(true);
+    } else {
+      doSubmit();
+    }
   };
 
   if (weaknessError || testError) {
@@ -212,6 +227,31 @@ export default function TestPreviewPage() {
           </Button>
         </div>
       </div>
+
+      <Dialog
+        open={showUnansweredConfirm}
+        onOpenChange={setShowUnansweredConfirm}
+        title={t('unansweredConfirmTitle', { count: unanswered.length })}
+        description={t('unansweredConfirmBody')}
+      >
+        <div className="space-y-2">
+          <Button
+            variant="outline"
+            className="h-auto min-h-11 w-full rounded-xl border-border-strong py-3 text-[14px]"
+            onClick={() => setShowUnansweredConfirm(false)}
+          >
+            {t('keepAnswering')}
+          </Button>
+          <Button
+            size="lg"
+            className="h-auto min-h-11 w-full rounded-xl py-3 text-[14px]"
+            loading={submitTest.isPending}
+            onClick={doSubmit}
+          >
+            {t('submitAnyway')}
+          </Button>
+        </div>
+      </Dialog>
     </div>
   );
 }

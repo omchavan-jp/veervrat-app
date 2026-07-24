@@ -9,6 +9,7 @@ import {
   InvitationNotCancellableException,
   InvitationReminderAlreadySentException,
   PendingGlobalVmInviteException,
+  ValidationException,
 } from '../../common/exceptions/app.exceptions';
 import type { SessionUser } from '../auth/types/auth.types';
 
@@ -248,6 +249,15 @@ describe('InvitationsService — sendVmInvitation', () => {
       expect.objectContaining({ type: InvitationType.PLATFORM, scopeId: null }),
     );
     expect(result.shareMessage).toContain('http://localhost:3000/signup?invite=');
+  });
+
+  it('NEGATIVE: PLATFORM + inviteeUsername (a found existing user) is rejected', async () => {
+    const repo = makeInvitationsRepo();
+    const svc = makeService(repo);
+    await expect(
+      svc.sendVmInvitation(VA, { type: InvitationType.PLATFORM, inviteeUsername: 'veer' }),
+    ).rejects.toBeInstanceOf(ValidationException);
+    expect(repo.create).not.toHaveBeenCalled();
   });
 });
 

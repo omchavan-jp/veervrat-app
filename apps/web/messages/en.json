@@ -413,7 +413,11 @@
       "blankSection": "Left blank ({count})",
       "hide": "Hide",
       "show": "Show",
-      "completeReflection": "Complete reflection"
+      "completeReflection": "Complete reflection",
+      "unansweredConfirmTitle": "{count, plural, one {# sentence} other {# sentences}} left blank",
+      "unansweredConfirmBody": "This can't be undone — once submitted, you won't be able to come back and answer the rest.",
+      "submitAnyway": "Submit anyway",
+      "keepAnswering": "Keep answering"
     },
     "report": {
       "flaggedTitle": "Sentences to work on",
@@ -961,11 +965,7 @@
     "inviteByEmail": "Invite {email} to join Veervrat",
     "online": "online",
     "following": "Following",
-    "scope": "Invite as",
-    "scopeOption": {
-      "VM_GLOBAL": "Global Vratmitra",
-      "PLATFORM": "Platform invite"
-    },
+    "scopeGlobalOnly": "They'll be invited as your global vratmitra.",
     "sendInvite": "Send invitation",
     "clear": "Clear selection",
     "sent": "Invitation sent",
