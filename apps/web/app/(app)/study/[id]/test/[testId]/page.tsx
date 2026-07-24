@@ -395,7 +395,10 @@ export default function TestQuestionPage() {
                   {t('previous')}
                 </Button>
                 <Button
-                  className="min-h-11 gap-1.5 px-5 text-[13px]"
+                  // Tinted accent, not solid — "Next" is used every question so it needs more
+                  // weight than a plain secondary button, but a solid accent here read as a
+                  // second identical CTA stacked on "Review responses" right below it.
+                  className="min-h-11 gap-1.5 border border-accent/40 bg-accent/10 px-5 text-[13px] text-accent hover:bg-accent/20"
                   disabled={currentIndex === sentences.length - 1}
                   onClick={() => setCurrentIndex((i) => Math.min(sentences.length - 1, i + 1))}
                 >
