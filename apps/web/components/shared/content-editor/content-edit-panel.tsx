@@ -38,67 +38,80 @@ export function ContentEditPanel({
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  const [activeKey, setActiveKey] = useState<string | null>(null);
+  // Every candidate key is checked by default — a click almost always means "edit this
+  // text", and disambiguation (content-editor.tsx) has usually already narrowed multi-key
+  // matches down using DOM/route context. Genuine remaining ties stay visible so the
+  // editor can uncheck the ones that don't apply.
+  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
   const [values, setValues] = useState<Record<OverrideLocale, string>>({ en: '', mr: '' });
-  const initedKeyRef = useRef<string | null>(null);
+  const initedForRef = useRef<string | null>(null);
+  const selectionSignature = selection?.keys.join('|') ?? null;
 
-  // Current staged overrides (with attribution) so re-opening a key shows the unpublished
-  // value and who last edited it — not just the baked original.
   const { data: staged, isLoading } = useQuery({
     queryKey: STAGED_KEY,
     queryFn: () => contentOverridesApi.list(),
     enabled: selection !== null,
   });
 
-  // A unique selection opens straight into editing; an ambiguous one waits for a pick.
   useEffect(() => {
-    if (!selection) setActiveKey(null);
-    else if (selection.keys.length === 1) setActiveKey(selection.keys[0]);
-    else setActiveKey(null);
-  }, [selection]);
+    setSelectedKeys(new Set(selection?.keys ?? []));
+    initedForRef.current = null;
+  }, [selectionSignature]);
 
-  // Canonical published values — the ICU-parity baseline and the "original" reference.
-  const baked = useMemo<Record<OverrideLocale, string>>(
+  const bakedFor = (key: string, locale: OverrideLocale) => FLAT_BY_LOCALE[locale][key] ?? '';
+  const effectiveFor = (key: string, locale: OverrideLocale) =>
+    staged?.[locale]?.[key]?.value ?? bakedFor(key, locale);
+
+  const checkedKeys = useMemo(() => Array.from(selectedKeys), [selectedKeys]);
+  const primaryKey = checkedKeys[0] ?? null;
+
+  // The edit fields seed from the first checked key. When several keys are checked, their
+  // effective values were identical for the LOCALE that was clicked (that's why they
+  // matched) but may genuinely differ in the other locale — divergentLocales below flags
+  // that before it gets silently overwritten.
+  const seed = useMemo<Record<OverrideLocale, string>>(
     () => ({
-      en: activeKey ? (EN_FLAT[activeKey] ?? '') : '',
-      mr: activeKey ? (MR_FLAT[activeKey] ?? '') : '',
+      en: primaryKey ? effectiveFor(primaryKey, 'en') : '',
+      mr: primaryKey ? effectiveFor(primaryKey, 'mr') : '',
     }),
-    [activeKey],
+    // effectiveFor reads `staged`, already a dependency below via primaryKey/staged.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [primaryKey, staged],
   );
 
-  // What the fields start from: the staged (unpublished) value if any, else the baked one.
-  const effective = useMemo<Record<OverrideLocale, string>>(
-    () => ({
-      en: (activeKey ? staged?.en?.[activeKey]?.value : undefined) ?? baked.en,
-      mr: (activeKey ? staged?.mr?.[activeKey]?.value : undefined) ?? baked.mr,
-    }),
-    [activeKey, staged, baked],
-  );
-
-  // Seed the fields once per key (after staged settles) — never mid-edit on a background refetch.
+  // Seed once per distinct selection (not on every staged background refetch mid-edit).
   useEffect(() => {
-    if (!activeKey) {
-      initedKeyRef.current = null;
-      return;
+    if (!primaryKey || isLoading) return;
+    if (initedForRef.current !== selectionSignature) {
+      setValues(seed);
+      initedForRef.current = selectionSignature;
     }
-    if (initedKeyRef.current !== activeKey && !isLoading) {
-      setValues(effective);
-      initedKeyRef.current = activeKey;
-    }
-  }, [activeKey, isLoading, effective]);
+  }, [primaryKey, isLoading, seed, selectionSignature]);
+
+  const toggleKey = (key: string) => {
+    setSelectedKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const divergentLocales = LOCALES.filter((locale) => {
+    if (checkedKeys.length < 2) return false;
+    const first = effectiveFor(checkedKeys[0], locale);
+    return checkedKeys.some((key) => effectiveFor(key, locale) !== first);
+  });
 
   const save = useMutation({
     mutationFn: async () => {
-      if (!activeKey) return;
-      for (const locale of LOCALES) {
-        // Save only locales actually changed, so untouched ones keep their existing author.
-        if (values[locale].length > 0 && values[locale] !== effective[locale]) {
-          await contentOverridesApi.upsert({
-            key: activeKey,
-            locale,
-            value: values[locale],
-            baseValue: baked[locale],
-          });
+      for (const key of checkedKeys) {
+        for (const locale of LOCALES) {
+          const value = values[locale];
+          // Save only locales actually changed for this key, so untouched ones keep their
+          // existing author.
+          if (value.length === 0 || value === effectiveFor(key, locale)) continue;
+          await contentOverridesApi.upsert({ key, locale, value, baseValue: bakedFor(key, locale) });
         }
       }
     },
@@ -114,10 +127,11 @@ export function ContentEditPanel({
 
   const discard = useMutation({
     mutationFn: async () => {
-      if (!activeKey) return;
-      for (const locale of LOCALES) {
-        if (staged?.[locale]?.[activeKey]) {
-          await contentOverridesApi.discard({ key: activeKey, locale });
+      for (const key of checkedKeys) {
+        for (const locale of LOCALES) {
+          if (staged?.[locale]?.[key]) {
+            await contentOverridesApi.discard({ key, locale });
+          }
         }
       }
     },
@@ -131,99 +145,124 @@ export function ContentEditPanel({
   });
 
   const open = selection !== null;
-  const ambiguous = selection !== null && selection.keys.length > 1 && !activeKey;
+  const multi = (selection?.keys.length ?? 0) > 1;
   const invalidLocale = LOCALES.find(
-    (l) => values[l].length > 0 && !placeholdersEqual(baked[l], values[l]),
+    (locale) =>
+      values[locale].length > 0 &&
+      checkedKeys.some((key) => !placeholdersEqual(bakedFor(key, locale), values[locale])),
   );
-  const hasStaged = Boolean(activeKey && (staged?.en?.[activeKey] || staged?.mr?.[activeKey]));
+  const hasStaged = checkedKeys.some((key) => staged?.en?.[key] || staged?.mr?.[key]);
+  // Attribution ("edited by … · original") is only meaningful for a single key — showing
+  // it for a batch of keys would be ambiguous about whose edit it refers to.
+  const singleEntry =
+    checkedKeys.length === 1
+      ? { en: staged?.en?.[checkedKeys[0]], mr: staged?.mr?.[checkedKeys[0]] }
+      : null;
 
   return (
     <Dialog
       open={open}
       onOpenChange={(o) => !o && onClose()}
       title={t('panelTitle')}
-      description={activeKey ?? t('panelPickHint')}
+      description={multi ? t('panelMultiHint', { count: checkedKeys.length }) : (primaryKey ?? '')}
       className="md:w-[min(560px,calc(100vw-40px))]"
     >
-      {ambiguous && selection ? (
-        <div className="flex flex-col gap-2">
-          <p className="text-[13px] text-muted">{t('ambiguous')}</p>
-          {selection.keys.map((k) => (
-            <button
-              key={k}
-              type="button"
-              onClick={() => setActiveKey(k)}
-              className="rounded-[12px] border border-border bg-surface px-3 py-2 text-left font-mono text-[12px] hover:border-accent"
-            >
-              {k}
-            </button>
-          ))}
-        </div>
-      ) : activeKey && isLoading ? (
-        <div className="flex justify-center py-8">
-          <Spinner size="md" label={t('stagedLoading')} />
-        </div>
-      ) : activeKey ? (
+      {selection && (
         <div className="flex flex-col gap-4">
-          {LOCALES.map((locale) => {
-            const entry = staged?.[locale]?.[activeKey];
-            const mismatch =
-              values[locale].length > 0 && !placeholdersEqual(baked[locale], values[locale]);
-            return (
-              <div key={locale}>
-                <Label className={FIELD_LABEL}>{t(locale === 'en' ? 'english' : 'marathi')}</Label>
-                <Textarea
-                  rows={2}
-                  value={values[locale]}
-                  onChange={(e) => setValues((v) => ({ ...v, [locale]: e.target.value }))}
-                  className={cn(mismatch && 'border-danger')}
-                />
-                {FLAT_BY_LOCALE[locale][activeKey] === undefined && (
-                  <p className="mt-1 text-[12px] text-muted">{t('missingLocale')}</p>
-                )}
-                {entry && (
-                  <div className="mt-1.5 space-y-0.5 text-[12px] text-muted">
-                    <p>
-                      {t('stagedBy', { name: entry.editedByName })}
-                      {entry.editedAt ? ` · ${formatWhen(entry.editedAt)}` : ''}
-                    </p>
-                    <p>
-                      {t('originalLabel')}: <span className="italic">{baked[locale] || '—'}</span>
-                    </p>
+          {multi && (
+            <div className="flex flex-col gap-1 rounded-[12px] border border-border bg-surface p-2">
+              <p className="px-1.5 pt-0.5 text-[12px] text-muted">{t('multiSelectHint')}</p>
+              {selection.keys.map((key) => (
+                <label
+                  key={key}
+                  className="flex items-center gap-2 rounded-[8px] px-1.5 py-1.5 text-[12px] hover:bg-fg/5"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedKeys.has(key)}
+                    onChange={() => toggleKey(key)}
+                    className="accent-accent"
+                  />
+                  <span className="truncate font-mono">{key}</span>
+                </label>
+              ))}
+            </div>
+          )}
+
+          {primaryKey && isLoading ? (
+            <div className="flex justify-center py-4">
+              <Spinner size="sm" label={t('stagedLoading')} />
+            </div>
+          ) : primaryKey ? (
+            <>
+              {LOCALES.map((locale) => {
+                const mismatch =
+                  values[locale].length > 0 &&
+                  checkedKeys.some((key) => !placeholdersEqual(bakedFor(key, locale), values[locale]));
+                const entry = singleEntry?.[locale];
+                return (
+                  <div key={locale}>
+                    <Label className={FIELD_LABEL}>{t(locale === 'en' ? 'english' : 'marathi')}</Label>
+                    <Textarea
+                      rows={2}
+                      value={values[locale]}
+                      onChange={(e) => setValues((v) => ({ ...v, [locale]: e.target.value }))}
+                      className={cn(mismatch && 'border-danger')}
+                    />
+                    {checkedKeys.some((key) => FLAT_BY_LOCALE[locale][key] === undefined) && (
+                      <p className="mt-1 text-[12px] text-muted">{t('missingLocale')}</p>
+                    )}
+                    {divergentLocales.includes(locale) && (
+                      <p className="mt-1 text-[12px] text-warning">{t('divergentValues')}</p>
+                    )}
+                    {entry && (
+                      <div className="mt-1.5 space-y-0.5 text-[12px] text-muted">
+                        <p>
+                          {t('stagedBy', { name: entry.editedByName })}
+                          {entry.editedAt ? ` · ${formatWhen(entry.editedAt)}` : ''}
+                        </p>
+                        <p>
+                          {t('originalLabel')}:{' '}
+                          <span className="italic">{bakedFor(checkedKeys[0], locale) || '—'}</span>
+                        </p>
+                      </div>
+                    )}
                   </div>
+                );
+              })}
+              {invalidLocale && <p className="text-[12px] text-danger">{t('placeholderMismatch')}</p>}
+              <div className="flex justify-end gap-2">
+                {hasStaged && (
+                  <button
+                    type="button"
+                    onClick={() => discard.mutate()}
+                    disabled={discard.isPending}
+                    className="mr-auto rounded-full px-3 py-1.5 text-[13px] text-danger transition-colors hover:bg-danger/10 disabled:opacity-50"
+                  >
+                    {discard.isPending ? t('discarding') : t('discard')}
+                  </button>
                 )}
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="rounded-full px-3 py-1.5 text-[13px] text-muted transition-colors hover:text-fg"
+                >
+                  {t('cancel')}
+                </button>
+                <Button
+                  type="button"
+                  disabled={save.isPending || Boolean(invalidLocale) || checkedKeys.length === 0}
+                  onClick={() => save.mutate()}
+                >
+                  {save.isPending ? t('saving') : t('save')}
+                </Button>
               </div>
-            );
-          })}
-          {invalidLocale && <p className="text-[12px] text-danger">{t('placeholderMismatch')}</p>}
-          <div className="flex justify-end gap-2">
-            {hasStaged && (
-              <button
-                type="button"
-                onClick={() => discard.mutate()}
-                disabled={discard.isPending}
-                className="mr-auto rounded-full px-3 py-1.5 text-[13px] text-danger transition-colors hover:bg-danger/10 disabled:opacity-50"
-              >
-                {discard.isPending ? t('discarding') : t('discard')}
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-full px-3 py-1.5 text-[13px] text-muted transition-colors hover:text-fg"
-            >
-              {t('cancel')}
-            </button>
-            <Button
-              type="button"
-              disabled={save.isPending || Boolean(invalidLocale)}
-              onClick={() => save.mutate()}
-            >
-              {save.isPending ? t('saving') : t('save')}
-            </Button>
-          </div>
+            </>
+          ) : (
+            <p className="text-[13px] text-muted">{t('panelPickHint')}</p>
+          )}
         </div>
-      ) : null}
+      )}
     </Dialog>
   );
 }
