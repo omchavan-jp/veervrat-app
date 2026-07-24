@@ -413,7 +413,11 @@
       "blankSection": "रिकामी ठेवलेली ({count})",
       "hide": "लपवा",
       "show": "दाखवा",
-      "completeReflection": "विचार पूर्ण करा"
+      "completeReflection": "विचार पूर्ण करा",
+      "unansweredConfirmTitle": "{count, plural, one {# वाक्य} other {# वाक्ये}} रिकामी आहेत",
+      "unansweredConfirmBody": "हे पूर्ववत करता येणार नाही — सादर केल्यानंतर तुम्ही परत येऊन उरलेल्या प्रश्नांची उत्तरे देऊ शकणार नाही.",
+      "submitAnyway": "तरीही सादर करा",
+      "keepAnswering": "उत्तरे देत राहा"
     },
     "report": {
       "flaggedTitle": "काम करण्यासारखी वाक्ये",
@@ -961,11 +965,7 @@
     "inviteByEmail": "{email} ला Veervrat मध्ये सामील होण्यासाठी आमंत्रित करा",
     "online": "ऑनलाइन",
     "following": "अनुसरण करत आहात",
-    "scope": "म्हणून आमंत्रित करा",
-    "scopeOption": {
-      "VM_GLOBAL": "वैश्विक व्रतमित्र",
-      "PLATFORM": "प्लॅटफॉर्म आमंत्रण"
-    },
+    "scopeGlobalOnly": "त्यांना तुमचे वैश्विक व्रतमित्र म्हणून आमंत्रित केले जाईल.",
     "sendInvite": "आमंत्रण पाठवा",
     "clear": "निवड रद्द करा",
     "sent": "आमंत्रण पाठवले",

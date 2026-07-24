@@ -5,6 +5,12 @@ User-visible changes, most recent first. Dated sections (continuous deploy to th
 behaviour adds a line here (see `documentation/20_Solo-Dev-Operations.md`).
 
 ## Unreleased
+- Fixed: inviting an existing user (found via search) no longer offers the confusing
+  "Platform invite" option, which silently failed to notify them or create the
+  vratmitra relationship. Also fixed the in-app notification for a vratmitra
+  invitation routing to the dashboard instead of the invitations page.
+- Weakness test: submitting with sentences left blank now asks for confirmation
+  first, since submission is final and can't be undone.
 - Weakness test: an opt-in "Auto next" toggle advances to the next sentence right
   after you pick a score (off by default; your preference is remembered).
 - Fixed: corrected the Marathi word for "app" (ॲप) in two places where it used a
