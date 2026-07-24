@@ -75,12 +75,14 @@ export default function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-[680px]">
-      <div className="mb-8 flex items-start justify-between gap-4">
+      {/* Stacks on mobile — the title and two full-text action pills don't fit side by
+          side on narrow viewports; row layout resumes at sm: and up. */}
+      <div className="mb-8 flex flex-col items-start gap-4 sm:flex-row sm:justify-between">
         <div>
           <h1 className="font-display text-[30px] font-medium tracking-tight">{t('title')}</h1>
           <p className="mt-1 text-[14px] text-muted">{t('subtitle')}</p>
         </div>
-        <div className="flex shrink-0 gap-2">
+        <div className="flex flex-wrap gap-2">
           <Link
             href="/settings"
             className="inline-flex items-center gap-1.5 rounded-lg border border-border-strong px-3 py-2 text-[13px] transition-colors hover:border-accent"
