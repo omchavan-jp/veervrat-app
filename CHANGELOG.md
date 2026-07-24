@@ -5,6 +5,8 @@ User-visible changes, most recent first. Dated sections (continuous deploy to th
 behaviour adds a line here (see `documentation/20_Solo-Dev-Operations.md`).
 
 ## Unreleased
+- Fixed: the journey title no longer overflows past the screen edge on mobile — it
+  now wraps like the rest of the page instead of staying on one unbreakable line.
 - Weakness test: "Next" is now the prominent button (matching "Review responses"),
   since it's used far more often than the final review/submit step.
 - Fixed: the language toggle now shows the language you'd switch TO, not the one
