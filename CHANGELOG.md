@@ -5,6 +5,11 @@ User-visible changes, most recent first. Dated sections (continuous deploy to th
 behaviour adds a line here (see `documentation/20_Solo-Dev-Operations.md`).
 
 ## Unreleased
+- Fixed: searching for a vratmitra to invite (by email, username, or name) now works
+  reliably — previously only an exact, full email address matched, and username/name
+  search silently returned nothing since it depended on Meilisearch, which isn't
+  deployed yet. Partial email now matches too, and username/name search no longer
+  depends on Meilisearch.
 - Beta feedback: observations now show who raised them, plus a "show details" toggle
   to expand/collapse descriptions (tap an item to expand just that one). Two new
   feedback types added — Modification and Addition — alongside Issue and Improvement.

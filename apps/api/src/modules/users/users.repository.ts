@@ -238,6 +238,27 @@ export class UsersRepository {
     });
   }
 
+  // Baseline substring match across email/username/displayName, always available
+  // regardless of whether Meilisearch is deployed (Meili adds typo-tolerance on top when
+  // it is). Case-insensitive `contains`, matching the pattern already used in
+  // admin-users.repository.ts.
+  async findIdsBySubstring(query: string, excludeUserId: string, limit = 10): Promise<string[]> {
+    const users = await this.prisma.user.findMany({
+      where: {
+        deletedAt: null,
+        id: { not: excludeUserId },
+        OR: [
+          { email: { contains: query, mode: 'insensitive' } },
+          { username: { contains: query, mode: 'insensitive' } },
+          { displayName: { contains: query, mode: 'insensitive' } },
+        ],
+      },
+      select: { id: true },
+      take: limit,
+    });
+    return users.map((u) => u.id);
+  }
+
   // Slim username → identity lookup (no profile aggregation). For follow targets etc.
   async findIdByUsername(username: string) {
     return this.prisma.user.findFirst({
