@@ -13,4 +13,11 @@ export class UpdateFeedbackDto {
   @MinLength(1)
   @MaxLength(500)
   declineReason?: string;
+
+  // Required when marking done, optional (ignored) otherwise — mirrors declineReason.
+  @ValidateIf((o: UpdateFeedbackDto) => o.status === FeedbackStatus.DONE)
+  @IsString()
+  @MinLength(1)
+  @MaxLength(500)
+  doneNote?: string;
 }

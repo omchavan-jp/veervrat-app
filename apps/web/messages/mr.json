@@ -1417,7 +1417,10 @@
       "empty": "अजून एकही नोंद नाही — पहिली नोंद तुम्ही करा.",
       "upvote": "मलाही असेच वाटते",
       "reportedBy": "{name} यांनी",
-      "showDetails": "तपशील दाखवा"
+      "showDetails": "तपशील दाखवा",
+      "showResolved": "निकाली नोंदी दाखवा",
+      "doneNoteLabel": "निराकरण",
+      "declineReasonLabel": "नाकारण्याचे कारण"
     },
     "form": {
       "typeLabel": "प्रकार",

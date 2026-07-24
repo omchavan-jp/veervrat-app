@@ -1103,6 +1103,8 @@ model FeedbackItem {
   userAgent     String?  @map("user_agent")
   commitSha     String?  @map("commit_sha")
   declineReason String?  @map("decline_reason")
+  // Required when marking DONE — mirrors declineReason's required-on-DECLINED pattern.
+  doneNote      String?  @map("done_note")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 

@@ -1417,7 +1417,10 @@
       "empty": "No observations yet — be the first to raise one.",
       "upvote": "Me too",
       "reportedBy": "by {name}",
-      "showDetails": "Show details"
+      "showDetails": "Show details",
+      "showResolved": "Show resolved",
+      "doneNoteLabel": "Resolution",
+      "declineReasonLabel": "Decline reason"
     },
     "form": {
       "typeLabel": "Type",

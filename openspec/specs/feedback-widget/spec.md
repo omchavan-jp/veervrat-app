@@ -77,6 +77,20 @@ with a description SHALL expand just that item, independent of the others.
 - **WHEN** the "show details" toggle is off and a tester taps an item that has a description
 - **THEN** only that item's description expands; other items remain collapsed
 
+### Requirement: Resolved observations can be shown
+The Observations tab SHALL default to open items only (`NEW`/`TRIAGED`, matching the API
+default). A "show resolved" toggle SHALL let the tester additionally view `DONE` and
+`DECLINED` items via `includeResolved=true`. A resolved item's `doneNote` (when `DONE`)
+or `declineReason` (when `DECLINED`) SHALL be shown when that item is expanded.
+
+#### Scenario: Resolved items hidden by default
+- **WHEN** a tester opens the Observations tab without enabling "show resolved"
+- **THEN** only `NEW` and `TRIAGED` items are listed
+
+#### Scenario: Show resolved reveals done/declined items with their note
+- **WHEN** a tester enables "show resolved" and expands a `DONE` item
+- **THEN** `DONE`/`DECLINED` items appear in the list, and the expanded item shows its `doneNote` or `declineReason`
+
 ### Requirement: Reports auto-capture client context
 When submitting feedback, the widget SHALL automatically attach the current route
 (pathname), UI locale, viewport dimensions, and build commit SHA

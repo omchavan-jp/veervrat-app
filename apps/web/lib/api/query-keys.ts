@@ -31,7 +31,7 @@ export const queryKeys = {
     unreadCount: ['notifications', 'unread-count'] as const,
   },
   feedback: {
-    list: ['feedback', 'list'] as const,
+    list: (includeResolved?: boolean) => ['feedback', 'list', { includeResolved }] as const,
   },
   dashboard: {
     stats: ['dashboard', 'stats'] as const,

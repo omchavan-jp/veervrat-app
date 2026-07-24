@@ -6,10 +6,12 @@ TBD - created by archiving change beta-feedback-widget. Update Purpose after arc
 ### Requirement: Admin can update feedback status
 The system SHALL allow admins to update a feedback item via `PATCH /api/v1/feedback/:id`
 with `status` (`TRIAGED` | `DONE` | `DECLINED`) and, when declining, a required
-`declineReason` (1–500 chars). Authorization SHALL be enforced in two layers: the auth
-guard (identity) and `hasPermission(user, resource, action)` for the `feedback` resource
-`manage` action (admin-only per the permission matrix). Non-admin callers SHALL receive
-`403`. Declining without a `declineReason` SHALL be rejected (`422`, platform validation convention).
+`declineReason` (1–500 chars), or when marking done, a required `doneNote` (1–500
+chars) describing the resolution. Authorization SHALL be enforced in two layers: the
+auth guard (identity) and `hasPermission(user, resource, action)` for the `feedback`
+resource `manage` action (admin-only per the permission matrix). Non-admin callers
+SHALL receive `403`. Declining without a `declineReason`, or marking done without a
+`doneNote`, SHALL be rejected (`422`, platform validation convention).
 
 #### Scenario: Admin triages an item
 - **WHEN** an admin PATCHes an item in status `NEW` with `status=TRIAGED`
@@ -21,6 +23,14 @@ guard (identity) and `hasPermission(user, resource, action)` for the `feedback` 
 
 #### Scenario: Decline without reason rejected
 - **WHEN** an admin PATCHes an item with `status=DECLINED` and no `declineReason`
+- **THEN** the system responds `422` and the item is unchanged
+
+#### Scenario: Admin marks done with a note
+- **WHEN** an admin PATCHes an item with `status=DONE` and `doneNote="Shipped in PR #42"`
+- **THEN** the item stores the note, visible to the reporter when resolved items are shown
+
+#### Scenario: Done without a note rejected
+- **WHEN** an admin PATCHes an item with `status=DONE` and no `doneNote`
 - **THEN** the system responds `422` and the item is unchanged
 
 #### Scenario: Non-admin denied

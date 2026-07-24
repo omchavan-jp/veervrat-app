@@ -5,6 +5,9 @@ User-visible changes, most recent first. Dated sections (continuous deploy to th
 behaviour adds a line here (see `documentation/20_Solo-Dev-Operations.md`).
 
 ## Unreleased
+- Beta feedback: a "show resolved" toggle reveals Done/Declined observations (hidden
+  by default), and expanding a resolved item now shows why — the resolution note
+  (required when marking done) or the existing decline reason.
 - Fixed: the profile page header no longer overflows on mobile — the title and the
   two action buttons now stack instead of being forced onto one row.
 - Fixed: the journey title no longer overflows past the screen edge on mobile — it

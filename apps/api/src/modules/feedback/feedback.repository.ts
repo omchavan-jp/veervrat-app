@@ -17,6 +17,7 @@ export type FeedbackRecord = {
   locale: string | null;
   commitSha: string | null;
   declineReason: string | null;
+  doneNote: string | null;
   createdAt: Date;
   reporter: FeedbackReporter;
   upvoteCount: number;
@@ -74,6 +75,7 @@ function toRecord(row: FeedbackRow): FeedbackRecord {
     locale: row.locale,
     commitSha: row.commitSha,
     declineReason: row.declineReason,
+    doneNote: row.doneNote,
     createdAt: row.createdAt,
     reporter: { id: row.reporter.id, displayName: row.reporter.displayName },
     upvoteCount: row._count.upvotes,
@@ -169,12 +171,12 @@ export class FeedbackRepository {
   async updateStatus(
     id: string,
     status: FeedbackStatus,
-    declineReason: string | null,
+    notes: { declineReason: string | null; doneNote: string | null },
     viewerId: string,
   ): Promise<FeedbackRecord> {
     const row = await this.prisma.feedbackItem.update({
       where: { id },
-      data: { status, declineReason },
+      data: { status, declineReason: notes.declineReason, doneNote: notes.doneNote },
       include: this.includeFor(viewerId),
     });
     return toRecord(row);
