@@ -5,6 +5,10 @@ User-visible changes, most recent first. Dated sections (continuous deploy to th
 behaviour adds a line here (see `documentation/20_Solo-Dev-Operations.md`).
 
 ## Unreleased
+- Weakness test: an opt-in "Auto next" toggle advances to the next sentence right
+  after you pick a score (off by default; your preference is remembered).
+- Fixed: corrected the Marathi word for "app" (ॲप) in two places where it used a
+  non-standard spelling.
 - Beta feedback: a "show resolved" toggle reveals Done/Declined observations (hidden
   by default), and expanding a resolved item now shows why — the resolution note
   (required when marking done) or the existing decline reason.
