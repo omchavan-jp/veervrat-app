@@ -279,13 +279,13 @@ describe('UsersService — searchUsers', () => {
 
   function makeSearchService(opts: {
     indexIds?: string[];
-    byEmail?: { id: string } | null;
+    substringIds?: string[];
     many?: Array<Record<string, unknown>>;
   }) {
     const service = Object.create(UsersService.prototype) as UsersService;
     const s = service as unknown as Record<string, unknown>;
     s['usersRepository'] = {
-      findByEmail: vi.fn().mockResolvedValue(opts.byEmail ?? null),
+      findIdsBySubstring: vi.fn().mockResolvedValue(opts.substringIds ?? []),
       findManyByIds: vi.fn().mockResolvedValue(opts.many ?? []),
     };
     s['usersIndex'] = { search: vi.fn().mockResolvedValue(opts.indexIds ?? []) };
@@ -300,9 +300,9 @@ describe('UsersService — searchUsers', () => {
     expect(await svc.searchUsers(REQUESTER, 'a')).toEqual([]);
   });
 
-  it('matches an exact full email (DB), prepended before index hits', async () => {
+  it('matches a partial email via the DB substring search, prepended before index hits', async () => {
     const svc = makeSearchService({
-      byEmail: { id: 'email-hit' },
+      substringIds: ['email-hit'],
       indexIds: ['fuzzy-hit'],
       many: [
         {
@@ -327,8 +327,31 @@ describe('UsersService — searchUsers', () => {
         },
       ],
     });
-    const res = await svc.searchUsers(REQUESTER, 'om@example.com');
+    // "om@exa" is a partial email — not a full valid address, so only the substring
+    // path (not a strict email-format check) can match it.
+    const res = await svc.searchUsers(REQUESTER, 'om@exa');
     expect(res.map((r) => r.username)).toEqual(['om', 'omkar']);
+  });
+
+  it('matches username/displayName via the DB baseline even when Meili yields nothing', async () => {
+    const svc = makeSearchService({
+      substringIds: ['pu'],
+      indexIds: [],
+      many: [
+        {
+          id: 'pu',
+          username: 'purvi',
+          displayName: 'Purvi',
+          avatarUrl: null,
+          profilePrivate: false,
+          showLastActive: false,
+          showOnlineIndicator: false,
+          lastActiveAt: null,
+        },
+      ],
+    });
+    const res = await svc.searchUsers(REQUESTER, 'pu');
+    expect(res.map((r) => r.username)).toEqual(['purvi']);
   });
 
   it('excludes private profiles from hydrated results', async () => {
@@ -361,8 +384,8 @@ describe('UsersService — searchUsers', () => {
     expect(res.map((r) => r.username)).toEqual(['pub']);
   });
 
-  it('returns empty when the index yields nothing and no email match', async () => {
-    const svc = makeSearchService({ indexIds: [], byEmail: null });
+  it('returns empty when neither the DB baseline nor the index yields a match', async () => {
+    const svc = makeSearchService({ indexIds: [], substringIds: [] });
     expect(await svc.searchUsers(REQUESTER, 'zzz')).toEqual([]);
   });
 });

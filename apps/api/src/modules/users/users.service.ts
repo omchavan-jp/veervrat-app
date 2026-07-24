@@ -164,19 +164,19 @@ export class UsersService implements OnModuleInit {
     return this.experienceLogsService.getPublicByAuthor(user.id, cursor);
   }
 
-  // Auth'd user search: typo-tolerant name/username via Meili + exact full-email via DB
-  // (email never indexed). Excludes private profiles + self. Returns presence + follow
-  // status. <2 chars → empty; backend down → empty (degrade, never error).
+  // Auth'd user search: a DB substring match across email/username/displayName is the
+  // baseline (always available — works even when Meilisearch isn't deployed, e.g. prod
+  // today), with Meili's typo-tolerant fuzzy matching layered on top when it's enabled.
+  // Excludes private profiles + self. <2 chars → empty; Meili down → degrades to the DB
+  // baseline alone, never errors.
   async searchUsers(requester: SessionUser, query: string): Promise<UserSearchResultDto[]> {
     const q = query.trim();
     if (q.length < 2) return [];
 
     const ids: string[] = [];
 
-    // Exact full-email match (strongly consistent, never via the index).
-    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(q)) {
-      const byEmail = await this.usersRepository.findByEmail(q.toLowerCase());
-      if (byEmail && byEmail.id !== requester.id) ids.push(byEmail.id);
+    for (const id of await this.usersRepository.findIdsBySubstring(q, requester.id)) {
+      if (!ids.includes(id)) ids.push(id);
     }
 
     for (const id of await this.usersIndex.search(q, requester.id)) {
