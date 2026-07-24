@@ -202,7 +202,10 @@ export default function JourneyDetailPage() {
                 variant="ghost"
                 onClick={() => { setTitleValue(journey.title); setEditingTitle(true); }}
                 title={t('detail.editTitleHint')}
-                className="h-auto flex-1 justify-start px-0 text-left font-display text-[clamp(26px,3vw,36px)] font-normal tracking-tight hover:bg-transparent hover:opacity-70"
+                // min-w-0 + shrink override the base button's shrink-0, and whitespace-normal
+                // overrides its whitespace-nowrap — otherwise a long title can't shrink or
+                // wrap within the flex row and overflows past the viewport on mobile.
+                className="h-auto min-w-0 flex-1 shrink justify-start whitespace-normal break-words px-0 text-left font-display text-[clamp(26px,3vw,36px)] font-normal tracking-tight hover:bg-transparent hover:opacity-70"
               >
                 {journey.title}
               </Button>
