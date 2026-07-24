@@ -5,6 +5,8 @@ User-visible changes, most recent first. Dated sections (continuous deploy to th
 behaviour adds a line here (see `documentation/20_Solo-Dev-Operations.md`).
 
 ## Unreleased
+- Fixed: the profile page header no longer overflows on mobile — the title and the
+  two action buttons now stack instead of being forced onto one row.
 - Fixed: the journey title no longer overflows past the screen edge on mobile — it
   now wraps like the rest of the page instead of staying on one unbreakable line.
 - Weakness test: "Next" is now the prominent button (matching "Review responses"),
