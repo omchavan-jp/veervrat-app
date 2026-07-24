@@ -18,28 +18,39 @@ the flag off.
 - **WHEN** the app is built without `NEXT_PUBLIC_CONTENT_EDIT` (production)
 - **THEN** no editor overlay, listeners, or content-override requests exist anywhere in the running app
 
-### Requirement: Option-click selects the underlying message key
-In content-edit mode, Option/Alt-clicking a visible text element SHALL resolve the i18n key
-that produced it by reverse-lookup against the messages provided by `useMessages()`, and
-open the edit panel for that key. When the clicked text does not resolve to exactly one key
-(interpolated or duplicated strings), the editor SHALL open a searchable key panel listing
-all keys with their `en`/`mr` values so the editor can pick the intended key. No `t()` call
-site SHALL be required to carry key metadata for this to work.
+### Requirement: Option-click resolves the underlying message key(s)
+In content-edit mode, Option/Alt-clicking a visible text element SHALL resolve the i18n
+key(s) that produced it by reverse-lookup against the messages provided by
+`useMessages()`. When several keys share the exact clicked text, the editor SHALL narrow
+the candidates using DOM/route context available without any call-site changes — whether
+the click occurred inside an open dialog (matched against keys whose path mentions
+"modal"/"dialog"), and the current route's path segments (matched against each
+candidate's leading namespace segment). When narrowing yields exactly one key, the edit
+panel SHALL open directly bound to it, with no picker shown. When narrowing still yields
+multiple keys (or would yield none, which is treated as no narrowing), the edit panel
+SHALL open with all remaining candidates pre-selected via checkboxes, letting the editor
+uncheck any that should not change together. No `t()` call site SHALL be required to
+carry key metadata for this to work.
 
 #### Scenario: Unique text resolves to its key
 - **WHEN** the editor Option-clicks a button whose label matches exactly one message value
-- **THEN** the edit panel opens bound to that key
+- **THEN** the edit panel opens bound to that key, with no picker
 
-#### Scenario: Ambiguous text falls back to search
-- **WHEN** the editor Option-clicks text that was rendered with an interpolated value (no exact match)
-- **THEN** the searchable key panel opens so the editor can locate the key manually
+#### Scenario: Context narrows a multi-key match to one
+- **WHEN** the editor Option-clicks text inside an open dialog and only one of the matching keys' paths mentions "modal"
+- **THEN** the edit panel opens directly bound to that one key, with no picker
 
-### Requirement: Edit both locales with live preview
-The edit panel SHALL show the selected key with its current `en` and `mr` values, both
-editable. On save it SHALL persist the changed value(s) via the content-overrides API and
-the page SHALL reflect the new text without a full reload (the override merges into the
-rendered messages). The panel SHALL indicate when a key is missing a translation in either
-locale.
+#### Scenario: A genuine tie falls back to multi-select
+- **WHEN** narrowing still leaves more than one candidate key
+- **THEN** the edit panel lists all remaining candidates as checkboxes, all pre-checked, and the editor can uncheck any before editing
+
+### Requirement: Edit both locales with live preview, across all selected keys
+The edit panel SHALL show the checked key(s)' current `en` and `mr` values (seeded from
+the first checked key), both editable. On save it SHALL persist the changed value(s) via
+the content-overrides API for every checked key, and the page SHALL reflect the new text
+without a full reload (the override merges into the rendered messages). The panel SHALL
+indicate when a checked key is missing a translation in either locale, and SHALL warn when
+checked keys currently disagree in a locale before a save would make them uniform.
 
 #### Scenario: Editing Marathi copy
 - **WHEN** the editor changes the `mr` value for a key and saves
@@ -48,6 +59,14 @@ locale.
 #### Scenario: Missing-locale indicator
 - **WHEN** the selected key has an `en` value but no `mr` value
 - **THEN** the panel flags the missing `mr` translation
+
+#### Scenario: Batch edit applies to every checked key
+- **WHEN** the editor has two keys checked and saves a new `en` value
+- **THEN** both keys are staged with that value, each validated against its own current value's ICU placeholders
+
+#### Scenario: Divergent values are flagged before overwrite
+- **WHEN** two checked keys currently have different `mr` values
+- **THEN** the panel shows a warning that saving will make them all match the new text
 
 ### Requirement: ICU placeholder and plural safety (client)
 Before sending a save, the editor SHALL compare the placeholder / plural-`select` token set

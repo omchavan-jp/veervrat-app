@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { animate, motion, useDragControls, useMotionValue } from 'framer-motion';
+import { usePathname } from 'next/navigation';
 import { useMessages, useTranslations } from 'next-intl';
 import { useMutation } from '@tanstack/react-query';
 import { Check, GripVertical, History, Pencil, UploadCloud } from 'lucide-react';
@@ -14,6 +15,7 @@ import {
   flattenMessages,
   type NestedMessages,
 } from '@/lib/content-editor/messages';
+import { disambiguateKeys } from '@/lib/content-editor/disambiguate';
 import { ContentEditPanel } from './content-edit-panel';
 import { ContentStagedList } from './content-staged-list';
 
@@ -36,6 +38,7 @@ export function ContentEditor() {
 function ContentEditorInner() {
   const t = useTranslations('contentEditor');
   const toast = useToast();
+  const pathname = usePathname();
   const messages = useMessages() as unknown as NestedMessages;
   const index = useMemo(() => buildValueIndex(flattenMessages(messages)), [messages]);
 
@@ -104,14 +107,20 @@ function ContentEditorInner() {
       const target = e.target as HTMLElement | null;
       const text = target?.textContent ?? '';
       if (!text.trim()) return;
-      const keys = findKeysByText(index, text);
-      if (keys.length === 0) {
+      const matches = findKeysByText(index, text);
+      if (matches.length === 0) {
         toast.add({ title: t('noKey'), type: 'error' });
         return;
       }
+      // Narrow multi-key matches using free DOM/route context (e.g. inside an open dialog
+      // vs. a page's inline trigger) before falling back to the multi-select picker.
+      const keys = disambiguateKeys(matches, {
+        insideDialog: target?.closest('[role="dialog"]') !== null,
+        routeSegments: pathname.split('/').filter(Boolean),
+      });
       setSelection({ keys });
     },
-    [index, t, toast],
+    [index, pathname, t, toast],
   );
 
   useEffect(() => {
