@@ -13,8 +13,11 @@ import { Dialog } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { Alert, AlertTitle } from '@/components/ui/alert';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Switch } from '@/components/ui/switch';
 import { BilingualText } from '@/components/shared/bilingual-text';
 import { useToast } from '@/hooks/use-toast';
+
+const AUTO_NEXT_STORAGE_KEY = 'veervrat.study.autoNext';
 
 type Score = 1 | 2 | 3 | 4;
 type ViewMode = 'one-at-a-time' | 'view-all';
@@ -81,6 +84,24 @@ export default function TestQuestionPage() {
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [pendingNavHref, setPendingNavHref] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Opt-in, persisted per device — off by default, matching current behaviour.
+  const [autoNext, setAutoNext] = useState(false);
+  useEffect(() => {
+    try {
+      setAutoNext(localStorage.getItem(AUTO_NEXT_STORAGE_KEY) === 'true');
+    } catch {
+      // ignore (private mode, etc.) — stays off
+    }
+  }, []);
+  const toggleAutoNext = (value: boolean) => {
+    setAutoNext(value);
+    try {
+      localStorage.setItem(AUTO_NEXT_STORAGE_KEY, String(value));
+    } catch {
+      // ignore storage failures
+    }
+  };
 
   const sentences: Sentence[] = (weakness?.subvirtues ?? []).flatMap(
     (sv) => sv.sentences,
@@ -189,7 +210,9 @@ export default function TestQuestionPage() {
   // base-ui ToggleGroup is single-select: `group` is [] when the pressed score is
   // toggled off, or [scoreString] when a score is chosen — so it already encodes the
   // tap-to-clear behaviour the previous hand-rolled toggle implemented manually.
-  const handleScoreSelect = (sentenceId: string, group: string[]) => {
+  // `advance` is true only from the one-at-a-time footer (not the view-all list) — auto-next
+  // only makes sense when there's a single "current" question to move on from.
+  const handleScoreSelect = (sentenceId: string, group: string[], advance = false) => {
     const selected = group.length > 0 ? (Number(group[0]) as Score) : null;
     setAnswers((prev) => {
       const next = new Map(prev);
@@ -202,6 +225,10 @@ export default function TestQuestionPage() {
       persistAnswers(next);
       return next;
     });
+    // Only on an actual selection (not tap-to-clear), and never past the last question.
+    if (advance && selected !== null && autoNext) {
+      setCurrentIndex((i) => Math.min(sentences.length - 1, i + 1));
+    }
   };
 
   const flushAndNavigate = (path: string) => {
@@ -367,11 +394,17 @@ export default function TestQuestionPage() {
         <div className="mx-auto max-w-2xl space-y-3">
           {viewMode === 'one-at-a-time' && current && (
             <>
-              <p className="text-center text-[11px] text-muted">{t('tapToClear')}</p>
+              <div className="flex items-center justify-between">
+                <p className="text-[11px] text-muted">{t('tapToClear')}</p>
+                <label className="flex items-center gap-2 text-[11px] text-muted">
+                  {t('autoNext')}
+                  <Switch aria-label={t('autoNext')} checked={autoNext} onCheckedChange={toggleAutoNext} />
+                </label>
+              </div>
               <ToggleGroup
                 className="grid grid-cols-2 gap-2 sm:grid-cols-4"
                 value={answers.has(current.sentenceId) ? [String(answers.get(current.sentenceId))] : []}
-                onValueChange={(group) => handleScoreSelect(current.sentenceId, group)}
+                onValueChange={(group) => handleScoreSelect(current.sentenceId, group, true)}
                 aria-label={t('scoreGroupLabel')}
               >
                 {([4, 3, 2, 1] as Score[]).map((score) => (

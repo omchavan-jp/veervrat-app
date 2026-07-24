@@ -378,6 +378,7 @@
       "reflectedProgress": "{answered}/{total} reflected on",
       "saveExit": "Save & exit",
       "tapToClear": "Tap again to clear",
+      "autoNext": "Auto next",
       "reviewResponses": "Review responses ✓",
       "reviewResponsesProgress": "Review responses ({answered}/{total})",
       "exitTitle": "Leave the test?",
