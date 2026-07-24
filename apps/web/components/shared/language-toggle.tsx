@@ -10,12 +10,15 @@ import { setLocaleCookie } from '@/lib/locale';
 
 type Display = 'label' | 'icon' | 'reveal';
 
-// Flips EN↔MR. The label shows the CURRENT language (what the app is in).
-//   'label'  — always show current language inline (desktop expanded)
+// Flips EN↔MR. The visible label shows the TARGET language (what you'd switch TO) —
+// tapping "मराठी" while in English switches to Marathi, matching the common toggle
+// convention. The tooltip/aria-label separately states the current language for
+// screen-reader clarity.
+//   'label'  — always show the target language inline (desktop expanded)
 //   'icon'   — icon only (collapsed rail)
-//   'reveal' — icon only; after a toggle, the current language label expands inline
-//              briefly then collapses back to icon-only — so the user sees what they
-//              switched into. Button width animates; neighbours shift gently.
+//   'reveal' — icon only; after a toggle, the (new) target language label expands
+//              inline briefly then collapses back to icon-only. Button width animates;
+//              neighbours shift gently.
 export function LanguageToggle({
   className = '',
   display = 'label',
@@ -36,6 +39,7 @@ export function LanguageToggle({
 
   const currentLabel = locale === 'mr' ? t('mr') : t('en');
   const next = locale === 'mr' ? 'en' : 'mr';
+  const nextLabel = next === 'mr' ? t('mr') : t('en');
 
   async function handleToggle() {
     if (display === 'reveal') {
@@ -70,7 +74,7 @@ export function LanguageToggle({
         className="overflow-hidden whitespace-nowrap transition-all duration-300 ease-out"
         style={{ maxWidth: showLabel ? '48px' : '0px', marginLeft: showLabel ? '6px' : '0px' }}
       >
-        {currentLabel}
+        {nextLabel}
       </span>
     </button>
   );

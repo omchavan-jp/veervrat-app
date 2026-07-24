@@ -55,7 +55,7 @@ Every route group layout (`(public)`, `(app)`, `(moderation)`, `(admin)`, `(vrat
 - **THEN** it receives translated strings without error
 
 ### Requirement: Language toggle component
-A `LanguageToggle` component SHALL be available in `components/shared/language-toggle.tsx`. It SHALL display the current locale (`EN` / `MR`) and allow the user to switch. On successful toggle: it SHALL call `PATCH /api/v1/users/me` with `{ language: '<new_locale>' }`, then call `router.refresh()` to re-render server components with the new locale. If the API call fails, `router.refresh()` SHALL NOT be called and the locale SHALL remain unchanged. The component SHALL be hidden when the user is not authenticated.
+A `LanguageToggle` component SHALL be available in `components/shared/language-toggle.tsx`. It SHALL display the target locale — the one the user would switch TO (`EN` / `MR`) — and allow the user to switch to it; the current locale SHALL still be surfaced via the tooltip/aria-label for accessibility. On successful toggle: it SHALL call `PATCH /api/v1/users/me` with `{ language: '<new_locale>' }`, then call `router.refresh()` to re-render server components with the new locale. If the API call fails, `router.refresh()` SHALL NOT be called and the locale SHALL remain unchanged. The component SHALL be hidden when the user is not authenticated.
 
 #### Scenario: Switching from EN to MR
 - **WHEN** an authenticated user clicks the MR option in the language toggle
