@@ -36,8 +36,8 @@ vi.mock('@/lib/api/users', () => ({
 
 import { LanguageToggle } from '../../components/shared/language-toggle';
 
-// Single button that flips EN↔MR and shows the CURRENT language. Clicking always
-// switches to the other language (persist via updateMe, then refresh).
+// Single button that flips EN↔MR and shows the TARGET language (what you'd switch to).
+// Clicking always switches to the other language (persist via updateMe, then refresh).
 describe('LanguageToggle', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -56,18 +56,20 @@ describe('LanguageToggle', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it('shows the current language (EN) and labels the switch target', () => {
+  it('shows the target language (मराठी) when current locale is EN', () => {
     mockLocale.value = 'en';
     render(<LanguageToggle />);
+    // aria-label/title still state the CURRENT locale for a11y clarity...
     expect(screen.getByRole('button', { name: 'Switch language (currently EN)' })).toBeInTheDocument();
-    expect(screen.getByText('EN')).toBeInTheDocument();
+    // ...while the visible label shows what you'd switch TO.
+    expect(screen.getByText('मराठी')).toBeInTheDocument();
   });
 
-  it('shows the current language (मराठी) when locale is mr', () => {
+  it('shows the target language (EN) when current locale is MR', () => {
     mockLocale.value = 'mr';
     render(<LanguageToggle />);
     expect(screen.getByRole('button', { name: 'Switch language (currently मराठी)' })).toBeInTheDocument();
-    expect(screen.getByText('मराठी')).toBeInTheDocument();
+    expect(screen.getByText('EN')).toBeInTheDocument();
   });
 
   it('clicking in EN switches to MR and refreshes', async () => {
