@@ -17,6 +17,7 @@ import {
   InvitationNotCancellableException,
   InvitationReminderAlreadySentException,
   PendingGlobalVmInviteException,
+  ValidationException,
 } from '../../common/exceptions/app.exceptions';
 import type { SessionUser } from '../auth/types/auth.types';
 import { SendInvitationDto } from './dto/send-invitation.dto';
@@ -56,6 +57,17 @@ export class InvitationsService {
       !hasPermission(user, { type: 'platform' }, 'vm_invitation.send')
     ) {
       throw new AccessDeniedException();
+    }
+
+    // inviteeUsername only comes from the search-select flow (an existing platform user).
+    // PLATFORM invites are a signup link for someone NOT yet registered — combining the
+    // two silently created an invite with no in-app notification and no VM relationship
+    // on accept, since neither path treats PLATFORM as a VM invitation. Reject it outright
+    // rather than accept a combination that can never do what the caller intended.
+    if (dto.type === InvitationType.PLATFORM && dto.inviteeUsername) {
+      throw new ValidationException(
+        'Platform invites are for people not yet on Veervrat — invite an existing user as a vratmitra instead.',
+      );
     }
 
     // Resolve the invitee email: from a username (existing user, email not exposed to

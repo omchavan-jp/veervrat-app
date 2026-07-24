@@ -36,11 +36,14 @@ const KNOWN_EVENT_TYPES = new Set<string>([
 function eventTypeToPath(eventType: string, resourceId: string | null): string | null {
   if (!resourceId) return null;
   switch (eventType) {
+    // Matches notification-link.ts (the email deep-link map) on the backend — this map
+    // had drifted to '/dashboard', which isn't where a pending invitation is visible.
     case 'VM_INVITATION_RECEIVED':
     case 'VM_INVITATION_ACCEPTED':
     case 'VM_INVITATION_DECLINED':
     case 'VM_INVITATION_EXPIRED':
-      return '/dashboard';
+    case 'INVITEE_JOINED_PLATFORM':
+      return '/invitations';
     case 'ERC_CLOSURE_SUBMITTED':
     case 'ERC_CLOSURE_APPROVED':
     case 'ERC_RETURNED_FOR_REVISIT':

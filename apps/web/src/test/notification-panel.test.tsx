@@ -121,6 +121,26 @@ describe('NotificationPanel', () => {
     expect(screen.getByRole('button', { name: n.markAllRead })).toBeDisabled();
   });
 
+  it('routes a VM invitation notification to /invitations, not /dashboard', async () => {
+    mockNotificationsApi.list.mockResolvedValue({
+      items: [makeItem({ eventType: 'VM_INVITATION_RECEIVED', resourceType: 'invitation' })],
+      nextCursor: null,
+    });
+    mockNotificationsApi.markRead.mockResolvedValue({ id: 'n-1' });
+
+    renderPanel();
+
+    await waitFor(() => {
+      expect(screen.getByText('Mentor One')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Mentor One'));
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith('/invitations');
+    });
+  });
+
   it('shows "System" when actor is null', async () => {
     mockNotificationsApi.list.mockResolvedValue({
       items: [makeItem({ actor: null })],

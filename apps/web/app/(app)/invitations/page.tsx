@@ -36,7 +36,6 @@ export default function InvitationsPage() {
 
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<UserSearchResult | null>(null);
-  const [scope, setScope] = useState<InvitationType>('VM_GLOBAL');
   const debounced = useDebounce(query, 250);
 
   const search = useQuery({
@@ -100,26 +99,15 @@ export default function InvitationsPage() {
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <div className="mt-4">
-              <div className="mb-2 text-[13px] font-medium">{t('scope')}</div>
-              <div className="flex flex-wrap gap-2">
-                {(['VM_GLOBAL', 'PLATFORM'] as InvitationType[]).map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => setScope(s)}
-                    className={`rounded-full border px-3.5 py-1.5 text-[13px] transition-colors ${
-                      scope === s ? 'border-accent bg-accent text-bg' : 'border-border-strong text-muted hover:border-accent'
-                    }`}
-                  >
-                    {t(`scopeOption.${s}`)}
-                  </button>
-                ))}
-              </div>
-            </div>
+            {/* An already-found user is by definition an existing platform member — the
+                only meaningful invite for them is a global vratmitra invite. Platform
+                Invite (a signup link) doesn't apply and used to be offered here by
+                mistake, silently skipping the in-app notification and VM relationship. */}
+            <p className="mt-4 text-[13px] text-muted">{t('scopeGlobalOnly')}</p>
             <Button
               className="mt-4"
               disabled={send.isPending}
-              onClick={() => send.mutate({ type: scope, inviteeUsername: selected.username })}
+              onClick={() => send.mutate({ type: 'VM_GLOBAL', inviteeUsername: selected.username })}
             >
               <UserPlus className="h-4 w-4" />
               <span className="ml-1.5">{t('sendInvite')}</span>
