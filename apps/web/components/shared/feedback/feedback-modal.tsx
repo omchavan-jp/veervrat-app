@@ -93,6 +93,9 @@ function ObservationsList({ enabled }: { enabled: boolean }) {
   // tapping an individual item expands just that one via expandedIds.
   const [showAllDetails, setShowAllDetails] = useState(false);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  // Open items (NEW/TRIAGED) by default, matching the API default — DONE/DECLINED items
+  // otherwise vanish from view with no confirmation anything happened.
+  const [showResolved, setShowResolved] = useState(false);
 
   const toggleExpanded = (id: string) => {
     setExpandedIds((prev) => {
@@ -103,9 +106,11 @@ function ObservationsList({ enabled }: { enabled: boolean }) {
     });
   };
 
+  const listKey = queryKeys.feedback.list(showResolved);
+
   const { data, isPending, isError } = useQuery({
-    queryKey: queryKeys.feedback.list,
-    queryFn: () => feedbackApi.list(),
+    queryKey: listKey,
+    queryFn: () => feedbackApi.list(undefined, showResolved),
     enabled,
   });
 
@@ -113,9 +118,9 @@ function ObservationsList({ enabled }: { enabled: boolean }) {
     mutationFn: (id: string) => feedbackApi.toggleUpvote(id),
     // Optimistic toggle; the settled invalidation reconciles with the server count.
     onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: queryKeys.feedback.list });
-      const previous = queryClient.getQueryData<FeedbackListResponse>(queryKeys.feedback.list);
-      queryClient.setQueryData<FeedbackListResponse>(queryKeys.feedback.list, (old) =>
+      await queryClient.cancelQueries({ queryKey: listKey });
+      const previous = queryClient.getQueryData<FeedbackListResponse>(listKey);
+      queryClient.setQueryData<FeedbackListResponse>(listKey, (old) =>
         old
           ? {
               ...old,
@@ -135,11 +140,12 @@ function ObservationsList({ enabled }: { enabled: boolean }) {
     },
     onError: (_err, _id, context) => {
       if (context?.previous) {
-        queryClient.setQueryData(queryKeys.feedback.list, context.previous);
+        queryClient.setQueryData(listKey, context.previous);
       }
     },
     onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.feedback.list });
+      // Broad prefix invalidation — both the open and resolved views may be affected.
+      void queryClient.invalidateQueries({ queryKey: ['feedback', 'list'] });
     },
   });
 
@@ -161,18 +167,30 @@ function ObservationsList({ enabled }: { enabled: boolean }) {
 
   return (
     <div className="flex flex-col gap-2">
-      <label className="flex items-center justify-end gap-2 text-[12px] text-muted">
-        {t('list.showDetails')}
-        <Switch
-          aria-label={t('list.showDetails')}
-          checked={showAllDetails}
-          onCheckedChange={setShowAllDetails}
-        />
-      </label>
+      <div className="flex items-center justify-end gap-4">
+        <label className="flex items-center gap-2 text-[12px] text-muted">
+          {t('list.showResolved')}
+          <Switch
+            aria-label={t('list.showResolved')}
+            checked={showResolved}
+            onCheckedChange={setShowResolved}
+          />
+        </label>
+        <label className="flex items-center gap-2 text-[12px] text-muted">
+          {t('list.showDetails')}
+          <Switch
+            aria-label={t('list.showDetails')}
+            checked={showAllDetails}
+            onCheckedChange={setShowAllDetails}
+          />
+        </label>
+      </div>
 
       <ul className="flex max-h-[50dvh] flex-col gap-2 overflow-y-auto pr-1">
         {data.items.map((item) => {
-          const hasDetails = Boolean(item.description);
+          const resolutionNote =
+            item.status === 'DONE' ? item.doneNote : item.status === 'DECLINED' ? item.declineReason : null;
+          const hasDetails = Boolean(item.description) || Boolean(resolutionNote);
           const expanded = showAllDetails || expandedIds.has(item.id);
           return (
             <li
@@ -213,6 +231,15 @@ function ObservationsList({ enabled }: { enabled: boolean }) {
                 {expanded && item.description && (
                   <p className="mt-2 whitespace-pre-wrap text-[13px] text-muted">
                     {item.description}
+                  </p>
+                )}
+                {expanded && resolutionNote && (
+                  <p className="mt-2 whitespace-pre-wrap text-[13px] text-muted">
+                    <span className="font-medium text-fg">
+                      {t(item.status === 'DONE' ? 'list.doneNoteLabel' : 'list.declineReasonLabel')}
+                      {': '}
+                    </span>
+                    {resolutionNote}
                   </p>
                 )}
               </div>
@@ -273,7 +300,7 @@ function RaiseForm({ onDone }: { onDone: () => void }) {
         commitSha: process.env.NEXT_PUBLIC_COMMIT_SHA ?? 'dev',
       }),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.feedback.list });
+      void queryClient.invalidateQueries({ queryKey: ['feedback', 'list'] });
       toast.add({ title: t('form.successTitle'), description: t('form.successDescription'), type: 'success' });
       reset({ type: 'ISSUE', title: '', description: '' });
       onDone();

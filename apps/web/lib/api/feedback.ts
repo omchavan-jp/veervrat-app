@@ -15,6 +15,7 @@ export type FeedbackItem = {
   locale: string | null;
   commitSha: string | null;
   declineReason: string | null;
+  doneNote: string | null;
   createdAt: string;
   reporter: { id: string; displayName: string };
   upvoteCount: number;
@@ -37,9 +38,12 @@ export type CreateFeedbackInput = {
 };
 
 export const feedbackApi = {
-  list: (cursor?: string): Promise<FeedbackListResponse> => {
-    const params = cursor ? `?cursor=${encodeURIComponent(cursor)}` : '';
-    return api.get<Wrapped<FeedbackListResponse>>(`/feedback${params}`).then((r) => r.data);
+  list: (cursor?: string, includeResolved?: boolean): Promise<FeedbackListResponse> => {
+    const search = new URLSearchParams();
+    if (cursor) search.set('cursor', cursor);
+    if (includeResolved) search.set('includeResolved', 'true');
+    const qs = search.toString();
+    return api.get<Wrapped<FeedbackListResponse>>(`/feedback${qs ? `?${qs}` : ''}`).then((r) => r.data);
   },
 
   create: (input: CreateFeedbackInput): Promise<FeedbackItem> =>

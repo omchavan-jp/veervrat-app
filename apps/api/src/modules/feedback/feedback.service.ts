@@ -83,7 +83,13 @@ export class FeedbackService {
 
     const declineReason =
       dto.status === FeedbackStatus.DECLINED ? (dto.declineReason ?? null) : null;
-    const updated = await this.repository.updateStatus(id, dto.status, declineReason, user.id);
+    const doneNote = dto.status === FeedbackStatus.DONE ? (dto.doneNote ?? null) : null;
+    const updated = await this.repository.updateStatus(
+      id,
+      dto.status,
+      { declineReason, doneNote },
+      user.id,
+    );
     return { ...updated, previousStatus: item.status };
   }
 }

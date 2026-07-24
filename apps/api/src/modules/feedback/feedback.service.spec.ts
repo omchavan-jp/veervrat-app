@@ -35,6 +35,7 @@ function makeRecord(overrides: Record<string, unknown> = {}) {
     locale: 'mr',
     commitSha: 'abc123',
     declineReason: null,
+    doneNote: null,
     createdAt: new Date('2026-07-04T00:00:00Z'),
     reporter: { id: 'user-1', displayName: 'User One' },
     upvoteCount: 0,
@@ -123,16 +124,22 @@ describe('FeedbackService', () => {
       expect(repo.updateStatus).not.toHaveBeenCalled();
     });
 
-    it('allows admin and includes the previous status for auditing', async () => {
+    it('allows admin, requires a doneNote when marking done, includes previous status for auditing', async () => {
       const { service, repo } = makeService();
       const result = await service.updateStatus(makeUser([Role.ADMIN]), ITEM_ID, {
         status: FeedbackStatus.DONE,
+        doneNote: 'Shipped in PR #42',
       });
-      expect(repo.updateStatus).toHaveBeenCalledWith(ITEM_ID, FeedbackStatus.DONE, null, 'user-1');
+      expect(repo.updateStatus).toHaveBeenCalledWith(
+        ITEM_ID,
+        FeedbackStatus.DONE,
+        { declineReason: null, doneNote: 'Shipped in PR #42' },
+        'user-1',
+      );
       expect(result.previousStatus).toBe(FeedbackStatus.NEW);
     });
 
-    it('persists the decline reason only when declining', async () => {
+    it('persists the decline reason only when declining, doneNote only when done', async () => {
       const { service, repo } = makeService();
       await service.updateStatus(makeUser([Role.ADMIN]), ITEM_ID, {
         status: FeedbackStatus.DECLINED,
@@ -141,7 +148,7 @@ describe('FeedbackService', () => {
       expect(repo.updateStatus).toHaveBeenCalledWith(
         ITEM_ID,
         FeedbackStatus.DECLINED,
-        'Duplicate',
+        { declineReason: 'Duplicate', doneNote: null },
         'user-1',
       );
 
@@ -152,7 +159,19 @@ describe('FeedbackService', () => {
       expect(repo.updateStatus).toHaveBeenLastCalledWith(
         ITEM_ID,
         FeedbackStatus.TRIAGED,
-        null,
+        { declineReason: null, doneNote: null },
+        'user-1',
+      );
+
+      await service.updateStatus(makeUser([Role.ADMIN]), ITEM_ID, {
+        status: FeedbackStatus.DONE,
+        doneNote: 'Fixed',
+        declineReason: 'should be ignored',
+      });
+      expect(repo.updateStatus).toHaveBeenLastCalledWith(
+        ITEM_ID,
+        FeedbackStatus.DONE,
+        { declineReason: null, doneNote: 'Fixed' },
         'user-1',
       );
     });

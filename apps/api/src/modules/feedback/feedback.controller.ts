@@ -64,6 +64,7 @@ export class FeedbackController {
       from: (c.result as { previousStatus?: FeedbackStatus })?.previousStatus,
       to: (c.body as UpdateFeedbackDto)?.status,
       declineReason: (c.body as UpdateFeedbackDto)?.declineReason,
+      doneNote: (c.body as UpdateFeedbackDto)?.doneNote,
     }),
   })
   async updateStatus(
