@@ -5,6 +5,8 @@ User-visible changes, most recent first. Dated sections (continuous deploy to th
 behaviour adds a line here (see `documentation/20_Solo-Dev-Operations.md`).
 
 ## Unreleased
+- Weakness test: "Next" is now the prominent button (matching "Review responses"),
+  since it's used far more often than the final review/submit step.
 - Fixed: the language toggle now shows the language you'd switch TO, not the one
   you're currently in — e.g. it now reads "मराठी" while the app is in English.
 - Fixed: searching for a vratmitra to invite (by email, username, or name) now works

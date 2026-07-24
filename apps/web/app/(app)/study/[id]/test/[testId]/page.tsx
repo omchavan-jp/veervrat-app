@@ -395,7 +395,6 @@ export default function TestQuestionPage() {
                   {t('previous')}
                 </Button>
                 <Button
-                  variant="secondary"
                   className="min-h-11 gap-1.5 px-5 text-[13px]"
                   disabled={currentIndex === sentences.length - 1}
                   onClick={() => setCurrentIndex((i) => Math.min(sentences.length - 1, i + 1))}
