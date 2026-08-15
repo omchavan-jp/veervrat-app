@@ -1,0 +1,13 @@
+# Downloaded provider plugins — re-created by `terraform init`
+**/.terraform/
+
+# Saved plan files — local artifacts of a specific run, not source
+*.tfplan
+
+# State lives remotely (see bootstrap/create-state-backend.sh); a local .tfstate
+# should never exist, but ignore it defensively in case one is ever generated
+*.tfstate
+*.tfstate.backup
+
+# May contain secrets if ever used
+*.auto.tfvars
