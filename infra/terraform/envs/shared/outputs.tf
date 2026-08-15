@@ -6,7 +6,3 @@ output "dns_zone_name_servers" {
 output "container_registry_login_server" {
   value = azurerm_container_registry.veervrat.login_server
 }
-
-output "key_vault_uri" {
-  value = azurerm_key_vault.veervrat.vault_uri
-}

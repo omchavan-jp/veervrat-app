@@ -35,8 +35,11 @@ consistent — and should not be forced to be:
 |---|---|---|
 | Storage account | lowercase alphanumeric only, 3–24 chars — **no hyphens** | `veervrattfstate` |
 | Container registry | alphanumeric only, 5–50 chars — **no hyphens** | `veervratacr` |
-| Key Vault | alphanumerics + hyphens, 3–24 chars | `veervrat-kv` |
+| Key Vault | alphanumerics + hyphens, 3–24 chars | `veervrat-uat-kv` |
 | Resource group | permissive | `veervrat-shared`, `veervrat-uat`, `veervrat-prod` |
+
+Per-environment resources are named `veervrat-<env>-<thing>` (e.g. `veervrat-uat-psql`,
+`veervrat-uat-redis`) — see §11 for the module that generates these.
 
 Prefix everything with `veervrat`. Use hyphens where the resource type allows them.
 
@@ -51,10 +54,14 @@ Prefix everything with `veervrat`. Use hyphens where the resource type allows th
 ```
 infra/terraform/
   bootstrap/     One-time setup script. Already run; not part of normal workflow.
+  modules/
+    environment/ One environment's stateful core — Key Vault, Postgres, Redis, Container
+                  Apps Environment. Called by envs/uat and (Phase 2B) envs/prod with a
+                  different `environment` value. See §11.
   envs/
-    shared/      Cross-environment: DNS zone, container registry, Key Vault.
-    uat/         Phase 2.
-    prod/        Phase 2.
+    shared/      Cross-environment: DNS zone, container registry.
+    uat/         Calls modules/environment. Landed 2026-08-16 (Phase 2A).
+    prod/        Phase 2B — will call the same module.
 ```
 
 One directory per environment, each with **its own state file**. This is the isolation
@@ -183,8 +190,9 @@ decisions with a deadline.
   relevant as soon as CD pushes on every merge. Basic includes 10 GB.
 - **Budget → action group → automation hard stop.** MCA subscriptions have no spending
   limit; see `azure-account-facts.md` §4.
-- **Per-environment Key Vaults.** The shared vault is the wrong home for
-  environment-specific secrets — see §10.
+- **Postgres/Redis firewall is currently "allow all Azure services," not per-resource.**
+  Same VNet dependency as above — narrowing this needs Container Apps to have a stable
+  outbound IP, which needs VNet integration.
 
 ---
 
@@ -213,8 +221,55 @@ in UAT could reach in prod**:
 |---|---|---|
 | Container registry (`veervratacr`) | **Yes — correct** | Promotion requires the *same image* be tested in UAT and shipped to prod. Separate registries mean either rebuilding (you'd ship bits you never tested) or copying between registries for no benefit. Images are artifacts, not secrets. |
 | State storage account (`veervrattfstate`) | **Account shared, state files separate** | The isolation boundary is the state *file*, not the account — `shared.tfstate`, later `uat.tfstate`, `prod.tfstate`. Terraform in one env cannot see another's resources. Note RBAC is granted at account scope, so anyone who can write UAT state can write prod state; revisit with separate containers when more than one person deploys. |
-| Key Vault (`veervrat-kv`) | **No — currently wrong, fix in Phase 2** | Secrets are exactly where a shared store breaks the environment boundary: a compromised or misconfigured UAT app could read the production database password. Per D11 beta testers with real personal data live on prod, so those credentials protect real users. |
+| Key Vault | **No** | Secrets are exactly where a shared store breaks the environment boundary: a compromised or misconfigured UAT app could read the production database password. Per D11 beta testers with real personal data live on prod, so those credentials protect real users. |
 
-**Phase 2 action:** add `veervrat-uat-kv` and `veervrat-prod-kv` in their own resource
-groups. Keep `veervrat-kv` only for genuinely cross-environment secrets. Key Vault is
-priced per operation, so additional vaults cost effectively nothing.
+**Resolved 2026-08-16 (Phase 2A):** the original shared `veervrat-kv` was deleted (confirmed
+0 secrets first) and replaced with a per-environment vault created by the module in §11 —
+`veervrat-uat-kv` now, `veervrat-prod-kv` with Phase 2B. Key Vault is priced per operation,
+so multiple vaults cost effectively nothing.
+
+---
+
+## 11. The `environment` module (Phase 2A, 2026-08-16)
+
+`modules/environment/` — one environment's stateful core: resource group, Key Vault,
+Postgres Flexible Server, Redis, and an empty Container Apps Environment. Parameterized by
+`environment` (`"uat"` / `"prod"`) so Phase 2B is `envs/prod/main.tf` calling the same
+module, not a second hand-written copy that can quietly drift from UAT's.
+
+**Deliberately not included:** Blob Storage (the app's upload code speaks the S3 protocol
+via `@aws-sdk/client-s3`, which Azure Blob does not — needs a small SDK swap first) and the
+actual `web`/`api` Container Apps (need a real image in ACR, which needs the CD pipeline).
+The Container Apps *Environment* — the empty execution shell — is created now so CD only
+has to deploy into it, not build it.
+
+Generated secrets (`database-url`, `redis-url`, the Postgres admin password) are written
+straight to the environment's Key Vault by Terraform — never typed by a human, never
+appear in a `.tf` file, never committed anywhere.
+
+### Two things discovered mid-build, not anticipated by the target architecture doc
+
+**Azure retired "Azure Cache for Redis" while this was being built.** The `apply` for the
+classic `azurerm_redis_cache` resource failed outright: *"Azure Cache for Redis is
+retiring, create Azure Managed Redis instance instead."* Its literal replacement resource,
+`azurerm_redis_enterprise_cluster`, turned out to be **also** deprecated and rejects the
+new SKU names — the actual current resource is `azurerm_managed_redis`, a different shape
+(one resource with a nested `default_database` block, not two separate resources). Verified
+pricing directly against Azure's live retail pricing API (`prices.azure.com`) rather than
+trusting either the marketing pricing page (shows no numbers) or a stale assumption:
+`Balanced_B0` is $0.017/hr (~$12/mo) in `centralindia` — cheaper than the ~$16/mo originally
+budgeted for the tier this replaces.
+
+**Lesson:** for external managed services, `plan`/`apply` failing with a clear error is the
+system working correctly, not a bug in our config — treat it as a signal to re-verify the
+target architecture doc's assumptions against current reality, not to route around.
+
+**Postgres reported drift on the very next `plan` after creation.** Azure auto-assigns an
+availability zone at creation; our config never set one, so Terraform read that as "should
+be null" and wanted to change it back on the next run — a real if low-risk diff (in-place
+update, not destroy/recreate). Fixed by reading the actual assigned zone
+(`az postgres flexible-server show --query availabilityZone`) and pinning it in config.
+
+**Lesson:** the same principle as §10 in reverse — some fields Azure assigns automatically
+that your config didn't request. Pin them once observed rather than leaving a plan that
+"corrects" something you never intended to change.
