@@ -21,6 +21,10 @@ function flattenValidationErrors(errors: ValidationError[], parentPath = ''): Va
 }
 
 export function configureApp(app: INestApplication): void {
+  // Makes Nest run onModuleDestroy / onApplicationShutdown on process signals. Without this
+  // those hooks never fire — PrismaService.onModuleDestroy was dead code — so connections were
+  // dropped mid-query rather than closed on every restart.
+  app.enableShutdownHooks();
   // HTTP security headers. The API serves JSON only, so disable the default CSP
   // (that's the frontend's concern) and COEP (would block cross-origin image/CDN use).
   app.use(

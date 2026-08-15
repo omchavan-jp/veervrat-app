@@ -1,6 +1,8 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { Logger, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import type Redis from 'ioredis';
+import { buildThrottlerOptions } from './common/throttler/throttler-config.factory';
 import { ScheduleModule } from '@nestjs/schedule';
 import { LoggerModule } from 'nestjs-pino';
 import { PrismaModule } from './prisma/prisma.module';
@@ -37,6 +39,7 @@ import { StatsModule } from './modules/stats/stats.module';
 import { AuditInterceptor } from './modules/audit/audit.interceptor';
 import { AuditService } from './modules/audit/audit.service';
 import { RedisModule } from './common/redis/redis.module';
+import { REDIS_CLIENT } from './common/redis/redis.provider';
 import { AppController } from './app.controller';
 import { Reflector } from '@nestjs/core';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
@@ -46,7 +49,13 @@ import { CsrfGuard } from './common/guards/csrf.guard';
 @Module({
   imports: [
     AppConfigModule,
-    ThrottlerModule.forRoot([{ name: 'global', ttl: 60000, limit: 300 }]),
+    // forRootAsync (not forRoot) so the Redis client can be injected — see the factory for why
+    // the default in-memory storage is unsafe with more than one replica.
+    ThrottlerModule.forRootAsync({
+      imports: [RedisModule],
+      inject: [REDIS_CLIENT],
+      useFactory: (redis: Redis) => buildThrottlerOptions(redis, new Logger('ThrottlerModule')),
+    }),
     // forRootAsync defers env reads until after AppConfigModule/dotenv has loaded
     LoggerModule.forRootAsync({
       useFactory: () => ({

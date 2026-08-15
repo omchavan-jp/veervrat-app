@@ -16,6 +16,18 @@ import * as Joi from 'joi';
           .valid('trace', 'debug', 'info', 'warn', 'error', 'fatal')
           .default('info'),
         NODE_ENV: Joi.string().valid('development', 'test', 'production').default('development'),
+        // Redis. Optional so the API still boots without it (local dev, unit tests), but when
+        // unset the rate limiter falls back to per-process counters and Socket.IO to the
+        // in-memory adapter — neither is safe with more than one replica.
+        REDIS_URL: Joi.string().optional(),
+        // Max pg connections held by ONE replica. The ceiling that matters is:
+        //   DATABASE_POOL_MAX × maxReplicas + headroom (migrations, admin) ≤ server max_connections
+        // Exhausting it is a cliff, not a slope: every request fails at once, health checks
+        // included. Default 10 matches the pg driver's own default, so this cannot regress.
+        DATABASE_POOL_MAX: Joi.number().integer().positive().default(10),
+        // Upper bound on graceful shutdown. Container platforms SIGTERM, wait, then SIGKILL;
+        // this must stay comfortably under that grace period.
+        SHUTDOWN_TIMEOUT_MS: Joi.number().integer().positive().default(10000),
         // Object storage (MinIO / S3-compatible) — optional; uploads fail gracefully if unset
         S3_ENDPOINT: Joi.string().optional(),
         S3_REGION: Joi.string().default('us-east-1'),

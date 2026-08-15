@@ -6,6 +6,7 @@ import {
   getTestPrisma,
   cleanTestDb,
 } from './helpers/app.helper';
+import { resetRateLimits, throttlerKeyCount } from './setup';
 
 describe('Auth — integration', () => {
   beforeAll(async () => {
@@ -204,6 +205,14 @@ describe('Auth — integration', () => {
           .send({ email, password: 'WrongPassword1' });
       }
 
+      // The `/login` route's own IP-based throttle (10 req/15min — see auth.controller.ts) uses
+      // the exact same count as this test's lockout threshold, so the 10 requests above trip
+      // both mechanisms simultaneously. The throttler guard runs ahead of the service-layer
+      // lockout check, so without this reset the 11th request below would be rejected by
+      // ThrottlerException, not the account-lockout logic this test exists to verify. This is a
+      // real product conflict (see backlog.md), not a workaround for a test artifact.
+      await resetRateLimits();
+
       // 11th should be ACCOUNT_LOCKED
       const res = await getRequest()
         .post('/api/v1/auth/login')
@@ -213,6 +222,43 @@ describe('Auth — integration', () => {
 
       expect(res.status).toBe(429);
       expect(res.body.error).toBe('ACCOUNT_LOCKED');
+    });
+  });
+
+  // ─── Rate limiting ─────────────────────────────────────────────────────────
+
+  describe('Rate limiting', () => {
+    it('blocks the 6th forgot-password request within an hour (limit: 5)', async () => {
+      const csrfToken = 'csrf-throttle-forgot';
+      const attempt = () =>
+        getRequest()
+          .post('/api/v1/auth/forgot-password')
+          .set('Cookie', `csrf-token=${csrfToken}`)
+          .set('X-CSRF-Token', csrfToken)
+          .send({ email: 'throttle-forgot@test.com' });
+
+      for (let i = 0; i < 5; i++) {
+        const res = await attempt();
+        expect(res.status).not.toBe(429);
+      }
+
+      const res = await attempt();
+      expect(res.status).toBe(429);
+    });
+
+    it('records counters in Redis, not per-process memory', async () => {
+      // Distinguishes "a limit was enforced" (could be the in-memory default) from "the Redis
+      // storage wired up in throttler-config.factory.ts is actually the thing enforcing it" —
+      // the multi-instance-readiness change this test suite covers is specifically about the
+      // latter.
+      const csrfToken = 'csrf-throttle-redis-check';
+      await getRequest()
+        .post('/api/v1/auth/forgot-password')
+        .set('Cookie', `csrf-token=${csrfToken}`)
+        .set('X-CSRF-Token', csrfToken)
+        .send({ email: 'throttle-redis-check@test.com' });
+
+      expect(await throttlerKeyCount()).toBeGreaterThan(0);
     });
   });
 });
