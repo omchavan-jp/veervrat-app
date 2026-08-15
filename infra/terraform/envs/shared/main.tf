@@ -11,7 +11,7 @@ terraform {
   # Where Terraform's state file (its record of what it has created) lives.
   # Created once by hand — see infra/terraform/bootstrap/create-state-backend.sh.
   backend "azurerm" {
-    resource_group_name = "veervrat-shared"
+    resource_group_name  = "veervrat-shared"
     storage_account_name = "veervrattfstate"
     container_name       = "tfstate"
     key                  = "shared.tfstate"

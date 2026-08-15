@@ -92,6 +92,7 @@ veervrat-app/
 - `documentation/16_Testing-Strategy.md` — what to test, auth matrix tests, E2E flows
 - `documentation/18_Observability-Standard.md` — structured logging schema, GlitchTip setup, alert thresholds
 - `documentation/19_Email-Strategy.md` — Resend + React Email, transactional vs notification emails, template structure, bilingual strategy
+- `documentation/21_Infrastructure-Conventions.md` — **read before touching `infra/terraform/`.** Naming rules, the DNS-zone rule, plan-before-apply discipline, import procedure, secrets/access model
 
 ## Hard rules — follow exactly
 

@@ -15,4 +15,11 @@ resource "azurerm_dns_zone" "veervrat" {
     environment = "shared"
     managed-by  = "manual-bootstrap"
   }
+
+  # The rule above, enforced rather than merely documented: Terraform will refuse to
+  # destroy this zone, so `terraform destroy` in this directory fails loudly instead of
+  # silently costing us a new NS delegation round-trip through JP.
+  lifecycle {
+    prevent_destroy = true
+  }
 }

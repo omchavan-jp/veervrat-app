@@ -4,7 +4,7 @@
 resource "azurerm_container_registry" "veervrat" {
   name                = "veervratacr"
   resource_group_name = data.azurerm_resource_group.shared.name
-  location             = var.location
+  location            = var.location
   sku                 = "Basic"
   admin_enabled       = false # CD pipeline will authenticate via managed identity, not a static admin password
 

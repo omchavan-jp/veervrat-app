@@ -4,7 +4,7 @@
 resource "azurerm_key_vault" "veervrat" {
   name                = "veervrat-kv"
   resource_group_name = data.azurerm_resource_group.shared.name
-  location             = var.location
+  location            = var.location
   tenant_id           = data.azurerm_client_config.current.tenant_id
   sku_name            = "standard"
 
@@ -13,16 +13,26 @@ resource "azurerm_key_vault" "veervrat" {
   rbac_authorization_enabled = true
 
   # Recovers from accidental deletion instead of the secret being gone forever.
-  purge_protection_enabled = false # keep off for now — makes the vault (and its secrets) permanently undeletable, revisit before prod
+  purge_protection_enabled   = false # keep off for now — makes the vault (and its secrets) permanently undeletable, revisit before prod
   soft_delete_retention_days = 7
 
   tags = var.tags
 }
 
-# The person running Terraform needs to be able to read/write secrets too (e.g. to seed
-# the DB password Phase 2 will create). Scoped to this vault only.
-resource "azurerm_role_assignment" "current_user_kv_admin" {
+# Note: with RBAC authorization enabled, subscription Owner does NOT grant access to secret
+# *values* — data-plane access needs its own role. Hence this explicit assignment, scoped to
+# this vault only. See var.key_vault_administrators for why these are named, not inferred.
+resource "azurerm_role_assignment" "key_vault_admins" {
+  for_each = var.key_vault_administrators
+
   scope                = azurerm_key_vault.veervrat.id
   role_definition_name = "Key Vault Administrator"
-  principal_id         = data.azurerm_client_config.current.object_id
+  principal_id         = each.value
+}
+
+# Renames the existing assignment in state instead of destroying and recreating it.
+# Safe to delete once this has been applied everywhere (i.e. after the next apply).
+moved {
+  from = azurerm_role_assignment.current_user_kv_admin
+  to   = azurerm_role_assignment.key_vault_admins["om"]
 }
