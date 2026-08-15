@@ -13,8 +13,12 @@ resource "azurerm_key_vault" "veervrat" {
   rbac_authorization_enabled = true
 
   # Recovers from accidental deletion instead of the secret being gone forever.
+  # 90 is the maximum and Azure's default. Soft-deleted vaults cost nothing, so a shorter
+  # window buys nothing and just makes a mistake unrecoverable sooner. Note this value is
+  # immutable — changing it replaces the vault, which is why it was set correctly while the
+  # vault was still empty.
   purge_protection_enabled   = false # keep off for now — makes the vault (and its secrets) permanently undeletable, revisit before prod
-  soft_delete_retention_days = 7
+  soft_delete_retention_days = 90
 
   tags = var.tags
 }

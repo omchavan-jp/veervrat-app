@@ -173,15 +173,48 @@ decisions with a deadline.
 - **VNet + private endpoints** for Postgres/Redis/Key Vault. Today these are reachable
   over the public internet and protected by identity + firewall + TLS, which is
   appropriate for beta. ~$7/mo per endpoint.
-- **Key Vault `purge_protection_enabled`** is currently `false` and
-  `soft_delete_retention_days` is `7` (the minimum; default is 90). Turning purge
-  protection on makes the vault permanently undeletable, so it is off while the setup
-  is still changing. Both should be reconsidered before the vault holds production
-  secrets — note that changing the retention window **replaces the vault**, so it is
-  cheapest to change while the vault is empty.
+- **Key Vault `purge_protection_enabled`** is currently `false`. Turning it on makes the
+  vault permanently undeletable, so it stays off while the setup is still changing.
+  Reconsider before the vault holds production secrets.
+  (`soft_delete_retention_days` is now `90` — see §10.)
 - **Container registry cleanup.** Automatic retention policies are **Premium-tier only**
   and we are on Basic, so the path is a scheduled `acr purge` task (supported on Basic)
   keeping roughly the last 10 tags. Not yet needed — zero images pushed. Becomes
   relevant as soon as CD pushes on every merge. Basic includes 10 GB.
 - **Budget → action group → automation hard stop.** MCA subscriptions have no spending
   limit; see `azure-account-facts.md` §4.
+- **Per-environment Key Vaults.** The shared vault is the wrong home for
+  environment-specific secrets — see §10.
+
+---
+
+## 10. Immutable settings — get them right at creation
+
+Some Azure properties cannot be changed after a resource is created. Terraform's `plan`
+does not always warn you: for `soft_delete_retention_days` it cheerfully planned an
+in-place update, and only the **apply** failed with *"once `soft_delete_retention_days`
+has been configured it cannot be modified"*. The fix was to replace the vault
+(`terraform apply -replace=...`), which was free only because the vault was still empty.
+
+**Lesson: a clean `plan` is not proof a change is possible.** For settings that look
+foundational (retention windows, redundancy, tier-defining options), assume immutable
+and set them correctly at creation, while the resource is empty and replacement is free.
+
+Settled 2026-08-16: `soft_delete_retention_days = 90` — the maximum, and Azure's
+default. Soft-deleted vaults cost nothing, so a shorter window buys nothing and only
+makes a mistake unrecoverable sooner.
+
+### Sharing across environments — decided per resource, not by default
+
+`shared` is not automatically the right home. The test is **what a compromise or mistake
+in UAT could reach in prod**:
+
+| Resource | Shared? | Why |
+|---|---|---|
+| Container registry (`veervratacr`) | **Yes — correct** | Promotion requires the *same image* be tested in UAT and shipped to prod. Separate registries mean either rebuilding (you'd ship bits you never tested) or copying between registries for no benefit. Images are artifacts, not secrets. |
+| State storage account (`veervrattfstate`) | **Account shared, state files separate** | The isolation boundary is the state *file*, not the account — `shared.tfstate`, later `uat.tfstate`, `prod.tfstate`. Terraform in one env cannot see another's resources. Note RBAC is granted at account scope, so anyone who can write UAT state can write prod state; revisit with separate containers when more than one person deploys. |
+| Key Vault (`veervrat-kv`) | **No — currently wrong, fix in Phase 2** | Secrets are exactly where a shared store breaks the environment boundary: a compromised or misconfigured UAT app could read the production database password. Per D11 beta testers with real personal data live on prod, so those credentials protect real users. |
+
+**Phase 2 action:** add `veervrat-uat-kv` and `veervrat-prod-kv` in their own resource
+groups. Keep `veervrat-kv` only for genuinely cross-environment secrets. Key Vault is
+priced per operation, so additional vaults cost effectively nothing.
