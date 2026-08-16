@@ -131,4 +131,4 @@ Updated 2026-08-16 (O6) — the Railway-era single-environment model is gone.
   Azure on the same image as the app, in the order build → migrate → deploy.
 - Conventional commits throughout.
 
-Full rules: `../CLAUDE.md` → Git conventions. Procedure: `../DEPLOYMENT.md`.
+Full rules: `../AGENTS.md` → Git conventions. Procedure: `../DEPLOYMENT.md`.

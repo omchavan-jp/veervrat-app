@@ -3,9 +3,9 @@
 Engineering decisions, standards, and conventions for the Veervrat app. Files are
 numbered by purpose so the reading order is obvious:
 
-- **00–05 — Orientation & roadmap:** where things stand, how to run it, what to build next, how to build it well.
-- **10–19 — Standards & conventions:** the rules every implementation must follow.
-- **90+ — Historical handoffs:** point-in-time session notes, kept for context.
+- **00–05 — Orientation & roadmap:** where things stand, how to run it, how to build it well.
+- **10–29 — Standards & conventions:** the rules every implementation must follow.
+- **90+ — Historical:** point-in-time records. **Frozen — never read as current state.**
 
 > This is engineering documentation. **Product decisions** live in `../spec/` (see
 > `../spec/SPEC_INDEX.md`); the **active spec-driven workflow** lives in `../openspec/`.
@@ -23,7 +23,7 @@ numbered by purpose so the reading order is obvious:
 | 04 | [Implementation Cautions & Principles](04_Implementation-Cautions-and-Principles.md) | Definition-of-Done, verification ladder, and generalized cautions. **Read before implementing any item.** |
 | 05 | [Deferral Ledger](05_Deferral-Ledger.md) | Cross-item index of intentionally-deferred work + which item pays it back. **Scan for your item number before starting.** |
 
-## 10–19 · Standards & conventions
+## 10–29 · Standards & conventions
 
 | # | Document | What it's for |
 |---|---|---|
@@ -41,17 +41,22 @@ numbered by purpose so the reading order is obvious:
 | 20 | [Solo-Dev Operations](20_Solo-Dev-Operations.md) | Feedback capture → triage (GitHub Issues) → implement → changelog/doc loop. |
 | 21 | [Infrastructure Conventions](21_Infrastructure-Conventions.md) | Terraform, Azure, CD, deployment traps. **Read before touching `infra/`.** |
 
-## 90+ · Historical handoffs
+## 90+ · Historical — frozen records
 
-| # | Document | What it's for |
+These describe a moment, not the present. Each carries a banner saying so. **Do not update
+them to match reality** — that destroys their value as a record; write current state in `01`
+or `../ops/PROJECT-STATUS.md` instead.
+
+| # | Document | Snapshot of |
 |---|---|---|
-| 90 | [Session Handoff — Auth Implementation](90_Session-Handoff-Auth-Implementation.md) | Point-in-time handoff notes from the auth build. Historical. |
+| 90 | [Session Handoff — Auth Implementation](90_Session-Handoff-Auth-Implementation.md) | 2026-05-20 — how auth was built. Its "known issues" are all resolved. |
+| 91 | [Production Readiness Audit](91_Production-Readiness-Audit.md) | 2026-07-01 — code-grounded audit taken *before* the Azure migration. |
 
 ---
 
 ### Related entry points
 - **Product spec:** `../spec/SPEC_INDEX.md` — every product decision, ADRs, the 74 screen specs.
-- **Agent context:** `../CLAUDE.md` — hard rules, project layout, session discipline.
+- **Agent context:** `../AGENTS.md` — hard rules, project layout, session discipline.
 - **Project status:** `../ops/PROJECT-STATUS.md` — decisions register (`D`), open threads (`O`),
   backlog (`B`), working order. **The live status document.**
 - **Azure reality:** `../ops/azure-account-facts.md` — what actually exists, plus the
@@ -63,7 +68,7 @@ numbered by purpose so the reading order is obvious:
 ### ⚠️ Reading status from these docs
 
 Several files here are **historical** and say so in a banner at the top: `03` (build plan,
-complete), `90` (May handoff), `PRODUCTION_READINESS_AUDIT` (July snapshot). They describe a
+complete), `90` (May handoff), `91` (July audit). They describe a
 moment, not the present. When a doc and reality disagree, reality wins and the doc is a bug —
 fix it in the same session.
 
@@ -71,7 +76,7 @@ fix it in the same session.
 asserting both "Sentry replaces GlitchTip" and "✅ Decided — GlitchTip" 92 lines apart, because
 a correct new line was added without reconciling the old one.
 
-> **Renaming convention:** when adding a doc, slot it into the right band (00–05 / 10–19 / 90+),
+> **Renaming convention:** when adding a doc, slot it into the right band (00–05 / 10–29 / 90+),
 > drop version suffixes from the filename, use `Hyphenated-Title-Case.md`, and add a row here.
 > Numbers are stable references — don't renumber an existing file without updating inbound links
-> (`CLAUDE.md`, `03_Implementation-Order.md`, and any `openspec/` specs that cite it).
+> (`AGENTS.md`, `03_Implementation-Order.md`, and any `openspec/` specs that cite it).

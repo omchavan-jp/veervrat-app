@@ -65,7 +65,7 @@ users, 10 journeys) + a local dump — **migration cancelled, see D19.**
 | Images | `veervratacr` — `veervrat-api`, `veervrat-api-migrate`, `veervrat-web`, built + cached in CI (GitHub Actions cache, not the registry) |
 | DNS | zone exists; **NS delegation still pending with JP** (O1) — blocks custom domain, working chat, Resend |
 
-`main` is the trunk; `dev` is retired. See `veervrat-app/CLAUDE.md` → Git conventions.
+`main` is the trunk; `dev` is retired. See `veervrat-app/AGENTS.md` → Git conventions.
 
 📌 **Before deploying anything new, read the traps table in `azure-account-facts.md` §5.**
 The first deploy hit seven distinct ones (Docker context bloat, arch mismatch, tag drift,
@@ -104,7 +104,7 @@ dropped build args). Every one is now documented with its guard.
 
 | # | Thread | Owner | Blocks |
 |---|---|---|---|
-| O6 | ✅ **CLOSED 2026-08-16** — single `main` trunk, UAT auto-deploys on merge, prod by `prod-*` tag promoting the same image. Documented in `veervrat-app/CLAUDE.md` + `DEPLOYMENT.md`. Transition done — `main` fast-forwarded, `dev` retired | — | — |
+| O6 | ✅ **CLOSED 2026-08-16** — single `main` trunk, UAT auto-deploys on merge, prod by `prod-*` tag promoting the same image. Documented in `veervrat-app/AGENTS.md` + `DEPLOYMENT.md`. Transition done — `main` fast-forwarded, `dev` retired | — | — |
 | O18 | ✅ **CLOSED 2026-08-16** — CD pipeline live. GitHub↔Azure via OIDC (no stored secret), `.github/workflows/cd.yml` + `.github/actions/deploy-environment`. Parallel cached builds, per-job auth, migrate-before-deploy enforced. UAT deploys proven end-to-end (multiple real runs, multiple real bugs found and fixed — see `veervrat-app/documentation/21_Infrastructure-Conventions.md` §14–15). `deploy-prod` not yet exercised — first prod tag is next | Claude | first prod deploy |
 | O1 | **DNS delegation** — Azure zone created 2026-08-15, NS values sent; awaiting Shantanu | Om → **Rahul** → Shantanu | custom domain, chat fix, Resend |
 | O2 | Confirm `veervrat.jnanaprabodhini.org` vs `veervrat.com` (90% settled on subdomain) | Om → **Ashutosh** | O1 |
@@ -127,6 +127,23 @@ dropped build args). Every one is now documented with its guard.
 > something. A **B-item** is noticed-but-unscheduled. When a B-item gets picked up it is
 > *moved* to this table, not copied. Merging the two registers on 2026-08-16 removed three
 > duplicates (ACR purge, chat readiness, feedback-widget environment) that existed in both.
+
+---
+
+## 🔄 In-flight OpenSpec changes
+
+`openspec/changes/` — genuinely incomplete work, not process debt. Task counts verified
+2026-08-16. Archived changes live in `openspec/changes/archive/` (36 of them).
+
+| Change | Tasks | Note |
+|---|---|---|
+| `ui-ux-remediation` | 39/42 | closest to done |
+| `my-vratmitras-chat` | 49/62 | the remainder is O8 — chat has never run in production |
+| `prevent-duplicate-journeys` | 0/11 | proposed, not started |
+
+`multi-instance-readiness` was archived 2026-08-16 at 35/35 — it had been left unarchived
+after completion, which `documentation/04` §12 correctly calls a defect: half-finished process
+state reads as ambiguous status to the next session.
 
 ---
 
@@ -263,7 +280,7 @@ first-time deployment surprise surfaces as a red CI log instead of in front of y
 Never a bare question or bare recommendation. Always include: the options considered
 (including rejected ones), which way you lean and why, why *not* each alternative, and what
 fact would change your mind. A recommendation without its alternatives is indistinguishable
-from a guess. Full version in `veervrat-app/CLAUDE.md`.
+from a guess. Full version in `veervrat-app/AGENTS.md`.
 
 ## Conventions
 

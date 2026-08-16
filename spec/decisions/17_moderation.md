@@ -31,9 +31,9 @@ _Last updated: 2026-06-01 | Round: R1_
 - Scheduled specific dates take priority over the queue.
 
 ### Moderation Area
-- Lives as a section within the existing app (`/moderation` route group, already in CLAUDE.md architecture).
+- Lives as a section within the existing app (`/moderation` route group, already in AGENTS.md architecture).
 - Not a separate tool.
-- All admin/moderator actions are audit-logged (already a hard rule in CLAUDE.md).
+- All admin/moderator actions are audit-logged (already a hard rule in AGENTS.md).
 
 - **Moderator pending review dashboard:** yes — moderators see a unified dashboard of all pending items (ERC proposals, reported blog comments, etc.).
 - **Blog comment reporting:** yes — any authenticated user can report a comment for moderator review.

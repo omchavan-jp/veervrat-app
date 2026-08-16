@@ -114,7 +114,7 @@ These are acknowledged but not yet decided in detail:
 | ~~Observability~~ | ✅ Decided 2026-08 — **Sentry** (app errors) + **Azure App Insights** (platform) + Pino structured JSON. **Supersedes the earlier GlitchTip decision** (D8 in `../ops/PROJECT-STATUS.md`). Implementation still pending — see backlog B13. Standard: 18_Observability-Standard.md |
 | ~~Security baseline~~ | ✅ CSRF (double-submit cookie), rate limiting, upload rules, brute force. See 10_Platform-Engineering-Standard.md + 14_Auth-Architecture-Decision.md (§15-16) |
 | ~~Hosting~~ | ✅ Decided 2026-08 — **Azure**, Central India, single cloud + Terraform. Container Apps (not self-run Kubernetes), managed Postgres/Redis, zero VMs. See `../ops/azure-account-facts.md` and `21_Infrastructure-Conventions.md` |
-| ~~Release process~~ | ✅ Decided 2026-08-16 (O6) — single `main` trunk, UAT auto-deploys on merge, prod ships by `prod-*` tag promoting the same image. See `../CLAUDE.md` → Git conventions |
+| ~~Release process~~ | ✅ Decided 2026-08-16 (O6) — single `main` trunk, UAT auto-deploys on merge, prod ships by `prod-*` tag promoting the same image. See `../AGENTS.md` → Git conventions |
 | ~~CI/CD~~ | ✅ **Both built** (O18) — CI gates PRs; CD does build → migrate → deploy with GitHub OIDC to Azure, no stored secrets. ⚠️ Merge is **not** blocked on green checks: branch protection is paywalled on this plan (B5) |
 | Object storage | Provider decided (Azure Blob) but **not implemented** — app still uses the S3 API via `@aws-sdk/client-s3`; needs an `@azure/storage-blob` swap |
 | ~~AI/recommendations~~ | ✅ Deferred to v2 explicitly. See spec/decisions/08_out-of-scope.md |
@@ -131,4 +131,4 @@ These define how code should be written. **See `00_INDEX.md` for the full docume
 
 ## Repo structure
 
-See `CLAUDE.md` for the full project layout and hard rules.
+See `AGENTS.md` for the full project layout and hard rules.

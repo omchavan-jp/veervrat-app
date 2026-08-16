@@ -20,7 +20,7 @@
 > useful when revisiting an area. The `/opsx:propose` session prompts are spent.
 >
 > ⚠️ Its process instructions are also stale: it says "squash merge to **dev**". `dev` is
-> retired — `main` is the trunk (O6). See `../CLAUDE.md` → Git conventions.
+> retired — `main` is the trunk (O6). See `../AGENTS.md` → Git conventions.
 
 _Written 2026-06-03. Superseded as a status document 2026-08-16._
 

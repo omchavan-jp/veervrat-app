@@ -3,7 +3,7 @@
 The live runbook. **This must describe what is actually deployed**, not what we intend to
 deploy. Update it in any infra PR.
 
-Rules and conventions live in `CLAUDE.md` (branching, tags, migrations) and
+Rules and conventions live in `AGENTS.md` (branching, tags, migrations) and
 `documentation/21_Infrastructure-Conventions.md` (Terraform). This file is the *procedure*.
 
 ---
@@ -13,25 +13,28 @@ Rules and conventions live in `CLAUDE.md` (branching, tags, migrations) and
 **UAT is live.** First successful Azure deploy 2026-08-16 — `/ready` green with Postgres
 and Redis both up, schema migrated, web serving and proxying to the api.
 
-**Prod does not exist yet**, so beta testers still have no access (per D11 they live on
-prod). That is the next milestone, after CD.
+**Prod infrastructure exists** (Phase 2B, 2026-08-16) — Postgres, Redis, Key Vault, Container
+Apps environment, all provisioned and `plan`-clean. **No apps deployed to it and no `prod-*`
+tag cut yet**, so beta testers still have no access (per D11 they live on prod).
 
-Data is safe: 12 users / 10 journeys in Neon, plus a local dump at
-`../backups/veervrat-neon-20260809T184831Z.dump`.
+Neon migration is **cancelled** (D19) — prod will be created fresh and seeded, exactly as CD
+already does for UAT. The dump at `../backups/veervrat-neon-20260809T184831Z.dump` is retained
+as an archive, not a migration source.
 
 | Piece | State |
 |---|---|
 | Azure subscription | `veervrat` · Central India · grant-funded (expires 2027-08-14) |
-| Terraform | `infra/terraform/` — `envs/shared` + `envs/uat` applied, `envs/prod` not built |
+| Terraform | `infra/terraform/` — `envs/shared`, `envs/uat`, `envs/prod` all applied, plans clean |
 | Container registry | `veervratacr.azurecr.io` — `veervrat-api`, `veervrat-api-migrate`, `veervrat-web` |
 | CI/CD | `ci.yml` + `integration.yml` (PR gates) · `cd.yml` (build → migrate → deploy). GitHub→Azure via OIDC, no stored secrets |
 | UAT Postgres | `veervrat-uat-psql` (v18, Burstable B1ms) — running, **schema migrated** (`pg_trgm` allow-listed via `azure.extensions`) |
 | UAT Redis | `veervrat-uat-redis` (Azure Managed Redis, Balanced_B0) — running |
-| UAT secrets | `veervrat-uat-kv` — holds `database-url`, `redis-url` |
+| UAT secrets | `veervrat-uat-kv` — `database-url`, `redis-url`, `session-secret`, `postgres-admin-password` |
+| UAT data | ✅ **seeded** — 6 virtues, 35 weaknesses, 226 sentences, 82 exposures, 128 resolutions, 31 challenges |
 | UAT compute | api + web Container Apps **running** in `veervrat-uat-cae`, scale-to-zero when idle |
 | UAT web | https://veervrat-uat-web.proudcoast-d3aa08a0.centralindia.azurecontainerapps.io |
 | UAT api | https://veervrat-uat-api.proudcoast-d3aa08a0.centralindia.azurecontainerapps.io |
-| prod | not created |
+| prod | **infra live, no apps** — `veervrat-prod-{psql,redis,kv,cae}` provisioned; 35-day backup retention; awaiting the first `prod-*` tag |
 | DNS | zone `veervrat.jnanaprabodhini.org` exists; **NS delegation pending with JP** |
 | Email (Resend) | not wired |
 | Object storage | **not provisioned** — app still uses the S3 API; needs an SDK swap first |
@@ -41,7 +44,7 @@ Data is safe: 12 users / 10 journeys in Neon, plus a local dump at
 
 ## How code reaches each environment
 
-See `CLAUDE.md` → Git conventions for the rules. In short:
+See `AGENTS.md` → Git conventions for the rules. In short:
 
 ```
 merge PR to main  →  build image tagged with git SHA  →  push to veervratacr
@@ -197,7 +200,7 @@ in the file.
 
 ## Database migrations — manual, never automatic
 
-Per the hard rule in `CLAUDE.md`: migrations are never applied automatically to a deployed
+Per the hard rule in `AGENTS.md`: migrations are never applied automatically to a deployed
 environment. A bad migration against real user data is expensive to undo.
 
 **They run as a one-off Container Apps Job inside Azure**, using the same image as the app.

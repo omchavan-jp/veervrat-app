@@ -4,7 +4,7 @@ _Last updated: 2026-06-02 | Round: R1_
 ## Architecture
 
 - **Fully integrated** — not a separate app or account switch. A user who is both VA and VM accesses both views from the same sidebar nav.
-- Route group: `(vratmitra)/` — replaces the previous `(mentor)/` reference in CLAUDE.md.
+- Route group: `(vratmitra)/` — replaces the previous `(mentor)/` reference in AGENTS.md.
 - Nav items for VM sections are only visible to users who currently hold an active VM assignment (global or journey-level). Hidden entirely for users with no VM assignments.
 
 ---

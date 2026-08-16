@@ -11,7 +11,7 @@
 Role-segmented routes within a single app:
 
 ⚠️ **Corrected 2026-08-16.** This previously used "mentor" and "mentees", violating the
-domain-language rule in `../CLAUDE.md` (*vratmitra*, not mentor; *vratarthi*, not user), and
+domain-language rule in `../AGENTS.md` (*vratmitra*, not mentor; *vratarthi*, not user), and
 listed routes that never existed. Actual structure:
 
 ```
