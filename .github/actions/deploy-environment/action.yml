@@ -1,0 +1,106 @@
+name: Deploy environment
+description: >
+  Applies infrastructure, runs migrations, then deploys the apps — in that order, which is
+  the whole point. Shared by UAT and prod so the two cannot drift apart.
+
+inputs:
+  environment:
+    description: uat or prod
+    required: true
+  image_tag:
+    description: Git SHA of the images to deploy. Promoted, never rebuilt.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.15.8
+        terraform_wrapper: false
+
+    - name: Terraform init
+      shell: bash
+      working-directory: infra/terraform/envs/${{ inputs.environment }}
+      run: terraform init -input=false
+
+    # Step 1 — infrastructure only. `deploy_apps=false` deliberately leaves the api/web apps
+    # untouched, so the database and the migration job are updated while the running apps are
+    # still serving the OLD image against the OLD schema. Nothing user-visible changes yet.
+    - name: Apply infrastructure (apps untouched)
+      shell: bash
+      working-directory: infra/terraform/envs/${{ inputs.environment }}
+      run: |
+        terraform apply -input=false -auto-approve \
+          -var="image_tag=${{ inputs.image_tag }}" \
+          -var="deploy_apps=false"
+
+    # Step 2 — migrate, on the NEW image, before any app runs the new code.
+    #
+    # `--image` overrides the job's image for this execution only. That is what makes the
+    # ordering enforceable without a second apply or a `-target` hack: the migration runs on
+    # the new build while the apps are still on the old one.
+    #
+    # Reversed, the app boots and queries columns that do not exist yet.
+    - name: Run migrations
+      shell: bash
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
+        IMAGE_TAG: ${{ inputs.image_tag }}
+      run: |
+        set -euo pipefail
+        EXEC=$(az containerapp job start \
+          -n "veervrat-$ENVIRONMENT-migrate" -g "veervrat-$ENVIRONMENT" \
+          --image "veervratacr.azurecr.io/veervrat-api-migrate:$IMAGE_TAG" \
+          --query name -o tsv)
+        echo "migration execution: $EXEC"
+
+        # Poll to a terminal state. A migration that fails must fail the deploy — otherwise
+        # the next step ships code expecting a schema that was never applied.
+        for _ in $(seq 1 90); do
+          STATUS=$(az containerapp job execution show \
+            -n "veervrat-$ENVIRONMENT-migrate" -g "veervrat-$ENVIRONMENT" \
+            --job-execution-name "$EXEC" --query properties.status -o tsv 2>/dev/null || echo Unknown)
+          case "$STATUS" in
+            Succeeded) echo "migrations applied"; exit 0 ;;
+            Failed|Degraded)
+              echo "::error::migration $EXEC failed"
+              az containerapp job logs show -n "veervrat-$ENVIRONMENT-migrate" \
+                -g "veervrat-$ENVIRONMENT" --container migrate --tail 60 || true
+              # Prisma records a failed migration and blocks every later one until a human
+              # decides whether it rolled back. Recovery is deliberate, never automatic:
+              #   terraform apply -var='migrate_command=migrate resolve --rolled-back <name>'
+              echo "::error::resolve it before retrying — see DEPLOYMENT.md → migrations"
+              exit 1 ;;
+          esac
+          sleep 10
+        done
+        echo "::error::migration did not reach a terminal state in 15 minutes"; exit 1
+
+    # Step 3 — now the apps move to the new image, against a schema that already matches.
+    - name: Deploy apps
+      shell: bash
+      working-directory: infra/terraform/envs/${{ inputs.environment }}
+      run: |
+        terraform apply -input=false -auto-approve \
+          -var="image_tag=${{ inputs.image_tag }}" \
+          -var="deploy_apps=true"
+
+    # `/ready` pings Postgres and Redis, so a green here proves images, Key Vault secrets via
+    # managed identity, networking and schema are all correct together. `/health` would only
+    # prove the process started.
+    - name: Verify /ready
+      shell: bash
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
+      run: |
+        set -euo pipefail
+        FQDN=$(az containerapp show -n "veervrat-$ENVIRONMENT-api" -g "veervrat-$ENVIRONMENT" \
+          --query properties.configuration.ingress.fqdn -o tsv)
+        # Retry: min_replicas=0 means the first request after idle pays a cold start.
+        for i in $(seq 1 20); do
+          CODE=$(curl -s -o /tmp/ready.json -w '%{http_code}' --max-time 60 "https://$FQDN/ready" || echo 000)
+          if [ "$CODE" = "200" ]; then cat /tmp/ready.json; echo; echo "ready"; exit 0; fi
+          echo "attempt $i: HTTP $CODE"; sleep 15
+        done
+        echo "::error::api never became ready"; cat /tmp/ready.json 2>/dev/null || true; exit 1

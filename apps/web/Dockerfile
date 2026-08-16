@@ -27,6 +27,11 @@ ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 # into the build. Set it as a Railway build-time variable on the web service.
 ARG API_ORIGIN
 ENV API_ORIGIN=${API_ORIGIN}
+# Absolute base for og:image / canonical URLs (app/layout.tsx). Build-time like every other
+# NEXT_PUBLIC_*; without it the build silently falls back to a hard-coded URL and every link
+# preview points at the wrong host.
+ARG NEXT_PUBLIC_SITE_URL
+ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
 # Feedback widget mode: 'test' (list + form), 'public' (form only), unset = hidden.
 ARG NEXT_PUBLIC_FEEDBACK_MODE
 ENV NEXT_PUBLIC_FEEDBACK_MODE=${NEXT_PUBLIC_FEEDBACK_MODE}

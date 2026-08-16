@@ -20,6 +20,7 @@ This document is the canonical reference for all library, tooling, and architect
 | Icons | lucide-react | `lucide-react` | Already in stack. Lined = default, filled = active. No mixing styles. |
 | WebSocket (client) | Socket.IO client | `socket.io-client` | Pairs with NestJS Gateway, handles reconnect natively |
 | WebSocket (server) | NestJS Gateway | `@nestjs/websockets`, `socket.io` | Native NestJS, cookie auth on handshake |
+| WebSocket (multi-instance) | Socket.IO Redis adapter | `@socket.io/redis-adapter` | **Required before running more than one API replica.** Socket.IO keeps room membership in per-process memory, so without a shared backplane a message published on replica A never reaches a client connected to replica B — silently, with no error. Uses two duplicated `ioredis` clients (pub/sub) from the existing `REDIS_CLIENT`. |
 | Background jobs (v1) | @nestjs/schedule | `@nestjs/schedule` | Single-instance cron. Known limitation: not multi-instance safe. |
 | Background jobs (v2 path) | BullMQ | `bullmq` | Upgrade path when horizontal scaling is needed. Redis-backed. |
 | Email provider | Resend SDK | `resend` | Free tier: 3k/month. Console logging in local dev. |
@@ -36,6 +37,7 @@ This document is the canonical reference for all library, tooling, and architect
 | Config validation | Joi | `joi` | Validates required env vars at startup via ConfigModule validationSchema. Fail-fast on missing config. |
 | Redis client | ioredis | `ioredis` | Used for account lockout, OG cache TTL, and future BullMQ upgrade. Injected as `REDIS_CLIENT` provider. |
 | Rate limiting | @nestjs/throttler | `@nestjs/throttler` | NestJS-native, per-route overrides via `@Throttle()`, global guard in AppModule. |
+| Rate limiting — shared storage | Redis throttler storage | `@nest-lab/throttler-storage-redis` | **Required for correctness on more than one replica.** The default storage is per-process memory, so N replicas allow N× the intended limit and every deploy resets the counters — a security control that silently weakens exactly as you scale. Redis-backed storage makes limits global and deploy-durable. Reuses the existing `REDIS_CLIENT`. |
 | HTTP security headers | helmet | `helmet` | Sets X-Frame-Options, X-Content-Type-Options, HSTS, Referrer-Policy, etc. Applied once in `configureApp`. API serves JSON only, so CSP is left to the frontend layer. |
 
 ---

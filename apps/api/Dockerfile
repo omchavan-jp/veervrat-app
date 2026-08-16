@@ -40,7 +40,11 @@ ENV NODE_ENV=production
 RUN groupadd --system --gid 1001 nodejs && useradd --system --uid 1001 --gid nodejs nodejs
 COPY --from=build --chown=nodejs:nodejs /app/pruned/node_modules ./node_modules
 COPY --from=build --chown=nodejs:nodejs /app/apps/api/dist ./dist
-# Prisma schema + migrations travel with the image so `migrate deploy` can run from here.
+# Prisma schema + migrations travel with the image for reference and for `@prisma/client`.
+# NOTE: `migrate deploy` can NOT run from this stage — the `prisma` CLI is a devDependency
+# and is pruned out above. Migrations run from the `build` stage instead, which keeps this
+# runtime image small (it matters: scale-to-zero means image size is cold-start time).
+# See DEPLOYMENT.md → migrations.
 COPY --from=build --chown=nodejs:nodejs /app/apps/api/prisma ./prisma
 USER nodejs
 EXPOSE 3001

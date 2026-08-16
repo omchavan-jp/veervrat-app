@@ -1,0 +1,84 @@
+terraform {
+  required_version = ">= 1.15"
+
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.6"
+    }
+  }
+
+  # Same storage account as envs/shared (bootstrap/create-state-backend.sh), but its own
+  # file — `key` is what keeps UAT's state (and therefore blast radius) separate from
+  # shared's and, later, prod's.
+  backend "azurerm" {
+    resource_group_name  = "veervrat-shared"
+    storage_account_name = "veervrattfstate"
+    container_name       = "tfstate"
+    key                  = "uat.tfstate"
+    use_azuread_auth     = true
+  }
+}
+
+provider "azurerm" {
+  features {
+    key_vault {
+      purge_soft_delete_on_destroy = true
+    }
+  }
+}
+
+# Set per deploy rather than committed, so the tag in state always reflects what is actually
+# running: terraform apply -var="image_tag=$(git rev-parse --short HEAD)" -var="deploy_apps=true"
+variable "image_tag" {
+  description = "Git SHA of the images to run. Empty = infra only, no apps."
+  type        = string
+  default     = ""
+}
+
+variable "deploy_apps" {
+  description = "Create the api/web Container Apps and the migration job."
+  type        = bool
+  default     = false
+}
+
+module "environment" {
+  source      = "../../modules/environment"
+  environment = "uat"
+
+  image_tag       = var.image_tag
+  deploy_apps     = var.deploy_apps
+  migrate_command = var.migrate_command
+
+  # UAT is disposable and has no real users: scale to zero when idle (free), and keep the
+  # per-replica connection count low so it cannot exhaust Burstable Postgres.
+  api_min_replicas  = 0
+  web_min_replicas  = 0
+  database_pool_max = 5
+}
+
+output "resource_group_name" {
+  value = module.environment.resource_group_name
+}
+
+output "key_vault_name" {
+  value = module.environment.key_vault_name
+}
+
+output "postgres_fqdn" {
+  value = module.environment.postgres_fqdn
+}
+
+output "redis_hostname" {
+  value = module.environment.redis_hostname
+}
+
+variable "migrate_command" {
+  description = "Prisma CLI subcommand the migration job runs. Override to recover a failed migration."
+  type        = string
+  default     = "migrate deploy"
+}

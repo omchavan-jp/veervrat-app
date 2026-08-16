@@ -92,6 +92,7 @@ veervrat-app/
 - `documentation/16_Testing-Strategy.md` — what to test, auth matrix tests, E2E flows
 - `documentation/18_Observability-Standard.md` — structured logging schema, GlitchTip setup, alert thresholds
 - `documentation/19_Email-Strategy.md` — Resend + React Email, transactional vs notification emails, template structure, bilingual strategy
+- `documentation/21_Infrastructure-Conventions.md` — **read before touching `infra/terraform/`.** Naming rules, the DNS-zone rule, plan-before-apply discipline, import procedure, secrets/access model
 
 ## Hard rules — follow exactly
 
@@ -172,15 +173,55 @@ Do all of this before invoking the skill:
 
 ## Git conventions
 
-### Branching
-- `dev` — **working integration branch**. All feature branches merge here. Never commit directly to dev — PR always.
-- `main` — production-stable only. Merges from dev after release validation.
-- `feat/<name>` — new features, branched from dev
-- `fix/<name>` — bug fixes, branched from dev
-- `refactor/<name>` — refactoring without behaviour change
-- `chore/<name>` — tooling, config, deps
-- `spec/<name>` — spec and documentation work (e.g. `spec/discovery` — now merged into dev)
-- **No direct commits to dev or main** — PR always
+### Branching — single trunk (`main`), releases by tag
+
+Settled 2026-08-16 (O6). Replaces the earlier `dev`/`main` two-branch model, which existed
+when Railway auto-deployed `dev` to the only environment there was.
+
+- **`main` is the trunk.** Everything merges here. **Never commit directly** — PR always.
+- **`main` must always be releasable.** This is the one real cost of a single trunk: a
+  release tag is only useful if `HEAD` is shippable. Keep PRs small and complete; anything
+  half-finished stays on its branch or goes behind a flag.
+- `feat/<name>` · `fix/<name>` · `refactor/<name>` · `chore/<name>` · `spec/<name>` —
+  all branched from `main`.
+- `dev` is **retired** — kept (branches are never deleted) but no longer merged into.
+
+**Branches are not environments.** A branch says what code exists; a tag says what was
+released. There is no `uat` branch and no `prod` branch — the same commit is promoted
+through environments by tag, so what you tested is literally what ships.
+
+### Environments and how code reaches them
+
+| Environment | What runs there | Triggered by |
+|---|---|---|
+| **dev** | local `docker-compose` | nothing — it's your machine, no pipeline touches it |
+| **UAT** | `veervrat-uat` on Azure | **automatic** on every merge to `main` |
+| **prod** | `veervrat-prod` on Azure | **a `prod-*` tag** — the tag itself is the gate (see below) |
+
+Note the name collision: the *environment* called "dev" (D10) is local docker-compose. It
+has nothing to do with the old `dev` *branch*.
+
+**On the prod gate:** GitHub's "required reviewers" protection rule needs a **paid plan on
+private repos**, so there is no approval prompt. The deliberate act is cutting the tag —
+nobody pushes a `prod-*` tag by accident, and self-approval would be a rubber stamp for a
+single maintainer. Revisit when a second maintainer joins or the repo moves to an org.
+
+### Release tags
+- Format `prod-YYYY-MM-DD`, suffixed `-2`, `-3` for multiple releases in a day.
+- **Deliberately not semver** — semver signals a public API contract this app doesn't have.
+- The tag is a human-readable bookmark. Real traceability is the **container image tagged
+  with the git SHA**.
+- **Promote, never rebuild.** The prod deploy ships the *same image* UAT already exercised.
+  Rebuilding from the same commit usually produces identical bits — but not guaranteed
+  (dependency resolution drifts), and then you'd ship something nobody tested.
+
+### Hotfix
+1. Branch from the **last `prod-*` tag** (not necessarily `main` — `main` may contain
+   unreleased work).
+2. Fix, PR, merge to `main`.
+3. Tag and deploy.
+4. **Confirm the fix is on `main`.** This is the step everyone forgets; skip it and the
+   next release silently reverts the hotfix.
 
 ### Commit messages (conventional commits)
 - `feat: add journey status overview endpoint`
@@ -193,14 +234,29 @@ Do all of this before invoking the skill:
 - Migrations get their own commit: `db: add journey_weakness join table`
 
 ### Merging philosophy
-- Squash merge feature branches into dev (clean history)
-- Never merge dev into a feature branch mid-work — rebase instead
-- dev → main only for production releases
+- Squash merge feature branches into `main` (clean history)
+- Never merge `main` into a feature branch mid-work — rebase instead
+- Feature branches are **kept** after merge, never deleted
 
-### Before starting implementation
-- `spec/discovery` is merged to `dev` ✅
-- Create `chore/pre-impl-setup` branch off `dev` for infrastructure setup (docker-compose, env, schema)
-- Feature branches created from `dev` after setup is merged
+**Squash and keep-the-branch are a pair, not two independent preferences.** Squashing puts
+one commit per PR on `main` — readable history, and a revert is a single commit, which
+matters now that tags mark releases. The cost is that the branch becomes the *only* place
+the granular commits survive, so deleting it would genuinely lose that history. (The
+coherent alternative is normal-merge + delete, which keeps every `wip`/`fix typo` commit in
+`main`'s history instead. We chose the other trade.) If the branch list gets noisy, prune
+old *merged* branches deliberately — don't switch merge strategy.
+
+### Database migrations
+- **Never auto-migrate any deployed environment.** Migrations run as a deliberate,
+  separately-triggered step, before the app image that needs them is deployed.
+- They run as a one-off job **inside Azure**, using the same container image as the app —
+  not from a laptop. Azure Postgres only accepts connections from Azure services, and
+  running from a local machine also risks a Prisma version mismatch with production.
+- Order is always: **build image → run migration job → deploy app.** Reversed, the app
+  queries columns that don't exist yet.
+- Migrations are forward-only. A bad one is corrected by a new migration, never by
+  `migrate reset` against a deployed database.
+- Full procedure: `DEPLOYMENT.md`.
 
 ## Session discipline
 - One task per session — don't try to do everything
