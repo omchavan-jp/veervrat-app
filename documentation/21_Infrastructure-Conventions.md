@@ -765,3 +765,80 @@ done
 
 The general shape: a thin pass-through layer is easy to forget precisely because it contains
 no logic. When adding a module variable, grep for every wrapper that calls the module.
+
+### Azure CLI hangs forever if IPv6 to Microsoft's login endpoint is broken
+
+Every `az` command that touched Azure (even `az group list`) hung indefinitely — no error,
+no timeout, nothing. `az account show` had worked moments earlier, which ruled out an
+expired login.
+
+Diagnosed with `az ... --debug`: the log showed a valid cached refresh token being used
+(`Cache attempts an RT`), then hung opening a connection to
+`login.microsoftonline.com`. Confirmed the actual cause directly:
+
+```bash
+curl -4 https://login.microsoftonline.com/   # 302 in 0.26s — fine
+curl -6 https://login.microsoftonline.com/   # timeout, 10s   — hangs
+```
+
+IPv6 to Microsoft's login endpoint was broken on the network; Azure CLI's Python HTTP stack
+has no "Happy Eyeballs" fallback, so it hung on the first (IPv6) address forever rather than
+falling back to IPv4. `gh` and plain `curl` were unaffected because they/the OS resolver
+behave differently.
+
+**Fix:** `sudo networksetup -setv6off Wi-Fi` (macOS). Re-enable with
+`sudo networksetup -setv6automatic Wi-Fi` once no longer needed. This is a
+machine-network change, not a project one — confirm with whoever owns the machine before
+running it, and reverse it afterward rather than leaving IPv6 off indefinitely.
+
+**If `az` ever appears to hang with zero output, this is the first thing to check** — it
+looks identical to a login prompt silently waiting on stdin, which is the misleading
+diagnosis that costs the most time.
+
+---
+
+## 15. CD: what GitHub can and cannot do, and where it's authorized
+
+### Identity and credentials
+
+One user-assigned managed identity, `veervrat-github-actions` (in `veervrat-shared`,
+`infra/terraform/envs/shared/github-oidc.tf`), shared by every CD job. No client secret, no
+publish profile — GitHub exchanges a short-lived OIDC token for an Azure token at run time.
+
+**Three federated credentials, one per GitHub Environment** (`build`, `uat`, `prod` — see §14
+"declare an environment on every job" for why there are exactly these three, no more):
+
+```
+repo:veer-vrat/veervrat-app:environment:build
+repo:veer-vrat/veervrat-app:environment:uat
+repo:veer-vrat/veervrat-app:environment:prod
+```
+
+Verify what exists: `az identity federated-credential list --identity-name
+veervrat-github-actions -g veervrat-shared -o table`.
+
+### Roles — all at subscription scope, deliberately
+
+| Role | Scope | Why |
+|---|---|---|
+| Contributor | subscription | CD creates resource groups itself (`veervrat-uat`, `veervrat-prod`), so anything narrower couldn't provision a new environment |
+| AcrPush | `veervratacr` | push built images — no admin password exists on the registry (`admin_enabled = false`) |
+| Storage Blob Data Contributor | `veervrattfstate` | read/write Terraform state |
+| Key Vault Secrets Officer | subscription | re-apply the same generated secrets on every run — Terraform is idempotent, so this must be read/write, not just read |
+
+**Contributor cannot grant roles.** CD can deploy infrastructure but cannot widen anyone's
+access, including its own — the same escalation boundary Azure enforces everywhere else in
+this project.
+
+Because every grant is subscription-scoped rather than resource-group-scoped, **prod needed
+zero additional role assignments** once its resource group existed — confirmed via
+`az role assignment list --assignee <client-id> --scope /subscriptions/<id>` before the
+first prod deploy, rather than assumed.
+
+### No paid-plan reviewer gate — the tag is the gate
+
+GitHub's required-reviewers protection rule needs a paid plan on private repos (422 on this
+account — see §14). The `prod` GitHub Environment therefore carries no protection rule; it
+exists solely to make the OIDC subject `environment:prod`. The deploy gate is **cutting and
+pushing a `prod-YYYY-MM-DD` tag** — deliberate and traceable, accepted as adequate for a
+single maintainer. Revisit with a second maintainer or a move to an org.
