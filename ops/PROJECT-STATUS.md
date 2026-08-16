@@ -58,7 +58,7 @@ yet — that's B1, next. Data remains safe in Neon (12 users, 10 journeys) + a l
 | Cloud | **Azure**, Central India (Pune) — grant **US$2,000 / ₹1,91,300**, expires **2027-08-14** |
 | Subscription | `veervrat` · `3ffcc513-dca6-453c-b9ff-83b096ea1381` |
 | Spend | UAT ~$28/mo + prod stateful core ~similar → **~$55-60/mo for both**, once prod runs apps |
-| Domain | `veervrat.jnanaprabodhini.org` (90% confirmed) + `veervrat.com` to buy defensively |
+| Domain | `veervrat.jnanaprabodhini.org` — **finalised** (O2 closed 2026-08-16) + `veervrat.com` to buy defensively |
 | UAT web | `https://veervrat-uat-web.proudcoast-d3aa08a0.centralindia.azurecontainerapps.io` |
 | UAT api | `https://veervrat-uat-api.proudcoast-d3aa08a0.centralindia.azurecontainerapps.io` |
 | Terraform | `veervrat-app/infra/terraform/` — `envs/shared`, `envs/uat`, `envs/prod` all applied, plans clean |
@@ -109,7 +109,7 @@ dropped build args). Every one is now documented with its guard.
 | O6 | ✅ **CLOSED 2026-08-16** — single `main` trunk, UAT auto-deploys on merge, prod by `prod-*` tag promoting the same image. Documented in `veervrat-app/AGENTS.md` + `DEPLOYMENT.md`. Transition done — `main` fast-forwarded, `dev` retired | — | — |
 | O18 | ✅ **CLOSED 2026-08-16** — CD pipeline live. GitHub↔Azure via OIDC (no stored secret), `.github/workflows/cd.yml` + `.github/actions/deploy-environment`. Parallel cached builds, per-job auth, migrate-before-deploy enforced. UAT **and now prod** deploys proven end-to-end — `deploy-prod` succeeded on its first run (`prod-2026-08-16`), the only CD path all the others' bug hunts hadn't yet touched (see `veervrat-app/documentation/21_Infrastructure-Conventions.md` §14–15) | — | — |
 | O1 | **DNS delegation** — Azure zone created 2026-08-15, NS values sent; awaiting Shantanu | Om → **Rahul** → Shantanu | custom domain, chat fix, Resend |
-| O2 | Confirm `veervrat.jnanaprabodhini.org` vs `veervrat.com` (90% settled on subdomain) | Om → **Ashutosh** | O1 |
+| O2 | ✅ **CLOSED 2026-08-16** — `veervrat.jnanaprabodhini.org` finalised over `veervrat.com` | — | — |
 | O3 | Buy `veervrat.com` defensively (~$10) | Om | — |
 | O4 | Devavrat to **verify billing email** (shows "Not verified") | Devavrat | billing notifications |
 | O5 | Add JP PAN/GSTIN to billing account (Tax ID empty) | Om → JP finance | invoice compliance |
