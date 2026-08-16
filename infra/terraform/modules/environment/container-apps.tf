@@ -13,7 +13,17 @@ data "azurerm_container_registry" "shared" {
 }
 
 locals {
+  # Apps are deployed only when asked for. Jobs exist as soon as there is an image to run,
+  # INDEPENDENTLY of the apps — gating them on the same flag meant "apply infra without
+  # touching the apps" also deleted the migration job that the very next step needs, and
+  # deleted the running apps outright rather than leaving them alone.
   deploy = var.deploy_apps && var.image_tag != ""
+  jobs   = var.image_tag != ""
+
+  # Apps run `app_image_tag`, which normally equals `image_tag`. They differ for exactly one
+  # window: while migrations run, jobs are on the NEW image and the apps are still serving the
+  # OLD one. That is what enforces migrate-before-deploy without downtime.
+  app_image = var.app_image_tag != "" ? var.app_image_tag : var.image_tag
 
   api_fqdn = "veervrat-${var.environment}-api.${azurerm_container_app_environment.this.default_domain}"
   web_fqdn = "veervrat-${var.environment}-web.${azurerm_container_app_environment.this.default_domain}"
@@ -74,7 +84,7 @@ resource "azurerm_container_app" "api" {
 
     container {
       name   = "api"
-      image  = "${data.azurerm_container_registry.shared.login_server}/veervrat-api:${var.image_tag}"
+      image  = "${data.azurerm_container_registry.shared.login_server}/veervrat-api:${local.app_image}"
       cpu    = 0.25
       memory = "0.5Gi"
 
@@ -190,7 +200,7 @@ resource "azurerm_container_app" "web" {
 
     container {
       name   = "web"
-      image  = "${data.azurerm_container_registry.shared.login_server}/veervrat-web:${var.image_tag}"
+      image  = "${data.azurerm_container_registry.shared.login_server}/veervrat-web:${local.app_image}"
       cpu    = 0.25
       memory = "0.5Gi"
 

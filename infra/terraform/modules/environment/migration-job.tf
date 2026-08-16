@@ -17,7 +17,7 @@
 #   az containerapp job execution list -n veervrat-<env>-migrate -g veervrat-<env> -o table
 
 resource "azurerm_container_app_job" "migrate" {
-  count = local.deploy ? 1 : 0
+  count = local.jobs ? 1 : 0
 
   name                         = "veervrat-${var.environment}-migrate"
   resource_group_name          = azurerm_resource_group.this.name

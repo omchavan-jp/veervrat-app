@@ -21,7 +21,7 @@
 # Usage:
 #   az containerapp job start -n veervrat-<env>-seed -g veervrat-<env>
 resource "azurerm_container_app_job" "seed" {
-  count = local.deploy ? 1 : 0
+  count = local.jobs ? 1 : 0
 
   name                         = "veervrat-${var.environment}-seed"
   resource_group_name          = azurerm_resource_group.this.name
