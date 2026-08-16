@@ -4,9 +4,12 @@ import { geistSans, geistMono, newsreader, tiroDevanagari } from './fonts';
 import { Providers } from '@/lib/providers';
 import './globals.css';
 
-// Absolute base for og:image / canonical URLs. Set NEXT_PUBLIC_SITE_URL to the
-// public web origin (update it when you move to a custom domain).
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://web-production-1fec3.up.railway.app';
+// Absolute base for og:image / canonical URLs. NEXT_PUBLIC_SITE_URL is inlined at build
+// time (see apps/web/Dockerfile), so it must be passed as a build arg, not a runtime env.
+// The fallback is deliberately the local origin rather than a deployed host: a wrong
+// absolute URL here silently breaks every link preview, and a localhost URL in production
+// is obvious, whereas a stale real domain looks plausible and goes unnoticed.
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
 const description = 'A platform for self-reliance and personal growth — Jnana Prabodhini.';
 
 export const metadata: Metadata = {

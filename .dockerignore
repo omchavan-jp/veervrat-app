@@ -28,6 +28,16 @@ spec
 openspec
 prototypes
 
+# Infrastructure — never needed to build an app image. Critically, `.terraform/` holds
+# downloaded provider plugins (~220MB *per environment directory*), so without this the
+# build context balloons to ~450MB and every `az acr build` uploads Terraform binaries to
+# Azure before it can start.
+infra
+**/.terraform
+**/*.tfstate
+**/*.tfstate.*
+**/*.tfplan
+
 # local-only
 docker-compose.yml
 *.md
