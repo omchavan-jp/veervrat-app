@@ -4,7 +4,7 @@ How we run infrastructure-as-code for Veervrat. Read this before touching anythi
 under `infra/terraform/`.
 
 Companion docs: `10_Platform-Engineering-Standard.md` (application libraries and
-constants) · `../../azure-account-facts.md` (account IDs, access, guardrails — the
+constants) · `../ops/azure-account-facts.md` (account IDs, access, guardrails — the
 source of truth for *what exists*; this doc covers *how we change it*).
 
 ---
@@ -196,7 +196,7 @@ and have been fixed.
 
 ## 9. Deferred — revisit before public launch
 
-Tracked in `../../infra-budget-log.md`; repeated here because they are infrastructure
+Tracked in `../ops/infra-budget-log.md`; repeated here because they are infrastructure
 decisions with a deadline.
 
 - **VNet + private endpoints** for Postgres/Redis/Key Vault. Today these are reachable

@@ -8,9 +8,10 @@ maintainer working with Claude Code.
 
 ```
 CAPTURE                TRIAGE                     IMPLEMENT
-in-app feedback  ──▶   GitHub Issues (canonical) ──▶  branch → PR → dev → Railway
-+ backlog notes        labeled, prioritized           → verify live → close issue
+in-app feedback  ──▶   GitHub Issues (canonical) ──▶  branch → PR → main → UAT (auto)
++ inbox notes          labeled, prioritized           → verify on UAT → close issue
                                                       → CHANGELOG + doc updates
+                                                      → prod-* tag ships it to users
 ```
 
 ## Loop 1 — Capture
@@ -22,7 +23,7 @@ button (position in `localStorage`), rendered when `NEXT_PUBLIC_FEEDBACK_MODE=te
   chip, +1 button (dedup pressure valve).
 - Modal tab 2: raise new — type + title + optional description. Everything else
   is auto-captured: route, user id + role, locale, viewport, user agent, commit
-  SHA (`RAILWAY_GIT_COMMIT_SHA` surfaced to web at build time).
+  SHA (`NEXT_PUBLIC_COMMIT_SHA`, set from the git SHA at build time by CD).
 - Backend: `feedback` module — Prisma model, `POST /feedback` + `POST /feedback/:id/upvote`
   (any logged-in user), `GET /feedback` (list, open items), `PATCH /feedback/:id`
   (status, admin only). Rate-limited.
@@ -33,8 +34,8 @@ button (position in `localStorage`), rendered when `NEXT_PUBLIC_FEEDBACK_MODE=te
 - Out of v1 scope (add only if triage suffers): screenshots, comment threads,
   email notifications.
 
-**Maintainer observations:** use the widget too, or jot in a scratch `backlog.md`
-(untracked, outside the repo). Both drain into triage.
+**Maintainer observations:** use the widget too, or add to the **Inbox** section of
+`../ops/PROJECT-STATUS.md`. Both drain into triage.
 
 ## Loop 2 — Triage
 
@@ -65,10 +66,16 @@ meant to drain to zero). Route by kind:
 - **Build-time technical deferral** (a seam left for a later implementation item,
   with a "paid back by" owner) → `documentation/05_Deferral-Ledger.md`. Different
   schema (item numbers, payback tracking); not for tester-driven ideas.
-- **Raw, still-untriaged note** → `backlog.md`, which is transient and always
-  drains to empty at the next triage.
-Keep `backlog.md` free of long-lived "future" sections — file them as `deferred`
-issues instead.
+- **Raw, still-untriaged note** → the **Inbox** section of `../ops/PROJECT-STATUS.md`,
+  which drains to empty at the next triage.
+- **Noticed but not yet scheduled** → the **Backlog** (`B<n>`) section of the same file.
+  Promote a `B` item to an **O-thread** when it gets an owner and a slot in the working
+  order — *move* it, never copy it. (Two separate registers previously produced three
+  duplicated items; that is why there is now one file.)
+
+Keep the Inbox free of long-lived "future" sections — file those as `deferred` issues
+instead. Already-triaged history lives in `../ops/triage-archive.md`, which is append-only
+and never actionable.
 
 ## Loop 3 — Implement
 
@@ -124,4 +131,4 @@ Updated 2026-08-16 (O6) — the Railway-era single-environment model is gone.
   Azure on the same image as the app, in the order build → migrate → deploy.
 - Conventional commits throughout.
 
-Full rules: `../CLAUDE.md` → Git conventions. Procedure: `../DEPLOYMENT.md`.
+Full rules: `../AGENTS.md` → Git conventions. Procedure: `../DEPLOYMENT.md`.

@@ -102,7 +102,11 @@ Minimum: one positive and one negative test per permission row.
 ---
 
 ## CI Integration
-- All tests run on PR — merge blocked if any fail
+- All tests run on PR (`ci.yml` + `integration.yml`, triggered on `main`)
+- ⚠️ **Merge is NOT blocked when they fail.** Branch protection with required status checks
+  needs a paid plan on private repos (403 *"Upgrade to GitHub Pro or make this repository
+  public"*), so this is currently a **habit, not a rule** — see backlog B5. Wait for green
+  before merging; nothing enforces it.
 - Backend tests: `pnpm --filter api test`
 - Frontend tests: `pnpm --filter web test`
 - E2E: `pnpm --filter web test:e2e` (requires running backend + DB)

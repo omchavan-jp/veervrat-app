@@ -198,7 +198,23 @@ Idempotency-Key: client-generated-uuid
 
 ## 12. Health and meta endpoints
 
+⚠️ **Corrected 2026-08-16** — the paths below were documented wrong. Verified against the
+running app.
+
 ```
-GET /api/health          → { "status": "ok" } (no auth, no versioning prefix)
-GET /api/v1/me           → current authenticated user + roles
+GET /health              → { "data": { "status": "ok" } }
+                           Liveness only. Cheap, no dependency checks — must NOT flap on a
+                           transient DB blip, or the platform restarts a healthy container.
+
+GET /ready               → { "data": { "status": "ok",
+                                       "checks": { "database": "up", "redis": "up" } } }
+                           Readiness. Actually pings Postgres and Redis; returns 503 if either
+                           is down. **This is the check that matters on deploy** — a green
+                           /ready proves images, Key Vault secrets, networking and schema are
+                           all correct together.
+
+GET /api/v1/auth/me      → current authenticated user + roles
 ```
+
+Both `/health` and `/ready` deliberately sit **outside** the `/api/v1` prefix so probes do not
+depend on API versioning. `/api/v1/health` returns 404 — that is expected, not a bug.

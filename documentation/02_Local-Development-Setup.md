@@ -14,21 +14,26 @@ cd veervrat-app
 pnpm install
 ```
 
-## 2. Start PostgreSQL
+## 2. Start the local services
 
 ```bash
 docker compose up -d
+docker compose ps          # verify all are running
 ```
 
-This starts PostgreSQL on `localhost:5433` with:
-- User: `veervrat`
-- Password: `veervrat_local`
-- Database: `veervrat`
+This starts **six** containers, not just Postgres:
 
-Verify it's running:
-```bash
-docker compose ps
-```
+| Service | Port | Notes |
+|---|---|---|
+| `veervrat-postgres` | **5433** | dev DB — user `veervrat` / pass `veervrat_local` / db `veervrat` |
+| `veervrat-postgres-test` | **5434** | test DB — `veervrat_test`. Never point `.env` at this |
+| `veervrat-redis` | **6380** | rate limits, account lockout, cache, Socket.IO adapter |
+| `veervrat-meilisearch` | 7700 | search (deployed nowhere — local only) |
+| `veervrat-minio` | 9000/9001 | S3-compatible object storage for uploads |
+| `veervrat-pgadmin` | 5050 | optional DB UI |
+
+⚠️ **Port 5433, not the Postgres default 5432** — chosen so it does not collide with a
+system Postgres. `DATABASE_URL` in `.env.example` already matches.
 
 ## 3. Set up environment variables
 
@@ -42,7 +47,12 @@ Edit `apps/api/.env` and fill in:
 - `GOOGLE_CLIENT_SECRET` — from Google Cloud Console
 - `SESSION_SECRET` — any random string (32+ chars)
 
-The `DATABASE_URL` defaults match the docker-compose configuration.
+⚠️ **The two `GOOGLE_*` values are read with `getOrThrow` and are *not* in the Joi schema**,
+so leaving them empty crash-loops the API at boot with no friendly error. Any placeholder
+string works for local dev if you are not testing Google sign-in.
+
+`DATABASE_URL` and `REDIS_URL` defaults already match docker-compose. Optional tuning knobs
+with sane defaults: `DATABASE_POOL_MAX` (10) and `SHUTDOWN_TIMEOUT_MS` (10000).
 
 ### Frontend (`apps/web`)
 ```bash
@@ -60,10 +70,14 @@ npx prisma generate
 npx prisma migrate dev
 ```
 
-If starting fresh (no migrations yet), create the first migration:
+Then **seed the reference content** — without it the app runs but is unusable, because there
+are no virtues, weaknesses or sentences to take a test against:
+
 ```bash
-npx prisma migrate dev --name init
+pnpm seed        # from apps/api/
 ```
+
+Idempotent (upserts), so it is safe to re-run.
 
 ## 5. Start development servers
 
@@ -109,16 +123,21 @@ pnpm --filter api start:dev   # backend only
 
 ## Infrastructure services
 
-| Service | Local | Status |
+| Service | Local | Deployed |
 |---|---|---|
-| PostgreSQL | docker-compose, port 5432 | Set up |
-| Meilisearch | will be added to docker-compose | Not set up yet |
-| Object storage | TBD | Not set up yet |
-| Email (dev) | console logging, no external service needed | Not set up yet |
+| PostgreSQL | ✅ docker-compose, port **5433** | ✅ Azure Flexible Server v18 |
+| Redis | ✅ docker-compose, port 6380 | ✅ Azure Managed Redis |
+| Meilisearch | ✅ docker-compose, port 7700 | ❌ deferred — search degrades gracefully |
+| Object storage | ✅ MinIO, ports 9000/9001 | ❌ Azure Blob decided, not implemented (O15) |
+| Email | ✅ console logging (no service needed) | ❌ Resend coded but not wired |
 
 ## Troubleshooting
 
-**Port conflicts**: if 5432 is taken, change the port mapping in `docker-compose.yml` and update `DATABASE_URL` in `.env`.
+**Port conflicts**: if 5433 (dev DB), 5434 (test DB) or 6380 (Redis) are taken, change the
+port mapping in `docker-compose.yml` and update `DATABASE_URL` / `REDIS_URL` to match.
+
+**API crash-loops immediately at boot**: check `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` are
+non-empty — they bypass config validation and throw before any friendly error is produced.
 
 **Prisma client errors after schema change**: run `npx prisma generate` from `apps/api/`.
 
@@ -153,3 +172,6 @@ cd apps/api && DATABASE_URL="postgresql://veervrat:veervrat_local@localhost:5434
 - Dev DB: `localhost:5433` (database: `veervrat`)
 - Test DB: `localhost:5434` (database: `veervrat_test`)
 - Test DB connection string is in `apps/api/.env.test` — never modify this to point at the dev DB.
+- `.env.test` also uses **Redis DB 1** (`redis://localhost:6380/1`) so test rate-limit counters,
+  lockouts and cache never touch your dev instance. The integration suite flushes only
+  throttler-namespaced keys before each test.

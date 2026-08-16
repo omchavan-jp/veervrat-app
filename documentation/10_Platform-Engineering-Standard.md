@@ -25,7 +25,8 @@ This document is the canonical reference for all library, tooling, and architect
 | Background jobs (v2 path) | BullMQ | `bullmq` | Upgrade path when horizontal scaling is needed. Redis-backed. |
 | Email provider | Resend SDK | `resend` | Free tier: 3k/month. Console logging in local dev. |
 | Email templates | React Email | `@react-email/components`, `react`, `react-dom` | JSX-based, type-safe, renders HTML + plain text, bilingual support. |
-| Error tracking | GlitchTip (Sentry SDK) | `@sentry/nextjs`, `@sentry/node` | Open-source, self-hostable, Sentry-compatible SDK |
+| Error tracking | **Sentry** (free tier) | `@sentry/nextjs`, `@sentry/node` | D8 — GlitchTip dropped 2026-08. SDK already installed; still reads `GLITCHTIP_DSN`, rename pending (B13) |
+| Platform telemetry | **Azure Application Insights** | *not yet installed* | D8 — answers "is the system healthy", which Sentry does not. No SDK and no Terraform resource yet (B13) |
 | Object storage client | AWS SDK S3 compatible | `@aws-sdk/client-s3` | Works with MinIO (S3-compatible API). Provider-agnostic. |
 | HEIC→JPEG conversion | heic-convert | `heic-convert` | Converts iPhone HEIC/HEIF uploads to JPEG server-side (Chrome/Firefox can't render HEIC). Pure-JS (libheif/wasm) — no native/libvips build. |
 | Search | Meilisearch | `meilisearch` | Already decided. See Search Architecture doc. |

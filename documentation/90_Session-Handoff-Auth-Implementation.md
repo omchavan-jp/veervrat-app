@@ -1,5 +1,15 @@
 # Session Handoff — Auth Implementation
 
+> 📌 **HISTORICAL — 2026-05-20. Every "known issue" and "not yet set up" line below has since
+> been resolved. Do not read this as current state.**
+>
+> Kept only as provenance for how auth was built. At the time of writing there was no CSRF,
+> no rate limiting, no tests, no CI/CD, and the domain model did not exist. All of that is now
+> built — see `01_System-Decisions-and-Status.md` and `../ops/PROJECT-STATUS.md`.
+>
+> It also references a `dev` branch (retired, `main` is the trunk) and a memory path that has
+> since moved.
+
 **Date:** 2026-05-20
 **Branch at close:** `feat/frontend-auth` (1 commit ahead of `main`)
 **Session scope:** Prisma fix → backend auth → frontend auth

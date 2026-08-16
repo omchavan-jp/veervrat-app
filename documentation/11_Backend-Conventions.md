@@ -242,6 +242,14 @@ Use **structured JSON logging**.
 - validate required config on app startup — fail fast if missing
 - use `.env.example` as the documented reference for required variables
 
+> ⚠️ **The code currently violates this rule in one place.** `GOOGLE_CLIENT_ID` and
+> `GOOGLE_CLIENT_SECRET` are read via `getOrThrow` in `GoogleStrategy` but are **absent from
+> the Joi schema**, so a missing value throws at construction instead of producing the
+> friendly boot-time validation error this section promises. The symptom is a container that
+> crash-loops with no useful message — which cost real time on the first Azure deploy.
+> **Every required variable belongs in the Joi schema**, including ones consumed outside
+> `ConfigService`. Worth fixing next time that file is touched.
+
 ## 13. Cross-module communication
 
 - modules import other modules and call their services — this is the standard NestJS approach

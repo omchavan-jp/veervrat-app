@@ -8,7 +8,7 @@
 > ladder so the same kinds of mistakes are not reintroduced. It contains **no specific
 > past examples** — only the generic lessons.
 >
-> **How to use:** read this once at session start, alongside `CLAUDE.md` and the relevant
+> **How to use:** read this once at session start, alongside `AGENTS.md` and the relevant
 > `spec/decisions/` + convention docs. Treat the Definition of Done and the Verification
 > Ladder as gates, not suggestions. When this doc and a convention doc disagree, the
 > convention doc wins on specifics; this doc wins on *process and rigor*.

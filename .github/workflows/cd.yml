@@ -1,6 +1,6 @@
 # Continuous deployment.
 #
-# Encodes the release rules from CLAUDE.md so they cannot be got wrong by hand:
+# Encodes the release rules from AGENTS.md so they cannot be got wrong by hand:
 #   merge to main       -> build images tagged with the SHA -> migrate -> deploy UAT
 #   tag prod-YYYY-MM-DD -> migrate -> deploy prod with the SAME image (never rebuilt)
 #
