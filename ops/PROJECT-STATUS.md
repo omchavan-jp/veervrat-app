@@ -301,11 +301,17 @@ History of already-triaged items: `triage-archive.md`.
 6. ✅ **CD pipeline** (O18) — done, proven end-to-end on UAT across several real runs
 7. ✅ **Terraform Phase 2B (prod infra)** — stateful core provisioned, `plan` clean.
    **Paused here on purpose** — no apps deployed, no `prod-*` tag cut yet
-8. **← next: O7 (UAT/prod roles + feedback-widget gating) → doc reorganisation → resume
-   Phase 2B by cutting the first `prod-*` tag.** This order was agreed before Phase 2B
-   started and got skipped once by momentum — see B1 below for what O7 unblocks
-9. **DNS cutover** (O1/O2) — parallel human track throughout
-9. Resend → Blob storage (O15) → decommission Neon/Upstash/R2
+8. ✅ **O7 settled** (D11's rationale replaced, D20 added) and ✅ **doc reorganisation done** —
+   ops docs moved into the repo, the two registers merged, all 21 `documentation/` files read
+   end to end with 12 staleness findings fixed, `AGENTS.md` made canonical
+9. **← next: cut the first `prod-*` tag.** `deploy-prod` is the only CD path never executed,
+   and prod has zero users — the cheapest possible moment to find its bugs. Every other CD
+   path surfaced real bugs on its first run
+10. **Then B1** — per-user capability grants + admin dashboard, OpenSpec full cycle. Prod
+    ships with the feedback widget effectively off until this lands, which is correct while
+    there are no testers
+11. **DNS cutover** (O1/O2) — parallel human track throughout; unblocks OAuth + Resend
+12. Resend → Blob storage (O15) → decommission Neon/Upstash/R2
 
 Rationale for 5-before-6: CD automates a deploy you understand. Written first, every
 first-time deployment surprise surfaces as a red CI log instead of in front of you.
