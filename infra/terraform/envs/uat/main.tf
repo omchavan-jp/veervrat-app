@@ -32,9 +32,32 @@ provider "azurerm" {
   }
 }
 
+# Set per deploy rather than committed, so the tag in state always reflects what is actually
+# running: terraform apply -var="image_tag=$(git rev-parse --short HEAD)" -var="deploy_apps=true"
+variable "image_tag" {
+  description = "Git SHA of the images to run. Empty = infra only, no apps."
+  type        = string
+  default     = ""
+}
+
+variable "deploy_apps" {
+  description = "Create the api/web Container Apps and the migration job."
+  type        = bool
+  default     = false
+}
+
 module "environment" {
   source      = "../../modules/environment"
   environment = "uat"
+
+  image_tag   = var.image_tag
+  deploy_apps = var.deploy_apps
+
+  # UAT is disposable and has no real users: scale to zero when idle (free), and keep the
+  # per-replica connection count low so it cannot exhaust Burstable Postgres.
+  api_min_replicas  = 0
+  web_min_replicas  = 0
+  database_pool_max = 5
 }
 
 output "resource_group_name" {

@@ -410,3 +410,56 @@ never holds Key Vault access.
 the migration *files* but not the tool that applies them. Migrations run from the **build**
 stage image instead. Keeping the runtime image lean is worth this split: with
 scale-to-zero, image size is cold-start latency.
+
+### Build every image for a release from ONE commit
+
+Hit on the first manual deploy: committing between image builds produced three images
+tagged with three different SHAs (`veervrat-api:af20773`, `veervrat-web:1013364`, …), which
+quietly breaks the "one SHA = one release, promote don't rebuild" model — there is no single
+tag to deploy or to promote to prod.
+
+Two things follow:
+
+1. **`az acr build` uploads the working tree, not a commit.** The SHA in the tag is a label
+   you choose; nothing enforces that it matches what was uploaded. Build from a clean tree
+   and label with `git rev-parse --short HEAD`, or the label is fiction.
+2. **Recovering is cheap only if you can prove the content is identical.** Compare what
+   changed against the build context, not the whole repo:
+   ```bash
+   git diff --name-only <built-at-sha> HEAD | grep -vE "^(infra/|documentation/|.*\.md$)"
+   ```
+   Empty output means the image is content-identical and can be retagged instead of rebuilt:
+   ```bash
+   az acr import --name veervratacr \
+     --source veervratacr.azurecr.io/<repo>:<old> --image <repo>:<new> --force
+   ```
+   Non-empty means rebuild — do not retag and hope.
+
+CD avoids this by construction: one workflow run, one checkout, one SHA, all images.
+
+### The image must exist in ACR *before* `terraform apply`
+
+Made this mistake on the first deploy despite having written the rule down an hour earlier.
+Applying while the image was still building failed with:
+
+```
+Failed to provision revision for container app 'veervrat-uat-api'.
+'template.containers.api.image' is invalid:
+MANIFEST_UNKNOWN: manifest tagged by "6ead179" is not found
+```
+
+Two things worth knowing:
+
+- **The failure is safe and partial.** Everything else in the plan (identities, role
+  grants, the other app, the migration job) was created; only the one resource whose image
+  was missing failed. Re-running after the image lands completes it. Terraform's partial
+  apply is doing its job here — no cleanup needed.
+- **Waiting on the ACR *task* is not the same as waiting on the *tag*.** Poll for the tag
+  itself, which is the thing Container Apps actually resolves:
+  ```bash
+  until az acr repository show-tags --name veervratacr --repository veervrat-api \
+        -o tsv | grep -q "$SHA"; do sleep 20; done
+  ```
+
+CD must enforce build → verify tag → migrate → deploy as ordered steps, because the
+ordering is easy to get wrong by hand even when you wrote the rule.
