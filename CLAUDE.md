@@ -258,6 +258,41 @@ old *merged* branches deliberately — don't switch merge strategy.
   `migrate reset` against a deployed database.
 - Full procedure: `DEPLOYMENT.md`.
 
+## When asking the user a question
+
+Never present a bare question or a bare recommendation. Every time you ask the user to
+decide something, include:
+
+1. **The options you actually considered** — including the ones you rejected.
+2. **Which way you lean**, stated plainly. Not "it depends" — pick one.
+3. **Why that one, and specifically why not each alternative.** The rejected options are
+   where the reasoning lives; omitting them hides whether you thought about them at all.
+4. **What would change your mind** — the fact or constraint that would flip your
+   recommendation. This is what lets the user answer with information rather than a coin flip.
+
+A recommendation without its alternatives is indistinguishable from a guess, and forces the
+user to re-derive the analysis you already did.
+
+## Editing files — use the editing tools, not shell text manipulation
+
+**Use `Edit` for targeted changes and `Write` for full rewrites.** Reserve shell (`sed`,
+`perl -pi`, python `str.replace`) for genuinely append-only operations where nothing existing
+can be corrupted.
+
+The reason is failure behaviour, not preference:
+
+- `Edit` **fails loudly** if `old_string` does not match exactly, so a stale assumption stops
+  you immediately.
+- `sed`/`python .replace()` **fail silently** — the command exits 0 having changed nothing.
+  You only notice if you remember to grep afterwards, which means correctness depends on
+  remembering to check.
+- Regex-based edits can also *corrupt* rather than no-op. This has already happened here: a
+  `perl -pi` substitution produced `...url)));` — an unbalanced paren that broke the file and
+  had to be spotted and repaired by hand.
+
+Batching several edits into one shell call is not a good enough reason to give up loud
+failure on a file you cannot afford to silently mangle.
+
 ## Session discipline
 - One task per session — don't try to do everything
 - Load only relevant context (backend: read api/ files; frontend: read web/ files)

@@ -60,6 +60,141 @@ Local development is `docker-compose` and is not a deploy target — no pipeline
 
 ---
 
+## Standing up a NEW environment, from zero
+
+The ordered sequence. Verified end-to-end twice — UAT (2026-08-16, by hand) and prod
+(2026-08-16, Terraform). **Every arrow below is a step that broke at least once**, which is
+why this is written as a sequence rather than a set of facts.
+
+Read `documentation/21_Infrastructure-Conventions.md` §14 first — it lists the traps with
+their guards. This section is the happy path; that one is why the path has this shape.
+
+### 0. Prerequisites
+
+- The environment name must be `uat` or `prod` (the module validates this — D10 allows no
+  third deployed environment).
+- `envs/shared` must already exist: it holds the container registry and the DNS zone, and the
+  new environment's apps pull images from that registry.
+- Azure CLI logged in to the `veervrat` subscription.
+  ⚠️ **If `az` hangs with no output, check IPv6 before anything else** — see §14.
+
+### 1. Infrastructure only — no apps, no image needed
+
+```bash
+cd infra/terraform/envs/<env>          # copy envs/prod/main.tf as the template
+terraform init
+terraform plan                          # read the summary line; expect ~23 to add, 0 to destroy
+terraform apply
+```
+
+Creates the resource group, Key Vault, Postgres, Redis, Container Apps *environment*,
+identities and alerting. **Deliberately no apps and no jobs** — `image_tag` is empty, so
+`local.deploy` and `local.jobs` are both false.
+
+Takes ~10 minutes; Redis alone is ~7.
+
+**Decide these before applying — they are immutable after creation:**
+
+| Setting | Why it cannot wait |
+|---|---|
+| `postgres_backup_retention_days` | changing it later **replaces the server** |
+| Key Vault `soft_delete_retention_days` | Azure rejects the change outright once set |
+| Postgres `zone` | assigned by Azure if unset, then shows as permanent drift |
+
+Verify: `terraform plan` again → **No changes**.
+
+### 2. Build and push images — all from ONE commit
+
+CD does this automatically on merge to `main`. By hand:
+
+```bash
+SHA=$(git rev-parse --short HEAD)      # clean tree — the tag is a label you choose, nothing enforces it
+az acr build --registry veervratacr --image "veervrat-api:$SHA" --file apps/api/Dockerfile .
+az acr build --registry veervratacr --image "veervrat-api-migrate:$SHA" --target build --file apps/api/Dockerfile .
+az acr build --registry veervratacr --image "veervrat-web:$SHA" --file apps/web/Dockerfile \
+  --build-arg NEXT_PUBLIC_API_URL=/api/v1 \
+  --build-arg API_ORIGIN="https://veervrat-<env>-api.<default-domain>" \
+  --build-arg NEXT_PUBLIC_SITE_URL="https://veervrat-<env>-web.<default-domain>" \
+  --build-arg NEXT_PUBLIC_FEEDBACK_MODE=test \
+  --build-arg NEXT_PUBLIC_COMMIT_SHA="$SHA"
+```
+
+The `<default-domain>` is knowable **before the apps exist**:
+
+```bash
+az containerapp env show -n veervrat-<env>-cae -g veervrat-<env> \
+  --query properties.defaultDomain -o tsv
+```
+
+**Then verify the tags actually exist** — Container Apps resolves the tag, not the build job:
+
+```bash
+for r in veervrat-api veervrat-api-migrate veervrat-web; do
+  az acr repository show-tags --name veervratacr --repository "$r" -o tsv | grep -qx "$SHA" \
+    && echo "ok $r" || echo "MISSING $r"
+done
+```
+
+### 3. Create the jobs (still no apps)
+
+```bash
+terraform apply -var="image_tag=$SHA"
+```
+
+`image_tag` being non-empty creates the migrate and seed jobs. Apps stay absent because
+`deploy_apps` defaults to false.
+
+### 4. Migrate — before any app serves the new schema
+
+```bash
+az containerapp job start -n veervrat-<env>-migrate -g veervrat-<env>
+az containerapp job execution list -n veervrat-<env>-migrate -g veervrat-<env> -o table
+```
+
+**Wait for `Succeeded`.** If it fails, read the logs and fix the cause — a failed Prisma
+migration blocks every later one until a human resolves it (see the migrations section
+below). Do not proceed to step 5 on a failed migration; the app would query columns that do
+not exist.
+
+### 5. Seed reference content
+
+```bash
+az containerapp job start -n veervrat-<env>-seed -g veervrat-<env>
+```
+
+Without this the environment is *serving* but not *usable* — no virtues, weaknesses or
+sentences means no weakness test and no journeys. Verify from the job logs, which print row
+counts per table (expect 6 virtues / 35 weaknesses / 226 sentences at time of writing).
+
+### 6. Deploy the apps
+
+```bash
+terraform apply -var="image_tag=$SHA" -var="deploy_apps=true"
+```
+
+### 7. Verify — the check that actually proves it
+
+```bash
+API=$(az containerapp show -n veervrat-<env>-api -g veervrat-<env> \
+  --query properties.configuration.ingress.fqdn -o tsv)
+
+curl -s "https://$API/ready"     # {"status":"ok","checks":{"database":"up","redis":"up"}}
+curl -s "https://$API/api/v1/auth/check-username?username=probe"   # proves the schema landed
+```
+
+A green `/ready` means images, Key Vault secrets via managed identity, networking **and**
+schema are all correct together. `/health` only proves the process started — it is not the
+check that matters. First request after idle may be slow: `min_replicas = 0` means a cold
+start.
+
+### 8. Record it
+
+Update this file's *Current state* table and `../../azure-account-facts.md` §5. The facts
+file is the source of truth for what exists; if it disagrees with reality, reality is a bug
+in the file.
+
+---
+
 ## Database migrations — manual, never automatic
 
 Per the hard rule in `CLAUDE.md`: migrations are never applied automatically to a deployed
