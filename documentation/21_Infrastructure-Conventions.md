@@ -738,3 +738,30 @@ Two corrections:
 the same expression if you reach for `count`. When you want a resource to persist unchanged,
 pin its inputs — never gate its existence. Read a plan's *destroy* count as the primary
 signal, not the add count.
+
+### `terraform validate` does not check the `-var` flags you actually pass
+
+CD failed with:
+
+```
+Error: Value for undeclared variable
+```
+
+`app_image_tag` had been added to `modules/environment` but not to the `envs/uat` wrapper
+that CD invokes. Locally everything looked fine: `terraform validate` passed (it validates
+configuration, not invocation) and a manual `apply` succeeded (because it did not pass the
+new flag).
+
+**Every variable CD passes must be declared in the env wrapper *and* forwarded to the
+module** — the wrapper is a second place to update, and forgetting it fails only in CI.
+
+Cheap check before pushing a pipeline change:
+
+```bash
+for v in image_tag app_image_tag deploy_apps migrate_command; do
+  grep -q "variable \"$v\"" main.tf || echo "MISSING: $v"
+done
+```
+
+The general shape: a thin pass-through layer is easy to forget precisely because it contains
+no logic. When adding a module variable, grep for every wrapper that calls the module.

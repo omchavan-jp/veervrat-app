@@ -41,9 +41,17 @@ variable "image_tag" {
 }
 
 variable "deploy_apps" {
-  description = "Create the api/web Container Apps and the migration job."
+  description = "Create the api/web Container Apps. Jobs (migrate, seed) are NOT gated on this — they must exist before apps deploy."
   type        = bool
   default     = false
+}
+
+# Set by CD to hold the apps on the image they are currently serving while migrations run
+# against the new one. Empty = follow image_tag.
+variable "app_image_tag" {
+  description = "Image the apps run, when it must differ from image_tag."
+  type        = string
+  default     = ""
 }
 
 module "environment" {
@@ -51,6 +59,7 @@ module "environment" {
   environment = "uat"
 
   image_tag       = var.image_tag
+  app_image_tag   = var.app_image_tag
   deploy_apps     = var.deploy_apps
   migrate_command = var.migrate_command
 
