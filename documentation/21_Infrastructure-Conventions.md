@@ -842,3 +842,42 @@ account — see §14). The `prod` GitHub Environment therefore carries no protec
 exists solely to make the OIDC subject `environment:prod`. The deploy gate is **cutting and
 pushing a `prod-YYYY-MM-DD` tag** — deliberate and traceable, accepted as adequate for a
 single maintainer. Revisit with a second maintainer or a move to an org.
+
+## 16. A doc-only merge used to rebuild and redeploy anyway (2026-08-16)
+
+`cd.yml`'s trigger was `push: branches: [main]`, with no path filter — every merge to `main`
+rebuilt all 3 images and redeployed UAT, including merges that touched only
+`documentation/`, `ops/`, or a `.md` file. Caught after a pure doc-reorganisation PR (#59)
+triggered a full CD run for nothing.
+
+**Why not fix it by making UAT tag-based too, matching prod?** Considered and rejected. UAT's
+entire value is running the exact commit that just merged, immediately — that's what lets an
+integration bug get attributed to one merge instead of a batch, and it's the whole reason a
+continuous-deploy staging environment exists at all. Prod is tag-gated because it protects
+real users and the tag is a deliberate go/no-go act; UAT protects nobody, so gating it the
+same way would trade away the fast-feedback property for a manual step with no matching
+safety benefit. It would also erase the one thing that currently makes UAT and prod
+*behave* differently — trigger discipline (auto vs. deliberate tag) — collapsing them into
+two environments that differ only in size.
+
+**The actual fix: filter the trigger, not the environment model.** `prepare` now diffs
+`github.event.before` against the pushed SHA and sets `app_changed=false` when every changed
+path matches an ignore list (`documentation/`, `ops/`, `openspec/`, `spec/`, `.claude/`, any
+`*.md`). `build` skips when a **branch push** to main found `app_changed=false`; `deploy-uat`
+skips automatically when `build` skips (needs it). **Tag pushes are never filtered** — the
+`build` job's condition is `startsWith(github.ref, 'refs/tags/prod-') || app_changed !=
+'false'`, so a `prod-*` tag always builds regardless of what changed. Filtering a rare,
+already-deliberate act would only add a way for a real prod deploy to silently no-op.
+
+The ignore list is an allow-list of known-safe non-app paths, not a blocklist of app paths —
+an unrecognised new top-level directory defaults to *triggering* a build, not skipping one.
+
+**A portability trap hit while writing the check:** the first version used `grep -qvE
+'pattern'` to test "did any changed file NOT match the ignore list". `-q` makes grep exit as
+soon as it has enough input to decide, and piped from a `$(...)` command substitution this
+returned the wrong exit status on this runner intermittently — a known class of `grep -q`
+flakiness on piped input, not specific to one grep implementation. Fixed by capturing the
+filtered output into a variable first (`non_ignored="$(... | grep -vE ... || true)"`) and
+checking `[ -n "$non_ignored" ]` instead of trusting grep's own exit code. Lesson: don't
+trust `grep -q`'s exit status when the input comes from a pipe rather than a file — capture
+and test the output instead.

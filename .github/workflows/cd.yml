@@ -7,6 +7,11 @@
 # Every step exists because doing it manually went wrong at least once. See
 # documentation/21_Infrastructure-Conventions.md §14 and the traps table in
 # ../../azure-account-facts.md §5.
+#
+# A push to main only builds+deploys if it touched an app-relevant path (see the `changes`
+# step in `prepare`, and §16 of 21_Infrastructure-Conventions.md). A doc-only merge — this
+# comment included — used to still rebuild all 3 images and redeploy UAT for nothing.
+# prod-* tag pushes are never filtered: they're already a deliberate, rare, manual act.
 name: CD
 
 on:
@@ -42,8 +47,13 @@ jobs:
     outputs:
       image_tag: ${{ steps.meta.outputs.sha }}
       uat_domain: ${{ steps.meta.outputs.domain }}
+      app_changed: ${{ steps.changes.outputs.app_changed }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Full history, not the default single-commit shallow clone — `changes` below diffs
+          # against the pre-push SHA, which a depth-1 checkout wouldn't have locally.
+          fetch-depth: 0
       - uses: azure/login@v2
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
@@ -59,12 +69,35 @@ jobs:
           # what lets web be *built* knowing the api's URL (NEXT_PUBLIC_* is baked in at build).
           echo "domain=$(az containerapp env show -n veervrat-uat-cae -g veervrat-uat \
             --query properties.defaultDomain -o tsv)" >> "$GITHUB_OUTPUT"
+      # Only meaningful for branch pushes to main — tag pushes always build (see `build`'s
+      # `if`), and a manual workflow_dispatch has no `before` SHA to diff against. Anything
+      # NOT matching the ignore list below counts as app-relevant, deliberately conservative:
+      # an unrecognised new top-level path triggers a build rather than silently skipping one.
+      - id: changes
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/')
+        run: |
+          set -euo pipefail
+          changed="$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}")"
+          # `grep -qv` was tried first and dropped: piped through `-q`, it exits as soon as it
+          # has enough input to decide, and on this input size that raced with a still-writing
+          # producer and returned the wrong status intermittently. Capturing full output first
+          # and checking it for content is slower by nothing that matters here, and correct.
+          non_ignored="$(echo "$changed" | grep -vE '^(documentation/|ops/|openspec/|spec/|\.claude/)|\.md$' || true)"
+          if [ -n "$non_ignored" ]; then
+            echo "app_changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "app_changed=false" >> "$GITHUB_OUTPUT"
+          fi
 
   # One job per image, in parallel. Three benefits over the previous single sequential job:
   # each gets its own fresh Azure login (see above), wall-clock is the slowest image rather
   # than the sum, and a failure names the image that broke.
   build:
     needs: prepare
+    # Tag pushes always build (never filtered — see the top-of-file comment). Branch pushes
+    # to main build only when `prepare` found an app-relevant path changed; an empty/unset
+    # output (tag push, workflow_dispatch) is treated as "build" — `!= 'false'`, not `== 'true'`.
+    if: startsWith(github.ref, 'refs/tags/prod-') || needs.prepare.outputs.app_changed != 'false'
     runs-on: ubuntu-latest
     environment: build # same reason as `prepare` — a stable OIDC subject across triggers
     strategy:
