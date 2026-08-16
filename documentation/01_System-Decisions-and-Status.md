@@ -10,8 +10,10 @@ This is the master reference for all technology and architecture decisions. Read
 | Backend | NestJS + TypeScript | Scaffolded |
 | Database | PostgreSQL | Scaffolded (docker-compose) |
 | ORM | Prisma | Scaffolded |
-| Search | Meilisearch | Decided, not set up — see 10_Platform-Engineering-Standard.md |
-| File storage | MinIO (S3-compatible) | Provider confirmed: MinIO. Not set up. |
+| Search | Meilisearch | Decided, **deferred** — not deployed; search degrades gracefully |
+| File storage | MinIO locally · **Azure Blob** in cloud | ⚠️ Decided but **not implemented** — code still speaks S3 (`@aws-sdk/client-s3`), which Azure Blob does not. Uploads degrade gracefully (chat images disabled) until swapped. |
+| Hosting | **Azure** (Container Apps, Central India) | Infra provisioned via Terraform (UAT); **app not yet deployed** — see `../DEPLOYMENT.md` |
+| Observability | Sentry (app errors) + Azure App Insights (platform) | Decided 2026-08 — **replaces GlitchTip**; different questions, both free tiers |
 | Rich text editor | Tiptap + JSON AST storage | Decided — see 10_Platform-Engineering-Standard.md |
 | i18n | next-intl | Decided — no URL routing, user preference — see 10_Platform-Engineering-Standard.md |
 | WebSocket | NestJS Gateway + Socket.IO | Decided — see 10_Platform-Engineering-Standard.md |
@@ -105,8 +107,10 @@ These are acknowledged but not yet decided in detail:
 | ~~Testing~~ | ✅ Decided — Vitest + supertest + Playwright. See 16_Testing-Strategy.md |
 | ~~Observability~~ | ✅ Decided — GlitchTip + Pino + structured JSON. See 18_Observability-Standard.md |
 | ~~Security baseline~~ | ✅ CSRF (double-submit cookie), rate limiting, upload rules, brute force. See 10_Platform-Engineering-Standard.md + 14_Auth-Architecture-Decision.md (§15-16) |
-| CI/CD | Pipeline setup, required checks, preview environments — Phase deployment |
-| Deployment | Hosting provider, CDN (Cloudflare ✅), scaling strategy — Phase deployment |
+| ~~Hosting~~ | ✅ Decided 2026-08 — **Azure**, Central India, single cloud + Terraform. Container Apps (not self-run Kubernetes), managed Postgres/Redis, zero VMs. See `../../azure-account-facts.md` and `21_Infrastructure-Conventions.md` |
+| ~~Release process~~ | ✅ Decided 2026-08-16 (O6) — single `main` trunk, UAT auto-deploys on merge, prod ships by `prod-*` tag promoting the same image. See `../CLAUDE.md` → Git conventions |
+| CI/CD | CI ✅ (PR gates). **CD not built** — next up; see `../DEPLOYMENT.md` |
+| Object storage | Provider decided (Azure Blob) but **not implemented** — app still uses the S3 API via `@aws-sdk/client-s3`; needs an `@azure/storage-blob` swap |
 | ~~AI/recommendations~~ | ✅ Deferred to v2 explicitly. See spec/decisions/08_out-of-scope.md |
 | Visual design system | Color tokens, typography, dark mode — Phase 7 |
 

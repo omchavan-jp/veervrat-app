@@ -1,256 +1,199 @@
-# Deployment Runbook — Veervrat (private beta)
+# Deployment Runbook — Veervrat
 
-Stack (decided 2026-07-01): **Railway** (web + api) · **Neon** (Postgres) · **Upstash**
-(Redis) · **Cloudflare R2** (object storage) · **Cloudflare** (CDN/DNS). Meilisearch
-**deferred** (search hidden/degraded in beta). MinIO is local-dev only — never deployed.
+The live runbook. **This must describe what is actually deployed**, not what we intend to
+deploy. Update it in any infra PR.
+
+Rules and conventions live in `CLAUDE.md` (branching, tags, migrations) and
+`documentation/21_Infrastructure-Conventions.md` (Terraform). This file is the *procedure*.
 
 ---
 
-## Current live state (as of 2026-07-04)
+## Current state (2026-08-16)
 
-Deployed 2026-07-03. **Deploy branch is `dev`** (both services), not `main` — revisit
-when a real staging/prod split is needed.
+**The app is not deployed.** Railway was removed when its trial expired; Azure
+infrastructure exists but no application is running on it yet. Beta testers have no access.
 
-| Piece | Live value |
+Data is safe: 12 users / 10 journeys in Neon, plus a local dump at
+`../backups/veervrat-neon-20260809T184831Z.dump`.
+
+| Piece | State |
 |---|---|
-| web | `https://web-production-1fec3.up.railway.app` (Railway, US West) |
-| api | `https://api-production-496bd.up.railway.app` (Railway, US West) |
-| Postgres | Neon, us-east-1, pooled connection — migrated (18 migrations) + seeded |
-| Redis | Upstash, us-east-1 |
-| Object storage | Cloudflare R2 bucket `veervrat-uploads-dev`, public via `pub-*.r2.dev` |
-| Search | **Meilisearch NOT deployed** — search features hidden/degraded |
-| Email | **Resend NOT wired** — signup verification / password reset don't deliver |
+| Azure subscription | `veervrat` · Central India · grant-funded (expires 2027-08-14) |
+| Terraform | `infra/terraform/` — `envs/shared` + `envs/uat` applied, `envs/prod` not built |
+| Container registry | `veervratacr.azurecr.io` — **empty, no images pushed** |
+| UAT Postgres | `veervrat-uat-psql` (v18, Burstable B1ms) — running, **schema not migrated** |
+| UAT Redis | `veervrat-uat-redis` (Azure Managed Redis, Balanced_B0) — running |
+| UAT secrets | `veervrat-uat-kv` — holds `database-url`, `redis-url` |
+| UAT compute | `veervrat-uat-cae` (Container Apps Environment) — **empty, no apps deployed** |
+| prod | not created |
+| DNS | zone `veervrat.jnanaprabodhini.org` exists; **NS delegation pending with JP** |
+| Email (Resend) | not wired |
+| Object storage | **not provisioned** — app still uses the S3 API; needs an SDK swap first |
+| Search (Meilisearch) | deferred |
 
-**Same-origin proxy (important architectural deviation):** web and api are separate
-`up.railway.app` subdomains (a public-suffix domain), so browsers block the api's session
-cookie as third-party. Fix: `apps/web/next.config.ts` rewrites `/api/v1/:path*` →
-`API_ORIGIN` (the api service). Consequences:
-- web build vars: `NEXT_PUBLIC_API_URL=/api/v1` (**relative**), `API_ORIGIN=<api URL>`,
-  `NEXT_PUBLIC_SITE_URL=<web URL>` (og/canonical URLs).
-- `GOOGLE_CALLBACK_URL` points at the **web** origin (`https://<web-url>/api/v1/auth/google/callback`)
-  so the OAuth callback's Set-Cookie is first-party. The Google console lists the web-origin
-  callback.
-- Auth cookies are `SameSite=None` in prod via `cookieSameSite()`
-  (`apps/api/src/common/http/cookie.ts`); set `COOKIE_SAMESITE=lax` once web+api share a
-  custom domain.
-- **WebSocket chat does not work** — Next rewrites don't proxy Socket.IO. Needs the
-  custom-domain setup (step 8) to fix.
+---
 
-**Migrations/seed against prod** run from the local Docker build stage image
-(`veervrat-api-build:local`, which has the Prisma CLI + ts-node), never automated:
-```bash
-docker build -f apps/api/Dockerfile --target build -t veervrat-api-build:local .
-docker run --rm -e DATABASE_URL="<neon-DIRECT-url>" veervrat-api-build:local \
-  npx prisma migrate deploy --schema prisma/schema.prisma
-# seed (idempotent):
-docker run --rm -e DATABASE_URL="<neon-pooled-url>" -w /app/apps/api veervrat-api-build:local \
-  ./node_modules/.bin/ts-node --transpile-only src/database/seed.ts
+## How code reaches each environment
+
+See `CLAUDE.md` → Git conventions for the rules. In short:
+
 ```
-Use the **direct** (non-pooler) Neon host for `migrate deploy`; the pooled host for runtime.
+merge PR to main  →  build image tagged with git SHA  →  push to veervratacr
+                  →  auto-deploy that image to UAT
 
-> The sections below are the original provisioning runbook, kept for re-provisioning or
-> staging setup. Steps marked **[you]** require dashboard clicks / credentials. Where
-> reality diverged, the live-state section above wins.
+tag prod-YYYY-MM-DD  →  manual approval  →  deploy the SAME image to prod
+```
 
----
+**Promote, never rebuild.** The prod deploy ships the exact image UAT exercised.
 
-## 0. Prerequisites
-- Code pushed to GitHub (see `PUSH_INSTRUCTIONS.md`) — CI activates automatically.
-- Accounts: Railway, Neon, Upstash, Cloudflare (all have free tiers).
-- `railway` CLI optional but handy: `npm i -g @railway/cli`.
+Local development is `docker-compose` and is not a deploy target — no pipeline touches it.
 
 ---
 
-## 1. Provision data services **[you]**
+## Database migrations — manual, never automatic
 
-### 1a. Neon (Postgres)
-1. neon.tech → new project (region near your Railway region).
-2. Copy the **pooled** connection string (has `-pooler` in the host). Keep the
-   `?sslmode=require` suffix. This is your `DATABASE_URL`.
-3. (Optional) create a separate branch/project for staging.
+Per the hard rule in `CLAUDE.md`: migrations are never applied automatically to a deployed
+environment. A bad migration against real user data is expensive to undo.
 
-### 1b. Upstash (Redis)
-1. upstash.com → Redis → create database (same region if possible).
-2. Copy the connection URL that starts with `rediss://` (TLS). This is your `REDIS_URL`.
+**They run as a one-off Container Apps Job inside Azure**, using the same image as the app.
+Two reasons this is not done from a laptop:
 
-### 1c. Cloudflare R2 (object storage)
-1. Cloudflare dashboard → R2 → create bucket (e.g. `veervrat-uploads`).
-2. R2 → Manage API Tokens → create token (Object Read & Write). Note the
-   **Access Key ID**, **Secret Access Key**, and the **S3 API endpoint**
-   (`https://<accountid>.r2.cloudflarestorage.com`).
-3. Enable public access (or a public dev subdomain) for the bucket → that public URL is
-   `S3_PUBLIC_URL`.
-   - `S3_ENDPOINT` = the r2.cloudflarestorage.com endpoint
-   - `S3_REGION` = `auto`
-   - `S3_BUCKET` = your bucket name
-   - `S3_ACCESS_KEY` / `S3_SECRET_KEY` = the token pair
+1. Azure Postgres accepts connections from Azure services only. A local `prisma migrate
+   deploy` is refused by the firewall. (Punching a temporary hole for your IP works, but
+   leaves a security exception to remember to close.)
+2. Running from a laptop risks a different Prisma version than the one in the image that
+   will actually serve traffic.
 
----
+**Order matters and is not negotiable:**
 
-## 2. Create the Railway project **[you]**
-1. railway.app → New Project → Deploy from GitHub repo → pick this repo.
-2. Create **two services** from the same repo:
-   - **api** — Railway reads `apps/api/railway.json` (Dockerfile build, healthcheck `/ready`).
-   - **web** — Railway reads `apps/web/railway.json`.
-   - If Railway auto-detects only one, add the second service manually and set its config
-     path / root. Both Dockerfiles expect the **repo root** as build context (they COPY
-     `pnpm-lock.yaml` etc.) — this is the Railway default.
-3. Set each service's **branch**: `main` for the production environment (create a second
-   Railway *environment* off `dev` for staging later — step 8).
+```
+1. build + push image (tagged with the git SHA)
+2. run the migration job on that image
+3. deploy the app on that same image
+```
+
+Reversed, the app boots and queries columns that don't exist yet.
+
+Migrations are **forward-only**. A bad migration is corrected with a new migration —
+never `migrate reset` against a deployed database.
+
+> Procedure to be filled in when the migration job is built (next step after the first
+> image push). Do not substitute a local run in the meantime without recording it here.
 
 ---
 
-## 3. Configure environment variables **[you]**
+## Environment variables
 
-Set these in Railway per service (Settings → Variables). Never commit real values.
+Runtime secrets come from the environment's Key Vault (`veervrat-<env>-kv`) via managed
+identity — never pasted into the portal, never committed.
 
-### api service
-| Var | Value | Notes |
+### api
+
+| Var | Source | Notes |
 |---|---|---|
+| `DATABASE_URL` | Key Vault `database-url` | generated by Terraform |
+| `REDIS_URL` | Key Vault `redis-url` | generated by Terraform |
+| `SESSION_SECRET` | Key Vault | 32+ random chars |
 | `NODE_ENV` | `production` | |
-| `PORT` | (leave unset) | Railway injects it; main.ts reads it |
-| `DATABASE_URL` | Neon pooled string | from 1a |
-| `REDIS_URL` | Upstash `rediss://…` | from 1b |
-| `SESSION_SECRET` | 32+ random chars | `openssl rand -base64 32` |
-| `SESSION_COOKIE_NAME` | `veervrat_session` | or keep default |
-| `SESSION_TTL_DAYS` | `30` | |
-| `CSRF_COOKIE_NAME` | `csrf-token` | or keep default |
-| `FRONTEND_URL` | web service public URL | set AFTER web has a URL (step 6) — CORS + cookie origin |
-| `S3_ENDPOINT` | R2 endpoint | from 1c |
-| `S3_REGION` | `auto` | |
-| `S3_BUCKET` | bucket name | |
-| `S3_ACCESS_KEY` / `S3_SECRET_KEY` | R2 token pair | |
-| `S3_PUBLIC_URL` | bucket public URL | |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | OAuth creds | **REQUIRED at boot** — from Google Cloud console. Missing/empty = the api crash-loops (`GoogleStrategy` reads these via `getOrThrow`, and they are NOT in the Joi schema so there is no friendly validation error). Set all three before first deploy. |
-| `GOOGLE_CALLBACK_URL` | `https://<api-url>/api/v1/auth/google/callback` | **REQUIRED at boot** — must match Google console |
-| `GLITCHTIP_DSN` | (optional) | enables error tracking; safe to leave unset |
-| `MEILI_HOST` / `MEILI_MASTER_KEY` | (leave unset) | search deferred |
+| `PORT` | `3001` | |
+| `FRONTEND_URL` | the web app's URL | CORS + cookie origin |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Key Vault | ⚠️ **required at boot** — read via `getOrThrow` and *not* in the Joi schema, so a missing value crash-loops the api with no friendly error |
+| `GOOGLE_CALLBACK_URL` | must match the Google console exactly | ⚠️ also required at boot |
+| `DATABASE_POOL_MAX` | default 10 | ⚠️ the real limit is `POOL_MAX × maxReplicas + headroom ≤ server max_connections`. Burstable Postgres allows few connections; exhausting them fails every request at once, health probes included. |
+| `SHUTDOWN_TIMEOUT_MS` | default 10000 | must stay under the platform's SIGTERM→SIGKILL grace period |
+| `S3_*` | unset for now | uploads degrade gracefully — chat image upload is disabled, nothing else breaks |
+| `MEILI_*` | unset | search deferred |
 
-### web service
-| Var | Value | Notes |
-|---|---|---|
-| `NEXT_PUBLIC_API_URL` | `/api/v1` | **BUILD-TIME** var, inlined into the browser bundle. Relative because of the same-origin proxy (see live-state section). Changing it requires a rebuild. |
-| `API_ORIGIN` | `https://<api-url>` | **BUILD-TIME** — target of the `/api/v1/*` rewrite proxy. |
-| `NEXT_PUBLIC_SITE_URL` | `https://<web-url>` | **BUILD-TIME** — og:image / canonical URL base. |
-| `NEXT_PUBLIC_FEEDBACK_MODE` | `test` | **BUILD-TIME** — feedback widget: `test` (list + form), `public` (form only), unset = hidden. |
-| `NEXT_PUBLIC_COMMIT_SHA` | `${{RAILWAY_GIT_COMMIT_SHA}}` | **BUILD-TIME** — build id attached to feedback reports (falls back to `dev`). |
+### web — all **build-time**, inlined into the browser bundle
 
-> Chicken-and-egg: web needs the api URL and api needs the web URL. Deploy api first
-> (step 5) to get its URL, set `NEXT_PUBLIC_API_URL`, deploy web (step 6), then set the
-> api's `FRONTEND_URL` to the web URL and redeploy api. Railway URLs are stable per
-> service, so you can also pre-generate domains in Settings → Networking before deploying.
+Changing any of these requires a **rebuild**, not just a restart.
+
+| Var | Notes |
+|---|---|
+| `NEXT_PUBLIC_API_URL` | see the same-origin note below |
+| `API_ORIGIN` | target of the `/api/v1/*` rewrite proxy, if the proxy is used |
+| `NEXT_PUBLIC_SITE_URL` | og:image / canonical URL base |
+| `NEXT_PUBLIC_FEEDBACK_MODE` | `test` = list + form, `public` = form only, unset = hidden |
+| `NEXT_PUBLIC_COMMIT_SHA` | build id attached to feedback reports |
 
 ---
 
-## 4. Run database migrations against prod **[you]** — MANUAL, never automated
-Per project hard rule (`CLAUDE.md`): migrations run manually after review, never
-auto-applied to production.
+## Architectural gotchas that survived the move off Railway
 
-From your machine, pointed at the prod DB:
+These bit us before and will bite again if forgotten.
+
+**Same-origin proxy and cookies.** On Railway, web and api sat on separate
+`up.railway.app` subdomains — a public-suffix domain — so browsers treated the api's
+session cookie as third-party and blocked it. The workaround was a Next.js rewrite proxying
+`/api/v1/*` plus `SameSite=None`.
+
+On a **shared custom domain** (`veervrat.jnanaprabodhini.org` + `api.veervrat.…`) this
+whole problem disappears: set `COOKIE_SAMESITE=lax` and drop the proxy. Prefer that.
+
+**WebSocket chat needs the custom domain.** Next.js rewrites do not proxy WebSocket
+upgrades, so chat was broken on Railway. Two independent causes existed — that, and the
+missing Socket.IO Redis adapter. **The adapter is now fixed** (multi-instance-readiness);
+the transport half is resolved by putting web and api on the same real domain, which is
+blocked on the pending NS delegation.
+
+**OAuth callback chicken-and-egg.** `GOOGLE_CALLBACK_URL` must exactly match the Google
+console entry, and it should point at whichever origin makes the `Set-Cookie` first-party.
+
+---
+
+## Verifying a deploy
+
 ```bash
-cd apps/api
-DATABASE_URL="<neon-prod-url>" pnpm db:migrate:deploy
-```
-`db:migrate:deploy` = `prisma migrate deploy` (applies committed migrations only; never
-generates or resets). Verify:
-```bash
-DATABASE_URL="<neon-prod-url>" npx prisma migrate status
-```
-(Optional) seed reference data if the app needs it:
-```bash
-DATABASE_URL="<neon-prod-url>" pnpm --filter api seed
+curl https://<api-url>/health   # cheap liveness — process is up
+curl https://<api-url>/ready    # actually pings Postgres + Redis
 ```
 
----
-
-## 5. Deploy the api **[you]**
-1. Trigger the api service deploy (push to `main`, or Railway → Deploy).
-2. Watch the build (Dockerfile: deps → prisma generate → build → prune → runtime).
-3. When live, Railway shows a public URL. Confirm health:
-   ```bash
-   curl https://<api-url>/ready
-   # → {"status":"ok","checks":{"database":"up","redis":"up"}}
-   ```
-   `/ready` actually pings Neon + Upstash — a green here means env vars + networking are
-   correct. `/health` is the cheap liveness probe.
-
----
-
-## 6. Deploy the web **[you]**
-1. Set `NEXT_PUBLIC_API_URL=https://<api-url>/api/v1` (build variable).
-2. Deploy the web service.
-3. Get its public URL → go back and set the api's `FRONTEND_URL` to it → redeploy api
-   (so CORS allows the web origin and session cookies are scoped correctly).
-
----
-
-## 7. Smoke test **[you]**
-- `GET https://<api-url>/ready` → all `up`.
-- Open the web URL → sign up / log in → confirm the session cookie is set and a
-  dashboard loads. (Email verification needs Resend wired — see Known gaps.)
-- Upload an image somewhere (chat/experience) → confirm it lands in R2.
-
----
-
-## 8. Domain, DNS, staging **[you]**
-- Cloudflare: add your domain, point DNS (CNAME) at the Railway web service; add the
-  api subdomain similarly. Enable Cloudflare proxy (CDN).
-- Update `FRONTEND_URL`, `NEXT_PUBLIC_API_URL`, `GOOGLE_CALLBACK_URL` to the custom
-  domains; redeploy.
-- **Staging:** in Railway create a second *environment* tracking the `dev` branch, with
-  its own Neon branch + Upstash db + env vars. Prod tracks `main`.
-
----
-
-## 9. Content-editing deployment (dev-only) **[you]**
-A separate, access-restricted deployment lets a content editor edit all UI copy (en/mr)
-in-context and publish changes as a PR. It is **off everywhere by default** — never enable
-it on the production services. (Design: archived openspec change `in-context-content-editor`.)
-
-Stand up a second Railway service (same project or a new one) that builds the same repo:
-
-**web (content-edit)** — all the normal web build vars, plus:
-| Var | Value | Notes |
-|---|---|---|
-| `NEXT_PUBLIC_CONTENT_EDIT` | `on` | **BUILD-TIME** — mounts the editor + enables the i18n overlay merge. Unset/anything-else = feature absent (production default). |
-
-**api (content-edit)** — all the normal api vars (incl. S3/R2 — overrides stage in the same
-bucket under `content-overrides/`), plus:
-| Var | Value | Notes |
-|---|---|---|
-| `CONTENT_EDIT_ENABLED` | `true` | master gate; the `content-overrides` routes 404 when false (production default) |
-| `CONTENT_EDITOR_USER_IDS` | comma-separated user UUIDs | allowlist of who may edit/publish (`content.edit`). Empty = nobody (fail-closed) |
-| `CONTENT_EDIT_GITHUB_TOKEN` | fine-grained PAT | this repo only, **Contents + Pull requests: write** |
-| `CONTENT_EDIT_GITHUB_REPO` | `veer-vrat/veervrat-app` | publish target |
-| `CONTENT_EDIT_GITHUB_BASE_BRANCH` | `dev` | branch PRs open against |
-
-- Restrict who can reach the deployment (private networking / auth proxy / an unshared URL)
-  — defence in depth on top of the server-side `content.edit` check.
-- Flow: editor logs in → **Edit content** → ⌥-click text → edit en/mr → **Save** (stages to
-  R2, shows live via `router.refresh`) → **Publish** → review + squash-merge the PR →
-  production redeploys from the merged message files. Clear the staged overrides once merged.
-- Production stays untouched: flag off → no editor UI, no overlay fetch, routes 404.
-
----
-
-## Known gaps to close before/around launch
-- **WebSocket chat:** Socket.IO is not proxied by the Next.js rewrites, so real-time chat
-  is broken on the railway.app URLs. Fixed by moving web+api onto a shared custom domain
-  (`app.<domain>` / `api.<domain>`), after which the proxy and `SameSite=None` can both be
-  retired (`COOKIE_SAMESITE=lax`).
-- **Email (Resend):** verification / password-reset emails are console-logged in dev and
-  not wired to a provider — signup verification + password recovery won't deliver until
-  Resend is integrated (approved in the platform standard, not yet implemented).
-- **Backups:** Neon provides point-in-time restore on its plans — confirm the retention
-  on your tier; that satisfies the audit's backup gap for managed PG.
-- **Search:** deferred; add a Meilisearch Railway container + `MEILI_HOST`/
-  `MEILI_MASTER_KEY` when entity-search/VM-invite lookup is needed.
-- **CI → CD automation:** current CI gates PRs; auto-deploy on merge to `main` can be
-  added later (Railway deploys on push by default once the GitHub link is set).
+A green `/ready` means env vars, secrets and networking are all correct — it is the check
+that matters. Then: sign up / log in through the web UI and confirm the session cookie is
+set and a dashboard loads.
 
 ---
 
 ## Rollback
-Railway keeps prior deployments — Deployments tab → pick a previous green deploy →
-Redeploy/Rollback. DB migrations are forward-only; a bad migration is reverted with a new
-corrective migration (never `migrate reset` on prod).
+
+Deploy the previous `prod-*` tag's image. Because prod ships a promoted image rather than
+a rebuild, the previous release is a known-good artifact still sitting in the registry.
+
+Database migrations are forward-only and are **not** rolled back — correct them with a new
+migration.
+
+---
+
+## Known gaps
+
+| Gap | Blocked on |
+|---|---|
+| App not deployed anywhere | first image push + migration job (next step) |
+| Custom domain, HTTPS, working chat | NS delegation from JP (O1) — external |
+| Email (verification, password reset) doesn't deliver | Resend not wired |
+| Object storage | app uses the S3 API; Azure Blob doesn't speak it — needs `@azure/storage-blob` swap |
+| Beta data still in Neon | migration after prod exists |
+| Search | Meilisearch deferred |
+| prod environment | Phase 2B Terraform |
+
+---
+
+## Content-editing deployment (dev-only)
+
+A separate, access-restricted deployment lets a content editor edit UI copy (en/mr)
+in-context and publish changes as a PR. **Off everywhere by default — never enable it on
+production.** Design: archived openspec change `in-context-content-editor`.
+
+Requires, on top of the normal vars:
+
+| Var | Value |
+|---|---|
+| `NEXT_PUBLIC_CONTENT_EDIT` (web) | `on` — build-time; mounts the editor + i18n overlay |
+| `CONTENT_EDIT_ENABLED` (api) | `true` — master gate; routes 404 when false |
+| `CONTENT_EDITOR_USER_IDS` | comma-separated UUIDs; empty = nobody (fail-closed) |
+| `CONTENT_EDIT_GITHUB_TOKEN` | fine-grained PAT, this repo only, Contents + PR write |
+| `CONTENT_EDIT_GITHUB_REPO` | `veer-vrat/veervrat-app` |
+| `CONTENT_EDIT_GITHUB_BASE_BRANCH` | `main` |
+
+Overrides stage in object storage under `content-overrides/`, so this feature also waits on
+the Blob migration. Which environment it runs in is still open (O7).

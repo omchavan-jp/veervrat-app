@@ -79,8 +79,10 @@ Two lanes, chosen at triage:
 2. Implement. Verification is **tiered by risk**: infra/auth/build/migration
    changes get empirical verification (docker build, boot, curl live endpoints);
    assets/copy/minor UI get typecheck + commit.
-3. Squash-merge to `dev` → Railway auto-deploys → spot-check live.
+3. Squash-merge to `main` → **UAT auto-deploys** → spot-check on UAT.
 4. Close the issue (`gh issue close NN --comment "..."`), add CHANGELOG line.
+5. Ship to beta testers by cutting a `prod-*` tag (below) — a merge alone no longer
+   reaches real users, which is the point of having UAT.
 
 **Change lane** — new features or behavior changes (`needs-spec` label).
 1. Draft an openspec change in `openspec/changes/<id>` (proposal + spec deltas).
@@ -108,10 +110,18 @@ or spec delta.
 **Merge checklist** (every PR): does this change require an update to
 CHANGELOG.md, DEPLOYMENT.md, or a spec? Answer explicitly before merging.
 
-## Environments and hard rules (unchanged)
+## Environments and hard rules
 
-- Deploy branch is `dev` (Railway). Never commit directly to `dev`/`main` —
-  always a branch + squash merge.
-- Never auto-migrate production; migrations run manually via the
-  `veervrat-api-build:local` image (see DEPLOYMENT.md).
+Updated 2026-08-16 (O6) — the Railway-era single-environment model is gone.
+
+- **`main` is the trunk.** Never commit directly — always a branch + squash merge.
+  `dev` is retired.
+- **Merging to `main` deploys to UAT automatically.** It does **not** reach beta testers.
+- **Beta testers are on prod** (D11), reached only by cutting a `prod-YYYY-MM-DD` tag and
+  approving the deploy. The same image UAT tested is promoted — never rebuilt.
+- **`main` must always be releasable**, since a tag is only useful if `HEAD` is shippable.
+- **Never auto-migrate a deployed environment.** Migrations run as a one-off job inside
+  Azure on the same image as the app, in the order build → migrate → deploy.
 - Conventional commits throughout.
+
+Full rules: `../CLAUDE.md` → Git conventions. Procedure: `../DEPLOYMENT.md`.

@@ -1,8 +1,12 @@
 # Changelog
 
-User-visible changes, most recent first. Dated sections (continuous deploy to the
-`dev` branch — no version numbers during beta). Every PR that changes user-visible
-behaviour adds a line here (see `documentation/20_Solo-Dev-Operations.md`).
+User-visible changes, most recent first. Dated sections — no semver during beta, since
+there is no public API contract to version. Releases are marked by `prod-YYYY-MM-DD` tags
+(see `CLAUDE.md` → Git conventions). Every PR that changes user-visible behaviour adds a
+line here (see `documentation/20_Solo-Dev-Operations.md`).
+
+Note: merging to `main` ships to **UAT**, not to users. A line here is live for beta
+testers only once a `prod-*` tag has been deployed.
 
 ## Unreleased
 - Deploys no longer interrupt you mid-action: the app now finishes requests already in
