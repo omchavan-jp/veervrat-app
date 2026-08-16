@@ -13,9 +13,12 @@ Rules and conventions live in `AGENTS.md` (branching, tags, migrations) and
 **UAT is live.** First successful Azure deploy 2026-08-16 — `/ready` green with Postgres
 and Redis both up, schema migrated, web serving and proxying to the api.
 
-**Prod infrastructure exists** (Phase 2B, 2026-08-16) — Postgres, Redis, Key Vault, Container
-Apps environment, all provisioned and `plan`-clean. **No apps deployed to it and no `prod-*`
-tag cut yet**, so beta testers still have no access (per D11 they live on prod).
+**Prod is live.** First `prod-2026-08-16` tag deployed 2026-08-16 — promoted UAT's exact
+image (`5576918`), no rebuild. `deploy-prod` succeeded on its first run (every other CD path
+had surfaced a real bug on its first run — this one didn't). `/ready` green with Postgres and
+Redis both up. Access is still effectively closed: the feedback widget and content-editor
+gating are env-var-only today (D20/O7), and no capability grants exist yet for real beta
+testers — that's B1, next.
 
 Neon migration is **cancelled** (D19) — prod will be created fresh and seeded, exactly as CD
 already does for UAT. The dump at `../backups/veervrat-neon-20260809T184831Z.dump` is retained
@@ -34,7 +37,13 @@ as an archive, not a migration source.
 | UAT compute | api + web Container Apps **running** in `veervrat-uat-cae`, scale-to-zero when idle |
 | UAT web | https://veervrat-uat-web.proudcoast-d3aa08a0.centralindia.azurecontainerapps.io |
 | UAT api | https://veervrat-uat-api.proudcoast-d3aa08a0.centralindia.azurecontainerapps.io |
-| prod | **infra live, no apps** — `veervrat-prod-{psql,redis,kv,cae}` provisioned; 35-day backup retention; awaiting the first `prod-*` tag |
+| prod Postgres | `veervrat-prod-psql` (v18, Burstable B1ms) — running, 35-day backup retention, schema migrated |
+| prod Redis | `veervrat-prod-redis` (Azure Managed Redis, Balanced_B0) — running |
+| prod secrets | `veervrat-prod-kv` — `database-url`, `redis-url`, `session-secret`, `postgres-admin-password` |
+| prod data | seeded (same content set as UAT) |
+| prod compute | api + web Container Apps **running** in `veervrat-prod-cae`, scale-to-zero (`min_replicas=0` — revisit once real traffic is expected) |
+| prod web | https://veervrat-prod-web.graydesert-a1bc836e.centralindia.azurecontainerapps.io |
+| prod api | https://veervrat-prod-api.graydesert-a1bc836e.centralindia.azurecontainerapps.io |
 | DNS | zone `veervrat.jnanaprabodhini.org` exists; **NS delegation pending with JP** |
 | Email (Resend) | not wired |
 | Object storage | **not provisioned** — app still uses the S3 API; needs an SDK swap first |

@@ -46,11 +46,12 @@ a design the app now implements.
 **UAT is LIVE on Azure, deployed by CD.** `/ready` green, schema migrated + seeded, web
 serving. CD (GitHub OIDC → Azure, no stored secret) proven end-to-end on multiple real runs.
 
-**Prod infra is now live too** (Phase 2B, 2026-08-16) — Postgres/Redis/Key Vault/Container
-Apps environment all provisioned, `terraform plan` clean. **No apps deployed to it yet and
-no `prod-*` tag cut** — deliberately paused before the first prod deploy to do the O7
-discussion + doc reorganisation first (see Working order). Data remains safe in Neon (12
-users, 10 journeys) + a local dump — **migration cancelled, see D19.**
+**Prod is now LIVE too.** First `prod-2026-08-16` tag deployed 2026-08-16 — promoted UAT's
+exact image (`5576918`), no rebuild. `deploy-prod` succeeded on its first run — `/ready`
+green, Postgres + Redis both up, schema migrated + seeded. Access is still effectively
+closed: gating is env-var-only today (D20/O7), no capability grants exist for real testers
+yet — that's B1, next. Data remains safe in Neon (12 users, 10 journeys) + a local dump —
+**migration cancelled, see D19.**
 
 | | |
 |---|---|
@@ -61,7 +62,7 @@ users, 10 journeys) + a local dump — **migration cancelled, see D19.**
 | UAT web | `https://veervrat-uat-web.proudcoast-d3aa08a0.centralindia.azurecontainerapps.io` |
 | UAT api | `https://veervrat-uat-api.proudcoast-d3aa08a0.centralindia.azurecontainerapps.io` |
 | Terraform | `veervrat-app/infra/terraform/` — `envs/shared`, `envs/uat`, `envs/prod` all applied, plans clean |
-| CD | `.github/workflows/cd.yml` — merge to `main` auto-deploys UAT; `prod-*` tag deploys prod (untested — next) |
+| CD | `.github/workflows/cd.yml` — merge to `main` auto-deploys UAT; `prod-*` tag deploys prod (proven 2026-08-16, first run, no bugs) |
 | Images | `veervratacr` — `veervrat-api`, `veervrat-api-migrate`, `veervrat-web`, built + cached in CI (GitHub Actions cache, not the registry) |
 | DNS | zone exists; **NS delegation still pending with JP** (O1) — blocks custom domain, working chat, Resend |
 
@@ -106,7 +107,7 @@ dropped build args). Every one is now documented with its guard.
 | # | Thread | Owner | Blocks |
 |---|---|---|---|
 | O6 | ✅ **CLOSED 2026-08-16** — single `main` trunk, UAT auto-deploys on merge, prod by `prod-*` tag promoting the same image. Documented in `veervrat-app/AGENTS.md` + `DEPLOYMENT.md`. Transition done — `main` fast-forwarded, `dev` retired | — | — |
-| O18 | ✅ **CLOSED 2026-08-16** — CD pipeline live. GitHub↔Azure via OIDC (no stored secret), `.github/workflows/cd.yml` + `.github/actions/deploy-environment`. Parallel cached builds, per-job auth, migrate-before-deploy enforced. UAT deploys proven end-to-end (multiple real runs, multiple real bugs found and fixed — see `veervrat-app/documentation/21_Infrastructure-Conventions.md` §14–15). `deploy-prod` not yet exercised — first prod tag is next | Claude | first prod deploy |
+| O18 | ✅ **CLOSED 2026-08-16** — CD pipeline live. GitHub↔Azure via OIDC (no stored secret), `.github/workflows/cd.yml` + `.github/actions/deploy-environment`. Parallel cached builds, per-job auth, migrate-before-deploy enforced. UAT **and now prod** deploys proven end-to-end — `deploy-prod` succeeded on its first run (`prod-2026-08-16`), the only CD path all the others' bug hunts hadn't yet touched (see `veervrat-app/documentation/21_Infrastructure-Conventions.md` §14–15) | — | — |
 | O1 | **DNS delegation** — Azure zone created 2026-08-15, NS values sent; awaiting Shantanu | Om → **Rahul** → Shantanu | custom domain, chat fix, Resend |
 | O2 | Confirm `veervrat.jnanaprabodhini.org` vs `veervrat.com` (90% settled on subdomain) | Om → **Ashutosh** | O1 |
 | O3 | Buy `veervrat.com` defensively (~$10) | Om | — |
@@ -304,10 +305,9 @@ History of already-triaged items: `triage-archive.md`.
 8. ✅ **O7 settled** (D11's rationale replaced, D20 added) and ✅ **doc reorganisation done** —
    ops docs moved into the repo, the two registers merged, all 21 `documentation/` files read
    end to end with 12 staleness findings fixed, `AGENTS.md` made canonical
-9. **← next: cut the first `prod-*` tag.** `deploy-prod` is the only CD path never executed,
-   and prod has zero users — the cheapest possible moment to find its bugs. Every other CD
-   path surfaced real bugs on its first run
-10. **Then B1** — per-user capability grants + admin dashboard, OpenSpec full cycle. Prod
+9. ✅ **First prod deploy** — `prod-2026-08-16` tag, `deploy-prod` succeeded on its first run
+   (no bugs — every other CD path had one). `/ready` green, UAT untouched
+10. **← next: B1** — per-user capability grants + admin dashboard, OpenSpec full cycle. Prod
     ships with the feedback widget effectively off until this lands, which is correct while
     there are no testers
 11. **DNS cutover** (O1/O2) — parallel human track throughout; unblocks OAuth + Resend

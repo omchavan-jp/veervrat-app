@@ -8,7 +8,13 @@ line here (see `documentation/20_Solo-Dev-Operations.md`).
 Note: merging to `main` ships to **UAT**, not to users. A line here is live for beta
 testers only once a `prod-*` tag has been deployed.
 
-## Unreleased
+## 2026-08-16 (prod-2026-08-16)
+- 🚀 Migrated off Railway/Neon/Upstash/R2 to Azure (Container Apps, Postgres Flexible
+  Server, Azure Managed Redis) via Terraform, with a GitHub Actions CD pipeline
+  (OIDC, no stored secrets). This is the first release on the new UAT → prod flow:
+  merges to `main` deploy to UAT automatically; a `prod-*` tag promotes that exact
+  image to prod. Object storage (Blob) and email (Resend) are not yet wired — see
+  `DEPLOYMENT.md`.
 - Deploys no longer interrupt you mid-action: the app now finishes requests already in
   flight before shutting down, so a restart can't lose a submission you just made.
 - Fixed: the stricter limits on signup, login and password-reset attempts were not
