@@ -333,3 +333,4 @@ from a guess. Full version in `veervrat-app/AGENTS.md`.
 - Non-trivial features go through **OpenSpec** (`veervrat-app/openspec/`)
 - Conventional commits
 - **Never auto-migrate production** — manual approval gate
+
