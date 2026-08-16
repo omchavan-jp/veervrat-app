@@ -23,7 +23,8 @@ Data is safe: 12 users / 10 journeys in Neon, plus a local dump at
 |---|---|
 | Azure subscription | `veervrat` · Central India · grant-funded (expires 2027-08-14) |
 | Terraform | `infra/terraform/` — `envs/shared` + `envs/uat` applied, `envs/prod` not built |
-| Container registry | `veervratacr.azurecr.io` — `veervrat-api`, `veervrat-api-migrate`, `veervrat-web`, all tagged `6ead179` |
+| Container registry | `veervratacr.azurecr.io` — `veervrat-api`, `veervrat-api-migrate`, `veervrat-web` |
+| CI/CD | `ci.yml` + `integration.yml` (PR gates) · `cd.yml` (build → migrate → deploy). GitHub→Azure via OIDC, no stored secrets |
 | UAT Postgres | `veervrat-uat-psql` (v18, Burstable B1ms) — running, **schema migrated** (`pg_trgm` allow-listed via `azure.extensions`) |
 | UAT Redis | `veervrat-uat-redis` (Azure Managed Redis, Balanced_B0) — running |
 | UAT secrets | `veervrat-uat-kv` — holds `database-url`, `redis-url` |
@@ -46,10 +47,14 @@ See `CLAUDE.md` → Git conventions for the rules. In short:
 merge PR to main  →  build image tagged with git SHA  →  push to veervratacr
                   →  auto-deploy that image to UAT
 
-tag prod-YYYY-MM-DD  →  manual approval  →  deploy the SAME image to prod
+tag prod-YYYY-MM-DD  →  deploy the SAME image to prod
 ```
 
 **Promote, never rebuild.** The prod deploy ships the exact image UAT exercised.
+
+Automated in `.github/workflows/cd.yml`. The prod gate is the **tag itself** — GitHub's
+required-reviewers rule needs a paid plan on private repos, so there is no approval prompt.
+Pushing a `prod-*` tag is the deliberate act.
 
 Local development is `docker-compose` and is not a deploy target — no pipeline touches it.
 
@@ -90,31 +95,73 @@ The job is defined in `infra/terraform/modules/environment/migration-job.tf` as
 devDependency and is pruned out of runtime, which ships the migration files but not the
 tool that applies them.
 
+**CD does this automatically** (`.github/actions/deploy-environment`). To run it by hand —
+recovering a failed migration, or a one-off:
+
 ```bash
 ENV=uat   # or prod
-SHA=$(git rev-parse --short HEAD)
+SHA=<git sha of an image already in the registry>
 
-# 1. Build both images from the same commit, so migrations and app can never drift
-az acr build --registry veervratacr --image "veervrat-api:$SHA" \
-  --file apps/api/Dockerfile .
-az acr build --registry veervratacr --image "veervrat-api-migrate:$SHA" \
-  --target build --file apps/api/Dockerfile .
+# Migrate on the NEW image while the apps still run the OLD one. `--image` overrides the
+# job's image for this execution only, which is what makes the ordering enforceable without
+# a second terraform apply.
+az containerapp job start -n veervrat-$ENV-migrate -g veervrat-$ENV \
+  --image "veervratacr.azurecr.io/veervrat-api-migrate:$SHA"
 
-# 2. Point the environment at the new tag and apply (creates/updates the job + apps)
-cd infra/terraform/envs/$ENV
-terraform apply -var="image_tag=$SHA" -var="deploy_apps=true"
-
-# 3. Run migrations — deliberate, separate, before the app serves the new schema
-az containerapp job start -n veervrat-$ENV-migrate -g veervrat-$ENV
-
-# 4. Watch it
 az containerapp job execution list -n veervrat-$ENV-migrate -g veervrat-$ENV -o table
 az containerapp job logs show -n veervrat-$ENV-migrate -g veervrat-$ENV --container migrate
+
+# Only once migrations succeed:
+cd infra/terraform/envs/$ENV
+terraform apply -var="image_tag=$SHA" -var="deploy_apps=true"
+```
+
+**Recovering a failed migration.** Prisma records the failure (`P3018`) and refuses every
+later `deploy` until a human states whether it rolled back — deliberately not automatic,
+which is also why the job has `replica_retry_limit = 0`:
+
+```bash
+terraform apply -var="image_tag=$SHA" -var="deploy_apps=true" \
+  -var='migrate_command=migrate resolve --rolled-back <migration_name>'
+az containerapp job start -n veervrat-$ENV-migrate -g veervrat-$ENV
+# then re-apply with the default migrate_command and run the job again
 ```
 
 `prisma migrate deploy` applies committed migrations only — it never generates one and
 never resets. `replica_retry_limit = 0` is deliberate: re-running a partially-applied
 migration should be a human decision, not an automatic retry.
+
+---
+
+## Seeding reference data — a separate job, deliberately not a migration
+
+The app is unusable without reference content: virtues, subvirtues, weaknesses, sentences,
+challenges, resolutions, exposures. You cannot take a weakness test or start a journey
+against an empty database, so a freshly-migrated environment is *serving* but not *usable*.
+
+**Seed is not part of migrations, on purpose:**
+
+- Migrations are **schema**, one-shot and forward-only. Seed is **content**, idempotent
+  (`src/database/seed.ts` uses upserts) and re-runnable.
+- Put seeding in a migration and it can never be re-run — and every content correction (a new
+  virtue, fixed Marathi wording) would need a fresh migration, which cannot be edited once
+  applied anywhere.
+- Content changes on a product cadence and gets product review; schema changes on an
+  engineering cadence. Different lifecycles should not share a mechanism.
+
+It reuses the **same one-off job machinery as migrations** — same build-stage image (it needs
+`ts-node`, which like the `prisma` CLI is a devDependency pruned out of runtime), same managed
+identity, same manual trigger. Only the command differs:
+
+```bash
+az containerapp job start -n veervrat-$ENV-migrate -g veervrat-$ENV \
+  --image "veervratacr.azurecr.io/veervrat-api-migrate:$SHA" \
+  --command "/bin/sh" "-c" \
+  --args "cd /app/apps/api && ./node_modules/.bin/ts-node --transpile-only src/database/seed.ts"
+```
+
+Per **O11**, UAT holds seeded reference data and **never real users**. Prod gets the same
+reference seed plus the migrated beta data from the Neon dump.
 
 ---
 
