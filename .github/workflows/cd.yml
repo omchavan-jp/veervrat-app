@@ -1,10 +1,10 @@
 # Continuous deployment.
 #
 # Encodes the release rules from CLAUDE.md so they cannot be got wrong by hand:
-#   merge to main      -> build images tagged with the SHA -> migrate -> deploy UAT
-#   tag prod-YYYY-MM-DD -> manual approval -> migrate -> deploy prod with the SAME image
+#   merge to main       -> build images tagged with the SHA -> migrate -> deploy UAT
+#   tag prod-YYYY-MM-DD -> migrate -> deploy prod with the SAME image (never rebuilt)
 #
-# Every step here exists because doing it manually went wrong at least once. See
+# Every step exists because doing it manually went wrong at least once. See
 # documentation/21_Infrastructure-Conventions.md §14 and the traps table in
 # ../../azure-account-facts.md §5.
 name: CD
@@ -30,18 +30,56 @@ env:
   REGISTRY_SERVER: veervratacr.azurecr.io
 
 jobs:
-  # ── Build once. Everything downstream promotes THIS artifact; nothing rebuilds. ──
-  build:
+  # Cheap job whose only purpose is to resolve values every later job needs, so each of those
+  # jobs can start with a *fresh* Azure login. Azure's OIDC assertion is valid for only ~5
+  # minutes; a single long job outlives its own credentials mid-run (AADSTS700024).
+  prepare:
     runs-on: ubuntu-latest
     outputs:
       image_tag: ${{ steps.meta.outputs.sha }}
+      uat_domain: ${{ steps.meta.outputs.domain }}
     steps:
       - uses: actions/checkout@v4
-
-      # One checkout, one SHA, all three images — the invariant that was broken by hand when
-      # committing between builds produced three images on three different tags.
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       - id: meta
-        run: echo "sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+        run: |
+          set -euo pipefail
+          # One checkout, one SHA, every image — the invariant broken by hand when committing
+          # between builds produced three images on three different tags.
+          echo "sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+          # Container App URLs are predictable from the environment's default domain, which is
+          # what lets web be *built* knowing the api's URL (NEXT_PUBLIC_* is baked in at build).
+          echo "domain=$(az containerapp env show -n veervrat-uat-cae -g veervrat-uat \
+            --query properties.defaultDomain -o tsv)" >> "$GITHUB_OUTPUT"
+
+  # One job per image, in parallel. Three benefits over the previous single sequential job:
+  # each gets its own fresh Azure login (see above), wall-clock is the slowest image rather
+  # than the sum, and a failure names the image that broke.
+  build:
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - image: veervrat-api
+            dockerfile: apps/api/Dockerfile
+            target: runtime
+          # Same Dockerfile, earlier stage. The build stage keeps the `prisma` CLI and
+          # `ts-node` — both devDependencies, pruned out of runtime — so this is the only
+          # image that can apply migrations or run the seed.
+          - image: veervrat-api-migrate
+            dockerfile: apps/api/Dockerfile
+            target: build
+          - image: veervrat-web
+            dockerfile: apps/web/Dockerfile
+            target: runtime
+    steps:
+      - uses: actions/checkout@v4
 
       - uses: azure/login@v2
         with:
@@ -49,55 +87,56 @@ jobs:
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
-      # `az acr build` builds in Azure, not on the runner. Not a convenience: Container Apps
-      # runs amd64, and building elsewhere risks an architecture mismatch that surfaces as an
-      # image that simply refuses to start.
-      - name: Build api image
-        run: |
-          az acr build --registry "$REGISTRY" \
-            --image "veervrat-api:${{ steps.meta.outputs.sha }}" \
-            --file apps/api/Dockerfile .
+      # Exchanges the (short-lived) Azure token for a registry login. AcrPush comes from the
+      # federated identity — there is no registry admin password; `admin_enabled = false`.
+      - name: Log in to ACR
+        run: az acr login --name "$REGISTRY"
 
-      # The build stage, which keeps the `prisma` CLI and `ts-node`. Both are devDependencies
-      # and are pruned out of the runtime image, so the runtime image carries the migration
-      # files but cannot apply them.
-      - name: Build migration image
-        run: |
-          az acr build --registry "$REGISTRY" \
-            --image "veervrat-api-migrate:${{ steps.meta.outputs.sha }}" \
-            --target build --file apps/api/Dockerfile .
+      - uses: docker/setup-buildx-action@v3
 
-      # NEXT_PUBLIC_* is inlined into the browser bundle at build time, so these must be build
-      # args. They are only honoured because the Dockerfile declares matching ARG+ENV — pass an
-      # undeclared one and Docker drops it silently, with no warning and a stale fallback.
-      - name: Build web image
+      # Build args only matter for web, and only because the Dockerfile declares matching
+      # ARG+ENV for each. Pass an undeclared build arg and Docker drops it silently — no
+      # warning, no failure, just a stale fallback in the shipped bundle.
+      - name: Resolve build args
+        id: args
         run: |
-          DOMAIN=$(az containerapp env show -n veervrat-uat-cae -g veervrat-uat \
-            --query "properties.defaultDomain" -o tsv)
-          az acr build --registry "$REGISTRY" \
-            --image "veervrat-web:${{ steps.meta.outputs.sha }}" \
-            --file apps/web/Dockerfile \
-            --build-arg NEXT_PUBLIC_API_URL=/api/v1 \
-            --build-arg API_ORIGIN="https://veervrat-uat-api.$DOMAIN" \
-            --build-arg NEXT_PUBLIC_SITE_URL="https://veervrat-uat-web.$DOMAIN" \
-            --build-arg NEXT_PUBLIC_FEEDBACK_MODE=test \
-            --build-arg NEXT_PUBLIC_COMMIT_SHA="${{ steps.meta.outputs.sha }}" \
-            .
+          if [ "${{ matrix.image }}" = "veervrat-web" ]; then
+            {
+              echo 'value<<EOF'
+              echo 'NEXT_PUBLIC_API_URL=/api/v1'
+              echo 'API_ORIGIN=https://veervrat-uat-api.${{ needs.prepare.outputs.uat_domain }}'
+              echo 'NEXT_PUBLIC_SITE_URL=https://veervrat-uat-web.${{ needs.prepare.outputs.uat_domain }}'
+              echo 'NEXT_PUBLIC_FEEDBACK_MODE=test'
+              echo 'NEXT_PUBLIC_COMMIT_SHA=${{ needs.prepare.outputs.image_tag }}'
+              echo EOF
+            } >> "$GITHUB_OUTPUT"
+          else
+            echo 'value=' >> "$GITHUB_OUTPUT"
+          fi
 
-      # Container Apps resolves the tag, not the build task. A build that has "finished"
-      # locally is not the same as a tag that exists — deploying too early fails the revision
-      # with MANIFEST_UNKNOWN and leaves an orphaned app that blocks the retry.
-      - name: Verify all three tags exist
-        run: |
-          for repo in veervrat-api veervrat-api-migrate veervrat-web; do
-            az acr repository show-tags --name "$REGISTRY" --repository "$repo" -o tsv \
-              | grep -qx "${{ steps.meta.outputs.sha }}" \
-              || { echo "::error::$repo:${{ steps.meta.outputs.sha }} not found"; exit 1; }
-            echo "ok: $repo:${{ steps.meta.outputs.sha }}"
-          done
+      # Built on the runner rather than via `az acr build`, deliberately. `az acr build`
+      # exposes no cache controls at all (no --cache-from, no --no-cache), so every run redid
+      # pnpm install + prisma generate + tsc from scratch — measured at ~4min per image, cold
+      # and warm alike. GitHub runners are already amd64, the same architecture Container Apps
+      # runs, so the reason to build in Azure (arm64 dev laptops) does not apply here.
+      #
+      # Cache lives in GitHub Actions cache, not the registry: ACR Basic has a 10GB quota and
+      # no purge policy yet (O17), so pushing cache layers there would quietly consume it.
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          target: ${{ matrix.target }}
+          push: true
+          tags: |
+            ${{ env.REGISTRY_SERVER }}/${{ matrix.image }}:${{ needs.prepare.outputs.image_tag }}
+            ${{ env.REGISTRY_SERVER }}/${{ matrix.image }}:latest
+          build-args: ${{ steps.args.outputs.value }}
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,scope=${{ matrix.image }},mode=max
 
   deploy-uat:
-    needs: build
+    needs: [prepare, build]
     if: startsWith(github.ref, 'refs/heads/main')
     runs-on: ubuntu-latest
     environment: uat
@@ -111,23 +150,22 @@ jobs:
       - uses: ./.github/actions/deploy-environment
         with:
           environment: uat
-          image_tag: ${{ needs.build.outputs.image_tag }}
+          image_tag: ${{ needs.prepare.outputs.image_tag }}
 
   deploy-prod:
-    needs: build
+    needs: [prepare, build]
     if: startsWith(github.ref, 'refs/tags/prod-')
     runs-on: ubuntu-latest
     # ⚠️ The gate here is the TAG, not a reviewer prompt. GitHub's "required reviewers"
     # protection rule needs a paid plan on private repos (422: "billing plan supports the
     # required reviewers protection rule"), so this environment carries no protection rule.
     #
-    # That is acceptable rather than ideal: cutting and pushing a `prod-YYYY-MM-DD` tag is
-    # already a deliberate, explicit, traceable act — nobody pushes one by accident — and a
-    # self-approval prompt would be a rubber stamp for a single maintainer anyway. The
-    # environment still scopes the OIDC federated credential subject.
+    # Acceptable rather than ideal: cutting and pushing a `prod-YYYY-MM-DD` tag is already a
+    # deliberate, traceable act — nobody pushes one by accident — and a self-approval prompt
+    # is a rubber stamp for a single maintainer. The environment still scopes the OIDC
+    # federated credential subject.
     #
-    # Revisit if a second maintainer joins, or if the repo moves to an org on a paid plan:
-    # a second pair of eyes on a production deploy is worth real money at that point.
+    # Revisit with a second maintainer, or if the repo moves to an org on a paid plan.
     environment: prod
     steps:
       - uses: actions/checkout@v4
@@ -139,4 +177,4 @@ jobs:
       - uses: ./.github/actions/deploy-environment
         with:
           environment: prod
-          image_tag: ${{ needs.build.outputs.image_tag }}
+          image_tag: ${{ needs.prepare.outputs.image_tag }}
