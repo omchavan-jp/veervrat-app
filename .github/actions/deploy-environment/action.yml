@@ -14,6 +14,33 @@ inputs:
 runs:
   using: composite
   steps:
+    # Container Apps resolves the *tag*, not the build job. Deploying a tag that is not in the
+    # registry fails the revision with MANIFEST_UNKNOWN and leaves an app in Failed state that
+    # then blocks the retry with "resource already exists".
+    #
+    # The auth check is separate on purpose. An earlier version collapsed "query failed" into
+    # "tag not found", so an expired Azure token reported a missing image that was actually
+    # present — the guard lied about why it failed, which is worse than not having one.
+    - name: Verify images exist
+      shell: bash
+      env:
+        IMAGE_TAG: ${{ inputs.image_tag }}
+      run: |
+        set -euo pipefail
+        for repo in veervrat-api veervrat-api-migrate veervrat-web; do
+          if ! TAGS=$(az acr repository show-tags --name veervratacr --repository "$repo" -o tsv 2>&1); then
+            echo "::error::could not query $repo — this is an ACCESS/auth failure, not a missing image"
+            echo "$TAGS"
+            exit 1
+          fi
+          if ! grep -qx "$IMAGE_TAG" <<<"$TAGS"; then
+            echo "::error::$repo:$IMAGE_TAG is genuinely absent from the registry"
+            echo "available tags: $(tr '\n' ' ' <<<"$TAGS")"
+            exit 1
+          fi
+          echo "ok: $repo:$IMAGE_TAG"
+        done
+
     - uses: hashicorp/setup-terraform@v3
       with:
         terraform_version: 1.15.8
