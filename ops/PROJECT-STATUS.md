@@ -88,7 +88,8 @@ dropped build args). Every one is now documented with its guard.
 | D8 | **Sentry free tier** (SDK already written) + **App Insights** for platform telemetry; **drop GlitchTip** | Different questions: "why did this fail" vs "is the system healthy". Both free. |
 | D9 | **Resend** stays for email | Already coded; never use Google Workspace SMTP — risks JP's domain reputation |
 | D10 | **Two deployed environments**: UAT + prod. Local docker-compose is "dev" | A third costs 3× for no user |
-| D11 | **Beta testers live on PROD**, not UAT | ⚠️ **Rationale partly void — needs re-deciding (2026-08-16).** The original reason was "otherwise you must migrate real personal data at launch". With the Neon migration cancelled (D19) there is no such data, so that argument no longer applies. The conclusion may still be right, but it now needs a different reason. Being settled in O7. |
+| D11 | **Beta testers live on PROD**, not UAT | ♻️ **Rationale replaced 2026-08-16.** The original reason ("otherwise you must migrate real personal data at launch") died with D19 — there is no data to migrate. The conclusion still holds, for a different and better reason: **UAT is the staging and approval environment**, where Nachiket reviews unreleased changes before they ship. Real beta users cannot live in an environment that is deliberately running unreviewed code. Confirmed in O7. |
+| D20 | **Feature access is per-user data in the DB, not env vars** (2026-08-16) | A user can only be allowlisted *after* signing up, so an env allowlist costs a full deploy cycle per tester (signup → find UUID → edit Terraform → PR → CD → access). Managed instead through the admin dashboard. `CONTENT_EDITOR_USER_IDS` is deleted and content-editor access migrates to the same model — one mechanism, not two. **Env vars keep only environment-level toggles** (`CONTENT_EDIT_ENABLED=false` on prod, permanently, for everyone): "does this feature exist here" is config, "which users have it" is data. See B1. |
 | D19 | **Neon migration CANCELLED** (2026-08-16) | Nachiket confirmed barely anyone started real work, and the dump agrees: 12 users and 10 journeys, but only 4 exposures / 3 resolutions / 1 challenge attached. The only non-reference data is 248 test answers and 15 feedback items — and the feedback is already captured in the inbox below. Prod will be created fresh and seeded, exactly as CD already does for UAT. Dump retained as an archive, not a migration source. |
 | D12 | One subscription, environments split by **resource group** | Simpler; grant bills at account level anyway |
 | D13 | **`veervrat.jnanaprabodhini.org`** over `veervrat.com` | Free, institutional identity. Moving later ≈ half a day + everyone logged out |
@@ -111,7 +112,7 @@ dropped build args). Every one is now documented with its guard.
 | O3 | Buy `veervrat.com` defensively (~$10) | Om | — |
 | O4 | Devavrat to **verify billing email** (shows "Not verified") | Devavrat | billing notifications |
 | O5 | Add JP PAN/GSTIN to billing account (Tax ID empty) | Om → JP finance | invoice compliance |
-| O7 | Feedback widget / content editor: which environment? | Om | — |
+| O7 | ✅ **CLOSED 2026-08-16** — **UAT:** feedback widget for all users, content editor for Nachiket (his content-review role). **Prod:** feedback widget for granted users only; **content editor never, for anyone**. Access is DB-backed and managed from the admin dashboard (D20), not env vars. Implementation is B1 | — | — |
 | O8 | **Chat production-readiness** — own work packet. The gateway is competently built (auth on connect, rooms, sequence numbers, image upload) but **has never once run successfully in production** — the Next.js rewrite proxy blocked WebSocket upgrades from day one, so all real-world behaviour is unverified. Redis adapter now fixed; transport half needs the custom domain. Needs: reconnection, delivery guarantees, offline/unread, push notifications, UX review | later | scaling >1 replica |
 | O9 | ✅ **CLOSED 2026-08-15** — Round 1 app fixes shipped (shutdown, distributed throttler, socket adapter, DB pool) | — | — |
 | O10 | Terraform — **Phase 1 + 2A done, UAT app LIVE**. Phase 2B (prod) outstanding | Claude | prod |
@@ -154,7 +155,42 @@ a GitHub Issue or is promoted to an O-thread above.
 
 **p1 — blocks something, or is user-facing and live**
 
-- **B1 · Runtime-gate the feedback widget and content editor.** Both are gated by
+- **B1 + B9 (merged) · Per-user capability grants + admin dashboard management.**
+  *Decided 2026-08-16 — supersedes the earlier "env allowlist now, UI later" plan.*
+
+  **Why not env vars:** a user can only be allowlisted *after* they sign up, so each beta
+  tester would cost signup → find UUID → edit Terraform → PR → CD deploy → access. A full
+  deploy cycle per person. `CONTENT_EDITOR_USER_IDS` already demonstrates that pain.
+
+  **The model — one mechanism, not two:**
+  - **Per-user capability grants live in the DB**, managed through the admin dashboard.
+  - **`CONTENT_EDITOR_USER_IDS` is deleted** and content-editor access migrates onto the same
+    model. A full rewrite of gating that currently works — deliberate, not a workaround.
+    Two access mechanisms side by side is the drift this exists to prevent.
+  - **Env vars keep only environment-level toggles** — `CONTENT_EDIT_ENABLED=false` on prod
+    permanently, for everyone. "Does this feature exist in this environment" is env config;
+    "which users have it" is data.
+  - `/auth/me` returns a coherent set of grants, not flags from two different sources.
+
+  **Open design question for the proposal — capabilities vs roles.** Roles already exist
+  (vratarthi, vratmitra, moderator, admin) and describe *domain identity*. A user can be a
+  vratarthi **and** a beta tester **and** a content editor at once, so these read as
+  capabilities rather than roles. Inclination is a separate grant concept over overloading
+  the role enum — but settle it against the data model, don't assume.
+
+  **Target behaviour:** feedback widget → all users on UAT, granted users on prod. Content
+  editor → UAT only (Nachiket), never on prod for anyone.
+
+  **Scope — the admin area is NOT greenfield.** 11 admin routes and audited APIs already
+  exist. Full design applies to the *new* surface (grant model, API, user search + toggle UI,
+  permission rows, audit events). Existing admin CRUD needs consistency, not redesign.
+  ⚠️ If the known admin gaps come along — Deferral Ledger **#24** (taxonomy UI), **#25**
+  (shloka tags / queue reorder), **#29** (Platform Stats dashboard) — **name them explicitly
+  in the proposal.** Absorbed silently, they turn a bounded feature into an open-ended one.
+
+  Settles O7. → needs-spec, OpenSpec full cycle
+
+- **B1 (original note, retained for context) · Runtime-gate the feedback widget and content editor.** Both are gated by
   `NEXT_PUBLIC_*` flags, which Next.js **inlines into the browser bundle at build time** —
   colliding with "promote the same image, never rebuild". One image cannot show the widget in
   `test` mode on UAT and gated-to-selected-users on prod. **The pattern already exists**:
@@ -204,8 +240,9 @@ a GitHub Issue or is promoted to an O-thread above.
 
 **p3 — worth doing, no deadline**
 
-- **B9 · Admin dashboard as a proper end-to-end work packet** (issue #40). Deliberately *not*
-  built as a stunted one-toggle UI for B1 — that version never gets replaced.
+- ~~**B9 · Admin dashboard**~~ → **merged into B1** (2026-08-16). It was p3 on the assumption
+  that B1 would ship an env-var stopgap first; once that was rejected, the dashboard *is* the
+  mechanism, so it inherits B1's p1 priority. Issue #40 still tracks the wider admin vision.
 - **B10 · Move the repo to a GitHub organisation.** `veer-vrat` is a **personal account**, so
   collaborators cannot be granted admin (only ownership transfer is offered). Also a
   continuity risk: JP's application is owned by one personal account. See B5 — an org on a
