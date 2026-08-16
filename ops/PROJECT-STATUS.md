@@ -87,14 +87,14 @@ dropped build args). Every one is now documented with its guard.
 | D6 | **Managed Redis**, drop Upstash | Free under grant; self-hosted needs min-replicas=1 anyway, so same cost + ops |
 | D7 | **Azure Blob**, drop R2 | Migration free today (0 files, 0 stored URLs); managed identity removes static keys |
 | D8 | **Sentry free tier** (SDK already written) + **App Insights** for platform telemetry; **drop GlitchTip** | Different questions: "why did this fail" vs "is the system healthy". Both free. |
-| D9 | **Resend** stays for email | Already coded; never use Google Workspace SMTP — risks JP's domain reputation |
+| D9 | **Resend** stays for email | Already coded; never use Google Workspace SMTP — risks JP's domain reputation. ⚠️ **Under reconsideration 2026-08-16** — Shantanov (JP) offered direct SMTP creds on his own mail server (`dhoomketu.in`, port 587) instead of asking us to verify a Resend sending domain. Not Workspace, so D9's specific reputation concern may not transfer as-is — but unconfirmed whether that server is dedicated to transactional mail or shared with JP's regular staff mail (same risk, different name, if the latter). See O21. Not yet flipped — `email.service.ts` only speaks Resend's API today; switching is a real code change (nodemailer/SMTP transport), tracked as B14, not done speculatively before creds exist. |
 | D10 | **Two deployed environments**: UAT + prod. Local docker-compose is "dev" | A third costs 3× for no user |
 | D11 | **Beta testers live on PROD**, not UAT | ♻️ **Rationale replaced 2026-08-16.** The original reason ("otherwise you must migrate real personal data at launch") died with D19 — there is no data to migrate. The conclusion still holds, for a different and better reason: **UAT is the staging and approval environment**, where Nachiket reviews unreleased changes before they ship. Real beta users cannot live in an environment that is deliberately running unreviewed code. Confirmed in O7. |
 | D20 | **Feature access is per-user data in the DB, not env vars** (2026-08-16) | A user can only be allowlisted *after* signing up, so an env allowlist costs a full deploy cycle per tester (signup → find UUID → edit Terraform → PR → CD → access). Managed instead through the admin dashboard. `CONTENT_EDITOR_USER_IDS` is deleted and content-editor access migrates to the same model — one mechanism, not two. **Env vars keep only environment-level toggles** (`CONTENT_EDIT_ENABLED=false` on prod, permanently, for everyone): "does this feature exist here" is config, "which users have it" is data. See B1. |
 | D19 | **Neon migration CANCELLED** (2026-08-16) | Nachiket confirmed barely anyone started real work, and the dump agrees: 12 users and 10 journeys, but only 4 exposures / 3 resolutions / 1 challenge attached. The only non-reference data is 248 test answers and 15 feedback items — and the feedback is already captured in the inbox below. Prod will be created fresh and seeded, exactly as CD already does for UAT. Dump retained as an archive, not a migration source. |
 | D12 | One subscription, environments split by **resource group** | Simpler; grant bills at account level anyway |
 | D13 | **`veervrat.jnanaprabodhini.org`** over `veervrat.com` | Free, institutional identity. Moving later ≈ half a day + everyone logged out |
-| D14 | Ask for **NS delegation**, not individual records | One request covers prod+UAT web/api and all future cert validation |
+| D14 | ~~Ask for NS delegation~~ → **per-record instead** (revised 2026-08-16) | Met with Shantanov: only 2 hostnames are ever public (`veervrat.jnanaprabodhini.org`, `uat.veervrat.jnanaprabodhini.org` — api rides the web app's Next.js proxy, never gets its own hostname), so delegating the whole subdomain was more than needed. He offered to add individual records instead, keeping JP's DNS control. Only 4 records needed total (2 TXT + 2 CNAME per hostname) — no future growth expected since api will never need one. See O1. |
 | D15 | Beta uses **firewall + TLS**; VNet + private endpoints **before public launch** | Private endpoints ~$7/mo each and harder to debug |
 | D16 | **Om not tenant-wide Global Admin by default** → later scoped to subscription | (Global Admin *was* granted; revisit if JP moves M365 into the tenant) |
 | D17 | No stakeholder dashboard — use **budget alerts + emailed invoices** | Built-ins don't go stale |
@@ -108,7 +108,8 @@ dropped build args). Every one is now documented with its guard.
 |---|---|---|---|
 | O6 | ✅ **CLOSED 2026-08-16** — single `main` trunk, UAT auto-deploys on merge, prod by `prod-*` tag promoting the same image. Documented in `veervrat-app/AGENTS.md` + `DEPLOYMENT.md`. Transition done — `main` fast-forwarded, `dev` retired | — | — |
 | O18 | ✅ **CLOSED 2026-08-16** — CD pipeline live. GitHub↔Azure via OIDC (no stored secret), `.github/workflows/cd.yml` + `.github/actions/deploy-environment`. Parallel cached builds, per-job auth, migrate-before-deploy enforced. UAT **and now prod** deploys proven end-to-end — `deploy-prod` succeeded on its first run (`prod-2026-08-16`), the only CD path all the others' bug hunts hadn't yet touched. Also fixed same day: doc-only merges no longer trigger a pointless rebuild+redeploy — verified live with a real doc-only PR that skipped `build`/`deploy-uat` in 21s (see `veervrat-app/documentation/21_Infrastructure-Conventions.md` §14–16) | — | — |
-| O1 | **DNS delegation** — Azure zone created 2026-08-15, NS values sent; awaiting Shantanu | Om → **Rahul** → Shantanu | custom domain, chat fix, Resend |
+| O1 | **DNS — per-record, not delegation** (revised 2026-08-16, see D14). Met Shantanov 2026-08-16 — the earlier Azure zone + NS-delegation request is superseded, he'll add records directly. Exact list handed off: 2 TXT (`asuid.veervrat` / `asuid.uat.veervrat`, both value `D7154DE720ABCA323E864B838E4C372E221EF61E7214F84A4179429E54B07DE5`) + 2 CNAME (`veervrat` → `veervrat-prod-web.graydesert-a1bc836e.centralindia.azurecontainerapps.io`, `uat.veervrat` → `veervrat-uat-web.proudcoast-d3aa08a0.centralindia.azurecontainerapps.io`). Once live, binding the hostname + managed cert is our step (`az containerapp hostname add` / `az containerapp env certificate create`), not Shantanov's. The now-unused Azure DNS zone (`veervrat.jnanaprabodhini.org`, `envs/shared/dns.tf`) is to be decommissioned — deliberately deferred until after this lands, see backlog | Om → Shantanov (direct) | custom domain, chat fix |
+| O21 | **Email sending — Resend vs JP's own SMTP.** Shantanov offered direct SMTP creds on `dhoomketu.in:587` instead of a Resend-verified domain — contradicts D9 as written (D9 marked "under reconsideration"). Open: is `dhoomketu.in` dedicated to transactional mail, or JP's general staff server (same reputation risk D9 warned about, different name)? What domain will outbound mail actually show as? The one mailbox the app needs regardless: `donotreply-veervrat@<that domain>` — the app has exactly one `EMAIL_FROM` used across all ~18 templates, nothing else to request. Code still only speaks Resend's API — swap to SMTP transport is B14, not done until creds exist to test against | Om → Shantanov | O15 (Resend/email go-live) |
 | O2 | ✅ **CLOSED 2026-08-16** — `veervrat.jnanaprabodhini.org` finalised over `veervrat.com` | — | — |
 | O3 | Buy `veervrat.com` defensively (~$10) | Om | — |
 | O4 | Devavrat to **verify billing email** (shows "Not verified") | Devavrat | billing notifications |
@@ -238,6 +239,17 @@ a GitHub Issue or is promoted to an O-thread above.
   create the Sentry project and store the DSN in Key Vault, provision + wire App Insights.
   `18_Observability-Standard.md` now describes the target; this is the implementation.
   **Should land before beta testers reach prod** — until then there is no error tracking.
+
+- **B14 · Swap `email.service.ts` from Resend's API to SMTP, if D9 flips.** Shantanov offered
+  direct SMTP creds (`dhoomketu.in:587`) instead of a Resend-verified domain — see O21. Only
+  worth doing once creds actually exist (nodemailer + SMTP transport, replacing the `resend`
+  SDK call; template rendering via React Email is unaffected either way). Don't build this
+  speculatively — no server to test against yet, and D9 hasn't formally flipped.
+- **B15 · Decommission the unused Azure DNS zone.** Created for the NS-delegation plan that
+  D14 superseded 2026-08-16 (per-record instead). `envs/shared/dns.tf`, `prevent_destroy =
+  true` — removing it is a deliberate `terraform destroy -target` + lifecycle override, not
+  a drive-by. Deferred until the per-record DNS (O1) is confirmed live, so there's no window
+  with neither the old nor the new DNS path working.
 
 **p3 — worth doing, no deadline**
 
