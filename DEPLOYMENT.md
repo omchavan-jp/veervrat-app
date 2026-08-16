@@ -64,6 +64,12 @@ tag prod-YYYY-MM-DD  →  deploy the SAME image to prod
 
 **Promote, never rebuild.** The prod deploy ships the exact image UAT exercised.
 
+**A merge only triggers a build+deploy if it touched an app-relevant path.** Doc-only merges
+(`documentation/`, `ops/`, `openspec/`, `spec/`, `.claude/`, any `*.md`) are skipped — added
+2026-08-16 after a pure doc PR rebuilt and redeployed for nothing. `prod-*` tag pushes are
+never filtered. Details and the reasoning for not making UAT tag-gated instead:
+`documentation/21_Infrastructure-Conventions.md` §16.
+
 Automated in `.github/workflows/cd.yml`. The prod gate is the **tag itself** — GitHub's
 required-reviewers rule needs a paid plan on private repos, so there is no approval prompt.
 Pushing a `prod-*` tag is the deliberate act.
