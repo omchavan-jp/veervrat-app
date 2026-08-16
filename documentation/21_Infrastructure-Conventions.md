@@ -533,3 +533,59 @@ az containerapp job start -n veervrat-<env>-migrate -g veervrat-<env>
 
 This is why the job has `replica_retry_limit = 0`. An automatic retry would have re-run a
 migration whose failure state nobody had assessed.
+
+### Seed is a job, not a migration
+
+Reference content (virtues, weaknesses, sentences…) is seeded by a separate one-off job, not
+by a Prisma migration. Migrations are schema — one-shot, forward-only, uneditable once
+applied. Seed is content — idempotent upserts that must stay re-runnable, changing on a
+product cadence rather than an engineering one. Sharing one mechanism between two different
+lifecycles means every content fix becomes an unrepeatable schema change.
+
+It reuses the migration job's machinery (build-stage image, managed identity, manual
+trigger) with a different command — `az containerapp job start` accepts `--command`,
+`--args`, `--image` and `--env-vars` per execution, so one job definition serves both.
+
+That same `--image` override is what makes the **build → migrate → deploy** order
+enforceable in CD: the migration can run on the *new* image before Terraform updates the
+apps, without needing a second `terraform apply` or a `-target` hack.
+
+### GitHub → Azure auth uses OIDC — there is no stored secret
+
+`infra/terraform/envs/shared/github-oidc.tf` creates a user-assigned managed identity with
+**federated credentials**. GitHub mints a short-lived token describing the workflow run
+(repo + branch/tag/environment); Azure trusts that issuer for specific subjects and exchanges
+it for an access token. Nothing long-lived lives in GitHub — no client secret, no publish
+profile, nothing to rotate or leak.
+
+Repository **variables** (not secrets — they are identifiers): `AZURE_CLIENT_ID`,
+`AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`.
+
+Trusted subjects must match GitHub's token **exactly**. A mismatch fails login with a
+generic *"no matching federated identity record found"*, so keep them aligned with the
+workflow's triggers and environment names.
+
+What CI can and cannot do, deliberately: Contributor at subscription scope (it creates
+resource groups, so a narrower scope would not work) plus AcrPush, Storage Blob Data
+Contributor on the state account, and Key Vault Secrets Officer. **Contributor cannot grant
+roles** — CI can deploy infrastructure but cannot widen anyone's access, including its own.
+
+Note the recurring Azure distinction: *Contributor covers the control plane but not data*.
+Blob and Key Vault each need their own data-plane role — the same trap that catches people
+expecting subscription Owner to read secrets.
+
+### Environment protection rules need a paid plan on private repos
+
+Attempting to add a required reviewer returns:
+
+```
+422 Failed to create the environment protection rule.
+Please ensure the billing plan supports the required reviewers protection rule.
+```
+
+Free plan + private repo = no protection rules. **The prod gate is therefore the tag
+itself**, which is defensible: pushing `prod-YYYY-MM-DD` is deliberate and traceable, and a
+self-approval prompt is a rubber stamp for a single maintainer. The `prod` environment still
+exists and still scopes the OIDC subject — it just carries no gate.
+
+Revisit if a second maintainer joins, or when the repo moves to an organisation.

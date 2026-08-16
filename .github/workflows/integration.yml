@@ -5,9 +5,9 @@ name: Integration
 # CI workflow so a DB blip never blocks lint/typecheck feedback.
 on:
   push:
-    branches: [dev, main]
+    branches: [main]
   pull_request:
-    branches: [dev, main]
+    branches: [main]
 
 concurrency:
   group: integration-${{ github.workflow }}-${{ github.ref }}

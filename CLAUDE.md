@@ -196,10 +196,15 @@ through environments by tag, so what you tested is literally what ships.
 |---|---|---|
 | **dev** | local `docker-compose` | nothing — it's your machine, no pipeline touches it |
 | **UAT** | `veervrat-uat` on Azure | **automatic** on every merge to `main` |
-| **prod** | `veervrat-prod` on Azure | **a `prod-*` tag**, deployed by a manual button |
+| **prod** | `veervrat-prod` on Azure | **a `prod-*` tag** — the tag itself is the gate (see below) |
 
 Note the name collision: the *environment* called "dev" (D10) is local docker-compose. It
 has nothing to do with the old `dev` *branch*.
+
+**On the prod gate:** GitHub's "required reviewers" protection rule needs a **paid plan on
+private repos**, so there is no approval prompt. The deliberate act is cutting the tag —
+nobody pushes a `prod-*` tag by accident, and self-approval would be a rubber stamp for a
+single maintainer. Revisit when a second maintainer joins or the repo moves to an org.
 
 ### Release tags
 - Format `prod-YYYY-MM-DD`, suffixed `-2`, `-3` for multiple releases in a day.

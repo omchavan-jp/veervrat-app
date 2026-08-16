@@ -4,9 +4,9 @@ name: CI
 # Runs on every push to the integration/production branches and on all PRs.
 on:
   push:
-    branches: [dev, main]
+    branches: [main]
   pull_request:
-    branches: [dev, main]
+    branches: [main]
 
 # A newer push to the same ref cancels the older in-flight run.
 concurrency:
