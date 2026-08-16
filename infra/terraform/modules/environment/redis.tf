@@ -24,9 +24,15 @@ resource "azurerm_managed_redis" "this" {
   high_availability_enabled = false # matches the old Basic tier's "no SLA/replica" tradeoff
 
   default_database {
-    client_protocol                    = "Encrypted"  # TLS
-    eviction_policy                    = "NoEviction" # counters/locks must not be silently dropped under memory pressure
-    access_keys_authentication_enabled = true         # ioredis connects via REDIS_URL + key, not Entra tokens
+    client_protocol = "Encrypted" # TLS
+    # `allkeys-lru`, deliberately NOT `NoEviction`. Under NoEviction a full cache starts
+    # failing writes, and auth.service.ts fails OPEN on Redis errors ("Redis error on
+    # lockout check, failing open") — so a full Redis would silently disable brute-force
+    # protection rather than preserve counters. LRU evicts cold cache entries instead and
+    # keeps the small, hot rate-limit/lockout counters alive. Everything here is
+    # reconstructible (sessions live in Postgres), so eviction is safe by design.
+    eviction_policy                    = "AllKeysLRU"
+    access_keys_authentication_enabled = true # ioredis connects via REDIS_URL + key, not Entra tokens
   }
 
   tags = local.tags

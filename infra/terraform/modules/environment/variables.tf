@@ -63,3 +63,20 @@ variable "redis_sku" {
   type        = string
   default     = "Balanced_B0" # smallest tier — no SLA/replica, acceptable for beta; revisit (higher tier) at launch
 }
+
+variable "postgres_backup_retention_days" {
+  description = "7 is fine for a disposable UAT; prod should raise this (Azure allows up to 35)."
+  type        = number
+  default     = 7
+}
+
+# @jnanaprabodhini.org (Google Workspace) only — the @jppune.onmicrosoft.com mailboxes exist
+# but nobody monitors them, so an alert landing there is functionally lost.
+# See azure-account-facts.md §6.
+variable "alert_email_recipients" {
+  description = "Who gets infrastructure alerts for this environment, keyed by a short name."
+  type        = map(string)
+  default = {
+    om = "om.chavan@jnanaprabodhini.org"
+  }
+}

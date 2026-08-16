@@ -117,6 +117,28 @@ let Terraform "resolve" the diff.
 - Object IDs, tenant IDs and subscription IDs are **identifiers, not credentials**, and
   belong in version control. Passwords, keys and connection strings never do.
 
+### ⚠️ Secrets are stored in plaintext in the Terraform state file
+
+Unavoidable, and frequently misunderstood. Terraform must remember what it created, so
+`random_password` results and every `azurerm_key_vault_secret` value sit in cleartext in
+the state file — verified, not assumed. Marking a variable `sensitive` only hides it from
+*console output*; it changes nothing about state.
+
+The practical consequences:
+
+- **Anyone who can read the state file has every secret for that environment.** Treat
+  read access to `veervrattfstate` as equivalent to Key Vault admin.
+- This is why state lives in a private storage account behind Azure AD RBAC, with no
+  account keys, and never in git.
+- Blast radius is currently wider than ideal: the Blob Data Contributor role is granted at
+  **storage-account scope**, so anyone who can read UAT state can also read prod state once
+  it exists. Narrow this to per-container scope when a second person deploys.
+- Rotating a secret means rotating it in Azure *and* accepting the old value remains in
+  state history (blob versioning keeps 30 days of prior versions).
+
+What this does buy: no secret is ever typed by a human, written into a `.tf` file, or
+committed to git — the app reads everything from Key Vault at runtime.
+
 ---
 
 ## 6. Importing existing resources
@@ -273,3 +295,37 @@ update, not destroy/recreate). Fixed by reading the actual assigned zone
 **Lesson:** the same principle as §10 in reverse — some fields Azure assigns automatically
 that your config didn't request. Pin them once observed rather than leaving a plan that
 "corrects" something you never intended to change.
+
+---
+
+## 12. Review findings — Phase 2A (2026-08-16)
+
+Found reviewing Phase 2A. All fixed; recorded so the reasoning survives.
+
+| # | Finding | Fix / lesson |
+|---|---|---|
+| 1 | `postgres.tf` claimed secrets were "never committed anywhere" — but they sit in plaintext in state. | Corrected the comment and documented the real rule in §5. **A reassuring comment that is factually wrong is worse than no comment**, because someone will make an access decision based on it. |
+| 2 | Redis `eviction_policy = "NoEviction"`, justified as protecting counters — it does the opposite. A full cache starts failing writes, and `auth.service.ts` fails *open* on Redis errors, silently disabling brute-force protection. | Changed to `AllKeysLRU`. **Check what your error handling actually does before choosing a failure mode**; "fail loudly" is only safe if something is listening. |
+| 3 | `prevent_destroy` applied to UAT's database, contradicting D11's "UAT is disposable". | **Not fixable as intended** — Terraform rejects variables in `prevent_destroy` ("Variables may not be used here"), verified. Left literal `true`; tearing down UAT requires commenting the block out, which is an acceptable speed bump in front of dropping a database. |
+| 4 | Storage auto-grow disabled: a full 32 GB disk would stop Postgres accepting writes, with no warning. | Enabled `auto_grow_enabled`, plus a `storage_percent > 80%` metric alert (§13) since auto-grow trades an outage risk for a cost risk. Also made `backup_retention_days` a variable — prod will want more than UAT's 7. |
+
+---
+
+## 13. Alerting
+
+Infrastructure alerts go to an Azure Monitor **action group** per environment
+(`veervrat-<env>-ops`), defined in `modules/environment/monitoring.tf`. Metric alert rules
+cost roughly $0.10/month each.
+
+**Recipients must be `@jnanaprabodhini.org` addresses** (Google Workspace — what people
+actually read). The `@jppune.onmicrosoft.com` mailboxes exist but nobody monitors them, so
+an alert delivered there is functionally lost. See `azure-account-facts.md` §6.
+
+Current rules:
+
+| Alert | Threshold | Why |
+|---|---|---|
+| `veervrat-<env>-psql-storage` | `storage_percent` > 80%, evaluated hourly | Auto-grow means a filling disk raises the bill permanently rather than causing an outage — this surfaces it as a warning instead of an invoice surprise. |
+
+**Prefer an alert over a note in a document.** A documented intention to "keep an eye on
+storage" decays; an alert does not.

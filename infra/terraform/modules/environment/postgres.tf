@@ -3,8 +3,14 @@
 # backups + point-in-time restore for ~$13/mo (Burstable B1ms), closing the "no backups"
 # gap that was true of the old Railway setup. See infra-budget-log.md target architecture.
 
-# Generated once, never typed by a human, never committed anywhere — only ever read from
-# the vault below.
+# Generated once, never typed by a human, never written to a .tf file, and never committed
+# to git — the app reads it from the vault below.
+#
+# ⚠️ It IS stored in plaintext in the Terraform state file, as is every value written to the
+# vault here. That is unavoidable: Terraform must remember what it created. It means
+# **anyone who can read the state file has every secret for this environment**, which is why
+# state lives in a private storage account behind Azure AD RBAC rather than anywhere casual.
+# See documentation/21_Infrastructure-Conventions.md §5.
 resource "random_password" "postgres_admin" {
   length  = 32
   special = false # Postgres connection strings choke on some special characters; length carries the entropy instead
@@ -19,10 +25,16 @@ resource "azurerm_postgresql_flexible_server" "this" {
   version    = var.postgres_version
   storage_mb = var.postgres_storage_mb
 
+  # Grows automatically at ~90% full. Without it, a full disk means Postgres stops accepting
+  # writes — a hard outage with no warning. The tradeoff is that storage never shrinks back,
+  # so runaway growth permanently raises the bill; the storage_percent alert in monitoring.tf
+  # exists so that shows up as a warning rather than as a surprise on an invoice.
+  auto_grow_enabled = true
+
   administrator_login    = var.postgres_admin_username
   administrator_password = random_password.postgres_admin.result
 
-  backup_retention_days        = 7
+  backup_retention_days        = var.postgres_backup_retention_days
   geo_redundant_backup_enabled = false # extra cost, not needed at beta scale
 
   # Azure auto-assigned this zone at creation since we didn't request one; pinning it here
@@ -36,8 +48,14 @@ resource "azurerm_postgresql_flexible_server" "this" {
 
   tags = local.tags
 
+  # Applies to BOTH environments, deliberately. Terraform requires a literal here — a
+  # variable is rejected with "Variables may not be used here" — so this cannot be relaxed
+  # per-environment. That's an acceptable outcome: it protects prod (which holds real user
+  # data), and D11's "UAT is disposable" still holds in the sense that matters — UAT holds
+  # no data worth keeping. Tearing UAT down just requires commenting this block out first,
+  # which is a reasonable speed bump in front of dropping a database.
   lifecycle {
-    prevent_destroy = true # holds real user data once the app is live — same reasoning as the DNS zone
+    prevent_destroy = true
   }
 }
 
