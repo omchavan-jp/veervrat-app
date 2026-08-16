@@ -329,3 +329,84 @@ Current rules:
 
 **Prefer an alert over a note in a document.** A documented intention to "keep an eye on
 storage" decays; an alert does not.
+
+---
+
+## 14. Building and shipping images (Phase 2B, 2026-08-16)
+
+### Build in Azure, not on your machine
+
+Use `az acr build`, which uploads the context and builds **inside Azure**:
+
+```bash
+SHA=$(git rev-parse --short HEAD)
+az acr build --registry veervratacr \
+  --image "veervrat-api:$SHA" --image "veervrat-api:latest" \
+  --file apps/api/Dockerfile .
+```
+
+This is not a convenience — it's correctness. Development machines here are **arm64**
+(Apple silicon) and Container Apps runs **amd64**. A local `docker build` produces an image
+that fails to start in Azure with an architecture error that reads like a corrupt image.
+
+Two operational notes:
+- **ACR runs are server-side.** Killing the local CLI does *not* stop the build; it keeps
+  running and consuming the queue. Cancel properly:
+  `az acr task cancel-run --registry veervratacr --run-id <id>`.
+- List runs with `az acr task list-runs --registry veervratacr -o table`.
+
+### Keep the build context small — check it, don't assume
+
+The build context is uploaded to Azure on every build. `.dockerignore` **must** exclude
+`infra/`, because Terraform's `.terraform/` directories hold ~220 MB of provider plugins
+*per environment directory*.
+
+Missing that, the context was **139 MB**; with it, **0.3 MB** — a 460× difference. The
+symptom was not an error but builds that appeared to hang during upload, which is a far
+harder thing to diagnose than a failure.
+
+**Verify rather than trust the file.** `az acr build` prints the archive path; check it:
+```bash
+ls -la /var/folders/**/build_archive_*.tar.gz   # macOS temp dir
+```
+Anything above a few MB for this repo means something large is leaking in.
+
+### `NEXT_PUBLIC_*` is build-time — declaring it in the Dockerfile is not optional
+
+Next.js inlines `NEXT_PUBLIC_*` into the browser bundle at build time. Passing
+`--build-arg` only works if the Dockerfile also declares `ARG` **and** `ENV` for it.
+Otherwise Docker silently ignores the argument — no warning, no failure, just a value that
+never arrives. `NEXT_PUBLIC_SITE_URL` was documented as build-time, passed as a build arg,
+and silently dropped this way for months.
+
+Corollary: **never default a public URL to a real deployed host.** The fallback should be
+`localhost`, because a stale-but-plausible domain fails invisibly while localhost in
+production is obvious on sight.
+
+### Container App URLs are predictable before the apps exist
+
+`azurerm_container_app_environment` exposes `default_domain`, and app URLs are
+`https://<app-name>.<default_domain>`. That resolves the chicken-and-egg where web must be
+*built* knowing the api's URL:
+
+```bash
+az containerapp env show -n veervrat-<env>-cae -g veervrat-<env> \
+  --query "properties.defaultDomain" -o tsv
+```
+
+### Use user-assigned identities for Container Apps, not system-assigned
+
+A system-assigned identity does not exist until the app is created — but the app cannot
+pull its image or read its secrets without role grants, and those grants need the
+identity's `principal_id`. That is a real dependency cycle Terraform refuses to resolve.
+
+Creating `azurerm_user_assigned_identity` as its own resource breaks it:
+**identity → role grants → app.** One identity per app, so web (which needs no secrets)
+never holds Key Vault access.
+
+### The runtime image cannot run migrations
+
+`prisma` is a devDependency and is pruned out of the runtime image, which therefore ships
+the migration *files* but not the tool that applies them. Migrations run from the **build**
+stage image instead. Keeping the runtime image lean is worth this split: with
+scale-to-zero, image size is cold-start latency.

@@ -20,11 +20,12 @@ Data is safe: 12 users / 10 journeys in Neon, plus a local dump at
 |---|---|
 | Azure subscription | `veervrat` · Central India · grant-funded (expires 2027-08-14) |
 | Terraform | `infra/terraform/` — `envs/shared` + `envs/uat` applied, `envs/prod` not built |
-| Container registry | `veervratacr.azurecr.io` — **empty, no images pushed** |
+| Container registry | `veervratacr.azurecr.io` — first images being pushed (`veervrat-api`, `veervrat-api-migrate`, `veervrat-web`) |
 | UAT Postgres | `veervrat-uat-psql` (v18, Burstable B1ms) — running, **schema not migrated** |
 | UAT Redis | `veervrat-uat-redis` (Azure Managed Redis, Balanced_B0) — running |
 | UAT secrets | `veervrat-uat-kv` — holds `database-url`, `redis-url` |
-| UAT compute | `veervrat-uat-cae` (Container Apps Environment) — **empty, no apps deployed** |
+| UAT compute | `veervrat-uat-cae` (Container Apps Environment) — apps defined in Terraform behind `deploy_apps`, **first deploy in progress** |
+| UAT app URLs | predicted from the environment's default domain: `veervrat-uat-{api,web}.proudcoast-d3aa08a0.centralindia.azurecontainerapps.io` |
 | prod | not created |
 | DNS | zone `veervrat.jnanaprabodhini.org` exists; **NS delegation pending with JP** |
 | Email (Resend) | not wired |
@@ -77,8 +78,39 @@ Reversed, the app boots and queries columns that don't exist yet.
 Migrations are **forward-only**. A bad migration is corrected with a new migration —
 never `migrate reset` against a deployed database.
 
-> Procedure to be filled in when the migration job is built (next step after the first
-> image push). Do not substitute a local run in the meantime without recording it here.
+### Procedure
+
+The job is defined in `infra/terraform/modules/environment/migration-job.tf` as
+`veervrat-<env>-migrate`. It runs the **build**-stage image
+(`veervrat-api-migrate:<sha>`) — *not* the runtime image, because `prisma` is a
+devDependency and is pruned out of runtime, which ships the migration files but not the
+tool that applies them.
+
+```bash
+ENV=uat   # or prod
+SHA=$(git rev-parse --short HEAD)
+
+# 1. Build both images from the same commit, so migrations and app can never drift
+az acr build --registry veervratacr --image "veervrat-api:$SHA" \
+  --file apps/api/Dockerfile .
+az acr build --registry veervratacr --image "veervrat-api-migrate:$SHA" \
+  --target build --file apps/api/Dockerfile .
+
+# 2. Point the environment at the new tag and apply (creates/updates the job + apps)
+cd infra/terraform/envs/$ENV
+terraform apply -var="image_tag=$SHA" -var="deploy_apps=true"
+
+# 3. Run migrations — deliberate, separate, before the app serves the new schema
+az containerapp job start -n veervrat-$ENV-migrate -g veervrat-$ENV
+
+# 4. Watch it
+az containerapp job execution list -n veervrat-$ENV-migrate -g veervrat-$ENV -o table
+az containerapp job logs show -n veervrat-$ENV-migrate -g veervrat-$ENV --container migrate
+```
+
+`prisma migrate deploy` applies committed migrations only — it never generates one and
+never resets. `replica_retry_limit = 0` is deliberate: re-running a partially-applied
+migration should be a human decision, not an automatic retry.
 
 ---
 

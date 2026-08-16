@@ -21,3 +21,16 @@ output "redis_hostname" {
 output "container_app_environment_id" {
   value = azurerm_container_app_environment.this.id
 }
+
+output "api_url" {
+  value = local.deploy ? "https://${local.api_fqdn}" : null
+}
+
+output "web_url" {
+  value = local.deploy ? "https://${local.web_fqdn}" : null
+}
+
+output "container_app_environment_default_domain" {
+  description = "Lets the image build know the URLs before the apps exist — NEXT_PUBLIC_* are baked in at build time."
+  value       = azurerm_container_app_environment.this.default_domain
+}

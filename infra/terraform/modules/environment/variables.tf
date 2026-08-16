@@ -80,3 +80,69 @@ variable "alert_email_recipients" {
     om = "om.chavan@jnanaprabodhini.org"
   }
 }
+
+# ─── Container Apps ───────────────────────────────────────────────────────────
+
+variable "deploy_apps" {
+  description = "Create the api/web Container Apps. False leaves just the (free) environment, which is how infra can exist before any image does."
+  type        = bool
+  default     = false
+}
+
+variable "image_tag" {
+  description = "Git SHA of the image to run. The SAME tag is promoted from UAT to prod — never rebuilt, so what shipped is what was tested."
+  type        = string
+  default     = ""
+}
+
+variable "container_registry_name" {
+  type    = string
+  default = "veervratacr"
+}
+
+variable "container_registry_resource_group" {
+  type    = string
+  default = "veervrat-shared"
+}
+
+# Scale-to-zero (min 0) is free but adds a cold start on the first request after idle.
+# Keep 1 for prod once real users arrive; 0 is fine for UAT.
+variable "api_min_replicas" {
+  type    = number
+  default = 0
+}
+
+variable "api_max_replicas" {
+  type    = number
+  default = 2
+}
+
+variable "web_min_replicas" {
+  type    = number
+  default = 0
+}
+
+variable "web_max_replicas" {
+  type    = number
+  default = 2
+}
+
+variable "database_pool_max" {
+  description = "Per-replica pg connections. The ceiling that matters is this × api_max_replicas + headroom ≤ the server's max_connections (low on Burstable)."
+  type        = number
+  default     = 5
+}
+
+# Read via getOrThrow and absent from the Joi schema, so an empty value crash-loops the api
+# with no useful error. Placeholders keep UAT bootable until real credentials are issued for
+# the UAT callback URL.
+variable "google_client_id" {
+  type    = string
+  default = "placeholder-not-configured"
+}
+
+variable "google_client_secret" {
+  type      = string
+  sensitive = true
+  default   = "placeholder-not-configured"
+}

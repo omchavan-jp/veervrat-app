@@ -26,3 +26,17 @@ resource "azurerm_role_assignment" "key_vault_admins" {
   role_definition_name = "Key Vault Administrator"
   principal_id         = each.value
 }
+
+# Signs session cookies. Generated here so it is never invented by a human, never reused
+# across environments, and never pasted into a config — same handling as the DB password.
+resource "random_password" "session_secret" {
+  length  = 48
+  special = false
+}
+
+resource "azurerm_key_vault_secret" "session_secret" {
+  name         = "session-secret"
+  value        = random_password.session_secret.result
+  key_vault_id = azurerm_key_vault.this.id
+  depends_on   = [azurerm_role_assignment.key_vault_admins]
+}
