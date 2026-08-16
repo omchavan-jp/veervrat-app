@@ -293,6 +293,25 @@ The reason is failure behaviour, not preference:
 Batching several edits into one shell call is not a good enough reason to give up loud
 failure on a file you cannot afford to silently mangle.
 
+### Before writing a fact, grep for the fact you are replacing
+
+This is a *separate* discipline and the editing tools do not cover it. `Edit` guarantees your
+change lands correctly; it cannot tell you the document now contradicts itself elsewhere.
+
+`documentation/01_System-Decisions-and-Status.md` ended up stating **both** "Sentry + App
+Insights, replaces GlitchTip" and "✅ Decided — GlitchTip", 92 lines apart, because a correct
+new line was added without searching for the old one it superseded. Both edits applied
+perfectly. The file was still wrong.
+
+So when recording a decision or status change:
+
+```bash
+grep -rn "<the thing being superseded>" --include="*.md" .
+```
+
+Reconcile *every* hit — update it or mark it superseded — before moving on. A fact stated in
+two places is a fact that will eventually be wrong in one of them.
+
 ## Session discipline
 - One task per session — don't try to do everything
 - Load only relevant context (backend: read api/ files; frontend: read web/ files)

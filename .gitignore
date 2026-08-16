@@ -22,6 +22,15 @@ generated/prisma/
 .env.test.local
 .env.production.local
 
+# Credential files that must never enter git history — git history is permanent, so a single
+# careless `git add .` is unrecoverable without rewriting history. Three of these were found
+# loose in the working root on 2026-08-16 and moved to ~/.secrets/veervrat/; this is the
+# second line of defence, not the first.
+client_secret*.json
+*-credentials.json
+*.pem
+*.p12
+
 # testing
 coverage/
 

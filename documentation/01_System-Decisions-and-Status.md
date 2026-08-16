@@ -105,9 +105,9 @@ These are acknowledged but not yet decided in detail:
 | ~~Realtime~~ | ✅ Decided — NestJS Gateway + Socket.IO. See 10_Platform-Engineering-Standard.md |
 | ~~Notifications~~ | ✅ Decided — in-app bell + email (Resend). See spec/decisions/25_notifications.md |
 | ~~Testing~~ | ✅ Decided — Vitest + supertest + Playwright. See 16_Testing-Strategy.md |
-| ~~Observability~~ | ✅ Decided — GlitchTip + Pino + structured JSON. See 18_Observability-Standard.md |
+| ~~Observability~~ | ✅ Decided 2026-08 — **Sentry** (app errors) + **Azure App Insights** (platform) + Pino structured JSON. **Supersedes the earlier GlitchTip decision** (D8 in `../ops/PROJECT-STATUS.md`). Implementation still pending — see backlog B13. Standard: 18_Observability-Standard.md |
 | ~~Security baseline~~ | ✅ CSRF (double-submit cookie), rate limiting, upload rules, brute force. See 10_Platform-Engineering-Standard.md + 14_Auth-Architecture-Decision.md (§15-16) |
-| ~~Hosting~~ | ✅ Decided 2026-08 — **Azure**, Central India, single cloud + Terraform. Container Apps (not self-run Kubernetes), managed Postgres/Redis, zero VMs. See `../../azure-account-facts.md` and `21_Infrastructure-Conventions.md` |
+| ~~Hosting~~ | ✅ Decided 2026-08 — **Azure**, Central India, single cloud + Terraform. Container Apps (not self-run Kubernetes), managed Postgres/Redis, zero VMs. See `../ops/azure-account-facts.md` and `21_Infrastructure-Conventions.md` |
 | ~~Release process~~ | ✅ Decided 2026-08-16 (O6) — single `main` trunk, UAT auto-deploys on merge, prod ships by `prod-*` tag promoting the same image. See `../CLAUDE.md` → Git conventions |
 | CI/CD | CI ✅ (PR gates). **CD not built** — next up; see `../DEPLOYMENT.md` |
 | Object storage | Provider decided (Azure Blob) but **not implemented** — app still uses the S3 API via `@aws-sdk/client-s3`; needs an `@azure/storage-blob` swap |

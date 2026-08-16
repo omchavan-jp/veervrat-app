@@ -33,8 +33,8 @@ button (position in `localStorage`), rendered when `NEXT_PUBLIC_FEEDBACK_MODE=te
 - Out of v1 scope (add only if triage suffers): screenshots, comment threads,
   email notifications.
 
-**Maintainer observations:** use the widget too, or jot in a scratch `backlog.md`
-(untracked, outside the repo). Both drain into triage.
+**Maintainer observations:** use the widget too, or add to the **Inbox** section of
+`../ops/PROJECT-STATUS.md`. Both drain into triage.
 
 ## Loop 2 — Triage
 
@@ -65,10 +65,16 @@ meant to drain to zero). Route by kind:
 - **Build-time technical deferral** (a seam left for a later implementation item,
   with a "paid back by" owner) → `documentation/05_Deferral-Ledger.md`. Different
   schema (item numbers, payback tracking); not for tester-driven ideas.
-- **Raw, still-untriaged note** → `backlog.md`, which is transient and always
-  drains to empty at the next triage.
-Keep `backlog.md` free of long-lived "future" sections — file them as `deferred`
-issues instead.
+- **Raw, still-untriaged note** → the **Inbox** section of `../ops/PROJECT-STATUS.md`,
+  which drains to empty at the next triage.
+- **Noticed but not yet scheduled** → the **Backlog** (`B<n>`) section of the same file.
+  Promote a `B` item to an **O-thread** when it gets an owner and a slot in the working
+  order — *move* it, never copy it. (Two separate registers previously produced three
+  duplicated items; that is why there is now one file.)
+
+Keep the Inbox free of long-lived "future" sections — file those as `deferred` issues
+instead. Already-triaged history lives in `../ops/triage-archive.md`, which is append-only
+and never actionable.
 
 ## Loop 3 — Implement
 

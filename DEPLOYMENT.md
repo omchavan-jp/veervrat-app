@@ -189,7 +189,7 @@ start.
 
 ### 8. Record it
 
-Update this file's *Current state* table and `../../azure-account-facts.md` §5. The facts
+Update this file's *Current state* table and `ops/azure-account-facts.md` §5. The facts
 file is the source of truth for what exists; if it disagrees with reality, reality is a bug
 in the file.
 
