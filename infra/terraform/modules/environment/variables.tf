@@ -146,3 +146,13 @@ variable "google_client_secret" {
   sensitive = true
   default   = "placeholder-not-configured"
 }
+
+# Normally `migrate deploy`. Override to recover a failed migration, e.g.
+#   -var='migrate_command=migrate resolve --rolled-back 20260614090133_add_trgm_entity_search_indexes'
+# Prisma records a failed migration and blocks every later deploy until a human states
+# whether it was rolled back or should count as applied — deliberately not automatic.
+variable "migrate_command" {
+  description = "Prisma CLI subcommand the migration job runs."
+  type        = string
+  default     = "migrate deploy"
+}

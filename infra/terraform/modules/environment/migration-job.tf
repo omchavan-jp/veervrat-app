@@ -59,8 +59,14 @@ resource "azurerm_container_app_job" "migrate" {
       command = ["/bin/sh", "-c"]
       # `migrate deploy` applies committed migrations only — it never generates a new one and
       # never resets. Schema path is explicit so the pruned prisma.config.ts is not needed.
+      #
+      # `migrate_command` exists so a failed migration can be resolved (see
+      # `prisma migrate resolve`) without editing this file: a migration that errors is
+      # recorded as failed, and every later `deploy` refuses to run until a human decides
+      # whether it was rolled back or should be marked applied. That decision must not be
+      # automatic — hence a variable, not a retry.
       args = [
-        "cd /app/apps/api && ./node_modules/.bin/prisma migrate deploy --schema prisma/schema.prisma"
+        "cd /app/apps/api && ./node_modules/.bin/prisma ${var.migrate_command} --schema prisma/schema.prisma"
       ]
 
       env {

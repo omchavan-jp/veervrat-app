@@ -10,8 +10,11 @@ Rules and conventions live in `CLAUDE.md` (branching, tags, migrations) and
 
 ## Current state (2026-08-16)
 
-**The app is not deployed.** Railway was removed when its trial expired; Azure
-infrastructure exists but no application is running on it yet. Beta testers have no access.
+**UAT is live.** First successful Azure deploy 2026-08-16 — `/ready` green with Postgres
+and Redis both up, schema migrated, web serving and proxying to the api.
+
+**Prod does not exist yet**, so beta testers still have no access (per D11 they live on
+prod). That is the next milestone, after CD.
 
 Data is safe: 12 users / 10 journeys in Neon, plus a local dump at
 `../backups/veervrat-neon-20260809T184831Z.dump`.
@@ -20,12 +23,13 @@ Data is safe: 12 users / 10 journeys in Neon, plus a local dump at
 |---|---|
 | Azure subscription | `veervrat` · Central India · grant-funded (expires 2027-08-14) |
 | Terraform | `infra/terraform/` — `envs/shared` + `envs/uat` applied, `envs/prod` not built |
-| Container registry | `veervratacr.azurecr.io` — first images being pushed (`veervrat-api`, `veervrat-api-migrate`, `veervrat-web`) |
-| UAT Postgres | `veervrat-uat-psql` (v18, Burstable B1ms) — running, **schema not migrated** |
+| Container registry | `veervratacr.azurecr.io` — `veervrat-api`, `veervrat-api-migrate`, `veervrat-web`, all tagged `6ead179` |
+| UAT Postgres | `veervrat-uat-psql` (v18, Burstable B1ms) — running, **schema migrated** (`pg_trgm` allow-listed via `azure.extensions`) |
 | UAT Redis | `veervrat-uat-redis` (Azure Managed Redis, Balanced_B0) — running |
 | UAT secrets | `veervrat-uat-kv` — holds `database-url`, `redis-url` |
-| UAT compute | `veervrat-uat-cae` (Container Apps Environment) — apps defined in Terraform behind `deploy_apps`, **first deploy in progress** |
-| UAT app URLs | predicted from the environment's default domain: `veervrat-uat-{api,web}.proudcoast-d3aa08a0.centralindia.azurecontainerapps.io` |
+| UAT compute | api + web Container Apps **running** in `veervrat-uat-cae`, scale-to-zero when idle |
+| UAT web | https://veervrat-uat-web.proudcoast-d3aa08a0.centralindia.azurecontainerapps.io |
+| UAT api | https://veervrat-uat-api.proudcoast-d3aa08a0.centralindia.azurecontainerapps.io |
 | prod | not created |
 | DNS | zone `veervrat.jnanaprabodhini.org` exists; **NS delegation pending with JP** |
 | Email (Resend) | not wired |

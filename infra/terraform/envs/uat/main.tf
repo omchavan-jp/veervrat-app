@@ -50,8 +50,9 @@ module "environment" {
   source      = "../../modules/environment"
   environment = "uat"
 
-  image_tag   = var.image_tag
-  deploy_apps = var.deploy_apps
+  image_tag       = var.image_tag
+  deploy_apps     = var.deploy_apps
+  migrate_command = var.migrate_command
 
   # UAT is disposable and has no real users: scale to zero when idle (free), and keep the
   # per-replica connection count low so it cannot exhaust Burstable Postgres.
@@ -74,4 +75,10 @@ output "postgres_fqdn" {
 
 output "redis_hostname" {
   value = module.environment.redis_hostname
+}
+
+variable "migrate_command" {
+  description = "Prisma CLI subcommand the migration job runs. Override to recover a failed migration."
+  type        = string
+  default     = "migrate deploy"
 }

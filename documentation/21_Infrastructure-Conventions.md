@@ -463,3 +463,73 @@ Two things worth knowing:
 
 CD must enforce build → verify tag → migrate → deploy as ordered steps, because the
 ordering is easy to get wrong by hand even when you wrote the rule.
+
+#### A failed Container App creation leaves an orphan that blocks the retry
+
+The `MANIFEST_UNKNOWN` failure above had a second-order effect. Azure created the Container
+App resource and *then* failed to provision a revision for it, so the app existed in a
+`Failed` state — but never entered Terraform state, since the create errored. The next
+apply then refused to proceed:
+
+```
+a resource with the ID ".../containerApps/veervrat-uat-api" already exists -
+to be managed via Terraform this resource needs to be imported into the State
+```
+
+Two ways out. **Check what the orphan actually is before choosing:**
+
+```bash
+az containerapp show -n <app> -g <rg> \
+  --query "{state:properties.provisioningState, revisions:properties.latestRevisionName, fqdn:properties.configuration.ingress.fqdn}"
+```
+
+- **No FQDN and no revisions** ⇒ it never served traffic and holds nothing. Delete it
+  (`az containerapp delete -n <app> -g <rg> --yes`) and re-apply. This is the normal case
+  for a failed first create.
+- **Otherwise** ⇒ it is real and possibly serving. `terraform import` it instead, then let
+  the next plan reconcile it. Never delete an app that has live revisions to fix a state
+  problem.
+
+The general shape is worth remembering: *one* out-of-order step (deploying before the image
+existed) produced a failed resource, which produced a state conflict, which needed manual
+cleanup. That cascade is the argument for CD — not that a human cannot follow the order,
+but that a human following it by hand will eventually not.
+
+### Azure Postgres requires extensions to be allow-listed at the server level
+
+The single most valuable thing the first manual deploy surfaced. 21 migrations applied
+cleanly, then:
+
+```
+extension "pg_trgm" is not allow-listed for users in Azure Database for PostgreSQL
+```
+
+Being database admin is *not* sufficient — Flexible Server gates `CREATE EXTENSION` behind
+a server parameter. Managed in Terraform:
+
+```hcl
+resource "azurerm_postgresql_flexible_server_configuration" "azure_extensions" {
+  name      = "azure.extensions"
+  server_id = azurerm_postgresql_flexible_server.this.id
+  value     = "PG_TRGM"
+}
+```
+
+Keep it in sync with the migrations:
+```bash
+grep -rhoiE "CREATE EXTENSION[^;]*" apps/api/prisma/migrations/ | sort -u
+```
+
+**A failed migration blocks every later one until a human resolves it.** Prisma records the
+failure (`P3018`) and refuses to proceed — correctly, since it cannot know whether the
+partial migration was rolled back. Recovery is a deliberate override rather than a retry:
+
+```bash
+terraform apply -var="image_tag=$SHA" -var="deploy_apps=true" \
+  -var='migrate_command=migrate resolve --rolled-back <migration_name>'
+az containerapp job start -n veervrat-<env>-migrate -g veervrat-<env>
+# then re-apply with the default migrate_command and run again
+```
+
+This is why the job has `replica_retry_limit = 0`. An automatic retry would have re-run a
+migration whose failure state nobody had assessed.

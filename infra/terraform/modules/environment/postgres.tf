@@ -97,3 +97,17 @@ resource "azurerm_key_vault_secret" "postgres_connection_string" {
   key_vault_id = azurerm_key_vault.this.id
   depends_on   = [azurerm_role_assignment.key_vault_admins]
 }
+
+# Azure Postgres Flexible Server refuses `CREATE EXTENSION` unless the extension is
+# allow-listed at the server level first — it is not enough for the role to be admin.
+# Discovered on the first deploy: migration 20260614090133_add_trgm_entity_search_indexes
+# failed with 'extension "pg_trgm" is not allow-listed for users in Azure Database for
+# PostgreSQL' after 21 earlier migrations had applied cleanly.
+#
+# pg_trgm backs the trigram indexes used by entity search (vratmitra lookup by name/username).
+# Keep this list in sync with `grep -r "CREATE EXTENSION" apps/api/prisma/migrations/`.
+resource "azurerm_postgresql_flexible_server_configuration" "azure_extensions" {
+  name      = "azure.extensions"
+  server_id = azurerm_postgresql_flexible_server.this.id
+  value     = "PG_TRGM"
+}
