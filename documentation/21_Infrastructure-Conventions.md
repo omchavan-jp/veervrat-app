@@ -702,3 +702,39 @@ The `build` environment gates nothing; it exists purely to stabilise the subject
 
 AADSTS700213 always names the subject it presented — read that string and register it
 verbatim rather than reasoning about what it ought to be.
+
+### A flag that gates a resource DELETES it — "don't touch the apps" is not `count = 0`
+
+The most damaging bug of the whole exercise, and it was in my own deploy action.
+
+Step 1 applied `deploy_apps=false`, with the stated intent of "update infrastructure while
+leaving the running apps alone". But `deploy_apps` gates `count` on the app resources, so
+Terraform did the only thing it could: **destroyed the running apps**. It destroyed the
+migration job with them — gated on the same flag — so the very next step failed with
+`ResourceNotFound` on the job it had just deleted.
+
+Against UAT this was an outage nobody saw. **Against prod it would have been a full outage on
+every single deploy.**
+
+Two corrections:
+
+1. **Separate what the flag controls.** Jobs (migrate, seed) are gated on `image_tag != ""` —
+   they must exist *before* apps deploy, so they cannot depend on the apps' flag.
+2. **To leave apps alone, pin them — do not un-gate them.** A separate `app_image_tag`
+   variable holds the apps on the image they are *currently serving* while migrations run:
+
+   ```bash
+   TAG=$(az containerapp show -n veervrat-$ENV-api -g veervrat-$ENV \
+     --query "properties.template.containers[0].image" -o tsv | sed 's/.*://')
+   terraform apply -var="image_tag=$NEW" -var="app_image_tag=$TAG" -var="deploy_apps=true"
+   ```
+
+   Jobs move to the new image; apps do not move at all. Then after migrations succeed, a
+   second apply without `app_image_tag` rolls the apps forward — Container Apps starts the new
+   revision and waits for its readiness probe before shifting traffic, so the old one serves
+   throughout.
+
+**The generalisable lesson:** in Terraform, "don't change X yet" and "X should not exist" are
+the same expression if you reach for `count`. When you want a resource to persist unchanged,
+pin its inputs — never gate its existence. Read a plan's *destroy* count as the primary
+signal, not the add count.

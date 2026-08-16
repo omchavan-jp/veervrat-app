@@ -156,3 +156,11 @@ variable "migrate_command" {
   type        = string
   default     = "migrate deploy"
 }
+
+# Image the APPS run. Normally identical to image_tag; set to the currently-running tag during
+# the migrate step so migrations execute on the new build while the apps still serve the old
+# one. Empty = follow image_tag.
+variable "app_image_tag" {
+  type    = string
+  default = ""
+}
