@@ -35,6 +35,10 @@ jobs:
   # minutes; a single long job outlives its own credentials mid-run (AADSTS700024).
   prepare:
     runs-on: ubuntu-latest
+    # Declared so the OIDC subject is `environment:build` regardless of whether this run was
+    # triggered by a branch push or a tag. Without it the subject differs between the two and
+    # tag-triggered (production) runs fail at the first job. Gates nothing.
+    environment: build
     outputs:
       image_tag: ${{ steps.meta.outputs.sha }}
       uat_domain: ${{ steps.meta.outputs.domain }}
@@ -62,6 +66,7 @@ jobs:
   build:
     needs: prepare
     runs-on: ubuntu-latest
+    environment: build # same reason as `prepare` — a stable OIDC subject across triggers
     strategy:
       fail-fast: true
       matrix:
