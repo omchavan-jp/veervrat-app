@@ -666,3 +666,39 @@ fi
 
 `cmd | grep -q ... || fail` silently conflates the two, because a failed command and an empty
 result look identical downstream of a pipe.
+
+### The OIDC subject depends on the trigger — declare an environment on every job
+
+`deploy-uat` failed with:
+
+```
+AADSTS700213: No matching federated identity record found for presented assertion
+subject 'repo:veer-vrat/veervrat-app:environment:uat'
+```
+
+Two things to internalise, both non-obvious:
+
+1. **A job that declares `environment: X` presents `environment:X` as its subject** — not the
+   branch ref. Registering `ref:refs/heads/main` does nothing for such a job.
+2. **A job with *no* environment presents a subject that changes with the trigger**:
+   `ref:refs/heads/main` on a branch push, `ref:refs/tags/prod-2026-08-16` on a tag push. So a
+   branch-ref credential silently works for UAT and fails every production run.
+
+And **`subject` is exact match** — `refs/tags/*` is not a wildcard, it is a literal string
+matching nothing. (Wildcards need Azure's flexible federated credentials with a claims
+expression, a different feature.)
+
+**The fix that makes this stop being fragile: declare a GitHub Environment on every CD job**,
+including build. Then every subject is `environment:<name>`, identical across branch and tag
+triggers, and there are exactly three credentials to register:
+
+```
+repo:<owner>/<repo>:environment:build
+repo:<owner>/<repo>:environment:uat
+repo:<owner>/<repo>:environment:prod
+```
+
+The `build` environment gates nothing; it exists purely to stabilise the subject.
+
+AADSTS700213 always names the subject it presented — read that string and register it
+verbatim rather than reasoning about what it ought to be.

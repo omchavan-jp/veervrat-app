@@ -22,15 +22,24 @@ resource "azurerm_user_assigned_identity" "github_actions" {
 locals {
   github_repo = "veer-vrat/veervrat-app"
 
+  # **Every CD job declares a GitHub Environment**, so every subject takes the
+  # `environment:<name>` form. That is deliberate, and the reason is not obvious:
+  #
+  # GitHub's subject claim depends on the trigger. A job WITHOUT an `environment:` gets
+  # `ref:refs/heads/main` on a branch push but `ref:refs/tags/prod-2026-08-16` on a tag push —
+  # so a branch-ref credential silently fails every tag-triggered (i.e. production) run. And
+  # federated `subject` is **exact match**: `refs/tags/*` is not a wildcard, it is a literal
+  # string that matches nothing.
+  #
+  # Declaring an environment on every job makes the subject identical regardless of trigger,
+  # which is why `build` exists as an environment despite gating nothing.
+  #
+  # Mismatches fail with AADSTS700213 ("No matching federated identity record found"), naming
+  # the subject it presented — read that string and register it verbatim.
   github_federated_subjects = {
-    # Every push to the trunk — builds images and deploys UAT.
-    main = "repo:${local.github_repo}:ref:refs/heads/main"
-    # Release tags (prod-YYYY-MM-DD). GitHub emits `ref:refs/tags/<tag>`; the wildcard form
-    # below is what allows a per-release tag without registering each one.
-    tags = "repo:${local.github_repo}:ref:refs/tags/*"
-    # The `prod` GitHub Environment, which carries the manual approval gate. This is the
-    # subject that actually guards production: approval happens before the token is issued.
-    prod = "repo:${local.github_repo}:environment:prod"
+    build = "repo:${local.github_repo}:environment:build"
+    uat   = "repo:${local.github_repo}:environment:uat"
+    prod  = "repo:${local.github_repo}:environment:prod"
   }
 }
 
