@@ -29,7 +29,10 @@ Elsewhere in the repo: `documentation/` (engineering standards) · `spec/` (prod
 · `openspec/` (change workflow) · `DEPLOYMENT.md` (live runbook) · `CHANGELOG.md`
 
 Still outside the repo, in the working root: `backups/` (DB dumps), `sahitya/` (source
-material), `analysis-output/`, and raw session transcripts.
+material), and raw session transcripts. `analysis-output/` was deleted 2026-08-16 — its one
+durable artifact (`DESIGN-LANGUAGE.md`) merged into `documentation/15_Design-System.md`; the
+rest was a June audit whose remediation completed the next day, plus 3.4MB of HTML mockups of
+a design the app now implements.
 
 > 🔐 **Credentials never live here or anywhere in the repo.** Google OAuth client-secret JSONs
 > were moved to `~/.secrets/veervrat/` (mode 600) on 2026-08-16, before this directory became

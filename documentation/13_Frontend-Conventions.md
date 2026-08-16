@@ -10,37 +10,22 @@
 
 Role-segmented routes within a single app:
 
+⚠️ **Corrected 2026-08-16.** This previously used "mentor" and "mentees", violating the
+domain-language rule in `../CLAUDE.md` (*vratmitra*, not mentor; *vratarthi*, not user), and
+listed routes that never existed. Actual structure:
+
 ```
 app/
-  (public)/
-    login/
-    register/
-    forgot-password/
-  (app)/
-    dashboard/
-    journeys/
-      [id]/
-    assessments/
-      [id]/
-    profile/
-    settings/
-  (mentor)/
-    mentor/
-      dashboard/
-      mentees/
-      journeys/
-        [id]/
-  (moderation)/
-    moderation/
-      dashboard/
-      reports/
-      content/
-  (admin)/
-    admin/
-      dashboard/
-      users/
-      platform/
+  (public)/       login, signup, forgot-password, reset-password
+  (app)/          dashboard, journeys/[id], study, actions, profile, settings
+  (vratmitra)/    my-vratarthis, vm-actions
+  (moderation)/   moderation dashboard
+  (admin)/        dashboard, users, platform
 ```
+
+**Use the domain vocabulary in route names, components and copy.** `spec/CONTEXT.md` is
+canonical: vratarthi, vratmitra (global vs journey), weakness, sentence — never user, mentor,
+mentee, lacuna or statement.
 
 ### Rules
 - route groups `(public)`, `(app)`, `(mentor)`, etc. apply shared layouts and auth guards

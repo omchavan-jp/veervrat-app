@@ -4,26 +4,32 @@ This is the master reference for all technology and architecture decisions. Read
 
 ## Stack overview
 
+> **Status vocabulary corrected 2026-08-16.** This table read "Scaffolded" across the board
+> for an application that is **built and deployed** — 30 API modules, 35 archived openspec
+> changes, live on Azure UAT. "Scaffolded" was accurate in June and never revisited.
+
 | Layer | Choice | Status |
 |---|---|---|
-| Frontend | Next.js (App Router) + TypeScript | Scaffolded |
-| Backend | NestJS + TypeScript | Scaffolded |
-| Database | PostgreSQL | Scaffolded (docker-compose) |
-| ORM | Prisma | Scaffolded |
-| Search | Meilisearch | Decided, **deferred** — not deployed; search degrades gracefully |
-| File storage | MinIO locally · **Azure Blob** in cloud | ⚠️ Decided but **not implemented** — code still speaks S3 (`@aws-sdk/client-s3`), which Azure Blob does not. Uploads degrade gracefully (chat images disabled) until swapped. |
-| Hosting | **Azure** (Container Apps, Central India) | Infra provisioned via Terraform (UAT); **app not yet deployed** — see `../DEPLOYMENT.md` |
-| Observability | Sentry (app errors) + Azure App Insights (platform) | Decided 2026-08 — **replaces GlitchTip**; different questions, both free tiers |
-| Rich text editor | Tiptap + JSON AST storage | Decided — see 10_Platform-Engineering-Standard.md |
-| i18n | next-intl | Decided — no URL routing, user preference — see 10_Platform-Engineering-Standard.md |
-| WebSocket | NestJS Gateway + Socket.IO | Decided — see 10_Platform-Engineering-Standard.md |
-| Animation | Framer Motion | Decided |
-| Background jobs | @nestjs/schedule (v1), BullMQ path (v2) | Decided |
-| Auth | Custom in NestJS (cookie sessions, OAuth + credentials) | Built (backend + frontend) — see `openspec/specs/auth/spec.md` |
-| Email | Resend (prod) + console logging (dev) | Decided, not built |
-| Monorepo | pnpm workspaces + Turborepo | Scaffolded |
-| UI | Tailwind CSS + shadcn/ui | Scaffolded |
-| API style | REST | Scaffolded |
+| Frontend | Next.js (App Router) + TypeScript | ✅ Built and deployed |
+| Backend | NestJS + TypeScript | ✅ Built and deployed — 30 domain modules |
+| Database | PostgreSQL | ✅ Live — Azure Flexible Server v18 (UAT + prod), docker-compose locally |
+| ORM | Prisma | ✅ Built — driver adapter (`PrismaPg`), explicit pool sizing |
+| Cache / sessions store | Redis | ✅ Live — Azure Managed Redis; rate limits, lockout, Socket.IO adapter |
+| Search | Meilisearch | Decided, **deferred** — runs in docker-compose locally, **not deployed**; search degrades gracefully |
+| File storage | MinIO locally · **Azure Blob** in cloud | ⚠️ Decided but **not implemented** — code still speaks S3 (`@aws-sdk/client-s3`), which Azure Blob does not. Uploads degrade gracefully (chat images disabled). O15 / B-items |
+| Hosting | **Azure** (Container Apps, Central India) | ✅ **UAT live and serving**; prod infra provisioned, no apps deployed yet — see `../DEPLOYMENT.md` |
+| CI / CD | GitHub Actions | ✅ Both — CI gates PRs; CD builds → migrates → deploys UAT on merge, prod by `prod-*` tag |
+| Observability | Sentry (app errors) + Azure App Insights (platform) | ⚠️ Decided 2026-08 (**replaces GlitchTip**) but **not implemented** — Sentry SDK still reads `GLITCHTIP_DSN`, App Insights not wired at all. Backlog B13 |
+| Rich text editor | Tiptap + JSON AST storage | ✅ Built |
+| i18n | next-intl | ✅ Built — no URL routing, user preference, en + mr |
+| WebSocket | NestJS Gateway + Socket.IO | ⚠️ Built with Redis adapter, but **has never run successfully in production** — the rewrite proxy blocked upgrades. Needs the custom domain. O8 |
+| Animation | Framer Motion | ✅ Built |
+| Background jobs | @nestjs/schedule (v1), BullMQ path (v2) | ✅ Built — dormant-journeys + notifications crons |
+| Auth | Custom in NestJS (cookie sessions, OAuth + credentials) | ✅ Built — see `openspec/specs/auth/spec.md`. ⚠️ Google OAuth credentials not yet configured for the deployed environments |
+| Email | Resend (prod) + console logging (dev) | ⚠️ **Coded, not wired** — `email.service.ts` + 8 React Email templates exist; no Resend account/API key/verified domain, so nothing delivers |
+| Monorepo | pnpm workspaces + Turborepo | ✅ Built |
+| UI | Tailwind CSS (v4, CSS-first) + shadcn/ui | ✅ Built — design system implemented, see 15 |
+| API style | REST | ✅ Built — `/api/v1/`, `{ data }` envelope |
 
 ## Architecture decisions
 
@@ -61,17 +67,17 @@ This is the master reference for all technology and architecture decisions. Read
 ### 8. Email via Resend + console logging for dev
 **Decision**: Resend as the email provider for production, console logging for local development.
 **Why**: Resend has excellent DX, generous free tier (100/day), clean Node SDK. Console logging means zero external dependencies for local dev. Email service abstracted behind an interface so provider can be swapped later.
-**Status**: pending implementation. Need to create Resend account and API key when ready for production email.
+**Status**: ⚠️ **Coded, not wired.** `EmailModule` + `email.service.ts` (Resend SDK with console fallback) and 8 React Email templates exist. What is missing is operational: a Resend account, an API key, and a verified sending domain — the last blocked on the DNS delegation (O1).
 
 ### 9. Meilisearch for search
 **Decision**: Meilisearch for full-text search.
 **Why**: simple, fast, good enough for the app's needs. Async indexing via events/jobs.
-**Status**: decided, not set up yet. Will add to docker-compose when needed.
+**Status**: ⚠️ **Running locally, not deployed.** Meilisearch *is* in `docker-compose.yml`. It is not deployed to Azure — search degrades gracefully, and entity search was moved off Meili onto Postgres trigram indexes so vratmitra lookup works without it.
 
 ### 10. S3-compatible object storage
-**Decision**: use S3-compatible API for file storage. Provider TBD (could be AWS S3, Cloudflare R2, MinIO, or SeaweedFS).
+**Decision**: ~~use S3-compatible API for file storage, provider TBD~~ → **superseded 2026-08 by D7**: Azure Blob Storage, with managed identity instead of static keys. ⚠️ The code still speaks the S3 API (`@aws-sdk/client-s3`), which Azure Blob does **not** — an SDK swap is required before Blob can be provisioned (O15). Uploads degrade gracefully meanwhile (chat images disabled). MinIO remains the local-dev provider.
 **Why**: app needs file uploads (images, documents). S3 API is the standard abstraction — provider is pluggable.
-**Status**: decided, provider not chosen, not set up.
+**Status**: ⚠️ Provider **is** chosen (Azure Blob, D7). The SDK swap is what remains — see the note above and O15.
 
 ### 11. Monorepo with pnpm + Turborepo
 **Decision**: monorepo using pnpm workspaces and Turborepo.
@@ -88,12 +94,12 @@ This is the master reference for all technology and architecture decisions. Read
 ### 14. RBAC + relationship-scoped authorization
 **Decision**: role-based access control (user, mentor, moderator, admin) plus relationship-based scoping.
 **Why**: mentors see only assigned users, journey mentors see only their journey. Simple RBAC is not enough — access depends on relationships, not just role.
-**Status**: designed conceptually, not implemented.
+**Status**: ✅ **Built** — `common/permissions/has-permission.ts` + `PermissionGuard`, with auth-matrix tests (one positive + one negative per permission row).
 
 ### 15. Visibility model
 **Decision**: user journeys are private by default. Users can change visibility. Main mentor sees everything, journey mentor sees specific journey. Moderators see only public content.
 **Why**: app contains sensitive self-development data. Least-privilege by default.
-**Status**: designed conceptually, not implemented.
+**Status**: ✅ **Built** — enforced in the service layer via the permission function; profile visibility is a user-editable setting.
 
 ## Pending decisions
 
@@ -109,10 +115,10 @@ These are acknowledged but not yet decided in detail:
 | ~~Security baseline~~ | ✅ CSRF (double-submit cookie), rate limiting, upload rules, brute force. See 10_Platform-Engineering-Standard.md + 14_Auth-Architecture-Decision.md (§15-16) |
 | ~~Hosting~~ | ✅ Decided 2026-08 — **Azure**, Central India, single cloud + Terraform. Container Apps (not self-run Kubernetes), managed Postgres/Redis, zero VMs. See `../ops/azure-account-facts.md` and `21_Infrastructure-Conventions.md` |
 | ~~Release process~~ | ✅ Decided 2026-08-16 (O6) — single `main` trunk, UAT auto-deploys on merge, prod ships by `prod-*` tag promoting the same image. See `../CLAUDE.md` → Git conventions |
-| CI/CD | CI ✅ (PR gates). **CD not built** — next up; see `../DEPLOYMENT.md` |
+| ~~CI/CD~~ | ✅ **Both built** (O18) — CI gates PRs; CD does build → migrate → deploy with GitHub OIDC to Azure, no stored secrets. ⚠️ Merge is **not** blocked on green checks: branch protection is paywalled on this plan (B5) |
 | Object storage | Provider decided (Azure Blob) but **not implemented** — app still uses the S3 API via `@aws-sdk/client-s3`; needs an `@azure/storage-blob` swap |
 | ~~AI/recommendations~~ | ✅ Deferred to v2 explicitly. See spec/decisions/08_out-of-scope.md |
-| Visual design system | Color tokens, typography, dark mode — Phase 7 |
+| ~~Visual design system~~ | ✅ Decided **and built** — tokens, typography, dark mode, motion, component language. `15_Design-System.md` (now merged with the former design-language doc) + `15a_UI-Consistency-Rules.md` |
 
 ## Convention docs
 

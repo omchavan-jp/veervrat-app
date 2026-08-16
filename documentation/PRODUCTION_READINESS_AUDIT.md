@@ -1,5 +1,19 @@
 # Production Readiness Audit
 
+> 📌 **Point-in-time record — 2026-07-01. Do not update it; read it as history.**
+> Its value is as a snapshot of what was true before the Azure migration. Several findings
+> have since been addressed — the verdict below says "no deployment, no CI/CD, no error
+> tracking, no backups"; as of 2026-08-16 the first three are wrong:
+>
+> | Then | Now |
+> |---|---|
+> | no deployment | UAT live on Azure, prod infra provisioned |
+> | no CI/CD | CD pipeline live (OIDC, build→migrate→deploy) |
+> | no backups | Postgres Flexible Server, 7-day UAT / 35-day prod retention + PITR |
+> | no error tracking | ⚠️ **still true** — decided (D8) but unimplemented, backlog B13 |
+>
+> Current status lives in `01_System-Decisions-and-Status.md` and `../ops/PROJECT-STATUS.md`.
+
 _Generated from a code-grounded audit (not spec-based). Each item: DONE / PARTIAL / MISSING with file evidence._
 
 ## Verdict

@@ -1,5 +1,28 @@
 # Implementation Order
-_Last updated: 2026-06-03_
+
+> 📌 **HISTORICAL — this was the build plan, and the build is done. Do not read the
+> checkmarks as status.**
+>
+> Only 7 of 37 items below carry a `✅ DONE` marker, because marking them was abandoned once
+> the pace picked up. **All 37 are implemented** — verified 2026-08-16 against the code (30
+> API modules exist, including permissions, i18n, journeys, ERC, chat, experience logs and
+> admin) and against `openspec/changes/archive/`, which holds **35 archived changes**. The
+> Deferral Ledger also references Items 30–37 as complete.
+>
+> A reader trusting the markers would conclude the app is at item 3 of 37. It is deployed.
+>
+> **For actual status, read:**
+> - `01_System-Decisions-and-Status.md` — what is built and what is decided
+> - `../ops/PROJECT-STATUS.md` — open threads, backlog, working order
+> - `openspec/changes/archive/` — the real record of what shipped
+>
+> Kept for the sequencing rationale and the per-item "Read first" lists, which are still
+> useful when revisiting an area. The `/opsx:propose` session prompts are spent.
+>
+> ⚠️ Its process instructions are also stale: it says "squash merge to **dev**". `dev` is
+> retired — `main` is the trunk (O6). See `../CLAUDE.md` → Git conventions.
+
+_Written 2026-06-03. Superseded as a status document 2026-08-16._
 
 Two tiers:
 - **[FULL]** — OpenSpec full cycle: propose → apply (with tests) → code-review → archive

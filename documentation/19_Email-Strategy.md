@@ -141,16 +141,29 @@ RESEND_API_KEY="re_your_api_key"
 EMAIL_FROM="Veervrat <noreply@yourdomain.com>"
 ```
 
-## New packages required
+## Packages — ✅ already installed
 
-Add to `apps/api/package.json`:
-- `resend` — Resend SDK
-- `@react-email/components` — email component library
-- `react` + `react-dom` — React Email rendering (server-side only)
+Verified 2026-08-16 (this section previously read as "required to add"):
 
-Add to `documentation/10_Platform-Engineering-Standard.md`:
-
-| Concern | Library |
+| Package | Installed |
 |---|---|
-| Email provider | Resend SDK (`resend`) |
-| Email templates | React Email (`@react-email/components`) |
+| `resend` | ✅ `^4.5.2` |
+| `@react-email/components` | ✅ `^0.0.36` |
+| `react` | ✅ `^19.0.0` |
+
+## Implementation status
+
+⚠️ **Coded, not wired — nothing has ever been delivered.**
+
+- ✅ `EmailModule` + `email.service.ts` with the Resend SDK and console fallback
+- ✅ 8 of the ~18 templates listed above exist (`EmailChangeEmail`, `NotificationEmail`,
+  `PasswordResetEmail`, `PlatformInvitationEmail`, `VerifyEmailEmail`, …). The full list above
+  is the target, not the current state
+- ❌ No Resend account, no `RESEND_API_KEY`, no verified sending domain
+
+**Blocked on the DNS delegation (O1)** — the sending domain needs SPF/DKIM/DMARC records, and
+those must go on the **subdomain**, never the root, which carries JP's live Google Workspace
+mail (D9 / guardrails).
+
+⚠️ The free tier's **3,000 emails/month is user-facing** (D18): exhausting it breaks signup
+verification and password reset, not just notifications.

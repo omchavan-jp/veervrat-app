@@ -8,9 +8,10 @@ maintainer working with Claude Code.
 
 ```
 CAPTURE                TRIAGE                     IMPLEMENT
-in-app feedback  ──▶   GitHub Issues (canonical) ──▶  branch → PR → dev → Railway
-+ backlog notes        labeled, prioritized           → verify live → close issue
+in-app feedback  ──▶   GitHub Issues (canonical) ──▶  branch → PR → main → UAT (auto)
++ inbox notes          labeled, prioritized           → verify on UAT → close issue
                                                       → CHANGELOG + doc updates
+                                                      → prod-* tag ships it to users
 ```
 
 ## Loop 1 — Capture
@@ -22,7 +23,7 @@ button (position in `localStorage`), rendered when `NEXT_PUBLIC_FEEDBACK_MODE=te
   chip, +1 button (dedup pressure valve).
 - Modal tab 2: raise new — type + title + optional description. Everything else
   is auto-captured: route, user id + role, locale, viewport, user agent, commit
-  SHA (`RAILWAY_GIT_COMMIT_SHA` surfaced to web at build time).
+  SHA (`NEXT_PUBLIC_COMMIT_SHA`, set from the git SHA at build time by CD).
 - Backend: `feedback` module — Prisma model, `POST /feedback` + `POST /feedback/:id/upvote`
   (any logged-in user), `GET /feedback` (list, open items), `PATCH /feedback/:id`
   (status, admin only). Rate-limited.
