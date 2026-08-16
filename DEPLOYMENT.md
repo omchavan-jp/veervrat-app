@@ -141,6 +141,34 @@ console entry, and it should point at whichever origin makes the `Set-Cookie` fi
 
 ---
 
+## DNS cutover checklist
+
+Runs once, when JP's NS delegation lands (O1). Several of these are easy to forget because
+they're only *implied* by the gotchas above — hence the explicit list.
+
+- [ ] Confirm delegation propagated: `dig NS veervrat.jnanaprabodhini.org` returns the four
+      `azure-dns` nameservers from `azure-account-facts.md` §5.
+- [ ] Add the app's DNS records **in Terraform**, inside the existing zone — never
+      re-create the zone (see `21_Infrastructure-Conventions.md` §4).
+- [ ] Bind custom domains + managed TLS certs to the Container Apps.
+- [ ] **Set `COOKIE_SAMESITE=lax`** — the `SameSite=None` workaround exists only because
+      web and api were on different public-suffix domains. On a shared domain it's
+      unnecessary and weaker.
+- [ ] **Remove the Next.js `/api/v1/*` rewrite proxy.** It exists for the same reason and
+      is what breaks WebSockets.
+- [ ] Rebuild web with the new `NEXT_PUBLIC_API_URL`, `API_ORIGIN`, `NEXT_PUBLIC_SITE_URL`
+      — these are **build-time**, so a restart is not enough.
+- [ ] Update `GOOGLE_CALLBACK_URL` **and** the matching entry in the Google console.
+- [ ] Verify chat actually works — this is the payoff; both causes (transport + Redis
+      adapter) are only now resolved.
+- [ ] **Rotate the exposed secrets (O12):** GitHub PAT, `SESSION_SECRET`, R2 keys — all
+      sat in plaintext in `apps/api/.env.railway`.
+- [ ] Wire Resend and verify SPF/DKIM/DMARC **on the subdomain**, never the root — the root
+      carries JP's live Google Workspace mail (D9, and §7 guardrails in the facts doc).
+- [ ] Point beta testers at the new URL.
+
+---
+
 ## Verifying a deploy
 
 ```bash

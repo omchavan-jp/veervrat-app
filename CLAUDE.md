@@ -233,6 +233,14 @@ has nothing to do with the old `dev` *branch*.
 - Never merge `main` into a feature branch mid-work — rebase instead
 - Feature branches are **kept** after merge, never deleted
 
+**Squash and keep-the-branch are a pair, not two independent preferences.** Squashing puts
+one commit per PR on `main` — readable history, and a revert is a single commit, which
+matters now that tags mark releases. The cost is that the branch becomes the *only* place
+the granular commits survive, so deleting it would genuinely lose that history. (The
+coherent alternative is normal-merge + delete, which keeps every `wip`/`fix typo` commit in
+`main`'s history instead. We chose the other trade.) If the branch list gets noisy, prune
+old *merged* branches deliberately — don't switch merge strategy.
+
 ### Database migrations
 - **Never auto-migrate any deployed environment.** Migrations run as a deliberate,
   separately-triggered step, before the app image that needs them is deployed.
