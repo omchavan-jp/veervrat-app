@@ -589,3 +589,80 @@ self-approval prompt is a rubber stamp for a single maintainer. The `prod` envir
 exists and still scopes the OIDC subject — it just carries no gate.
 
 Revisit if a second maintainer joins, or when the repo moves to an organisation.
+
+### Build caching — and a correction to "always build in Azure"
+
+**`az acr build` provides no layer caching and no way to enable it.** Its flag list has
+neither `--cache-from` nor `--no-cache`; there is no cache control at all. Confirmed
+empirically on our own runs: the api image took **4m16s** cold and **4m20s** on a rebuild of
+near-identical content. Every build redoes `pnpm install`, `prisma generate` and `tsc` from
+scratch, ×3 images per deploy.
+
+The Dockerfiles are already structured for caching (a `deps` stage keyed on the lockfile) —
+nothing was reusing those layers between runs.
+
+**The correction:** §14 above says "build in Azure, not on your machine, because dev machines
+are arm64 and Container Apps is amd64." That reasoning is right for a *laptop* and wrong for
+*CI*. **GitHub-hosted `ubuntu-latest` runners are already amd64**, so building there is
+natively the correct architecture — no QEMU, no emulation, no mismatch. The rule should have
+been "never build on an arm64 machine", not "always build in Azure".
+
+So the two contexts differ:
+
+| Context | Build with | Why |
+|---|---|---|
+| Local / ad-hoc (arm64 Mac) | `az acr build` | correct architecture without emulation; cache is not worth the complexity for a one-off |
+| CI (amd64 runner) | `docker/build-push-action` + registry cache | already the right architecture, and gains real layer caching |
+
+**Lesson worth generalising:** a rule justified by one constraint (CPU architecture) should
+not be applied where that constraint does not hold. When writing a convention, record *why*
+— it is the only way a future reader can tell whether it still applies.
+
+### Azure's OIDC token expires in ~5 minutes — long jobs outlive their own credentials
+
+The first CD run failed like this:
+
+```
+AADSTS700024: Client assertion is not within its valid time range.
+Current time: 02:24:23, assertion valid from 02:11:29, expiry 02:16:29
+```
+
+`azure/login` exchanges a GitHub OIDC assertion with a **~5 minute** validity. A job that
+runs longer than that loses Azure auth partway through — the early steps succeed, a later
+one fails with what looks like an unrelated error. Here all three images built fine; only
+the verification step 13 minutes in failed.
+
+**Structure jobs so each starts with a fresh login**, rather than trying to extend one:
+- A cheap `prepare` job resolves shared values (SHA, environment domain) and passes them as
+  outputs.
+- Each build runs as its own matrix job with its own `azure/login`.
+- Deploy jobs likewise log in at their own start.
+
+Parallel matrix jobs are shorter *and* independently authenticated, so this fixes the
+credential problem and the wall-clock problem with one change.
+
+### A guard that misreports why it failed is worse than no guard
+
+The same run surfaced a bug in the tag check I had written:
+
+```bash
+az acr repository show-tags ... | grep -qx "$SHA" || { echo "not found"; exit 1; }
+```
+
+When the token expired, `az` failed, the pipe produced nothing, `grep` found nothing, and the
+guard announced **"veervrat-api:dbb563b not found"** — for an image that was sitting in the
+registry. It sent the investigation in exactly the wrong direction.
+
+**Always distinguish "the check could not run" from "the check found a problem":**
+
+```bash
+if ! TAGS=$(az acr repository show-tags ... 2>&1); then
+  echo "::error::could not query $repo — ACCESS failure, not a missing image"; exit 1
+fi
+if ! grep -qx "$IMAGE_TAG" <<<"$TAGS"; then
+  echo "::error::$repo:$IMAGE_TAG is genuinely absent"; exit 1
+fi
+```
+
+`cmd | grep -q ... || fail` silently conflates the two, because a failed command and an empty
+result look identical downstream of a pipe.
