@@ -60,7 +60,7 @@ as an archive, not a migration source.
 | prod web | https://veervrat.jnanaprabodhini.org (custom domain, live 2026-08-17) — internal: https://veervrat-prod-web.graydesert-a1bc836e.centralindia.azurecontainerapps.io |
 | prod api | https://api.veervrat.jnanaprabodhini.org (custom domain, live 2026-08-17) — hostname bound and serving, but **prod's web still proxies to UAT** until a new tag ships the fix (O22). Internal: https://veervrat-prod-api.graydesert-a1bc836e.centralindia.azurecontainerapps.io |
 | DNS | **live** — per-record (not delegation, see `ops/PROJECT-STATUS.md` D14/O1); both custom domains bound with managed TLS certs as of 2026-08-17 |
-| Email | **not wired** — JP IT's SMTP relay chosen (D9), credentials verified, code swap pending (B14). Blocks credential signup |
+| Email | ✅ **delivering on UAT** — nodemailer over JP IT's relay (`dhoomketu.in:587`, STARTTLS), verified 2026-08-17 to an external inbox. ⚠️ **prod's Key Vault holds a placeholder password** — set `smtp-password` there before the next prod deploy, or prod silently logs mail to console |
 | Object storage | **not provisioned** — app still uses the S3 API; needs an SDK swap first |
 | Search (Meilisearch) | deferred |
 
