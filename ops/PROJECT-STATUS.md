@@ -241,6 +241,14 @@ a GitHub Issue or is promoted to an O-thread above.
   clicking a verification link, so it should mark the address verified. Also missing: a
   **resend-verification endpoint** — there is none (`auth.controller.ts` has `forgot-password`
   and `verify-email` only), so a lost verification email is unrecoverable by the user.
+- **B18 · No privacy policy or terms pages exist.** Verified 2026-08-17: nothing in
+  `apps/web/app`, no CMS page, no route. This blocks **publishing** the Google OAuth consent
+  screen to production, which requires both URLs — so Google sign-in has to run in Testing mode
+  (capped at 100 named test users, and each sees an "unverified app" warning) until they exist.
+  Note publishing needs **no Google review**, because the app requests only the non-sensitive
+  `email` and `profile` scopes; the two pages are the entire blocker. Independently needed
+  before any public launch, and more pressing than usual given the platform handles data about
+  minors.
 - **B17 · No way to administer data in a deployed environment.** There is no admin user (the
   seed creates content only), no `az containerapp exec` runbook, and Postgres allows only
   "Azure services" through its firewall — so removing a test account or fixing a row on UAT has
