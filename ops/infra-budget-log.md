@@ -465,7 +465,7 @@ Activate) → renaming both to *Jnana Prabodhini*; the profile name prints on mo
 - [ ] Payment methods — card attached or not? (decides suspend-vs-bill at credit exhaustion)
 - [ ] Calendar reminder **July 2027** — grant renewal, no rollover
 - [ ] Add Nachiket as subscription Owner (needs a JP Microsoft account first)
-- [ ] DNS: message **Shantanu Mahajan** — NS delegation for `veervrat.jnanaprabodhini.org`
+- [x] DNS: message **Shantanoo Mahajan** — done 2026-08-16, per-record instead of NS delegation (see `ops/PROJECT-STATUS.md` O1/D14)
 
 **Env/environment strategy:** one subscription, staging + prod separated by **resource group** —
 simpler and cheaper than two subscriptions, and the grant bills at account level regardless.
