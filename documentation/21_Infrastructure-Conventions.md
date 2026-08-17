@@ -1017,6 +1017,12 @@ Actions endpoints only; `/repos/<owner>/<repo>` answered normally with the same 
 failure is upstream of your own build steps, or an API contradicts itself between endpoints,
 suspect the platform before debugging your change.
 
+**Confirmed as a real GitHub incident** (checked 2026-08-17): a widespread outage with error
+rates around 20% on both web and API traffic, roughly half of archive/raw-content downloads
+failing, and GitHub Actions degraded. So the diagnosis above was right for the right reason —
+worth noting that "retry a few times" was the correct response to a genuine 1-in-5 failure rate,
+not superstition.
+
 **What worked:** simply retrying. Failed jobs were re-run several times each; the build
 eventually passed, then `deploy-uat` failed and was re-run until it passed too. No code change
 was involved.

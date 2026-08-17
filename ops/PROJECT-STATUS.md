@@ -246,6 +246,14 @@ a GitHub Issue or is promoted to an O-thread above.
   Each of (1) and (2) proves control of the mailbox at least as well as clicking a verification
   link, so both should mark the address verified; (3) should exist regardless. The UI also
   explains none of this — it just refuses. Any beta tester who misses one email lands here.
+- **B18 · No privacy policy or terms pages exist.** Verified 2026-08-17: nothing in
+  `apps/web/app`, no CMS page, no route. This blocks **publishing** the Google OAuth consent
+  screen, which requires both URLs, so Google sign-in stays in Testing mode — capped at 100
+  named test users for the app's lifetime. Publishing needs **no Google review** (the scopes are
+  non-sensitive), so these two pages are the entire blocker. Note the cap is the *only* cost:
+  testers see an ordinary consent screen, **not** an "unverified app" warning — that is tied to
+  sensitive scopes, confirmed by real sign-in 2026-08-18. Needed before any public launch
+  regardless, and more pressing than usual given the platform handles data about minors.
 - **B17 · No way to administer data in a deployed environment.** There is no admin user (the
   seed creates content only), no `az containerapp exec` runbook, and Postgres allows only
   "Azure services" through its firewall — so removing a test account or fixing a row on UAT has
