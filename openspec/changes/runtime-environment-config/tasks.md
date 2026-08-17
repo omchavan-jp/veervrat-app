@@ -60,6 +60,10 @@ the new frontend fails CORS.
 `curl` ignores `SameSite` and does not enforce CORS, so it cannot detect the failure modes this
 change risks. Each item below is a real browser against UAT.
 
+⚠️ **This section is the gate on cutting a prod tag, and it is not yet done.** Everything a
+machine can check has passed (see 5.1); what remains genuinely needs a human with a browser and
+a login, because the risk is that cookies stop being *sent* — which no `curl` run can observe.
+
 - [ ] 4.1 Log in with credentials; confirm the session persists across a reload.
 - [ ] 4.2 Perform a state-changing action (CSRF double-submit passes across hosts).
 - [ ] 4.3 Log out; confirm the session is cleared.
@@ -71,7 +75,11 @@ change risks. Each item below is a real browser against UAT.
 
 ## 5. Ship and document
 
-- [ ] 5.1 Merge to `main`; confirm UAT deploys and re-run §4 against it.
+- [x] 5.1 Merged; UAT deployed green. Machine-verifiable results confirmed on UAT 2026-08-17:
+  web advertises `api.uat.veervrat.jnanaprabodhini.org`, `og:url` names the UAT custom domain
+  (was UAT's host leaking into prod), the OAuth `redirect_uri` is on the api origin, CORS
+  returns the web origin with credentials, and cookies are `Secure; SameSite=Lax` host-scoped
+  with no `Domain`. The CD wiring check passed on a real deploy.
 - [ ] 5.2 Cut a `prod-*` tag; re-run §4 against prod, including a real login.
 - [ ] 5.3 Update `DEPLOYMENT.md`: the proxy is gone, the api is browser-reachable, and the
   post-deploy wiring check is part of the procedure.
