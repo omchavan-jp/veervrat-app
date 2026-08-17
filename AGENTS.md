@@ -312,6 +312,52 @@ grep -rn "<the thing being superseded>" --include="*.md" .
 Reconcile *every* hit — update it or mark it superseded — before moving on. A fact stated in
 two places is a fact that will eventually be wrong in one of them.
 
+## Verification discipline — how you are allowed to conclude something works
+
+Filed here, not under CI or Terraform, **on purpose**. Every lesson below was first written
+into an infrastructure doc, filed under where it happened, and then repeated in a different
+context because it did not look like "a CD problem" at the time. These rules govern *how you
+confirm things*, wherever you are.
+
+### An empty result is not a pass
+
+**State the expected observable before running a check, then confirm you saw it.** A command
+that produces no output has told you nothing, and "nothing" is not "fine".
+
+This has now happened twice:
+
+- A `grep -q` guard in CD reported "image not found" when the real cause was an expired auth
+  token — it could not distinguish *absent* from *could not look*.
+- Later, checking whether email had sent, `az containerapp logs --tail 60 | grep -i "EMAIL
+  DEV|smtp"` returned nothing and that was reported as "no console fallback, no SMTP error —
+  it sent over SMTP." It had not sent. The log line was real; `--tail 60` simply did not reach
+  it. The conclusion was drawn from a window, not from evidence.
+
+So:
+
+- A check must be able to **fail for the right reason**. If "no output" can mean either pass
+  or could-not-look, it is not a check yet.
+- Prefer a **positive assertion**: assert the thing you expect to be present, rather than the
+  absence of the thing you fear.
+- When searching output, confirm the search **could have seen** the answer — an unbounded
+  window, a known-present control string, or an exit status you actually inspected.
+- Never report a conclusion whose evidence is "the grep was empty".
+
+### Do not claim verification you did not perform
+
+`curl` ignores `SameSite` and does not enforce CORS. A 201 from an endpoint does not prove a
+downstream side effect occurred. A green `/ready` does not prove the tiers are wired to each
+other. Name what the check actually covers, and say plainly what remains unverified — an
+overstated "verified" is worse than an honest "not yet checked", because it stops anyone else
+from looking.
+
+### Prefer mechanism over memory
+
+A rule that lives only in prose will be followed until the moment attention is elsewhere. If a
+rule can be made executable — a hook, a schema, a CI step, an assertion — make it executable.
+Every rule that held during the 2026-08-17 session was mechanical (`terraform validate`, CI
+lint, the CD wiring check); the ones broken that day were all prose-only.
+
 ## Session discipline
 - One task per session — don't try to do everything
 - Load only relevant context (backend: read api/ files; frontend: read web/ files)
