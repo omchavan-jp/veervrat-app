@@ -8,20 +8,26 @@ Rules and conventions live in `AGENTS.md` (branching, tags, migrations) and
 
 ---
 
-## Current state (2026-08-16)
+## Current state (2026-08-17)
 
-**UAT is live.** First successful Azure deploy 2026-08-16 — `/ready` green with Postgres
-and Redis both up, schema migrated, web serving and proxying to the api.
+**UAT is live** and running the runtime-config fix (`8039e67`). `/ready` green, schema
+migrated and seeded. The `/api/v1` rewrite proxy is **gone** — the browser calls the api
+directly on `api.uat.veervrat.jnanaprabodhini.org`. Verified there: the web tier advertises its
+own api, `og:url` names the UAT domain, the OAuth `redirect_uri` is on the api origin, CORS
+returns the web origin with credentials, cookies are `Secure; SameSite=Lax` host-scoped.
+
+⚠️ **Nobody can log in to UAT yet** — no users exist, Google OAuth is a placeholder, and
+credential login needs email that is not wired. So the browser-only checks (session persists,
+CSRF passes across hosts) are still outstanding. See step 8 below and §18.
 
 🔴 **Prod is deployed but NOT usable — do not send anyone there.** The `prod-2026-08-16`
 tag deployed cleanly and `/ready` is green, but two defects found 2026-08-17 mean no real user
 can use it:
 
-- **O22** — the prod web tier proxies `/api/v1` to **UAT's api**, so prod traffic reads and
-  writes UAT's database. Cause: `API_ORIGIN` is baked into the image at build time, so the
-  promoted image keeps UAT's value and prod's runtime setting is ignored. See
-  `documentation/21_Infrastructure-Conventions.md` §17. Fix in progress:
-  `openspec/changes/runtime-environment-config`.
+- **O22** — prod still runs the pre-fix image (`5576918`), whose web tier proxies `/api/v1` to
+  **UAT's api**, so prod traffic would read and write UAT's database. The fix is merged and
+  live on UAT, but prod only moves on a `prod-*` tag — **which must not be cut until the
+  browser checks above are done.** See `documentation/21_Infrastructure-Conventions.md` §17.
 - **O23** — prod's Google OAuth holds `placeholder-not-configured`, and credential login
   requires an email-verification link that cannot be sent yet (email transport unwired, B14).
   **No login path works on prod.**
@@ -45,14 +51,14 @@ as an archive, not a migration source.
 | UAT data | ✅ **seeded** — 6 virtues, 35 weaknesses, 226 sentences, 82 exposures, 128 resolutions, 31 challenges |
 | UAT compute | api + web Container Apps **running** in `veervrat-uat-cae`, scale-to-zero when idle |
 | UAT web | https://uat.veervrat.jnanaprabodhini.org (custom domain, live 2026-08-17) — internal: https://veervrat-uat-web.proudcoast-d3aa08a0.centralindia.azurecontainerapps.io |
-| UAT api | https://api.uat.veervrat.jnanaprabodhini.org (custom domain, live 2026-08-17) — internal: https://veervrat-uat-api.proudcoast-d3aa08a0.centralindia.azurecontainerapps.io. Still reached via web's `/api/v1` proxy today — the hostname exists so O8 can drop that proxy, not because anything routes to it directly yet |
+| UAT api | https://api.uat.veervrat.jnanaprabodhini.org (custom domain, live 2026-08-17) — **called directly by the browser**; the rewrite proxy was removed 2026-08-17. Internal: https://veervrat-uat-api.proudcoast-d3aa08a0.centralindia.azurecontainerapps.io |
 | prod Postgres | `veervrat-prod-psql` (v18, Burstable B1ms) — running, 35-day backup retention, schema migrated |
 | prod Redis | `veervrat-prod-redis` (Azure Managed Redis, Balanced_B0) — running |
 | prod secrets | `veervrat-prod-kv` — `database-url`, `redis-url`, `session-secret`, `postgres-admin-password` |
 | prod data | seeded (same content set as UAT) |
-| prod compute | api + web Container Apps **running** in `veervrat-prod-cae`, scale-to-zero (`min_replicas=0` — revisit once real traffic is expected) |
+| prod compute | api + web Container Apps **running** in `veervrat-prod-cae` on the **pre-fix image `5576918`**, scale-to-zero (`min_replicas=0` — revisit once real traffic is expected) |
 | prod web | https://veervrat.jnanaprabodhini.org (custom domain, live 2026-08-17) — internal: https://veervrat-prod-web.graydesert-a1bc836e.centralindia.azurecontainerapps.io |
-| prod api | https://api.veervrat.jnanaprabodhini.org (custom domain, live 2026-08-17) — internal: https://veervrat-prod-api.graydesert-a1bc836e.centralindia.azurecontainerapps.io. Still reached via web's `/api/v1` proxy today — the hostname exists so O8 can drop that proxy, not because anything routes to it directly yet |
+| prod api | https://api.veervrat.jnanaprabodhini.org (custom domain, live 2026-08-17) — hostname bound and serving, but **prod's web still proxies to UAT** until a new tag ships the fix (O22). Internal: https://veervrat-prod-api.graydesert-a1bc836e.centralindia.azurecontainerapps.io |
 | DNS | **live** — per-record (not delegation, see `ops/PROJECT-STATUS.md` D14/O1); both custom domains bound with managed TLS certs as of 2026-08-17 |
 | Email | **not wired** — JP IT's SMTP relay chosen (D9), credentials verified, code swap pending (B14). Blocks credential signup |
 | Object storage | **not provisioned** — app still uses the S3 API; needs an SDK swap first |
@@ -214,7 +220,40 @@ schema are all correct together. `/health` only proves the process started — i
 check that matters. First request after idle may be slow: `min_replicas = 0` means a cold
 start.
 
-### 8. Record it
+**`/ready` is not sufficient on its own.** It checks each service in isolation and cannot tell
+you whether the tiers are wired to *this* environment's peers — prod ran for a day with a green
+`/ready` while its web tier talked to UAT's database. Also confirm:
+
+```bash
+WEB=$(az containerapp show -n veervrat-<env>-web -g veervrat-<env> \
+  --query properties.configuration.ingress.fqdn -o tsv)
+
+# The served HTML carries the api URL the browser will use — it must be THIS environment's api
+curl -s "https://$WEB/login" | grep -o 'api[a-z.\-]*veervrat[a-z.\-]*'
+```
+
+CD runs this automatically (`.github/actions/deploy-environment`), but do it by hand for an
+environment stood up outside the pipeline.
+
+### 8. Confirm somebody can actually log in
+
+**An environment is not finished until a human can sign in.** Easy to miss: `/ready` is
+green, wiring is correct, content is seeded — and the environment is still unusable, because
+health checks cannot see that there is no way in.
+
+A freshly provisioned environment has **no users at all** — the seed loads content only. So
+one of these must be true before the environment counts as done:
+
+- Email is wired, so credential signup can complete verification (login refuses an unverified
+  address), **or**
+- Real Google OAuth credentials are in place — the Terraform default is
+  `placeholder-not-configured`, which fails before reaching Google.
+
+Neither was true for UAT or prod as of 2026-08-17 (B14 / O23), which is also why any change
+to cookies, CORS, CSRF or sessions cannot be verified yet: those need a real browser session.
+See `documentation/21_Infrastructure-Conventions.md` §18.
+
+### 9. Record it
 
 Update this file's *Current state* table and `ops/azure-account-facts.md` §5. The facts
 file is the source of truth for what exists; if it disagrees with reality, reality is a bug
@@ -349,17 +388,29 @@ identity — never pasted into the portal, never committed.
 | `S3_*` | unset for now | uploads degrade gracefully — chat image upload is disabled, nothing else breaks |
 | `MEILI_*` | unset | search deferred |
 
-### web — all **build-time**, inlined into the browser bundle
+### web — **runtime**, except the commit SHA
 
-Changing any of these requires a **rebuild**, not just a restart.
+Rewritten 2026-08-17. These used to be build-time `NEXT_PUBLIC_*`, which broke under
+"promote, never rebuild": one image carried UAT's values into prod, and prod's web tier
+called UAT's api. See `documentation/21_Infrastructure-Conventions.md` §17.
+
+Runtime — set on the Container App, changed with a restart, no rebuild:
 
 | Var | Notes |
 |---|---|
-| `NEXT_PUBLIC_API_URL` | see the same-origin note below |
-| `API_ORIGIN` | target of the `/api/v1/*` rewrite proxy, if the proxy is used |
-| `NEXT_PUBLIC_SITE_URL` | og:image / canonical URL base |
-| `NEXT_PUBLIC_FEEDBACK_MODE` | `test` = list + form, `public` = form only, unset = hidden |
-| `NEXT_PUBLIC_COMMIT_SHA` | build id attached to feedback reports |
+| `API_BASE_URL` | absolute api URL incl. `/api/v1`. The browser calls the api directly — there is no proxy |
+| `SITE_URL` | og:image / canonical URL base |
+| `FEEDBACK_MODE` | `test` = list + form, `public` = form only, `off`/unset = hidden. Environment-level only; per-user is B1 |
+
+Build-time, and only these:
+
+| Var | Notes |
+|---|---|
+| `NEXT_PUBLIC_COMMIT_SHA` | build id attached to feedback reports — describes the *image*, so baking is correct |
+| `NEXT_PUBLIC_CONTENT_EDIT` | deliberately build-time: being inlined lets the bundler drop the editor's code so dev tooling never ships to users. Never passed by CD |
+
+**The test before adding anything here:** does the value describe the *image*, or the
+*environment the image runs in*? Only the former may be baked.
 
 ---
 
