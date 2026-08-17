@@ -35,16 +35,16 @@ as an archive, not a migration source.
 | UAT secrets | `veervrat-uat-kv` — `database-url`, `redis-url`, `session-secret`, `postgres-admin-password` |
 | UAT data | ✅ **seeded** — 6 virtues, 35 weaknesses, 226 sentences, 82 exposures, 128 resolutions, 31 challenges |
 | UAT compute | api + web Container Apps **running** in `veervrat-uat-cae`, scale-to-zero when idle |
-| UAT web | https://veervrat-uat-web.proudcoast-d3aa08a0.centralindia.azurecontainerapps.io |
-| UAT api | https://veervrat-uat-api.proudcoast-d3aa08a0.centralindia.azurecontainerapps.io |
+| UAT web | https://uat.veervrat.jnanaprabodhini.org (custom domain, live 2026-08-17) — internal: https://veervrat-uat-web.proudcoast-d3aa08a0.centralindia.azurecontainerapps.io |
+| UAT api | https://api.uat.veervrat.jnanaprabodhini.org (custom domain, live 2026-08-17) — internal: https://veervrat-uat-api.proudcoast-d3aa08a0.centralindia.azurecontainerapps.io. Still reached via web's `/api/v1` proxy today — the hostname exists so O8 can drop that proxy, not because anything routes to it directly yet |
 | prod Postgres | `veervrat-prod-psql` (v18, Burstable B1ms) — running, 35-day backup retention, schema migrated |
 | prod Redis | `veervrat-prod-redis` (Azure Managed Redis, Balanced_B0) — running |
 | prod secrets | `veervrat-prod-kv` — `database-url`, `redis-url`, `session-secret`, `postgres-admin-password` |
 | prod data | seeded (same content set as UAT) |
 | prod compute | api + web Container Apps **running** in `veervrat-prod-cae`, scale-to-zero (`min_replicas=0` — revisit once real traffic is expected) |
-| prod web | https://veervrat-prod-web.graydesert-a1bc836e.centralindia.azurecontainerapps.io |
-| prod api | https://veervrat-prod-api.graydesert-a1bc836e.centralindia.azurecontainerapps.io |
-| DNS | zone `veervrat.jnanaprabodhini.org` exists; **NS delegation pending with JP** |
+| prod web | https://veervrat.jnanaprabodhini.org (custom domain, live 2026-08-17) — internal: https://veervrat-prod-web.graydesert-a1bc836e.centralindia.azurecontainerapps.io |
+| prod api | https://api.veervrat.jnanaprabodhini.org (custom domain, live 2026-08-17) — internal: https://veervrat-prod-api.graydesert-a1bc836e.centralindia.azurecontainerapps.io. Still reached via web's `/api/v1` proxy today — the hostname exists so O8 can drop that proxy, not because anything routes to it directly yet |
+| DNS | **live** — per-record (not delegation, see `ops/PROJECT-STATUS.md` D14/O1); both custom domains bound with managed TLS certs as of 2026-08-17 |
 | Email (Resend) | not wired |
 | Object storage | **not provisioned** — app still uses the S3 API; needs an SDK swap first |
 | Search (Meilisearch) | deferred |
