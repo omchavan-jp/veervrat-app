@@ -58,7 +58,7 @@ Every log line is JSON with these fields:
 - API request/response (status, duration, route — not body)
 - Background job execution (start, success, failure, duration)
 - WebSocket connection/disconnection
-- External API calls (Resend, Meilisearch, MinIO) — status, duration, error if any
+- External calls (SMTP relay, Meilisearch, MinIO) — status, duration, error if any
 - OG metadata fetch — URL, status, duration, blocked (SSRF)
 
 ### What NOT to log
@@ -83,7 +83,7 @@ Every log line is JSON with these fields:
 | Background job failure | Log-based (job logs error level) | Any failure triggers alert |
 | WebSocket connection count | NestJS Gateway metric | Informational — no alert |
 | Search query latency | Meilisearch built-in metrics | > 500ms p95 — *Meilisearch is deferred, not deployed* |
-| Notification delivery failure | Resend webhook / log-based | Any bounce/failure — *Resend not yet wired* |
+| Notification delivery failure | log-based (SMTP send errors) | Any send failure — *email not yet wired, B14*. Note: an SMTP relay gives no bounce webhook, unlike Resend — bounces are invisible to us, so log-based send-failure alerting is all we get |
 | Uptime | External ping | < 99.5% in 24h window |
 
 ---

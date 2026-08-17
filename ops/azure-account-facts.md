@@ -406,7 +406,7 @@ Raised 2026-08-15: should Veervrat live at **`veervrat.jnanaprabodhini.org`** (s
 | Code | no change | Next.js `basePath` change + asset/route rework |
 | SSL | independent, auto-renewing | managed by JP's host |
 | Cookies | isolated to the subdomain | **shared with the main JP site** — real security concern |
-| Email (Resend) | SPF/DKIM on our own subdomain, **zero risk to JP's Google Workspace mail** | records must go on the **root domain** — risks JP's live mail |
+| Email | SPF/DKIM handled by JP IT on `notifications.jnanaprabodhini.org`, **zero risk to JP's Workspace mail** (D9 — we no longer own any mail records) | records must go on the **root domain** — risks JP's live mail |
 | Debugging | direct | through someone else's proxy |
 
 The email point alone is close to decisive: path-based hosting would force our mail records onto
@@ -415,7 +415,7 @@ the root domain that carries JP's Google Workspace mail.
 **Who decides what:** the subdomain-vs-path choice is **technical → Rahul**. Whether Veervrat sits
 under JP's identity at all (vs a standalone `veervrat.com`) is **institutional → Ashutosh/Nachiket**.
 
-**Blocks:** DNS setup, HTTPS certs, WebSocket chat fix, Resend domain verification.
+**Blocks:** ~~DNS setup, HTTPS certs~~ — both resolved 2026-08-17 (O1). Remaining: the WebSocket chat fix, which now needs the rewrite proxy removed rather than DNS. Email needs no domain work at all (D9).
 
 ---
 
@@ -427,7 +427,7 @@ under JP's identity at all (vs a standalone `veervrat.com`) is **institutional �
 | **Upstash** | Redis (us-east-1) | live |
 | **Cloudflare R2** | object storage, bucket `veervrat-uploads-dev` | live, **empty** |
 | **Google Cloud** | OAuth client (Google sign-in) | live |
-| **Resend** | transactional email | account not yet created — never wired |
+| ~~**Resend**~~ | transactional email | **not used** — D9 (2026-08-17) moved email to JP IT's SMTP relay; no account was ever created |
 | **Railway** | previous host | **removed** (trial expired) — app currently **down** |
 
 Backup on disk: `backups/veervrat-neon-20260809T184831Z.dump` (2026-08-09, 50 tables).
@@ -463,7 +463,7 @@ Managed Redis, Container Apps Environment — see §5)
 - [x] DNS via **Rahul** → Shantanoo: done 2026-08-16, per-record instead of NS delegation
       (met Shantanoo directly — see `ops/PROJECT-STATUS.md` O1/D14)
 - [ ] Consider adding JP's PAN/GSTIN to the billing account (Tax ID currently "None provided") — ask finance
-- [ ] After Phase 2B: data migration → Resend
+- [x] ~~After Phase 2B: data migration~~ → cancelled (D19, fresh seed instead). Email is now JP's SMTP relay (D9); code swap tracked as B14
 
 See `infra-budget-log.md` for the decision trail and budget analysis.
 

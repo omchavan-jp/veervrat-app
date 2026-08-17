@@ -17,16 +17,16 @@ This is the master reference for all technology and architecture decisions. Read
 | Cache / sessions store | Redis | ✅ Live — Azure Managed Redis; rate limits, lockout, Socket.IO adapter |
 | Search | Meilisearch | Decided, **deferred** — runs in docker-compose locally, **not deployed**; search degrades gracefully |
 | File storage | MinIO locally · **Azure Blob** in cloud | ⚠️ Decided but **not implemented** — code still speaks S3 (`@aws-sdk/client-s3`), which Azure Blob does not. Uploads degrade gracefully (chat images disabled). O15 / B-items |
-| Hosting | **Azure** (Container Apps, Central India) | ✅ **UAT live and serving**; prod infra provisioned, no apps deployed yet — see `../DEPLOYMENT.md` |
+| Hosting | **Azure** (Container Apps, Central India) | ✅ **UAT live and serving**; prod deployed 2026-08-16 but 🔴 **not usable** — prod web talks to UAT's api (O22) and no login path works (O23). See `../DEPLOYMENT.md` |
 | CI / CD | GitHub Actions | ✅ Both — CI gates PRs; CD builds → migrates → deploys UAT on merge, prod by `prod-*` tag |
 | Observability | Sentry (app errors) + Azure App Insights (platform) | ⚠️ Decided 2026-08 (**replaces GlitchTip**) but **not implemented** — Sentry SDK still reads `GLITCHTIP_DSN`, App Insights not wired at all. Backlog B13 |
 | Rich text editor | Tiptap + JSON AST storage | ✅ Built |
 | i18n | next-intl | ✅ Built — no URL routing, user preference, en + mr |
-| WebSocket | NestJS Gateway + Socket.IO | ⚠️ Built with Redis adapter, but **has never run successfully in production** — the rewrite proxy blocked upgrades. Needs the custom domain. O8 |
+| WebSocket | NestJS Gateway + Socket.IO | ⚠️ Built with Redis adapter, but **has never run successfully in production** — the rewrite proxy blocks upgrades. Custom domains are now live (2026-08-17), so the remaining blocker is removing the proxy — `runtime-environment-config`, then O8 |
 | Animation | Framer Motion | ✅ Built |
 | Background jobs | @nestjs/schedule (v1), BullMQ path (v2) | ✅ Built — dormant-journeys + notifications crons |
-| Auth | Custom in NestJS (cookie sessions, OAuth + credentials) | ✅ Built — see `openspec/specs/auth/spec.md`. ⚠️ Google OAuth credentials not yet configured for the deployed environments |
-| Email | Resend (prod) + console logging (dev) | ⚠️ **Coded, not wired** — `email.service.ts` + 8 React Email templates exist; no Resend account/API key/verified domain, so nothing delivers |
+| Auth | Custom in NestJS (cookie sessions, OAuth + credentials) | ✅ Built — see `openspec/specs/auth/spec.md`. 🔴 Google OAuth credentials are still `placeholder-not-configured` on **prod** (O23); with email unwired (B14), prod has no working signup or login path at all |
+| Email | **JP IT's SMTP relay** (prod) + console logging (dev) | ⚠️ **Coded, not wired** — `email.service.ts` + 8 React Email templates exist, but the transport is still the Resend SDK. Credentials for the relay are verified working; the swap is backlog **B14**. Nothing delivers until then, which **blocks credential signup** |
 | Monorepo | pnpm workspaces + Turborepo | ✅ Built |
 | UI | Tailwind CSS (v4, CSS-first) + shadcn/ui | ✅ Built — design system implemented, see 15 |
 | API style | REST | ✅ Built — `/api/v1/`, `{ data }` envelope |
@@ -64,10 +64,25 @@ This is the master reference for all technology and architecture decisions. Read
 **Why**: covers the two most common auth methods. Architecture supports adding more OAuth providers later.
 **Account linking**: no auto-link on email match — requires explicit confirmation.
 
-### 8. Email via Resend + console logging for dev
-**Decision**: Resend as the email provider for production, console logging for local development.
-**Why**: Resend has excellent DX, generous free tier (100/day), clean Node SDK. Console logging means zero external dependencies for local dev. Email service abstracted behind an interface so provider can be swapped later.
-**Status**: ⚠️ **Coded, not wired.** `EmailModule` + `email.service.ts` (Resend SDK with console fallback) and 8 React Email templates exist. What is missing is operational: a Resend account, an API key, and a verified sending domain — the last blocked on the DNS delegation (O1).
+### 8. Email via JP IT's SMTP relay + console logging for dev
+**Decision** (revised 2026-08-17, D9): send through **JP IT's own SMTP relay**
+(`dhoomketu.in:587`, STARTTLS) as
+`Veervrat <do-not-reply-veervrat@notifications.jnanaprabodhini.org>`. Console logging for local
+development.
+
+**Why the change from Resend**: the relay sends as a subdomain dedicated to automated mail, not
+JP's staff mail, which removes the domain-reputation risk that motivated using a third party at
+all. It also removes an external account, removes Resend's 3,000/month ceiling (which was
+user-facing — exhausting it breaks signup verification and password reset), and hands
+SPF/DKIM/DMARC ownership to JP IT rather than us. Credentials were verified authenticating, and
+a test message reached a Gmail inbox rather than spam, before the decision was taken. The
+`EmailService` abstraction that made the original decision reversible is what made this cheap.
+
+**Status**: ⚠️ **Coded, not wired.** `EmailModule` + `email.service.ts` (console fallback) and 8
+React Email templates exist, but the transport is **still the Resend SDK** — the swap to
+nodemailer is backlog **B14**. No longer blocked on DNS (JP owns the sending domain); the only
+remaining work is the code change. 🔴 Until it lands, credential signup is unusable —
+`auth.service.ts` refuses login until an email-verification link is delivered.
 
 ### 9. Meilisearch for search
 **Decision**: Meilisearch for full-text search.
@@ -109,7 +124,7 @@ These are acknowledged but not yet decided in detail:
 |---|---|
 | ~~Background jobs~~ | ✅ Decided — @nestjs/schedule v1, BullMQ v2. See 10_Platform-Engineering-Standard.md |
 | ~~Realtime~~ | ✅ Decided — NestJS Gateway + Socket.IO. See 10_Platform-Engineering-Standard.md |
-| ~~Notifications~~ | ✅ Decided — in-app bell + email (Resend). See spec/decisions/25_notifications.md |
+| ~~Notifications~~ | ✅ Decided — in-app bell + email (JP IT's SMTP relay; was Resend, see D9). See spec/decisions/25_notifications.md |
 | ~~Testing~~ | ✅ Decided — Vitest + supertest + Playwright. See 16_Testing-Strategy.md |
 | ~~Observability~~ | ✅ Decided 2026-08 — **Sentry** (app errors) + **Azure App Insights** (platform) + Pino structured JSON. **Supersedes the earlier GlitchTip decision** (D8 in `../ops/PROJECT-STATUS.md`). Implementation still pending — see backlog B13. Standard: 18_Observability-Standard.md |
 | ~~Security baseline~~ | ✅ CSRF (double-submit cookie), rate limiting, upload rules, brute force. See 10_Platform-Engineering-Standard.md + 14_Auth-Architecture-Decision.md (§15-16) |

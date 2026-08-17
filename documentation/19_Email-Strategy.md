@@ -1,19 +1,44 @@
 # Email Strategy — v1
 
-⚠️ **Under reconsideration 2026-08-17.** This doc describes the original plan (Resend). JP
-offered direct SMTP on their own mail server instead (met Shantanoo 2026-08-16) — reasoning
-and status in `ops/PROJECT-STATUS.md` D9/O21. **Not yet decided or implemented either way** —
-the app still only speaks Resend's API today, and no SMTP creds have arrived. Don't treat this
-page as current until D9 is resolved one way or the other.
+> **Provider changed 2026-08-17: Resend → JP's own SMTP relay** (decision D9). The strategy
+> below — categories, templates, bilingual handling — is unchanged; only the transport is
+> different. **The code still calls Resend and has not been swapped yet** (backlog B14), so
+> the "Implementation status" section at the foot of this page is the authority on what
+> actually runs today.
 
 ## Provider & Architecture
 
 | Concern | Decision |
 |---|---|
-| Production provider | Resend (`resend` SDK) |
+| Production transport | **JP IT's SMTP relay** — `dhoomketu.in:587`, STARTTLS |
+| Sending identity | `Veervrat <do-not-reply-veervrat@notifications.jnanaprabodhini.org>` |
 | Local development | Console logging — no actual emails sent |
-| Template engine | React Email (`@react-email/components`) |
+| Template engine | React Email (`@react-email/components`) — unaffected by the transport change |
 | Email module | Dedicated `EmailModule` in NestJS, injectable app-wide |
+
+**Why not Resend** (reversing the original decision): JP's relay sends as
+`notifications.jnanaprabodhini.org`, a subdomain dedicated to automated mail rather than JP's
+staff mail — which removes the domain-reputation risk that motivated choosing a third party in
+the first place. It also drops an external account, and with it Resend's 3,000/month free-tier
+ceiling, which was user-facing (exhausting it breaks signup verification and password reset).
+Credentials were verified authenticating before the decision was taken, and a test message
+delivered to a Gmail **inbox rather than spam** — deliverability evidence, not just config.
+
+### ⚠️ STARTTLS, not implicit TLS
+
+Port 587 with `TLS: true` means **STARTTLS** — the connection opens in the clear and upgrades.
+In nodemailer that is:
+
+```ts
+{ host: 'dhoomketu.in', port: 587, secure: false, requireTLS: true }
+```
+
+`secure: true` means *implicit* TLS on port 465 and will fail against this server with a
+confusing handshake error. This is the single most common way to misconfigure it.
+
+The server also **rejects pipelined commands** (`554 5.5.0 Error: SMTP protocol
+synchronization`) — it expects each command to await its reply. Standard SMTP clients handle
+this correctly; it only bites hand-rolled connection testing.
 
 ### EmailService pattern
 ```
@@ -22,7 +47,8 @@ EmailService
   .sendNotification(to, template, data)    // fire-and-forget, non-blocking
 ```
 
-In local dev (`NODE_ENV !== 'production'`): both methods log the rendered content to console instead of calling Resend. No env var needed for dev.
+In local dev (`NODE_ENV !== 'production'`): both methods log the rendered content to console
+instead of sending. No credentials needed for dev.
 
 ---
 
@@ -95,10 +121,13 @@ Examples: `VerifyEmailEmail.tsx`, `PasswordResetEmail.tsx`, `VmInvitationEmail.t
 
 ## From Address & Domain
 
-- **From:** `Veervrat <noreply@[sending-domain]>` — sending domain to be configured in Resend at deployment
-- **Reply-to:** none (noreply)
-- **Domain verification:** required in Resend before production emails send. Add SPF, DKIM, DMARC records to DNS.
-- Dev: domain irrelevant (console logging)
+- **From:** `Veervrat <do-not-reply-veervrat@notifications.jnanaprabodhini.org>` — provisioned
+  by JP IT 2026-08-17.
+- **Reply-to:** none (do-not-reply). The mailbox is not monitored.
+- **Domain / SPF / DKIM / DMARC:** **not our concern** — JP IT owns
+  `notifications.jnanaprabodhini.org` and its mail records. This is a real advantage of the
+  relay over a third-party sender: no DNS records for us to add, verify, or keep correct.
+- Dev: identity irrelevant (console logging).
 
 ---
 
@@ -107,7 +136,7 @@ Examples: `VerifyEmailEmail.tsx`, `PasswordResetEmail.tsx`, `VmInvitationEmail.t
 ```
 apps/api/src/modules/email/
   email.module.ts
-  email.service.ts          # Resend vs console abstraction
+  email.service.ts          # SMTP vs console abstraction (currently still Resend — B14)
   templates/
     VerifyEmailEmail.tsx
     PasswordResetEmail.tsx
@@ -131,45 +160,70 @@ apps/api/src/modules/email/
 
 ---
 
-## Rate & Resend Limits
+## Rate limits
 
-- Free tier: 3,000 emails/month — monitor and upgrade before hitting limit
-- No per-user rate limiting on email in v1 (Resend handles abuse at API level)
-- Password reset: existing tokens are invalidated before creating a new one (already implemented in auth service) — prevents flooding
+- ~~Resend free tier: 3,000/month~~ — **no longer applies** (D9). That ceiling was
+  user-facing: exhausting it broke signup verification and password reset, not just
+  notifications.
+- ⚠️ **JP's relay limits are unknown.** Ask JP IT before any bulk send (e.g. a broadcast to all
+  beta testers). Absence of a documented limit is not evidence of no limit.
+- No per-user rate limiting on email in v1.
+- Password reset: existing tokens are invalidated before creating a new one (already
+  implemented in auth service) — prevents flooding.
 
 ---
 
 ## Required env vars
 
 ```bash
-# Production only — leave blank for local dev (uses console logging)
-RESEND_API_KEY="re_your_api_key"
-EMAIL_FROM="Veervrat <noreply@yourdomain.com>"
+# Production only — leave unset for local dev (console logging)
+SMTP_HOST="dhoomketu.in"
+SMTP_PORT="587"
+SMTP_SECURE="false"        # STARTTLS on 587 — true would mean implicit TLS on 465
+SMTP_REQUIRE_TLS="true"
+SMTP_USER="do-not-reply-veervrat@notifications.jnanaprabodhini.org"
+SMTP_PASS="<from Key Vault — never committed>"
+EMAIL_FROM="Veervrat <do-not-reply-veervrat@notifications.jnanaprabodhini.org>"
 ```
 
-## Packages — ✅ already installed
+`RESEND_API_KEY` is retired by B14.
 
-Verified 2026-08-16 (this section previously read as "required to add"):
+**Credential handling:** the password lives in `~/.secrets/veervrat/smtp-jp.env` (mode 600,
+outside the repo) until B14 moves it into per-environment Key Vault. It must never enter git —
+see the credential rule in `../AGENTS.md`.
 
-| Package | Installed |
+## Packages
+
+| Package | State |
 |---|---|
-| `resend` | ✅ `^4.5.2` |
-| `@react-email/components` | ✅ `^0.0.36` |
+| `nodemailer` | ❌ **to add** (B14) — plus `@types/nodemailer` |
+| `resend` | ⚠️ `^4.5.2` installed, **to be removed** by B14 |
+| `@react-email/components` | ✅ `^0.0.36` — unaffected, renders HTML for any transport |
 | `react` | ✅ `^19.0.0` |
+
+Adding `nodemailer` requires updating `10_Platform-Engineering-Standard.md` first — approved
+library catalog rule.
 
 ## Implementation status
 
-⚠️ **Coded, not wired — nothing has ever been delivered.**
+⚠️ **Coded, not wired — nothing has ever been delivered.** (Accurate as of 2026-08-17.)
 
-- ✅ `EmailModule` + `email.service.ts` with the Resend SDK and console fallback
+- ✅ `EmailModule` + `email.service.ts` with a console fallback
+- ⚠️ The transport is still the **Resend SDK** — D9 flipped to SMTP but the code has not been
+  swapped. That is **B14**, and it is the only remaining blocker to email working.
 - ✅ 8 of the ~18 templates listed above exist (`EmailChangeEmail`, `NotificationEmail`,
   `PasswordResetEmail`, `PlatformInvitationEmail`, `VerifyEmailEmail`, …). The full list above
   is the target, not the current state
-- ❌ No Resend account, no `RESEND_API_KEY`, no verified sending domain
+- ✅ Credentials exist and are **verified authenticating** against JP's relay (2026-08-17)
+- ❌ Not in Key Vault yet — currently only in `~/.secrets/veervrat/smtp-jp.env`
 
-**Blocked on the DNS delegation (O1)** — the sending domain needs SPF/DKIM/DMARC records, and
-those must go on the **subdomain**, never the root, which carries JP's live Google Workspace
-mail (D9 / guardrails).
+**No longer blocked on DNS.** The old blocker (verify a sending domain, add SPF/DKIM/DMARC on
+a subdomain we control) disappeared with D9: JP IT owns the sending domain and its mail
+records. Nothing on the DNS side is outstanding for email.
 
-⚠️ The free tier's **3,000 emails/month is user-facing** (D18): exhausting it breaks signup
-verification and password reset, not just notifications.
+🔴 **This gates credential signup entirely.** `auth.service.ts:148` throws
+`EmailNotVerifiedException` on login when `emailVerifiedAt` is null, and only a delivered
+verification email can set it. Until B14 ships, a user who signs up with email and password
+**can never log in**. Google OAuth bypasses this (it sets `emailVerifiedAt` on account
+creation) — but prod's Google credentials are placeholders (O23), so today prod has no working
+signup path at all.

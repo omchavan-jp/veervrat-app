@@ -9,6 +9,11 @@ the Microsoft nonprofit grant (US$2,000) and the option to reuse `jnanaprabodhin
 subdomain, which redirected effort into claiming the grant and building the deployment. The
 proposal itself is still outstanding — see `PROJECT-STATUS.md` B12.
 
+> 📌 **Superseded decisions below.** This log records what was believed *at the time* — that is
+> its value as an evidence base, so it is not rewritten. Two entries have since changed: email
+> moved from **Resend → JP IT's SMTP relay** (D9, 2026-08-17), and the **Neon data migration was
+> cancelled** (D19). `PROJECT-STATUS.md` is authoritative for current decisions.
+
 ⚠️ **An earlier header said "delete once infra decisions are finalised". That was wrong** and
 nearly cost the file: the decisions *are* finalised, but this is the reference the proposal
 will be written from. Its value is highest now, not lowest.

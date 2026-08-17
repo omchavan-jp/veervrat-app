@@ -21,7 +21,7 @@ Two distinct invitation types, both tracked:
 
 #### 1. Platform Invitation (invite to join Veervrat)
 - Any authenticated user can invite anyone to join the platform.
-- VA enters an email address → platform sends an invitation email (via Resend) with a signup link.
+- VA enters an email address → platform sends an invitation email (via JP IT's SMTP relay; was Resend — D9) with a signup link.
 - VA can also share a platform-independent invite message (copy/paste) for WhatsApp, Instagram, Facebook, etc.
 - Tracked: who invited whom, when, invite status (pending/accepted/expired).
 
