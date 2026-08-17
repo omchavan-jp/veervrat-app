@@ -67,19 +67,20 @@ Both tiers share a registrable domain, so requests between them are **same-site*
 cross-*origin*, which is a CORS concern, not a cookie concern). `SameSite=Lax` is therefore
 correct and strictly stronger than the `None` the proxy era required.
 
-**⚠️ The subtlety that would silently break auth: CSRF is double-submit.** The `csrf-token`
-cookie is deliberately non-HttpOnly because client JS must read it and echo it in the
-`X-CSRF-Token` header. If the api sets that cookie scoped to its own host
-(`api.veervrat.…`), **the web origin cannot read it** — the cookie is delivered to the api
-fine, so every request would carry the cookie but no header, and every state-changing request
-would fail CSRF validation. The session cookie (HttpOnly) would work, making this look like a
-CSRF bug rather than a scoping bug.
+**Cookies stay host-scoped to the api — no `Domain` attribute, no new config.**
 
-Therefore auth cookies are set with an explicit **`Domain` of the shared parent** — for prod
-`veervrat.jnanaprabodhini.org`, for UAT `uat.veervrat.jnanaprabodhini.org` — which the api may
-do because that is its own parent domain and not a public suffix. This requires a new
-per-environment `COOKIE_DOMAIN`, unset in local dev (host-only cookies on `localhost`, which is
-already same-site across ports).
+An earlier draft of this design called for a `COOKIE_DOMAIN` naming the shared parent, on the
+reasoning that CSRF is double-submit and client JS must *read* the `csrf-token` cookie, which a
+host-scoped cookie would prevent. **That reasoning was wrong, and checking the code rather than
+trusting it is what caught it:** the web client never reads the cookie. It fetches the token
+from `GET /auth/csrf` (which returns it in the body) and caches it in memory —
+`apps/web/lib/api/client.ts`, with an explanatory comment naming this exact split-domain case.
+The mitigation was already built.
+
+So the only cookie requirement is that the browser *sends* the session cookie to the api, which
+needs `credentials: 'include'` (already present on every request) and a `SameSite` that permits
+it. Host-scoped cookies are strictly better here — a narrower scope than the parent domain, and
+one less per-environment variable to get wrong.
 
 ### 4. CORS allow-lists the environment's web origin, credentialed
 

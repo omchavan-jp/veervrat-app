@@ -27,6 +27,13 @@ locals {
 
   api_fqdn = "veervrat-${var.environment}-api.${azurerm_container_app_environment.this.default_domain}"
   web_fqdn = "veervrat-${var.environment}-web.${azurerm_container_app_environment.this.default_domain}"
+
+  # What browsers actually address. The platform FQDN is the fallback for an environment that
+  # has no custom domain yet; once one is bound, every origin-sensitive value (CORS, links,
+  # the api base URL the browser calls) must use the public host instead — otherwise CORS
+  # rejects the origin users arrive on.
+  web_origin = var.public_web_host != "" ? "https://${var.public_web_host}" : "https://${local.web_fqdn}"
+  api_origin = var.public_api_host != "" ? "https://${var.public_api_host}" : "https://${local.api_fqdn}"
 }
 
 # ─── api ──────────────────────────────────────────────────────────────────────
@@ -108,9 +115,17 @@ resource "azurerm_container_app" "api" {
         name        = "SESSION_SECRET"
         secret_name = "session-secret"
       }
+      # Doubles as the CORS allow-list entry, so it must be the origin the browser actually
+      # sends — the custom domain once one is bound, not the platform FQDN.
       env {
         name  = "FRONTEND_URL"
-        value = "https://${local.web_fqdn}"
+        value = local.web_origin
+      }
+      # `lax` once web and api share a registrable domain: stricter than `none`, and `none`
+      # was only ever needed while the two tiers were cross-site.
+      env {
+        name  = "COOKIE_SAMESITE"
+        value = var.cookie_samesite
       }
       # Sized against Postgres: DATABASE_POOL_MAX × max_replicas + headroom must stay under
       # the server's max_connections, which is low on Burstable tiers.

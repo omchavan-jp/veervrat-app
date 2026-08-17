@@ -9,19 +9,15 @@
 The api must be ready before any browser calls it directly. Reversed, the first request from
 the new frontend fails CORS.
 
-- [ ] 1.1 Add `COOKIE_DOMAIN` to the api config module and its Joi validation schema —
-  optional, absent in local dev. Note that `GOOGLE_*` currently bypass the Joi schema
-  (`11_Backend-Conventions.md`); do not repeat that pattern here.
-- [ ] 1.2 Apply `COOKIE_DOMAIN` to every auth cookie: session and `csrf-token`
-  (`auth.controller.ts`, `users.controller.ts`, `csrf.middleware.ts`). Prefer a single shared
-  cookie-options helper over repeating the object at each call site — there are four.
-- [ ] 1.3 Unit-test the cookie options helper: with `COOKIE_DOMAIN` set the attribute is
-  present, without it the cookie is host-only.
-- [ ] 1.4 Terraform: add `cookie_domain` and set `COOKIE_SAMESITE=lax` per environment; point
-  `FRONTEND_URL` at the custom domain (`veervrat.jnanaprabodhini.org` /
-  `uat.veervrat.jnanaprabodhini.org`). Both are module inputs — declare them in the `envs/uat`
-  and `envs/prod` wrappers too, or CI fails on an undeclared variable (§14).
-- [ ] 1.5 Deploy the api to UAT alone and verify with the proxy still in place that nothing
+- [x] 1.1 Declare `COOKIE_SAMESITE` in the api Joi schema so an invalid value fails at boot
+  rather than silently falling back. (`COOKIE_DOMAIN` was investigated and is **not needed** —
+  the web client reads its CSRF token from `GET /auth/csrf`, not from the cookie, so
+  host-scoped cookies work and are narrower. See design.md.)
+- [ ] 1.2 Terraform: set `COOKIE_SAMESITE=lax` per environment and point `FRONTEND_URL` at the
+  custom domain (`veervrat.jnanaprabodhini.org` / `uat.veervrat.jnanaprabodhini.org`) so CORS
+  admits the origin users actually arrive on. Module inputs must also be declared in the
+  `envs/uat` and `envs/prod` wrappers, or CI fails on an undeclared variable (§14).
+- [ ] 1.3 Deploy the api to UAT alone and verify with the proxy still in place that nothing
   regressed: log in through a browser, reload, perform a state-changing action, log out.
 
 ## 2. Web — runtime configuration

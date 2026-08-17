@@ -164,3 +164,34 @@ variable "app_image_tag" {
   type    = string
   default = ""
 }
+
+# Public hostnames bound to the Container Apps (custom domain + managed TLS). Empty falls back
+# to the platform's `*.azurecontainerapps.io` FQDN, which is what a brand-new environment has
+# before DNS exists.
+#
+# These are what users and browsers actually address, so they — not the platform FQDNs — are
+# what CORS must admit and what links must be built from.
+variable "public_web_host" {
+  description = "Custom hostname serving the web app, e.g. veervrat.jnanaprabodhini.org. Empty = use the platform FQDN."
+  type        = string
+  default     = ""
+}
+
+variable "public_api_host" {
+  description = "Custom hostname serving the api, e.g. api.veervrat.jnanaprabodhini.org. Empty = use the platform FQDN."
+  type        = string
+  default     = ""
+}
+
+# `lax` is correct wherever web and api share a registrable domain; `none` exists only for the
+# cross-site case and is weaker. See documentation/21_Infrastructure-Conventions.md §17.
+variable "cookie_samesite" {
+  description = "SameSite policy for auth cookies: lax | strict | none."
+  type        = string
+  default     = "lax"
+
+  validation {
+    condition     = contains(["lax", "strict", "none"], var.cookie_samesite)
+    error_message = "cookie_samesite must be one of: lax, strict, none."
+  }
+}

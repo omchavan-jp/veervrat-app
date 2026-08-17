@@ -54,7 +54,9 @@ the defect:
 
 **3. Session cookies drop `SameSite=None`.**
 With a shared registrable domain, `SameSite=Lax` is correct and strictly stronger. `None`
-was only ever required because the two tiers were cross-site.
+was only ever required because the two tiers were cross-site. Cookies stay **host-scoped** to
+the api — no `Domain` attribute is needed, because the web client reads its CSRF token from
+`GET /auth/csrf` rather than from the cookie (verified in `lib/api/client.ts`).
 
 **4. The api gains explicit CORS for the web origin, credentialed.**
 Direct browser→api calls are cross-*origin* (different host) even though same-*site*, so CORS
@@ -77,7 +79,7 @@ healthy. CD gains a verification that the web tier resolves to its **own** envir
 
 ## Impact
 
-- Affected specs: `runtime-configuration` (new), `session-cookies`, `api-cors`
+- Affected specs: `runtime-configuration` (new). No delta to `csrf-protection` — the existing `GET /auth/csrf` mechanism already covers split-domain operation.
 - Affected code: `apps/web/next.config.ts`, `apps/web/lib/api/client.ts`, `apps/web/proxy.ts`,
   the six components reading `NEXT_PUBLIC_API_URL`, `apps/web/app/layout.tsx`,
   `apps/api/src/bootstrap.ts` (CORS), session cookie construction in `apps/api`,
