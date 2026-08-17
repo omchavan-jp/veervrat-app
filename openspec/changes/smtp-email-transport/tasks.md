@@ -1,43 +1,52 @@
 ## 1. Dependency and configuration
 
-- [ ] 1.1 Add `nodemailer` + `@types/nodemailer` to `apps/api`; record it in
+- [x] 1.1 Add `nodemailer` + `@types/nodemailer` to `apps/api`; record it in
   `documentation/10_Platform-Engineering-Standard.md` (approved-library rule) and remove
   `resend` in the same pass, so there is never a window with two transports.
-- [ ] 1.2 Declare `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_SECURE` and
+- [x] 1.2 Declare `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_SECURE` and
   `EMAIL_FROM` in the Joi schema — all optional, since local dev runs without them. Do not read
   them raw from `process.env` (the pattern `11_Backend-Conventions.md` already flags for
   `GOOGLE_*`).
-- [ ] 1.3 Update `apps/api/.env.example`; drop `RESEND_API_KEY`.
+- [x] 1.3 Update `apps/api/.env.example`; drop `RESEND_API_KEY`.
 
 ## 2. Transport
 
-- [ ] 2.1 Replace the Resend client in `email.service.ts` with a nodemailer transport.
+- [x] 2.1 Replace the Resend client in `email.service.ts` with a nodemailer transport.
   **`{ secure: false, requireTLS: true }` on 587** — `secure: true` means implicit TLS on 465
   and fails here.
-- [ ] 2.2 Switch the dev-fallback trigger from "no API key" to "no SMTP host", keeping the
+- [x] 2.2 Switch the dev-fallback trigger from "no API key" to "no SMTP host", keeping the
   `[EMAIL DEV]` console behaviour and the warning when production is unconfigured.
-- [ ] 2.3 Keep `sendTransactional` awaiting and propagating failure; keep `sendNotification`
+- [x] 2.3 Keep `sendTransactional` awaiting and propagating failure; keep `sendNotification`
   catching and logging. Do not change `renderTemplate` or any call site.
-- [ ] 2.4 Unit tests: sends over SMTP when configured; logs and opens no connection when not;
+- [x] 2.4 Unit tests: sends over SMTP when configured; logs and opens no connection when not;
   transactional failure propagates; notification failure is swallowed and logged; STARTTLS
   options are what the transport receives for port 587.
 
 ## 3. Secrets and infrastructure
 
-- [ ] 3.1 Put the SMTP password into **each environment's Key Vault** as `smtp-password`,
+- [x] 3.1 Put the SMTP password into **each environment's Key Vault** as `smtp-password`,
   sourced from `~/.secrets/veervrat/smtp-jp.env`. It must not pass through git or a `.tf` file.
-- [ ] 3.2 Wire it into the api Container App as a secret reference (same shape as
+- [x] 3.2 Wire it into the api Container App as a secret reference (same shape as
   `database-url`), with the non-secret `SMTP_*` values as plain env.
-- [ ] 3.3 Declare any new module inputs in the `envs/uat` and `envs/prod` wrappers — an
+- [x] 3.3 Declare any new module inputs in the `envs/uat` and `envs/prod` wrappers — an
   undeclared variable fails only at CI time (§14).
-- [ ] 3.4 `terraform plan` both environments and read the summary line before applying.
+- [x] 3.4 `terraform plan` both environments and read the summary line before applying.
 
 ## 4. Verification — a received email, not a green log
 
 The current failure mode is "nothing is delivered", and a misconfigured relay looks exactly the
 same. Only an email that actually arrives proves this.
 
-- [ ] 4.1 Deploy to UAT; register a real account and confirm the verification email **arrives**.
+- [x] 4.0 **Egress cleared.** The risk a laptop test cannot rule out is Azure blocking outbound
+  SMTP (it blocks port 25 by default; 587 is not guaranteed). Registered a throwaway account on
+  UAT with an `@example.com` address — a reserved domain, so no real inbox is touched.
+  Registration returned **201**, and because `sendTransactional` propagates failure that means
+  the relay accepted the message; api logs show neither an `[EMAIL DEV]` line nor an SMTP
+  error, so it sent over SMTP rather than falling back. Test account: `smtpcheck1` /
+  `smtp-egress-check@example.com` — harmless, delete whenever convenient.
+- [ ] 4.1 Register with a **real address** and confirm the verification email actually arrives.
+  This is the part no machine check can stand in for: "nothing delivered" and "misconfigured
+  relay" look identical from this side.
 - [ ] 4.2 Confirm it renders in both languages (EN and MR) and that the link works.
 - [ ] 4.3 Complete verification and **log in** — this is the first working login path in any
   deployed environment.
