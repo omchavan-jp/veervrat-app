@@ -50,12 +50,13 @@ serving. CD (GitHub OIDC → Azure, no stored secret) proven end-to-end on multi
 tag deployed 2026-08-16, `deploy-prod` succeeded on its first run, `/ready` green. But two
 defects found 2026-08-17 mean no real user can use it:
 
-- 🟡 **O22** — prod's web tier proxies to **UAT's api** (reads/writes UAT's database). **Fixed
-  and live on UAT** as of 2026-08-17; prod still runs the pre-fix image `5576918` and only moves
-  on a `prod-*` tag, which is deliberately **not** cut until the browser checks below pass.
-- 🔴 **O23** — Google OAuth holds placeholder credentials in **both** environments, and
-  credential login requires email verification that cannot send. **No login path works
-  anywhere — including UAT.**
+- ✅ **O22 CLOSED** — prod's web tier now reaches **its own** api. Verified on prod after
+  `prod-2026-08-17`: the served page names `api.veervrat.jnanaprabodhini.org`, the old proxy
+  path returns 404, `og:url` names the prod domain.
+- ✅ **Credential login works** — email delivers (B14), so signup → verify → login is a real
+  path. Proven end to end on UAT 2026-08-17.
+- 🔴 **O23** — Google OAuth still holds placeholder credentials in **both** environments. Not
+  blocking (credential login works), but it is half the intended sign-in options.
 
 Both were invisible to `/ready`, which checks each service in isolation and never asks whether
 the tiers are wired to their own environment.
@@ -126,9 +127,9 @@ dropped build args). Every one is now documented with its guard.
 | O6 | ✅ **CLOSED 2026-08-16** — single `main` trunk, UAT auto-deploys on merge, prod by `prod-*` tag promoting the same image. Documented in `veervrat-app/AGENTS.md` + `DEPLOYMENT.md`. Transition done — `main` fast-forwarded, `dev` retired | — | — |
 | O18 | ✅ **CLOSED 2026-08-16** — CD pipeline live. GitHub↔Azure via OIDC (no stored secret), `.github/workflows/cd.yml` + `.github/actions/deploy-environment`. Parallel cached builds, per-job auth, migrate-before-deploy enforced. UAT **and now prod** deploys proven end-to-end — `deploy-prod` succeeded on its first run (`prod-2026-08-16`), the only CD path all the others' bug hunts hadn't yet touched. Also fixed same day: doc-only merges no longer trigger a pointless rebuild+redeploy — verified live with a real doc-only PR that skipped `build`/`deploy-uat` in 21s (see `veervrat-app/documentation/21_Infrastructure-Conventions.md` §14–16) | — | — |
 | O1 | **DNS per-record, not delegation** (revised 2026-08-16, see D14). Met Shantanoo 2026-08-16 — the earlier Azure zone + NS-delegation request is superseded, he added records directly. **Web hostnames live and verified 2026-08-17**: `https://veervrat.jnanaprabodhini.org` (prod) and `https://uat.veervrat.jnanaprabodhini.org` (UAT), both serving real traffic with Azure-managed DigiCert TLS certs, hostnames bound `SniEnabled`. Caught and fixed same day: Shantanoo hit Azure's default 404 page hitting the domain — records were live, but the hostname wasn't yet bound to the Container App on our side (that step was always ours, not his). ⚠️ D14's original "only 2 hostnames are ever public" was wrong: `DEPLOYMENT.md`'s pre-existing DNS-cutover checklist (predates this thread) calls for **api hostnames too** (`api.veervrat.…`, `api.uat.veervrat.…`), specifically to enable same-site cookies and remove the Next.js rewrite proxy — the proxy is the documented reason WebSocket chat has never worked in production (O8). 4 more records requested from Shantanoo 2026-08-17; confirmed live same day, hostnames bound, managed certs issued — **all 4 hostnames now serve real traffic with valid TLS**: `veervrat.jnanaprabodhini.org`, `uat.veervrat.…`, `api.veervrat.…`, `api.uat.veervrat.…`. ✅ **DNS side closed.** Not yet done: the actual cookie/proxy-removal code change (`COOKIE_SAMESITE=lax`, drop the Next.js rewrite) — that's O8's work, a separate deliberate change, not a side effect of DNS landing. The now-unused Azure DNS zone (`veervrat.jnanaprabodhini.org`, `envs/shared/dns.tf`) is ready to decommission — see B15 | — | O8 (chat) |
-| O22 | 🟡 **Fixed on UAT 2026-08-17, prod pending a tag** — prod's frontend was talking to UAT's backend. Found 2026-08-17, reproduced 3/3, while prod was live with `/ready` green on both tiers. `next.config.ts` reads `API_ORIGIN` at module scope; Next bakes `rewrites()` destinations into the build at **build time**, so the runtime env var Terraform sets on prod was silently ignored, and the promoted image kept UAT's value. Every prod request would have read/written **UAT's database**. Blast radius zero — prod had no users. Not one bad variable but a category error: **anything build-time cannot vary per environment under "promote, never rebuild"** — same root cause as the `NEXT_PUBLIC_SITE_URL` og-tag bug and the `NEXT_PUBLIC_FEEDBACK_MODE` problem behind B1. Written up as `documentation/21_Infrastructure-Conventions.md` §17. Fix is OpenSpec change `runtime-environment-config` (runtime config + drop the proxy + `SameSite=Lax` + CORS + a post-deploy wiring check); also unblocks O8's WebSocket transport | Claude | prod usable at all |
+| O22 | ✅ **CLOSED 2026-08-17** — prod's frontend was talking to UAT's backend. Found 2026-08-17, reproduced 3/3, while prod was live with `/ready` green on both tiers. `next.config.ts` reads `API_ORIGIN` at module scope; Next bakes `rewrites()` destinations into the build at **build time**, so the runtime env var Terraform sets on prod was silently ignored, and the promoted image kept UAT's value. Every prod request would have read/written **UAT's database**. Blast radius zero — prod had no users. Not one bad variable but a category error: **anything build-time cannot vary per environment under "promote, never rebuild"** — same root cause as the `NEXT_PUBLIC_SITE_URL` og-tag bug and the `NEXT_PUBLIC_FEEDBACK_MODE` problem behind B1. Written up as `documentation/21_Infrastructure-Conventions.md` §17. Fix is OpenSpec change `runtime-environment-config` (runtime config + drop the proxy + `SameSite=Lax` + CORS + a post-deploy wiring check); also unblocks O8's WebSocket transport | Claude | prod usable at all |
 | O23 | **Google OAuth is not configured in EITHER environment** — `GOOGLE_CLIENT_ID`/`SECRET` are the literal Terraform default `placeholder-not-configured` (`modules/environment/variables.tf`) on UAT *and* prod, so the OAuth redirect reaches Google with a placeholder client id and fails. ⚠️ The callback URL also **changed** with the proxy removal — it is now on the api origin (`api.veervrat…`/`api.uat.veervrat…`), so that is what must be registered in the Google console. Combined with credential login throwing `EmailNotVerifiedException` (`auth.service.ts:148`) while email is unwired, **there is currently no way for anyone to sign up or log in on prod, by any path.** Needs a Google console entry for the prod callback URL (external dependency — start early) and real secrets into Key Vault. Sequenced after `runtime-environment-config`, because the callback URL changes when the proxy is removed | Om + Claude | any prod login |
-| O21 | ✅ **CLOSED 2026-08-17** — email goes through JP's SMTP relay, not Resend (**D9 flipped**). Every open question answered: sends as `notifications.jnanaprabodhini.org` (dedicated notifications subdomain, not staff mail — which is what resolved the D9 reputation concern); credentials received and **verified authenticating** (`235`); Shantanoo's test mail reached a Gmail **inbox, not spam**. Mailbox is `do-not-reply-veervrat@` (his naming, already provisioned — we adopt it, not the `noreply-` I'd suggested). Creds stored at `~/.secrets/veervrat/smtp-jp.env` (600, outside git). Remaining work is code only: B14 | — | — |
+| O21 | ✅ **CLOSED 2026-08-17** — email goes through JP's SMTP relay, not Resend (**D9 flipped**), **implemented and delivering** (B14 — a real message reached an external Gmail inbox, not spam). Every open question answered: sends as `notifications.jnanaprabodhini.org` (dedicated notifications subdomain, not staff mail — which is what resolved the D9 reputation concern); credentials received and **verified authenticating** (`235`); Shantanoo's test mail reached a Gmail **inbox, not spam**. Mailbox is `do-not-reply-veervrat@` (his naming, already provisioned — we adopt it, not the `noreply-` I'd suggested). Creds stored at `~/.secrets/veervrat/smtp-jp.env` (600, outside git). Remaining work is code only: B14 | — | — |
 | O2 | ✅ **CLOSED 2026-08-16** — `veervrat.jnanaprabodhini.org` finalised over `veervrat.com` | — | — |
 | O3 | Buy `veervrat.com` defensively (~$10) | Om | — |
 | O4 | Devavrat to **verify billing email** (shows "Not verified") | Devavrat | billing notifications |
@@ -372,11 +373,14 @@ History of already-triaged items: `triage-archive.md`.
     2026-08-17: reached an external Gmail inbox, not spam, which also proved the relay sends
     outside JP's own domain (never previously tested). ⚠️ Prod's Key Vault still holds the
     placeholder SMTP password — set it before the next prod deploy
-13. **← next: finish 11's browser verification, then cut the prod tag.** Sign up fresh on UAT
-    (a plus-address such as `…+uat@gmail.com` avoids needing the stale account removed), verify
-    via the emailed link, then confirm session persists across reload, a state-changing action
-    passes CSRF across hosts, and logout clears. Only then tag — the tag is what finally stops
-    prod writing to UAT's database
+13. ✅ **Signup → verify → login proven on UAT**, and **`prod-2026-08-17` shipped**. Completing
+    onboarding (display name, username, gender, DOB) exercised several state-changing writes
+    across hosts, so CSRF double-submit and credentialed CORS are verified against the new
+    architecture. Prod redeployed and confirmed pointing at its own api.
+    ⚠️ Still unverified: session persistence across a **reload**, **logout**, and whether
+    **prod** can actually send email (its config matches UAT and the real password is in its
+    Key Vault, but no message has been sent from prod — deliberately, since B17 means a test
+    account on prod cannot be deleted)
 14. **Then prod Google OAuth** (O23) — real client id/secret. ⚠️ Register the **api-origin**
     callback URL, not the web origin; it moved when the proxy was removed
 15. **Then B1** — per-user capability grants + admin dashboard, OpenSpec full cycle. Only
@@ -407,4 +411,23 @@ from a guess. Full version in `veervrat-app/AGENTS.md`.
 - Non-trivial features go through **OpenSpec** (`veervrat-app/openspec/`)
 - Conventional commits
 - **Never auto-migrate production** — manual approval gate
+
+
+
+# manual entries section to integrate properly into above backlog
+
+in signup page username checks 
+- what chars are allowed/not alowed isn't displayed
+- when i enter invalid, endpoint response is 
+{"data":{"available":false,"reason":"invalid"}}
+but error message displayed is "Username already taken"
+
+----
+
+After verifying email, during first sign in, it takes me to Step 1 of 2
+Set up your account page, there i again get option to change display name and username (though both were filled during sign up) - proper ux (like just prefill as non immutable or what) discussion required.
+
+----
+
+in step 2 (onboarding) - "take me to test" button still took me to dashboard.
 
