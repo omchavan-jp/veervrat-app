@@ -71,6 +71,14 @@ module "environment" {
   # Stays off until B1 lands per-user grants — D20 says which users see it is data, not config.
   feedback_mode = "off"
 
+  # Outbound email via JP IT's relay (D9). The password is NOT here — Terraform creates the
+  # Key Vault secret with a placeholder and the real value is set out of band; see
+  # modules/environment/keyvault.tf.
+  smtp_host  = "dhoomketu.in"
+  smtp_port  = 587
+  smtp_user  = "do-not-reply-veervrat@notifications.jnanaprabodhini.org"
+  email_from = "Veervrat <do-not-reply-veervrat@notifications.jnanaprabodhini.org>"
+
   image_tag       = var.image_tag
   app_image_tag   = var.app_image_tag
   deploy_apps     = var.deploy_apps

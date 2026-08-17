@@ -40,3 +40,27 @@ resource "azurerm_key_vault_secret" "session_secret" {
   key_vault_id = azurerm_key_vault.this.id
   depends_on   = [azurerm_role_assignment.key_vault_admins]
 }
+
+# SMTP password for JP IT's mail relay (D9).
+#
+# Terraform owns this secret's EXISTENCE but deliberately not its VALUE. The real password is
+# JP's, not ours to generate, and putting it in a variable would place it in the state file and
+# in whatever shell history or CI log the `-var` passed through. Instead the resource is created
+# with a placeholder and the real value is set once, out of band:
+#
+#   az keyvault secret set --vault-name veervrat-<env>-kv --name smtp-password \
+#     --value "$(grep '^SMTP_PASS=' ~/.secrets/veervrat/smtp-jp.env | cut -d= -f2-)"
+#
+# `ignore_changes = [value]` is what makes that stable: without it, the next apply would revert
+# the real password to the placeholder and email would silently stop working. Note the value
+# still lands in state (§5) — this keeps the secret out of git and CI, not out of state.
+resource "azurerm_key_vault_secret" "smtp_password" {
+  name         = "smtp-password"
+  value        = "placeholder-set-out-of-band"
+  key_vault_id = azurerm_key_vault.this.id
+  depends_on   = [azurerm_role_assignment.key_vault_admins]
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+}

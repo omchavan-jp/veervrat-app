@@ -74,6 +74,14 @@ resource "azurerm_container_app" "api" {
     identity            = azurerm_user_assigned_identity.api.id
   }
 
+  # versionless_id matters here: the SMTP password is set out of band (see keyvault.tf), which
+  # creates a NEW secret version. A pinned version would keep serving the placeholder.
+  secret {
+    name                = "smtp-password"
+    key_vault_secret_id = azurerm_key_vault_secret.smtp_password.versionless_id
+    identity            = azurerm_user_assigned_identity.api.id
+  }
+
   ingress {
     external_enabled = true
     target_port      = 3001
@@ -126,6 +134,32 @@ resource "azurerm_container_app" "api" {
       env {
         name  = "COOKIE_SAMESITE"
         value = var.cookie_samesite
+      }
+      # Outbound email via JP IT's relay (D9). ⚠️ SMTP_SECURE stays false: port 587 upgrades
+      # with STARTTLS, whereas true would mean implicit TLS on 465 and fail the handshake.
+      env {
+        name  = "SMTP_HOST"
+        value = var.smtp_host
+      }
+      env {
+        name  = "SMTP_PORT"
+        value = tostring(var.smtp_port)
+      }
+      env {
+        name  = "SMTP_SECURE"
+        value = "false"
+      }
+      env {
+        name  = "SMTP_USER"
+        value = var.smtp_user
+      }
+      env {
+        name        = "SMTP_PASS"
+        secret_name = "smtp-password"
+      }
+      env {
+        name  = "EMAIL_FROM"
+        value = var.email_from
       }
       # Sized against Postgres: DATABASE_POOL_MAX × max_replicas + headroom must stay under
       # the server's max_connections, which is low on Burstable tiers.

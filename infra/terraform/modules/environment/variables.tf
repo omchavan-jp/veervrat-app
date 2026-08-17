@@ -208,3 +208,30 @@ variable "feedback_mode" {
     error_message = "feedback_mode must be one of: off, test, public."
   }
 }
+
+# Outbound email via JP IT's SMTP relay (D9). The password is NOT here — it lives in Key Vault
+# and is set out of band; see keyvault.tf. Empty host = the api logs mail to the console
+# instead of sending, which is the correct state for an environment before email is wired.
+variable "smtp_host" {
+  description = "SMTP relay hostname. Empty disables sending (console fallback)."
+  type        = string
+  default     = ""
+}
+
+variable "smtp_port" {
+  description = "SMTP submission port. 587 = STARTTLS, which is what the relay expects."
+  type        = number
+  default     = 587
+}
+
+variable "smtp_user" {
+  description = "SMTP username — the sending mailbox."
+  type        = string
+  default     = ""
+}
+
+variable "email_from" {
+  description = "From header, e.g. \"Veervrat <do-not-reply-veervrat@example.org>\"."
+  type        = string
+  default     = ""
+}

@@ -39,6 +39,18 @@ import * as Joi from 'joi';
         MEILI_MASTER_KEY: Joi.string().optional(),
         // Error tracking (GlitchTip / Sentry-compatible) — optional; disabled when unset.
         GLITCHTIP_DSN: Joi.string().optional(),
+        // Outbound email over JP IT's SMTP relay (D9). All optional: without SMTP_HOST the
+        // EmailService logs to the console instead of sending, which is what local dev wants.
+        //
+        // ⚠️ SMTP_SECURE distinguishes implicit TLS (port 465, true) from STARTTLS (port 587,
+        // false). Our relay is 587/STARTTLS, so this stays false; setting it true fails the
+        // handshake with an error that does not name the cause.
+        SMTP_HOST: Joi.string().optional(),
+        SMTP_PORT: Joi.number().integer().positive().default(587),
+        SMTP_SECURE: Joi.boolean().default(false),
+        SMTP_USER: Joi.string().optional(),
+        SMTP_PASS: Joi.string().optional(),
+        EMAIL_FROM: Joi.string().optional(),
         // Overrides the SameSite default (`none` in production, `lax` otherwise). Set to `lax`
         // wherever web and api share a registrable domain — simpler and stricter than `none`.
         // Read directly from process.env by common/http/cookie.ts; declared here so an invalid
