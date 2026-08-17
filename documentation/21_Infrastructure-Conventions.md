@@ -881,3 +881,75 @@ filtered output into a variable first (`non_ignored="$(... | grep -vE ... || tru
 checking `[ -n "$non_ignored" ]` instead of trusting grep's own exit code. Lesson: don't
 trust `grep -q`'s exit status when the input comes from a pipe rather than a file — capture
 and test the output instead.
+
+## 17. Prod's frontend was silently talking to UAT's backend (2026-08-17)
+
+**The single most serious defect found in this project so far.** Prod was deployed, `/ready`
+was green, TLS was valid, the custom domain resolved — and every request a prod user made
+would have read and written **UAT's database**.
+
+### How it was found
+
+Not by a health check. While verifying prod's Google OAuth config, the `/api/v1/auth/google`
+redirect returned a `redirect_uri` pointing at UAT's hostname — issued through **prod's**
+domain. Reproduced 3/3. Hitting each api directly (`api.veervrat…` vs `api.uat.veervrat…`)
+returned the correct per-environment value, which isolated the fault to the **web** tier.
+
+### Root cause
+
+`apps/web/next.config.ts` read `process.env.API_ORIGIN` at **module scope** and used it to
+build the `rewrites()` destination. Next.js evaluates `rewrites()` at **build time** and bakes
+the resolved destination into `routes-manifest.json`. The runtime environment variable is then
+**never consulted** — Terraform was correctly setting `API_ORIGIN` on prod's web app, and it
+was silently ignored.
+
+CD builds the web image once with UAT's `API_ORIGIN`, then promotes that identical image to
+prod (correctly, per "promote, never rebuild"). The result: prod's web tier proxied `/api/v1/*`
+to UAT's api.
+
+### Why nothing caught it
+
+- `/ready` on both tiers was genuinely green — each *service* was healthy. Nothing asserted
+  **which** api the web tier actually talks to.
+- The runtime env var existed and had the right value, so any inspection of configuration
+  (Terraform, `az containerapp show`) showed a correct system.
+- Prod had zero users, so no one hit the wrong data.
+
+**The guard this produces:** a deploy is not verified until you have confirmed, *from the
+outside*, that each tier talks to its own environment's peers. Config that looks right is not
+evidence. See the post-deploy check added to `DEPLOYMENT.md`.
+
+### The general rule this is an instance of
+
+> **Anything resolved at build time cannot vary per environment under "promote, never rebuild".**
+
+Next.js bakes two categories at build:
+1. `next.config.ts` evaluation — `rewrites()`, `redirects()`, `headers()` destinations.
+2. Every `NEXT_PUBLIC_*` variable, inlined into the client bundle.
+
+Both are frozen into the image. A per-environment value in either is a latent bug, not a
+configuration choice. Known instances at time of writing:
+
+| Baked value | Symptom on prod |
+|---|---|
+| `API_ORIGIN` (via `rewrites()`) | **prod web → UAT api** — this defect |
+| `NEXT_PUBLIC_SITE_URL` | `og:url`/`og:image` point at UAT — every link preview wrong |
+| `NEXT_PUBLIC_FEEDBACK_MODE` | cannot differ between UAT and prod (drove B1) |
+| `NEXT_PUBLIC_CONTENT_EDIT` | same |
+
+`NEXT_PUBLIC_COMMIT_SHA` is *correctly* baked — it describes the image, not the environment.
+That is the test: **does this value describe the image, or where the image is running?** Only
+the former may be baked.
+
+### The fix
+
+Environment-varying values must be resolved at **request time**, not build time. The web tier
+is a running Next.js server and can read `process.env` server-side per request, so the correct
+shape is to deliver configuration from server to client at runtime rather than inlining it.
+
+Combined with the api now having its own hostname (`api.veervrat.jnanaprabodhini.org`), this
+also removes the `/api/v1` rewrite proxy entirely — which is independently required for
+WebSocket chat (Next rewrites do not forward WS upgrades, see O8) and lets session cookies
+drop the `SameSite=None` workaround, since web and api now share a registrable domain.
+
+Tracked as an OpenSpec change; see `ops/PROJECT-STATUS.md`.
