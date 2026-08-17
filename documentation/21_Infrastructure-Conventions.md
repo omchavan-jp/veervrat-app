@@ -953,3 +953,48 @@ WebSocket chat (Next rewrites do not forward WS upgrades, see O8) and lets sessi
 drop the `SameSite=None` workaround, since web and api now share a registrable domain.
 
 Tracked as an OpenSpec change; see `ops/PROJECT-STATUS.md`.
+
+### Outcome (2026-08-17)
+
+Fixed by `openspec/changes/runtime-environment-config`: per-environment values are read at
+request time, the `/api/v1` rewrite proxy is gone, cookies are `SameSite=Lax`, and CD now
+asserts cross-tier wiring. Deployed to UAT and confirmed there — the web tier advertises its own
+api, `og:url` names the right environment, the OAuth `redirect_uri` sits on the api origin, CORS
+returns the web origin with credentials, and cookies come back `Secure; SameSite=Lax` host-scoped.
+
+Two lessons the fix itself produced:
+
+**A verification written against the architecture you are replacing will fail on its first
+run.** The new wiring check probed `/api/v1/auth/google` on the *web* origin — the proxy path
+that the same change deletes. It 404'd, so the check reported "could not reach the web tier" on
+a deploy that had actually succeeded. Harmless here, but the failure mode is worse than it
+looks: a check that fails for the wrong reason teaches people to distrust and then bypass it.
+It now probes the **served HTML**, which carries the runtime config the browser will really
+use — a stronger assertion than reading back a value we ourselves set.
+
+**Assert positively, and beware nested hostnames.** The first draft asked "does the *other*
+environment's host appear?" That is unreliable when hostnames nest:
+`api.uat.veervrat.jnanaprabodhini.org` contains `veervrat.jnanaprabodhini.org`, so
+"prod must be absent" flags a perfectly healthy UAT. Asserting the exact expected host is
+unambiguous in both directions. Also note the `Location` header is percent-encoded — `//`
+arrives as `%2F%2F`, so never match on it.
+
+## 18. A freshly provisioned environment has no way to log in (2026-08-17)
+
+Found while trying to browser-verify §17's fix on UAT. Worth stating explicitly, because it is
+invisible until someone tries to sign in and it blocks verification of anything auth-related:
+
+- The seed loads **content only** — virtues, weaknesses, sentences, exposures, resolutions,
+  challenges. It creates **zero users** (no `prisma.user` writes in `src/database/seed.ts`).
+- Google OAuth carries the `placeholder-not-configured` Terraform default in **both** UAT and
+  prod, so the OAuth path fails before it reaches Google.
+- Credential login refuses any account whose email is unverified
+  (`auth.service.ts` → `EmailNotVerifiedException`), and email delivery is not wired (B14).
+
+So a new environment reaches "green `/ready`, correct wiring, fully seeded" while remaining
+**impossible to log into**. Health checks cannot see this: every service is genuinely healthy.
+
+**Consequence for sequencing:** any change to cookies, CORS, CSRF or sessions can only be
+verified by a real browser session, so wiring email (B14) or real OAuth credentials (O23) is a
+*prerequisite* for validating auth work — not a follow-up to it. Add this to the zero-to-running
+sequence in `../DEPLOYMENT.md`: an environment is not "done" until someone can log in.
