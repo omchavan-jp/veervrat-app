@@ -158,15 +158,19 @@ runs:
     # The check whose absence let prod run for a day pointed at UAT's database.
     #
     # Every existing check passed throughout: both /ready endpoints were green, and Terraform
-    # and `az containerapp show` both reported the correct API_ORIGIN. All true, and the system
-    # was still wrong, because nothing asked the deployed WEB tier which api it actually
-    # reaches. Per-service health cannot answer a cross-tier question, and configuration that
-    # looks right is not evidence that the running artifact honours it.
+    # and `az containerapp show` both reported the correct api origin. All true, and the system
+    # was still wrong, because nothing asked the deployed WEB tier which api it actually tells
+    # browsers to call. Per-service health cannot answer a cross-tier question, and stored
+    # configuration is not evidence that the running artifact honours it.
     #
-    # /auth/google is the probe because its redirect carries the api's OWN configured origin in
-    # `redirect_uri` — the answer comes from the running api, reached through the running web
-    # tier, rather than from anything this workflow set.
-    - name: Verify the web tier talks to THIS environment's api
+    # The probe is the served HTML: the web tier renders its runtime config into the page, so
+    # the api base URL in that markup is literally what a browser will use. That is a stronger
+    # assertion than reading any env var back.
+    #
+    # (The first version of this check probed /api/v1/auth/google on the web origin, which was
+    # the pre-existing proxy path. This change deletes that proxy, so the probe 404'd and the
+    # check failed on its very first run — testing an architecture that no longer exists.)
+    - name: Verify the web tier points at THIS environment's api
       shell: bash
       env:
         ENVIRONMENT: ${{ inputs.environment }}
@@ -176,43 +180,38 @@ runs:
         WEB=$(az containerapp show -n "veervrat-$ENVIRONMENT-web" -g "veervrat-$ENVIRONMENT" \
           --query properties.configuration.ingress.fqdn -o tsv)
 
-        # The api hostname this environment is supposed to be using: its bound custom domain if
-        # it has one, else the platform FQDN. Read from Azure rather than hardcoded, so the
-        # check keeps working when hostnames change.
+        # The api hostname this environment should be using: its bound custom domain if it has
+        # one, else the platform FQDN. Read from Azure rather than hardcoded so the check keeps
+        # working when hostnames change.
         EXPECTED_API_HOST=$(az containerapp show -n "veervrat-$ENVIRONMENT-api" -g "veervrat-$ENVIRONMENT" \
           --query "properties.configuration.ingress.customDomains[0].name" -o tsv 2>/dev/null || true)
         if [ -z "$EXPECTED_API_HOST" ] || [ "$EXPECTED_API_HOST" = "null" ]; then
           EXPECTED_API_HOST=$(az containerapp show -n "veervrat-$ENVIRONMENT-api" -g "veervrat-$ENVIRONMENT" \
             --query properties.configuration.ingress.fqdn -o tsv)
         fi
-        echo "expecting the web tier to reach: $EXPECTED_API_HOST"
+        echo "expecting the web tier to advertise: $EXPECTED_API_HOST"
 
-        LOCATION=""
+        BODY=""
         for i in $(seq 1 10); do
-          LOCATION=$(curl -s -o /dev/null -w '%{redirect_url}' --max-time 60 \
-            "https://$WEB/api/v1/auth/google" || echo "")
-          [ -n "$LOCATION" ] && break
-          echo "attempt $i: no redirect yet (cold start?)"; sleep 15
+          BODY=$(curl -s --max-time 60 "https://$WEB/login" || echo "")
+          [ -n "$BODY" ] && break
+          echo "attempt $i: no response yet (cold start?)"; sleep 15
         done
 
-        if [ -z "$LOCATION" ]; then
-          echo "::error::could not reach /api/v1/auth/google through the web tier to check wiring"
+        if [ -z "$BODY" ]; then
+          echo "::error::could not fetch a page from the web tier to check wiring"
           exit 1
         fi
-        echo "redirect: $LOCATION"
 
-        # Asserted positively against the exact expected host. A negative test ("the other
-        # environment must be absent") is unreliable here because the hostnames nest —
-        # uat.veervrat.jnanaprabodhini.org contains veervrat.jnanaprabodhini.org as a
-        # substring, so "prod must not appear" matches a perfectly healthy UAT.
-        #
-        # Substring matching is safe on the percent-encoded Location: dots are not encoded,
-        # though the scheme separator is (%3A%2F%2F), so never match on "//" here.
-        if ! echo "$LOCATION" | grep -qF "$EXPECTED_API_HOST"; then
-          echo "::error::$ENVIRONMENT's web tier is NOT wired to $ENVIRONMENT's api."
-          echo "::error::Expected to see $EXPECTED_API_HOST in: $LOCATION"
+        # Positive assertion against the exact expected host. A negative test ("the other
+        # environment must be absent") is unreliable because the hostnames nest:
+        # api.uat.veervrat.jnanaprabodhini.org contains veervrat.jnanaprabodhini.org, so
+        # "prod must not appear" would flag a perfectly healthy UAT.
+        if ! printf '%s' "$BODY" | grep -qF "$EXPECTED_API_HOST"; then
+          echo "::error::$ENVIRONMENT's web tier does NOT advertise $ENVIRONMENT's api."
+          echo "::error::Expected $EXPECTED_API_HOST in the served HTML and it was absent."
           echo "::error::See documentation/21_Infrastructure-Conventions.md §17."
           exit 1
         fi
 
-        echo "wiring ok — $ENVIRONMENT web reaches $EXPECTED_API_HOST"
+        echo "wiring ok — $ENVIRONMENT web advertises $EXPECTED_API_HOST"
