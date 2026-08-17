@@ -278,7 +278,7 @@ Zone starts with 2 record sets (the automatic NS and SOA records). All app recor
 `veervrat`, `api`, `uat`, `api.uat`, cert validation, SPF/DKIM/DMARC — will be created by
 Terraform *inside* this zone.
 
-**Delegation status:** ⏳ requested from JP (Om → Rahul → Shantanu, 2026-08-15). Verify with
+**Delegation status:** ⏳ requested from JP (Om → Rahul → Shantanoo, 2026-08-15). Verify with
 `dig NS veervrat.jnanaprabodhini.org` once done.
 
 ---
@@ -331,11 +331,14 @@ Continuity is handled by this document, not a dormant account.
 | **Rahul Dharmadhikari** | **JP IT lead** | ⭐ **primary technical contact — route requests through him** |
 | Ashutosh Barmukh | *sahakaryavah*, JP | owns the card on file; institutional/identity decisions |
 | Devavrat Munagekar | tenant admin | Azure billing, nonprofit programme, Entra |
-| Shantanu Mahajan | DNS operator | `jnanaprabodhini.org` DNS — ⚠️ **contact via Rahul, not directly** |
+| Shantanoo Mahajan | DNS operator | `jnanaprabodhini.org` DNS — met directly 2026-08-16, see below |
 | Nachiket Nitsure | Veervrat product owner | product decisions |
 
 📋 **Communication protocol (set 2026-08-15):** technical/infra requests go to **Rahul**, who
-routes to Shantanu or others as needed. Do not approach Shantanu directly.
+routes to Shantanoo or others as needed. ⚠️ **Superseded in practice 2026-08-16** — Om met
+Shantanoo directly for the DNS/email handoff. Doc not yet reconciled with whether this is a
+one-off or the protocol has genuinely relaxed — confirm before assuming direct contact is
+now fine going forward.
 
 ### Notification recipients
 
@@ -457,7 +460,8 @@ Managed Redis, Container Apps Environment — see §5)
 - [ ] Turn **off** Elevate access (root-scope UAA) — redundant now
 - [ ] Devavrat to **verify the billing email** (currently "Not verified" → notifications may not deliver)
 - [ ] Decide **subdomain vs path** with Rahul (section 7)
-- [ ] DNS via **Rahul** → Shantanu: NS delegation for `veervrat.jnanaprabodhini.org`
+- [x] DNS via **Rahul** → Shantanoo: done 2026-08-16, per-record instead of NS delegation
+      (met Shantanoo directly — see `ops/PROJECT-STATUS.md` O1/D14)
 - [ ] Consider adding JP's PAN/GSTIN to the billing account (Tax ID currently "None provided") — ask finance
 - [ ] After Phase 2B: data migration → Resend
 

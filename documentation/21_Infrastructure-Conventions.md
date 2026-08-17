@@ -80,7 +80,7 @@ create the thing that stores its own record of what it created. Created once by
 `bootstrap/create-state-backend.sh`, which is idempotent and safe to re-run.
 
 **The DNS zone (`veervrat.jnanaprabodhini.org`).** Hand-created 2026-08-15 to unblock
-the NS delegation request to JP (a slow human round-trip via Rahul → Shantanu) before
+the NS delegation request to JP (a slow human round-trip via Rahul → Shantanoo) before
 Terraform existed for this project. **Imported** into state on 2026-08-16 — Terraform
 tracks it but did not create it.
 
