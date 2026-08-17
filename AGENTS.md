@@ -173,6 +173,24 @@ Do all of this before invoking the skill:
 
 ## Git conventions
 
+### One-time setup — activate the hooks
+
+```bash
+git config core.hooksPath .githooks
+```
+
+`.githooks/pre-commit` refuses commits made directly on `main`/`master`/`dev`. It is
+version-controlled (not left in `.git/hooks`) so it survives a fresh clone, but **it does
+nothing until the config above is set** — a hook nobody activated is the same as no hook.
+
+It exists because "never commit directly to `main`" was documented, agreed, and broken anyway
+— mid-flow, on a docs change. Written rules depend on attention at exactly the moment
+attention is elsewhere. Where a rule can be made mechanical, make it mechanical.
+
+Note the hook only protects branches that *contain* it: checking out an older commit predating
+`.githooks/` disables it silently. That is inherent to version-controlled hooks and worth
+knowing rather than being surprised by.
+
 ### Branching — single trunk (`main`), releases by tag
 
 Settled 2026-08-16 (O6). Replaces the earlier `dev`/`main` two-branch model, which existed
