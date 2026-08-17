@@ -13,12 +13,21 @@ Rules and conventions live in `AGENTS.md` (branching, tags, migrations) and
 **UAT is live.** First successful Azure deploy 2026-08-16 — `/ready` green with Postgres
 and Redis both up, schema migrated, web serving and proxying to the api.
 
-**Prod is live.** First `prod-2026-08-16` tag deployed 2026-08-16 — promoted UAT's exact
-image (`5576918`), no rebuild. `deploy-prod` succeeded on its first run (every other CD path
-had surfaced a real bug on its first run — this one didn't). `/ready` green with Postgres and
-Redis both up. Access is still effectively closed: the feedback widget and content-editor
-gating are env-var-only today (D20/O7), and no capability grants exist yet for real beta
-testers — that's B1, next.
+🔴 **Prod is deployed but NOT usable — do not send anyone there.** The `prod-2026-08-16`
+tag deployed cleanly and `/ready` is green, but two defects found 2026-08-17 mean no real user
+can use it:
+
+- **O22** — the prod web tier proxies `/api/v1` to **UAT's api**, so prod traffic reads and
+  writes UAT's database. Cause: `API_ORIGIN` is baked into the image at build time, so the
+  promoted image keeps UAT's value and prod's runtime setting is ignored. See
+  `documentation/21_Infrastructure-Conventions.md` §17. Fix in progress:
+  `openspec/changes/runtime-environment-config`.
+- **O23** — prod's Google OAuth holds `placeholder-not-configured`, and credential login
+  requires an email-verification link that cannot be sent yet (email transport unwired, B14).
+  **No login path works on prod.**
+
+Neither was visible to `/ready`, which checks each service alone and never asks whether the
+tiers are wired to their own environment.
 
 Neon migration is **cancelled** (D19) — prod will be created fresh and seeded, exactly as CD
 already does for UAT. The dump at `../backups/veervrat-neon-20260809T184831Z.dump` is retained
@@ -45,7 +54,7 @@ as an archive, not a migration source.
 | prod web | https://veervrat.jnanaprabodhini.org (custom domain, live 2026-08-17) — internal: https://veervrat-prod-web.graydesert-a1bc836e.centralindia.azurecontainerapps.io |
 | prod api | https://api.veervrat.jnanaprabodhini.org (custom domain, live 2026-08-17) — internal: https://veervrat-prod-api.graydesert-a1bc836e.centralindia.azurecontainerapps.io. Still reached via web's `/api/v1` proxy today — the hostname exists so O8 can drop that proxy, not because anything routes to it directly yet |
 | DNS | **live** — per-record (not delegation, see `ops/PROJECT-STATUS.md` D14/O1); both custom domains bound with managed TLS certs as of 2026-08-17 |
-| Email (Resend) | not wired |
+| Email | **not wired** — JP IT's SMTP relay chosen (D9), credentials verified, code swap pending (B14). Blocks credential signup |
 | Object storage | **not provisioned** — app still uses the S3 API; needs an SDK swap first |
 | Search (Meilisearch) | deferred |
 
@@ -399,8 +408,9 @@ they're only *implied* by the gotchas above — hence the explicit list.
       adapter) are only now resolved.
 - [ ] **Rotate the exposed secrets (O12):** GitHub PAT, `SESSION_SECRET`, R2 keys — all
       sat in plaintext in `apps/api/.env.railway`.
-- [ ] Wire Resend and verify SPF/DKIM/DMARC **on the subdomain**, never the root — the root
-      carries JP's live Google Workspace mail (D9, and §7 guardrails in the facts doc).
+- [ ] Wire email: swap `email.service.ts` to SMTP (B14). **No DNS work needed** — D9 moved
+      sending to JP IT's relay, so JP owns SPF/DKIM/DMARC on
+      `notifications.jnanaprabodhini.org` and we add no mail records at all.
 - [ ] Point beta testers at the new URL.
 
 ---
@@ -434,7 +444,7 @@ migration.
 |---|---|
 | App not deployed anywhere | first image push + migration job (next step) |
 | Custom domain, HTTPS, working chat | NS delegation from JP (O1) — external |
-| Email (verification, password reset) doesn't deliver | Resend not wired |
+| Email (verification, password reset) doesn't deliver | transport not swapped to SMTP yet (B14) |
 | Object storage | app uses the S3 API; Azure Blob doesn't speak it — needs `@azure/storage-blob` swap |
 | Beta data still in Neon | migration after prod exists |
 | Search | Meilisearch deferred |

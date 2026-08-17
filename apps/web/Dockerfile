@@ -18,30 +18,28 @@ RUN pnpm install --frozen-lockfile
 
 # ---- Build ----
 FROM base AS build
-# NEXT_PUBLIC_* is inlined into the browser bundle at BUILD time, so the API URL must be
-# passed as a build arg (not just a runtime env var). Railway: set this as a build-time
-# variable. Falls back to same-origin /api/v1 if omitted.
-ARG NEXT_PUBLIC_API_URL
-ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-# API_ORIGIN is the proxy target for the /api/v1 rewrite (next.config.ts), baked
-# into the build. Set it as a Railway build-time variable on the web service.
-ARG API_ORIGIN
-ENV API_ORIGIN=${API_ORIGIN}
-# Absolute base for og:image / canonical URLs (app/layout.tsx). Build-time like every other
-# NEXT_PUBLIC_*; without it the build silently falls back to a hard-coded URL and every link
-# preview points at the wrong host.
-ARG NEXT_PUBLIC_SITE_URL
-ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
-# Feedback widget mode: 'test' (list + form), 'public' (form only), unset = hidden.
-ARG NEXT_PUBLIC_FEEDBACK_MODE
-ENV NEXT_PUBLIC_FEEDBACK_MODE=${NEXT_PUBLIC_FEEDBACK_MODE}
-# Build identifier attached to feedback reports. On Railway set the build variable
-# NEXT_PUBLIC_COMMIT_SHA=${{RAILWAY_GIT_COMMIT_SHA}}.
+# ⚠️ Build args here are BAKED INTO THE IMAGE, and CD promotes one image from UAT to prod
+# without rebuilding. So nothing environment-specific may be passed here — it would make the
+# promoted image carry UAT's values into production. That is not hypothetical: API_ORIGIN and
+# NEXT_PUBLIC_SITE_URL used to be build args and did exactly that
+# (documentation/21_Infrastructure-Conventions.md §17).
+#
+# Per-environment values are read at RUNTIME instead — see apps/web/lib/runtime-config.ts and
+# the API_BASE_URL / SITE_URL / FEEDBACK_MODE env vars set on the Container App.
+#
+# The only value legitimately baked is the commit SHA: it describes the image itself, not the
+# environment the image runs in. That is the test to apply before adding anything below.
 ARG NEXT_PUBLIC_COMMIT_SHA=dev
 ENV NEXT_PUBLIC_COMMIT_SHA=${NEXT_PUBLIC_COMMIT_SHA}
-# In-context content editor: 'on' makes the editor available in the build (it stays
-# allowlist-gated per user via /auth/me). Build-time because NEXT_PUBLIC_* is inlined into
-# the browser bundle; unset/anything else = feature absent (production default).
+# In-context content editor. Deliberately still BUILD-time, and deliberately never passed by
+# CD, so the editor is absent from every deployed bundle.
+#
+# This is the one case where build-time is the point rather than a bug: being inlined lets the
+# bundler drop the editor's code entirely, so dev tooling never ships to users. Moving it to
+# runtime config would put that code in the production bundle, gated only by a flag — a
+# security posture change, not a refactor. D20 wants the editor available on UAT for Nachiket
+# and never on prod, which one promoted image cannot express this way; resolving that belongs
+# with B1's per-user capability model, not here.
 ARG NEXT_PUBLIC_CONTENT_EDIT
 ENV NEXT_PUBLIC_CONTENT_EDIT=${NEXT_PUBLIC_CONTENT_EDIT}
 COPY --from=deps /app/node_modules ./node_modules

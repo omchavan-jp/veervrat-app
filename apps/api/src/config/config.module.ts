@@ -39,6 +39,11 @@ import * as Joi from 'joi';
         MEILI_MASTER_KEY: Joi.string().optional(),
         // Error tracking (GlitchTip / Sentry-compatible) — optional; disabled when unset.
         GLITCHTIP_DSN: Joi.string().optional(),
+        // Overrides the SameSite default (`none` in production, `lax` otherwise). Set to `lax`
+        // wherever web and api share a registrable domain — simpler and stricter than `none`.
+        // Read directly from process.env by common/http/cookie.ts; declared here so an invalid
+        // value fails at boot rather than silently falling back.
+        COOKIE_SAMESITE: Joi.string().valid('lax', 'strict', 'none').optional(),
         // In-context content editor (dev-only tooling; hard-off in production). All default
         // off/empty so production, CI, and local dev are unaffected unless explicitly enabled.
         CONTENT_EDIT_ENABLED: Joi.boolean().default(false),

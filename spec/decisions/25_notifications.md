@@ -5,7 +5,7 @@ _Last updated: 2026-06-02 | Round: R1_
 
 ### Delivery Channels
 - **In-app:** bell icon in nav with unread count badge. Clicking opens a notification panel/page.
-- **Email:** via Resend. Per-event opt-out available (some events email by default, can be disabled in settings).
+- **Email:** via JP IT's SMTP relay (was Resend — D9, 2026-08-17). Per-event opt-out available (some events email by default, can be disabled in settings).
 - Per-VM chat email toggle: already specced in `decisions/18_my-vratmitras-chat.md`.
 
 ### Notification Data Model

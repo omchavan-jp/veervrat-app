@@ -18,7 +18,7 @@ _Last updated: 2026-05-31 | Round: R1_
 
 ### Third-party Integrations (v1)
 - **Error tracking:** GlitchTip — open-source, self-hostable, Sentry-SDK-compatible. Captures unhandled exceptions and frontend crashes with full stack traces.
-- **Transactional email:** Resend — free tier (3,000 emails/month), simple API. Used for: VM invitations, notification emails, account actions. Switch cost is low (one service file) if outgrown.
+- **Transactional email:** **JP IT's SMTP relay** (`notifications.jnanaprabodhini.org`) — revised 2026-08-17, was Resend; see D9 in `ops/PROJECT-STATUS.md`. Used for: VM invitations, notification emails, account actions. No per-month tier limit, and JP IT owns the sending domain's SPF/DKIM/DMARC. The low switch cost predicted here (one service file) is what made the change cheap — see B14.
 
 ### Notification Delivery
 - **v1:** in-app (bell icon, unread count) + email. Both channels for: VM invitation, new ERC available, custom ERC approved/rejected, journey state changes.
@@ -59,7 +59,7 @@ _Last updated: 2026-05-31 | Round: R1_
 
 ## Flags
 - ⚠ `@nestjs/schedule` dormant job is not multi-instance safe. Must be revisited before horizontal scaling.
-- ⚠ Resend free tier (3k/month) — monitor usage, upgrade plan before limit is hit.
+- ⚠ ~~Resend free tier (3k/month)~~ — obsolete (D9). JP's relay has no published tier limit, but its rate limits are **unknown**: ask JP IT before any bulk send.
 
 ### Media Limits (confirmed)
 - **Images in chat and experience logs:** max 10MB per image, max 5 images per message/entry.

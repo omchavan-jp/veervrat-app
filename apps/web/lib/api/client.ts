@@ -1,4 +1,8 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+import { getRuntimeConfig } from '@/lib/runtime-config';
+
+// Resolved per call, never at module scope: the api base URL varies per environment, and one
+// build serves both. See lib/runtime-config.ts.
+const apiBaseUrl = () => getRuntimeConfig().apiBaseUrl;
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
@@ -29,7 +33,7 @@ let csrfTokenCache: string | undefined;
 
 async function fetchCsrfToken(): Promise<string | undefined> {
   try {
-    const res = await fetch(`${API_BASE_URL}/auth/csrf`, {
+    const res = await fetch(`${apiBaseUrl()}/auth/csrf`, {
       method: 'GET',
       credentials: 'include',
     });
@@ -55,7 +59,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
         csrfHeader['x-csrf-token'] = token;
       }
     }
-    return fetch(`${API_BASE_URL}${path}`, {
+    return fetch(`${apiBaseUrl()}${path}`, {
       method,
       credentials: 'include',
       headers: {

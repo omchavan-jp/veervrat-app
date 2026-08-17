@@ -22,6 +22,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useToast } from '@/hooks/use-toast';
 import { EMAILABLE_EVENTS } from '@/lib/notification-events';
+import { getRuntimeConfig } from '@/lib/runtime-config';
 
 function Section({ icon, title, desc, children }: { icon: React.ReactNode; title: string; desc?: string; children: React.ReactNode }) {
   return (
@@ -93,7 +94,6 @@ export default function SettingsPage() {
 }
 
 const INPUT_STYLE = 'mt-1 h-auto rounded-xl border-border bg-bg px-3 py-2 text-[14px] focus-visible:border-accent focus-visible:ring-0';
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
 // Splits a stored gender into the radio choice + custom text (mirrors onboarding,
 // where 'Male'/'Female' are canonical and anything else was typed under 'other').
@@ -509,7 +509,7 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
               <span className="text-muted">Google</span>
               {/* Full-page navigation into the OAuth flow; the callback recognises the
                   matching email and routes through /link-account (password confirm). */}
-              <Button variant="outline" size="sm" nativeButton={false} render={<a href={`${API_URL}/auth/google`} />}>
+              <Button variant="outline" size="sm" nativeButton={false} render={<a href={`${getRuntimeConfig().apiBaseUrl}/auth/google`} />}>
                 {t('connectGoogle')}
               </Button>
             </div>

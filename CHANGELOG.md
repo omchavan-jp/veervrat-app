@@ -13,7 +13,7 @@ testers only once a `prod-*` tag has been deployed.
   Server, Azure Managed Redis) via Terraform, with a GitHub Actions CD pipeline
   (OIDC, no stored secrets). This is the first release on the new UAT → prod flow:
   merges to `main` deploy to UAT automatically; a `prod-*` tag promotes that exact
-  image to prod. Object storage (Blob) and email (Resend) are not yet wired — see
+  image to prod. Object storage (Blob) and email are not yet wired — see
   `DEPLOYMENT.md`.
 - Deploys no longer interrupt you mid-action: the app now finishes requests already in
   flight before shutting down, so a restart can't lose a submission you just made.

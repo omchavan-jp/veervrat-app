@@ -41,16 +41,22 @@ a design the app now implements.
 
 ---
 
-## Current state (2026-08-16)
+## Current state (2026-08-17)
 
 **UAT is LIVE on Azure, deployed by CD.** `/ready` green, schema migrated + seeded, web
 serving. CD (GitHub OIDC → Azure, no stored secret) proven end-to-end on multiple real runs.
 
-**Prod is now LIVE too.** First `prod-2026-08-16` tag deployed 2026-08-16 — promoted UAT's
-exact image (`5576918`), no rebuild. `deploy-prod` succeeded on its first run — `/ready`
-green, Postgres + Redis both up, schema migrated + seeded. Access is still effectively
-closed: gating is env-var-only today (D20/O7), no capability grants exist for real testers
-yet — that's B1, next. Data remains safe in Neon (12 users, 10 journeys) + a local dump —
+**Prod is deployed but NOT usable — do not send anyone there yet.** First `prod-2026-08-16`
+tag deployed 2026-08-16, `deploy-prod` succeeded on its first run, `/ready` green. But two
+defects found 2026-08-17 mean no real user can use it:
+
+- 🔴 **O22** — prod's web tier proxies to **UAT's api**, so prod traffic reads/writes UAT's
+  database. Build-time config baked into a promoted image. Fix: `runtime-environment-config`.
+- 🔴 **O23** — prod Google OAuth holds placeholder credentials, and credential login requires
+  email verification that cannot send. **No login path works on prod.**
+
+Both were invisible to `/ready`, which checks each service in isolation and never asks whether
+the tiers are wired to their own environment. Data remains safe in Neon (12 users, 10 journeys) + a local dump —
 **migration cancelled, see D19.**
 
 | | |
@@ -59,12 +65,14 @@ yet — that's B1, next. Data remains safe in Neon (12 users, 10 journeys) + a l
 | Subscription | `veervrat` · `3ffcc513-dca6-453c-b9ff-83b096ea1381` |
 | Spend | UAT ~$28/mo + prod stateful core ~similar → **~$55-60/mo for both**, once prod runs apps |
 | Domain | `veervrat.jnanaprabodhini.org` — **finalised** (O2 closed 2026-08-16) + `veervrat.com` to buy defensively |
-| UAT web | `https://veervrat-uat-web.proudcoast-d3aa08a0.centralindia.azurecontainerapps.io` |
-| UAT api | `https://veervrat-uat-api.proudcoast-d3aa08a0.centralindia.azurecontainerapps.io` |
+| UAT web | `https://uat.veervrat.jnanaprabodhini.org` |
+| UAT api | `https://api.uat.veervrat.jnanaprabodhini.org` |
+| Prod web | `https://veervrat.jnanaprabodhini.org` — 🔴 deployed, not usable (O22/O23) |
+| Prod api | `https://api.veervrat.jnanaprabodhini.org` |
 | Terraform | `veervrat-app/infra/terraform/` — `envs/shared`, `envs/uat`, `envs/prod` all applied, plans clean |
 | CD | `.github/workflows/cd.yml` — merge to `main` auto-deploys UAT; `prod-*` tag deploys prod (proven 2026-08-16, first run, no bugs) |
 | Images | `veervratacr` — `veervrat-api`, `veervrat-api-migrate`, `veervrat-web`, built + cached in CI (GitHub Actions cache, not the registry) |
-| DNS | zone exists; **NS delegation still pending with JP** (O1) — blocks custom domain, working chat, Resend |
+| DNS | ✅ **live 2026-08-17** — 4 hostnames (web + api, UAT + prod) on `*.veervrat.jnanaprabodhini.org`, per-record via Shantanoo, managed TLS bound (O1/D14) |
 
 `main` is the trunk; `dev` is retired. See `veervrat-app/AGENTS.md` → Git conventions.
 
@@ -87,7 +95,7 @@ dropped build args). Every one is now documented with its guard.
 | D6 | **Managed Redis**, drop Upstash | Free under grant; self-hosted needs min-replicas=1 anyway, so same cost + ops |
 | D7 | **Azure Blob**, drop R2 | Migration free today (0 files, 0 stored URLs); managed identity removes static keys |
 | D8 | **Sentry free tier** (SDK already written) + **App Insights** for platform telemetry; **drop GlitchTip** | Different questions: "why did this fail" vs "is the system healthy". Both free. |
-| D9 | **Resend** stays for email | Already coded; never use Google Workspace SMTP — risks JP's domain reputation. ⚠️ **Under reconsideration 2026-08-16** — Shantanoo (JP) offered direct SMTP creds on his own mail server (`dhoomketu.in`, port 587) instead of asking us to verify a Resend sending domain. Not Workspace, so D9's specific reputation concern may not transfer as-is — but unconfirmed whether that server is dedicated to transactional mail or shared with JP's regular staff mail (same risk, different name, if the latter). See O21. Not yet flipped — `email.service.ts` only speaks Resend's API today; switching is a real code change (nodemailer/SMTP transport), tracked as B14, not done speculatively before creds exist. |
+| D9 | ~~Resend~~ → **JP's own SMTP relay** (flipped 2026-08-17) | Original reasoning ("Resend is already coded; never use Google Workspace SMTP — risks JP's domain reputation") was sound but its premise dissolved. JP IT provides a relay that sends as **`notifications.jnanaprabodhini.org`** — a purpose-built notifications subdomain, *not* JP's staff mail domain — so the reputation risk D9 was protecting against does not apply. What settled it: **credentials verified working end-to-end** 2026-08-17 (`235 Authentication successful`), and Shantanoo's own test mail landed in a **Gmail inbox, not spam** — real deliverability evidence, which no amount of config review provides. Also removes an external dependency, a third-party account, and Resend's 3,000/mo ceiling that D18 flagged as user-facing. Connection: `dhoomketu.in:587`, **STARTTLS** (`secure: false` + `requireTLS: true` in nodemailer — `secure: true` means implicit TLS on 465 and fails here). From: `Veervrat <do-not-reply-veervrat@notifications.jnanaprabodhini.org>`. Creds at `~/.secrets/veervrat/smtp-jp.env` (600, outside git), destined for Key Vault. Residual risk, accepted: deliverability reputation is now shared with other JP apps using that domain — smaller than the staff-mail risk, and not ours to control. Code swap is B14. |
 | D10 | **Two deployed environments**: UAT + prod. Local docker-compose is "dev" | A third costs 3× for no user |
 | D11 | **Beta testers live on PROD**, not UAT | ♻️ **Rationale replaced 2026-08-16.** The original reason ("otherwise you must migrate real personal data at launch") died with D19 — there is no data to migrate. The conclusion still holds, for a different and better reason: **UAT is the staging and approval environment**, where Nachiket reviews unreleased changes before they ship. Real beta users cannot live in an environment that is deliberately running unreviewed code. Confirmed in O7. |
 | D20 | **Feature access is per-user data in the DB, not env vars** (2026-08-16) | A user can only be allowlisted *after* signing up, so an env allowlist costs a full deploy cycle per tester (signup → find UUID → edit Terraform → PR → CD → access). Managed instead through the admin dashboard. `CONTENT_EDITOR_USER_IDS` is deleted and content-editor access migrates to the same model — one mechanism, not two. **Env vars keep only environment-level toggles** (`CONTENT_EDIT_ENABLED=false` on prod, permanently, for everyone): "does this feature exist here" is config, "which users have it" is data. See B1. |
@@ -98,7 +106,7 @@ dropped build args). Every one is now documented with its guard.
 | D15 | Beta uses **firewall + TLS**; VNet + private endpoints **before public launch** | Private endpoints ~$7/mo each and harder to debug |
 | D16 | **Om not tenant-wide Global Admin by default** → later scoped to subscription | (Global Admin *was* granted; revisit if JP moves M365 into the tenant) |
 | D17 | No stakeholder dashboard — use **budget alerts + emailed invoices** | Built-ins don't go stale |
-| D18 | Free tiers fine for now | ⚠️ **Resend's 3,000/mo ceiling is user-facing** (signups break); Sentry's is not |
+| D18 | Free tiers fine for now | ~~Resend's 3,000/mo ceiling is user-facing~~ — **no longer applies** (D9 flipped 2026-08-17; JP's relay has no such tier limit). Sentry's free tier remains, and is not user-facing. ⚠️ New watch item instead: JP's relay may impose its own rate limits — unknown, ask JP IT before any bulk send. |
 
 ---
 
@@ -109,7 +117,9 @@ dropped build args). Every one is now documented with its guard.
 | O6 | ✅ **CLOSED 2026-08-16** — single `main` trunk, UAT auto-deploys on merge, prod by `prod-*` tag promoting the same image. Documented in `veervrat-app/AGENTS.md` + `DEPLOYMENT.md`. Transition done — `main` fast-forwarded, `dev` retired | — | — |
 | O18 | ✅ **CLOSED 2026-08-16** — CD pipeline live. GitHub↔Azure via OIDC (no stored secret), `.github/workflows/cd.yml` + `.github/actions/deploy-environment`. Parallel cached builds, per-job auth, migrate-before-deploy enforced. UAT **and now prod** deploys proven end-to-end — `deploy-prod` succeeded on its first run (`prod-2026-08-16`), the only CD path all the others' bug hunts hadn't yet touched. Also fixed same day: doc-only merges no longer trigger a pointless rebuild+redeploy — verified live with a real doc-only PR that skipped `build`/`deploy-uat` in 21s (see `veervrat-app/documentation/21_Infrastructure-Conventions.md` §14–16) | — | — |
 | O1 | **DNS per-record, not delegation** (revised 2026-08-16, see D14). Met Shantanoo 2026-08-16 — the earlier Azure zone + NS-delegation request is superseded, he added records directly. **Web hostnames live and verified 2026-08-17**: `https://veervrat.jnanaprabodhini.org` (prod) and `https://uat.veervrat.jnanaprabodhini.org` (UAT), both serving real traffic with Azure-managed DigiCert TLS certs, hostnames bound `SniEnabled`. Caught and fixed same day: Shantanoo hit Azure's default 404 page hitting the domain — records were live, but the hostname wasn't yet bound to the Container App on our side (that step was always ours, not his). ⚠️ D14's original "only 2 hostnames are ever public" was wrong: `DEPLOYMENT.md`'s pre-existing DNS-cutover checklist (predates this thread) calls for **api hostnames too** (`api.veervrat.…`, `api.uat.veervrat.…`), specifically to enable same-site cookies and remove the Next.js rewrite proxy — the proxy is the documented reason WebSocket chat has never worked in production (O8). 4 more records requested from Shantanoo 2026-08-17; confirmed live same day, hostnames bound, managed certs issued — **all 4 hostnames now serve real traffic with valid TLS**: `veervrat.jnanaprabodhini.org`, `uat.veervrat.…`, `api.veervrat.…`, `api.uat.veervrat.…`. ✅ **DNS side closed.** Not yet done: the actual cookie/proxy-removal code change (`COOKIE_SAMESITE=lax`, drop the Next.js rewrite) — that's O8's work, a separate deliberate change, not a side effect of DNS landing. The now-unused Azure DNS zone (`veervrat.jnanaprabodhini.org`, `envs/shared/dns.tf`) is ready to decommission — see B15 | — | O8 (chat) |
-| O21 | **Email sending — Resend vs JP's own SMTP.** Shantanoo offered direct SMTP on `dhoomketu.in:587` instead of a Resend-verified domain — contradicts D9 as written (D9 marked "under reconsideration"; `documentation/19_Email-Strategy.md` now carries the same banner). Open: is `dhoomketu.in` dedicated to transactional mail, or JP's general staff server (same reputation risk D9 warned about, different name)? What domain will outbound mail actually show as? Mailbox requested: `noreply-veervrat@<that domain>`. **Still waiting on actual SMTP credentials from JP IT** (host/port confirmed as `dhoomketu.in:587`, but no username/password yet — Shantanoo's email offered the server, not login details). Code still only speaks Resend's API — swap to SMTP transport is B14, not done until creds exist to test against | Om → Shantanoo/JP IT | O15 (Resend/email go-live) |
+| O22 | 🔴 **CRITICAL — prod's frontend was talking to UAT's backend.** Found 2026-08-17, reproduced 3/3, while prod was live with `/ready` green on both tiers. `next.config.ts` reads `API_ORIGIN` at module scope; Next bakes `rewrites()` destinations into the build at **build time**, so the runtime env var Terraform sets on prod was silently ignored, and the promoted image kept UAT's value. Every prod request would have read/written **UAT's database**. Blast radius zero — prod had no users. Not one bad variable but a category error: **anything build-time cannot vary per environment under "promote, never rebuild"** — same root cause as the `NEXT_PUBLIC_SITE_URL` og-tag bug and the `NEXT_PUBLIC_FEEDBACK_MODE` problem behind B1. Written up as `documentation/21_Infrastructure-Conventions.md` §17. Fix is OpenSpec change `runtime-environment-config` (runtime config + drop the proxy + `SameSite=Lax` + CORS + a post-deploy wiring check); also unblocks O8's WebSocket transport | Claude | prod usable at all |
+| O23 | **Prod Google OAuth is not configured** — `GOOGLE_CLIENT_ID`/`SECRET` are still the literal Terraform default `placeholder-not-configured` (`modules/environment/variables.tf`), so the OAuth redirect goes to Google with a placeholder client id and fails. Combined with credential login throwing `EmailNotVerifiedException` (`auth.service.ts:148`) while email is unwired, **there is currently no way for anyone to sign up or log in on prod, by any path.** Needs a Google console entry for the prod callback URL (external dependency — start early) and real secrets into Key Vault. Sequenced after `runtime-environment-config`, because the callback URL changes when the proxy is removed | Om + Claude | any prod login |
+| O21 | ✅ **CLOSED 2026-08-17** — email goes through JP's SMTP relay, not Resend (**D9 flipped**). Every open question answered: sends as `notifications.jnanaprabodhini.org` (dedicated notifications subdomain, not staff mail — which is what resolved the D9 reputation concern); credentials received and **verified authenticating** (`235`); Shantanoo's test mail reached a Gmail **inbox, not spam**. Mailbox is `do-not-reply-veervrat@` (his naming, already provisioned — we adopt it, not the `noreply-` I'd suggested). Creds stored at `~/.secrets/veervrat/smtp-jp.env` (600, outside git). Remaining work is code only: B14 | — | — |
 | O2 | ✅ **CLOSED 2026-08-16** — `veervrat.jnanaprabodhini.org` finalised over `veervrat.com` | — | — |
 | O3 | Buy `veervrat.com` defensively (~$10) | Om | — |
 | O4 | Devavrat to **verify billing email** (shows "Not verified") | Devavrat | billing notifications |
@@ -242,11 +252,17 @@ a GitHub Issue or is promoted to an O-thread above.
   `18_Observability-Standard.md` now describes the target; this is the implementation.
   **Should land before beta testers reach prod** — until then there is no error tracking.
 
-- **B14 · Swap `email.service.ts` from Resend's API to SMTP, if D9 flips.** Shantanoo offered
-  direct SMTP creds (`dhoomketu.in:587`) instead of a Resend-verified domain — see O21. Only
-  worth doing once creds actually exist (nodemailer + SMTP transport, replacing the `resend`
-  SDK call; template rendering via React Email is unaffected either way). Don't build this
-  speculatively — no server to test against yet, and D9 hasn't formally flipped.
+- **B14 · Swap `email.service.ts` from Resend's API to JP's SMTP relay.** ✅ Unblocked —
+  **D9 flipped, creds verified authenticating** 2026-08-17 (O21). Replace the `resend` SDK call
+  with nodemailer; React Email template rendering is unaffected (it produces HTML either way).
+  ⚠️ **STARTTLS, not implicit TLS**: `{ secure: false, requireTLS: true }` on port 587 —
+  `secure: true` means port-465 implicit TLS and fails against this server. Also: drop the
+  `resend` dependency, rename `RESEND_API_KEY` → the `SMTP_*` set in config + Joi schema +
+  `.env.example`, put the password in **Key Vault per environment** (currently only in
+  `~/.secrets/veervrat/smtp-jp.env`), and set `EMAIL_FROM` to
+  `Veervrat <do-not-reply-veervrat@notifications.jnanaprabodhini.org>`. **Gates credential
+  signup** — `auth.service.ts:148` throws `EmailNotVerifiedException`, so without delivery no
+  credential user can ever log in. Ask JP IT about relay rate limits before any bulk send.
 - **B15 · Decommission the unused Azure DNS zone.** Created for the NS-delegation plan that
   D14 superseded 2026-08-16 (per-record instead). `envs/shared/dns.tf`, `prevent_destroy =
   true` — removing it is a deliberate `terraform destroy -target` + lifecycle override, not
@@ -321,14 +337,23 @@ History of already-triaged items: `triage-archive.md`.
    end to end with 12 staleness findings fixed, `AGENTS.md` made canonical
 9. ✅ **First prod deploy** — `prod-2026-08-16` tag, `deploy-prod` succeeded on its first run
    (no bugs — every other CD path had one). `/ready` green, UAT untouched
-10. **← next: B1** — per-user capability grants + admin dashboard, OpenSpec full cycle. Prod
-    ships with the feedback widget effectively off until this lands, which is correct while
-    there are no testers
-11. **DNS cutover** (O1/O2) — parallel human track throughout; unblocks OAuth + Resend
-12. Resend → Blob storage (O15) → decommission Neon/Upstash/R2
+10. ✅ **Custom domains live** (O1) — all 4 hostnames bound with managed TLS, 2026-08-17
+11. **← next: `runtime-environment-config`** (O22) — the prod-web→UAT-api defect. OpenSpec
+    change written; api ships first, then web, browser-verified on UAT before any prod tag.
+    Nothing below matters until this lands: **prod is not currently usable by anyone**
+12. **Then B14 + the D9 flip** (O21) — SMTP creds are verified working; swap `email.service.ts`
+    off the Resend SDK. Unblocks credential signup, which `EmailNotVerifiedException` gates
+13. **Then prod Google OAuth** (O23) — real client id/secret; callback URL depends on 11
+14. **Then B1** — per-user capability grants + admin dashboard, OpenSpec full cycle. Only
+    meaningful once people can actually log in (11–13)
+15. Blob storage (O15) → decommission Neon/Upstash/R2 → budget proposal (B12, owed to JP
+    finance — not blocking, but a human commitment that silently slips)
 
 Rationale for 5-before-6: CD automates a deploy you understand. Written first, every
 first-time deployment surprise surfaces as a red CI log instead of in front of you.
+
+Rationale for 11-before-everything: it is the only item that makes prod *wrong* rather than
+*incomplete*. A user reaching prod today would have their data written to UAT.
 
 ---
 

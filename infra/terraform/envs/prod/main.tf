@@ -63,6 +63,14 @@ module "environment" {
   source      = "../../modules/environment"
   environment = "prod"
 
+  # Custom hostnames bound 2026-08-17 (O1). These are the origins browsers use, so CORS and
+  # every generated link must be built from them rather than the *.azurecontainerapps.io FQDN.
+  public_web_host = "veervrat.jnanaprabodhini.org"
+  public_api_host = "api.veervrat.jnanaprabodhini.org"
+
+  # Stays off until B1 lands per-user grants — D20 says which users see it is data, not config.
+  feedback_mode = "off"
+
   image_tag       = var.image_tag
   app_image_tag   = var.app_image_tag
   deploy_apps     = var.deploy_apps

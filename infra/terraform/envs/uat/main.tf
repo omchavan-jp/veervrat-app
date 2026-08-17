@@ -58,6 +58,14 @@ module "environment" {
   source      = "../../modules/environment"
   environment = "uat"
 
+  # Custom hostnames bound 2026-08-17 (O1). These are the origins browsers use, so CORS and
+  # every generated link must be built from them rather than the *.azurecontainerapps.io FQDN.
+  public_web_host = "uat.veervrat.jnanaprabodhini.org"
+  public_api_host = "api.uat.veervrat.jnanaprabodhini.org"
+
+  # Nachiket reviews unreleased changes here, so the widget is on for everyone.
+  feedback_mode = "test"
+
   image_tag       = var.image_tag
   app_image_tag   = var.app_image_tag
   deploy_apps     = var.deploy_apps

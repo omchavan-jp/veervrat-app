@@ -3,8 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import { AuthShell } from '@/components/auth/auth-shell';
 import { StatusBanner } from '@/components/auth/status-banner';
 import { Button } from '@/components/ui/button';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+import { getRuntimeConfig } from '@/lib/runtime-config';
 
 // Module-scoped so it isn't recreated on every render (a component defined inside
 // render is flagged by react-hooks/static-components).
@@ -27,7 +26,7 @@ async function verifyEmailToken(
   token: string,
 ): Promise<{ ok: boolean; reason?: 'network' | 'rejected'; message?: string }> {
   try {
-    const res = await fetch(`${API_BASE_URL}/auth/verify-email`, {
+    const res = await fetch(`${getRuntimeConfig().apiBaseUrl}/auth/verify-email`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token }),

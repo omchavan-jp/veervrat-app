@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { ChatComposer } from '@/components/chat/chat-composer';
 import { MessageContent, type TiptapDoc } from '@/components/chat/message-content';
+import { getRuntimeConfig } from '@/lib/runtime-config';
 
 interface MessageSender {
   id: string;
@@ -57,7 +58,7 @@ function initialsOf(name: string): string {
 // server root, not the `/api/v1` namespace (which it would otherwise treat as a
 // Socket.IO namespace and fail to find).
 function socketOrigin(): string {
-  const base = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+  const base = getRuntimeConfig().apiBaseUrl;
   return base.replace(/\/api\/v\d+\/?$/, '');
 }
 

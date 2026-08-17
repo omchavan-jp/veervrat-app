@@ -129,7 +129,7 @@ pnpm --filter api start:dev   # backend only
 | Redis | ✅ docker-compose, port 6380 | ✅ Azure Managed Redis |
 | Meilisearch | ✅ docker-compose, port 7700 | ❌ deferred — search degrades gracefully |
 | Object storage | ✅ MinIO, ports 9000/9001 | ❌ Azure Blob decided, not implemented (O15) |
-| Email | ✅ console logging (no service needed) | ❌ Resend coded but not wired |
+| Email | ✅ console logging (no service needed) | ❌ not wired — JP IT's SMTP relay chosen (D9), code swap pending (B14) |
 
 ## Troubleshooting
 
