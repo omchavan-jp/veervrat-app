@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Refuse commits made directly on the trunk.
+#
+# This exists because the rule "never commit directly to main" was documented, agreed, and then
+# broken anyway — mid-flow, on a docs change, by an agent that had the rule in a file it had
+# stopped re-reading. Prose depends on attention at exactly the moment attention is elsewhere.
+# A hook does not.
+#
+# Version-controlled rather than left in .git/hooks so it survives a fresh clone. Activate with:
+#   git config core.hooksPath .githooks
+# (AGENTS.md → Git conventions documents this as a setup step.)
+set -euo pipefail
+
+BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+PROTECTED_REGEX='^(main|master|dev)$'
+
+if [[ "$BRANCH" =~ $PROTECTED_REGEX ]]; then
+  # Deliberately not offering a convenient flag. The override is long and awkward on purpose:
+  # it should feel like a decision, not a reflex.
+  if [[ "${VEERVRAT_ALLOW_PROTECTED_BRANCH_COMMIT:-}" == "yes-i-am-sure" ]]; then
+    echo "pre-commit: override accepted — committing directly to '$BRANCH'." >&2
+  else
+    cat >&2 <<EOF
+
+  ✋ Refusing to commit directly to '$BRANCH'.
+
+  Branch, then open a PR:
+
+      git switch -c <type>/<slug>
+      git add -A && git commit
+      git push -u origin HEAD && gh pr create
+
+  Already staged? The stage survives the branch switch — just switch and commit again.
+
+  If you genuinely must (and it is almost never), this is the escape hatch:
+
+      VEERVRAT_ALLOW_PROTECTED_BRANCH_COMMIT=yes-i-am-sure git commit ...
+
+EOF
+    exit 1
+  fi
+fi

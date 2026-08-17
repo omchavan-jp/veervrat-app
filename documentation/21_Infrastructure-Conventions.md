@@ -998,3 +998,30 @@ So a new environment reaches "green `/ready`, correct wiring, fully seeded" whil
 verified by a real browser session, so wiring email (B14) or real OAuth credentials (O23) is a
 *prerequisite* for validating auth work — not a follow-up to it. Add this to the zero-to-running
 sequence in `../DEPLOYMENT.md`: an environment is not "done" until someone can log in.
+
+## 19. GitHub Actions instability — 2026-08-17
+
+**Symptom, roughly 14:50–16:00 IST on 2026-08-17:** the Actions API and runners degraded in
+several distinct ways within the hour —
+
+- `503 No server is currently available` from `api.github.com/graphql` on `gh pr merge` /
+  `gh pr checks`
+- `429 Too Many Requests` while a runner downloaded `pnpm/action-setup`, failing a job during
+  **Set up job**, before any of our code ran
+- `404 Not Found` on `/actions/runs` and `/actions/runs/<id>/jobs` for a repo that was
+  otherwise readable, with valid auth — so run status could not be read at all for a while
+
+**How to recognise it as theirs, not ours:** the 429 failure happened in *Set up job*, while
+downloading a third-party action — nothing to do with the code in the commit. The 404s were on
+Actions endpoints only; `/repos/<owner>/<repo>` answered normally with the same token. When a
+failure is upstream of your own build steps, or an API contradicts itself between endpoints,
+suspect the platform before debugging your change.
+
+**What worked:** simply retrying. Failed jobs were re-run several times each; the build
+eventually passed, then `deploy-uat` failed and was re-run until it passed too. No code change
+was involved.
+
+**Guidance:** re-run failed jobs a few times before diagnosing. Do **not** reach for the manual
+`az acr build` fallback (`../DEPLOYMENT.md` §2) just to route around a platform blip — it ships
+an image that CI never gated, and it hides whether the failure was actually ours. Reserve it
+for a genuine, prolonged outage, and say explicitly that you are deviating.
