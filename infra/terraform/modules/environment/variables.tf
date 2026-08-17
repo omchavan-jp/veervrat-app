@@ -133,18 +133,17 @@ variable "database_pool_max" {
   default     = 5
 }
 
-# Read via getOrThrow and absent from the Joi schema, so an empty value crash-loops the api
-# with no useful error. Placeholders keep UAT bootable until real credentials are issued for
-# the UAT callback URL.
+# The Google OAuth *client ID* is not a secret — it is handed to the browser on every sign-in —
+# so it stays a plain variable. The client **secret** is a Key Vault reference instead; see
+# keyvault.tf.
+#
+# Read via getOrThrow and absent from the Joi schema, so an EMPTY value crash-loops the api with
+# no useful error. The placeholder keeps an environment bootable before real credentials exist;
+# sign-in fails at Google with an invalid client, which is the loud, obvious failure we want
+# rather than a container that will not start.
 variable "google_client_id" {
   type    = string
   default = "placeholder-not-configured"
-}
-
-variable "google_client_secret" {
-  type      = string
-  sensitive = true
-  default   = "placeholder-not-configured"
 }
 
 # Normally `migrate deploy`. Override to recover a failed migration, e.g.

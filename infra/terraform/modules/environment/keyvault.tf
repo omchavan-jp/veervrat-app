@@ -64,3 +64,29 @@ resource "azurerm_key_vault_secret" "smtp_password" {
     ignore_changes = [value]
   }
 }
+
+# Google OAuth client secret.
+#
+# Same pattern and the same reasoning as smtp-password above: Terraform owns the secret's
+# existence, never its value. Previously this was passed straight through as a plain container
+# env value, which put the real secret in Terraform state *and* left it readable to anyone who
+# could run `az containerapp show` — a wider blast radius than the database password, which has
+# always been a Key Vault reference. Moved before real credentials existed rather than after.
+#
+# Set the real value out of band, per environment:
+#
+#   az keyvault secret set --vault-name veervrat-<env>-kv --name google-client-secret \
+#     --value "$(python3 -c 'import json;print(json.load(open("<downloaded>.json"))["web"]["client_secret"])')"
+#
+# The client ID is NOT secret — it is sent to the browser on every sign-in — so it stays a
+# plain variable.
+resource "azurerm_key_vault_secret" "google_client_secret" {
+  name         = "google-client-secret"
+  value        = "placeholder-set-out-of-band"
+  key_vault_id = azurerm_key_vault.this.id
+  depends_on   = [azurerm_role_assignment.key_vault_admins]
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
