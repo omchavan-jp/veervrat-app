@@ -1,5 +1,11 @@
 # Email Strategy — v1
 
+⚠️ **Under reconsideration 2026-08-17.** This doc describes the original plan (Resend). JP
+offered direct SMTP on their own mail server instead (met Shantanoo 2026-08-16) — reasoning
+and status in `ops/PROJECT-STATUS.md` D9/O21. **Not yet decided or implemented either way** —
+the app still only speaks Resend's API today, and no SMTP creds have arrived. Don't treat this
+page as current until D9 is resolved one way or the other.
+
 ## Provider & Architecture
 
 | Concern | Decision |
