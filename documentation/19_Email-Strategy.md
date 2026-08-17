@@ -1,10 +1,9 @@
 # Email Strategy — v1
 
-> **Provider changed 2026-08-17: Resend → JP's own SMTP relay** (decision D9). The strategy
-> below — categories, templates, bilingual handling — is unchanged; only the transport is
-> different. **The code still calls Resend and has not been swapped yet** (backlog B14), so
-> the "Implementation status" section at the foot of this page is the authority on what
-> actually runs today.
+> **Provider changed 2026-08-17: Resend → JP's own SMTP relay** (decision D9, implemented as
+> B14). The strategy below — categories, templates, bilingual handling — is unchanged; only the
+> transport is different. Email is **live and delivering**; see "Implementation status" at the
+> foot of this page for what is and is not done.
 
 ## Provider & Architecture
 
@@ -136,7 +135,7 @@ Examples: `VerifyEmailEmail.tsx`, `PasswordResetEmail.tsx`, `VmInvitationEmail.t
 ```
 apps/api/src/modules/email/
   email.module.ts
-  email.service.ts          # SMTP vs console abstraction (currently still Resend — B14)
+  email.service.ts          # nodemailer (SMTP) vs console abstraction
   templates/
     VerifyEmailEmail.tsx
     PasswordResetEmail.tsx
@@ -180,13 +179,15 @@ apps/api/src/modules/email/
 SMTP_HOST="dhoomketu.in"
 SMTP_PORT="587"
 SMTP_SECURE="false"        # STARTTLS on 587 — true would mean implicit TLS on 465
-SMTP_REQUIRE_TLS="true"
 SMTP_USER="do-not-reply-veervrat@notifications.jnanaprabodhini.org"
 SMTP_PASS="<from Key Vault — never committed>"
 EMAIL_FROM="Veervrat <do-not-reply-veervrat@notifications.jnanaprabodhini.org>"
 ```
 
-`RESEND_API_KEY` is retired by B14.
+`RESEND_API_KEY` is gone, and so is the `resend` package.
+
+There is no separate `SMTP_REQUIRE_TLS`: `requireTLS` is derived as the inverse of
+`SMTP_SECURE`, so the two cannot be set to a contradictory pair.
 
 **Credential handling:** the password lives in `~/.secrets/veervrat/smtp-jp.env` (mode 600,
 outside the repo) until B14 moves it into per-environment Key Vault. It must never enter git —
@@ -206,16 +207,24 @@ library catalog rule.
 
 ## Implementation status
 
-⚠️ **Coded, not wired — nothing has ever been delivered.** (Accurate as of 2026-08-17.)
+✅ **Wired and delivering, verified 2026-08-17.** A password-reset email sent from UAT reached
+an external Gmail inbox — **not** spam. That is the first email this project has ever
+delivered, and it also proved the relay handles external domains, which had never been tested
+(JP's own test message went to a `@jnanaprabodhini.org` address).
 
 - ✅ `EmailModule` + `email.service.ts` with a console fallback
-- ⚠️ The transport is still the **Resend SDK** — D9 flipped to SMTP but the code has not been
-  swapped. That is **B14**, and it is the only remaining blocker to email working.
+- ✅ Transport is **nodemailer over JP IT's relay** (B14, 2026-08-17). `resend` removed.
 - ✅ 8 of the ~18 templates listed above exist (`EmailChangeEmail`, `NotificationEmail`,
   `PasswordResetEmail`, `PlatformInvitationEmail`, `VerifyEmailEmail`, …). The full list above
   is the target, not the current state
 - ✅ Credentials exist and are **verified authenticating** against JP's relay (2026-08-17)
-- ❌ Not in Key Vault yet — currently only in `~/.secrets/veervrat/smtp-jp.env`
+- ✅ Password in **UAT's Key Vault** as `smtp-password`, referenced by the app. Terraform owns
+  the secret's existence with `ignore_changes = [value]`; the real value is set out of band, so
+  an apply cannot revert it to the placeholder. **Prod's vault still holds the placeholder** —
+  set it before the next prod deploy.
+- ⚠️ **Verification email cannot be resent.** No such endpoint exists, and password reset does
+  not mark the address verified — so a user who loses the verification mail is locked out with
+  no self-service route. See B16.
 
 **No longer blocked on DNS.** The old blocker (verify a sending domain, add SPF/DKIM/DMARC on
 a subdomain we control) disappeared with D9: JP IT owns the sending domain and its mail

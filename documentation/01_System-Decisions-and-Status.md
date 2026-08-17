@@ -25,8 +25,8 @@ This is the master reference for all technology and architecture decisions. Read
 | WebSocket | NestJS Gateway + Socket.IO | ⚠️ Built with Redis adapter, but **has never run successfully in production** — the rewrite proxy blocks upgrades. Custom domains are now live (2026-08-17), so the remaining blocker is removing the proxy — `runtime-environment-config`, then O8 |
 | Animation | Framer Motion | ✅ Built |
 | Background jobs | @nestjs/schedule (v1), BullMQ path (v2) | ✅ Built — dormant-journeys + notifications crons |
-| Auth | Custom in NestJS (cookie sessions, OAuth + credentials) | ✅ Built — see `openspec/specs/auth/spec.md`. 🔴 Google OAuth credentials are still `placeholder-not-configured` on **prod** (O23); with email unwired (B14), prod has no working signup or login path at all |
-| Email | **JP IT's SMTP relay** (prod) + console logging (dev) | ⚠️ **Coded, not wired** — `email.service.ts` + 8 React Email templates exist, but the transport is still the Resend SDK. Credentials for the relay are verified working; the swap is backlog **B14**. Nothing delivers until then, which **blocks credential signup** |
+| Auth | Custom in NestJS (cookie sessions, OAuth + credentials) | ✅ Built — see `openspec/specs/auth/spec.md`. 🔴 Google OAuth credentials are still `placeholder-not-configured` in **both** environments (O23). Credential signup now works on UAT (email delivers, B14); **prod still has no working login path** — its Key Vault holds a placeholder SMTP password |
+| Email | **JP IT's SMTP relay** (prod) + console logging (dev) | ✅ **Delivering** — verified 2026-08-17, a real message reached an external Gmail inbox (not spam). nodemailer over `dhoomketu.in:587` STARTTLS. ⚠️ Prod's Key Vault still holds the placeholder password |
 | Monorepo | pnpm workspaces + Turborepo | ✅ Built |
 | UI | Tailwind CSS (v4, CSS-first) + shadcn/ui | ✅ Built — design system implemented, see 15 |
 | API style | REST | ✅ Built — `/api/v1/`, `{ data }` envelope |
@@ -78,11 +78,16 @@ SPF/DKIM/DMARC ownership to JP IT rather than us. Credentials were verified auth
 a test message reached a Gmail inbox rather than spam, before the decision was taken. The
 `EmailService` abstraction that made the original decision reversible is what made this cheap.
 
-**Status**: ⚠️ **Coded, not wired.** `EmailModule` + `email.service.ts` (console fallback) and 8
-React Email templates exist, but the transport is **still the Resend SDK** — the swap to
-nodemailer is backlog **B14**. No longer blocked on DNS (JP owns the sending domain); the only
-remaining work is the code change. 🔴 Until it lands, credential signup is unusable —
-`auth.service.ts` refuses login until an email-verification link is delivered.
+**Status**: ✅ **Live on UAT, verified 2026-08-17** — a real password-reset email reached an
+external Gmail inbox, not spam, which also proved the relay delivers outside JP's own domain
+(never previously tested). nodemailer replaced the Resend SDK in B14.
+
+⚠️ **Prod's Key Vault still holds the placeholder password** — set `smtp-password` there before
+the next prod deploy, or prod will silently log mail to the console instead of sending.
+
+⚠️ Two gaps found while verifying: there is **no resend-verification endpoint**, and password
+reset does **not** mark an address verified — so a user who loses the verification email is
+locked out with no self-service route (**B16**).
 
 ### 9. Meilisearch for search
 **Decision**: Meilisearch for full-text search.

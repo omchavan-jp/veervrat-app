@@ -8,6 +8,13 @@ line here (see `documentation/20_Solo-Dev-Operations.md`).
 Note: merging to `main` ships to **UAT**, not to users. A line here is live for beta
 testers only once a `prod-*` tag has been deployed.
 
+## Unreleased
+- Signup verification and password-reset emails now actually send. They have never worked in
+  any deployed environment until now — the code was written but no mail provider was ever
+  connected, so accounts created with an email address could never be logged into.
+- Fixed: the app could send you to the wrong environment's data. (Internal wiring fault; no
+  user data was affected, as production had no users.)
+
 ## 2026-08-16 (prod-2026-08-16)
 - 🚀 Migrated off Railway/Neon/Upstash/R2 to Azure (Container Apps, Postgres Flexible
   Server, Azure Managed Redis) via Terraform, with a GitHub Actions CD pipeline

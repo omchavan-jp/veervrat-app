@@ -231,6 +231,23 @@ a GitHub Issue or is promoted to an O-thread above.
 
 **p2 — real, not blocking**
 
+- **B16 · Password reset does not verify the email, leaving a dead end.** Found 2026-08-17.
+  Login refuses an unverified address (`auth.service.ts` → `EmailNotVerifiedException`), but
+  `resetPassword` only updates the password hash — it never sets `emailVerifiedAt`. So a user
+  who signs up, never receives the verification mail, and then uses "forgot password"
+  *successfully resets* and **still cannot log in**, with nothing in the UI explaining why or
+  offering a way out. Completing a reset proves control of the mailbox exactly as well as
+  clicking a verification link, so it should mark the address verified. Also missing: a
+  **resend-verification endpoint** — there is none (`auth.controller.ts` has `forgot-password`
+  and `verify-email` only), so a lost verification email is unrecoverable by the user.
+- **B17 · No way to administer data in a deployed environment.** There is no admin user (the
+  seed creates content only), no `az containerapp exec` runbook, and Postgres allows only
+  "Azure services" through its firewall — so removing a test account or fixing a row on UAT has
+  no supported path. Fine while environments are disposable; not fine once real beta users
+  exist and someone needs a correction made. Wants either a documented break-glass procedure or
+  the admin surface from B1.
+
+
 - **B3 · Account lockout is unreachable from a single IP — confirmed, not theorised.**
   `14_Auth-Architecture-Decision.md` §16 specifies lockout after 10 failed logins per email;
   login is throttled at 10 req/15 min per IP. The throttler guard runs *before* the
@@ -351,11 +368,15 @@ History of already-triaged items: `triage-archive.md`.
     proxy removed, `SameSite=Lax`, CORS on the custom domain, plus a CD check that asserts
     cross-tier wiring. Everything machine-verifiable passes. **Prod tag deliberately not cut**
     — the browser checks are the gate and they are blocked, see 12
-12. **← next: B14** (O21) — swap `email.service.ts` off the Resend SDK onto JP's SMTP relay.
-    Creds verified. Now doubles as the **unblocker for 11's verification**: no email means no
-    verified account, no login, and therefore no way to browser-test cookies/CORS/CSRF
-13. **Then finish 11's browser verification and cut the prod tag** — sign up on UAT, verify the
-    email, confirm session persistence + a state-changing action + logout, then tag
+12. ✅ **B14 done** (O21) — nodemailer over JP's relay. **Verified by a real delivered email**
+    2026-08-17: reached an external Gmail inbox, not spam, which also proved the relay sends
+    outside JP's own domain (never previously tested). ⚠️ Prod's Key Vault still holds the
+    placeholder SMTP password — set it before the next prod deploy
+13. **← next: finish 11's browser verification, then cut the prod tag.** Sign up fresh on UAT
+    (a plus-address such as `…+uat@gmail.com` avoids needing the stale account removed), verify
+    via the emailed link, then confirm session persists across reload, a state-changing action
+    passes CSRF across hosts, and logout clears. Only then tag — the tag is what finally stops
+    prod writing to UAT's database
 14. **Then prod Google OAuth** (O23) — real client id/secret. ⚠️ Register the **api-origin**
     callback URL, not the web origin; it moved when the proxy was removed
 15. **Then B1** — per-user capability grants + admin dashboard, OpenSpec full cycle. Only
