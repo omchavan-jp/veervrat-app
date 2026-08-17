@@ -8,12 +8,14 @@ line here (see `documentation/20_Solo-Dev-Operations.md`).
 Note: merging to `main` ships to **UAT**, not to users. A line here is live for beta
 testers only once a `prod-*` tag has been deployed.
 
-## Unreleased
-- Signup verification and password-reset emails now actually send. They have never worked in
-  any deployed environment until now — the code was written but no mail provider was ever
-  connected, so accounts created with an email address could never be logged into.
-- Fixed: the app could send you to the wrong environment's data. (Internal wiring fault; no
-  user data was affected, as production had no users.)
+## 2026-08-17 (prod-2026-08-17)
+- **Signing up with an email address now works.** Verification and password-reset emails
+  actually send — they never have before in any deployed environment, so an account created
+  with an email address could not previously be logged into.
+- The site now runs on its real address, `veervrat.jnanaprabodhini.org`, with HTTPS.
+- Fixed: link previews (when you share a page in a chat app) showed the wrong address.
+- Fixed, internal: production was reading and writing the test environment's database. No
+  user data was affected — production had no users at the time.
 
 ## 2026-08-16 (prod-2026-08-16)
 - 🚀 Migrated off Railway/Neon/Upstash/R2 to Azure (Container Apps, Postgres Flexible
