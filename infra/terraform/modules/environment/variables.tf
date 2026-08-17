@@ -195,3 +195,16 @@ variable "cookie_samesite" {
     error_message = "cookie_samesite must be one of: lax, strict, none."
   }
 }
+
+# Feedback widget availability for the environment as a whole: "test" (list + form), "public"
+# (form only), "off" (absent). Per-user gating is a separate concern — see D20 and B1.
+variable "feedback_mode" {
+  description = "Feedback widget mode for this environment: off | test | public."
+  type        = string
+  default     = "off"
+
+  validation {
+    condition     = contains(["off", "test", "public"], var.feedback_mode)
+    error_message = "feedback_mode must be one of: off, test, public."
+  }
+}

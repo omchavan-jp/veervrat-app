@@ -63,6 +63,9 @@ module "environment" {
   public_web_host = "uat.veervrat.jnanaprabodhini.org"
   public_api_host = "api.uat.veervrat.jnanaprabodhini.org"
 
+  # Nachiket reviews unreleased changes here, so the widget is on for everyone.
+  feedback_mode = "test"
+
   image_tag       = var.image_tag
   app_image_tag   = var.app_image_tag
   deploy_apps     = var.deploy_apps

@@ -14,8 +14,7 @@ import { GoogleIcon } from '@/components/auth/google-icon';
 import { useLogin } from '@/hooks/use-auth';
 import { loginSchema, type LoginInput } from '@/lib/validations/auth';
 import { ApiError } from '@/lib/api/client';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+import { getRuntimeConfig } from '@/lib/runtime-config';
 
 const FIELD_LABEL = 'mb-2 block font-mono text-[11px] uppercase tracking-[0.1em] text-muted';
 
@@ -144,7 +143,7 @@ export default function LoginPage() {
         size="lg"
         className="min-h-12 w-full text-[15px]"
         nativeButton={false}
-        render={<a href={`${API_URL}/auth/google`} />}
+        render={<a href={`${getRuntimeConfig().apiBaseUrl}/auth/google`} />}
       >
         <GoogleIcon className="h-[18px] w-[18px]" />
         {t('googleCta')}

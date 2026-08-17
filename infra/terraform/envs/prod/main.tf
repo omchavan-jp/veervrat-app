@@ -68,6 +68,9 @@ module "environment" {
   public_web_host = "veervrat.jnanaprabodhini.org"
   public_api_host = "api.veervrat.jnanaprabodhini.org"
 
+  # Stays off until B1 lands per-user grants — D20 says which users see it is data, not config.
+  feedback_mode = "off"
+
   image_tag       = var.image_tag
   app_image_tag   = var.app_image_tag
   deploy_apps     = var.deploy_apps

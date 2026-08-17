@@ -1,10 +1,12 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { SUPPORTED_LOCALES, type Locale } from '@/lib/i18n-constants';
 
-// Server-side fetch needs an ABSOLUTE URL. NEXT_PUBLIC_API_URL is relative (/api/v1)
-// in production (same-origin proxy), so resolve against API_ORIGIN — the same origin
-// the next.config.ts rewrite already proxies to. Falls back to the local dev API.
-const API_BASE = `${process.env.API_ORIGIN || 'http://localhost:3001'}/api/v1`;
+// Read per request, never at module scope. Middleware modules are bundled, and a
+// module-scope `process.env` read can be frozen into that bundle — the same build-time
+// baking that pointed prod's web tier at UAT's api (21_Infrastructure-Conventions §17).
+function apiBase(): string {
+  return process.env.API_BASE_URL || 'http://localhost:3001/api/v1';
+}
 
 function parseAcceptLanguage(header: string | null): Locale {
   if (!header) return 'en';
@@ -18,7 +20,7 @@ async function resolveLocale(request: NextRequest): Promise<Locale> {
   }
 
   try {
-    const res = await fetch(`${API_BASE}/auth/me`, {
+    const res = await fetch(`${apiBase()}/auth/me`, {
       headers: {
         Cookie: `veervrat_session=${sessionCookie.value}`,
       },

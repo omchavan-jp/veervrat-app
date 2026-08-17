@@ -65,8 +65,8 @@ jobs:
           # One checkout, one SHA, every image — the invariant broken by hand when committing
           # between builds produced three images on three different tags.
           echo "sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
-          # Container App URLs are predictable from the environment's default domain, which is
-          # what lets web be *built* knowing the api's URL (NEXT_PUBLIC_* is baked in at build).
+          # Still resolved because the post-deploy wiring check compares against it; the web
+          # image no longer needs it, since per-environment URLs are runtime config now.
           echo "domain=$(az containerapp env show -n veervrat-uat-cae -g veervrat-uat \
             --query properties.defaultDomain -o tsv)" >> "$GITHUB_OUTPUT"
       # Only meaningful for branch pushes to main — tag pushes always build (see `build`'s
@@ -135,16 +135,18 @@ jobs:
       # Build args only matter for web, and only because the Dockerfile declares matching
       # ARG+ENV for each. Pass an undeclared build arg and Docker drops it silently — no
       # warning, no failure, just a stale fallback in the shipped bundle.
+      # ⚠️ Only values that describe the IMAGE may go here. This image is promoted to prod
+      # unchanged, so an environment-specific build arg ships UAT's value to production —
+      # which is exactly how prod's web tier ended up calling UAT's api
+      # (documentation/21_Infrastructure-Conventions.md §17). API_ORIGIN,
+      # NEXT_PUBLIC_API_URL, NEXT_PUBLIC_SITE_URL and NEXT_PUBLIC_FEEDBACK_MODE were removed
+      # from here for that reason; they are runtime env vars on the Container App now.
       - name: Resolve build args
         id: args
         run: |
           if [ "${{ matrix.image }}" = "veervrat-web" ]; then
             {
               echo 'value<<EOF'
-              echo 'NEXT_PUBLIC_API_URL=/api/v1'
-              echo 'API_ORIGIN=https://veervrat-uat-api.${{ needs.prepare.outputs.uat_domain }}'
-              echo 'NEXT_PUBLIC_SITE_URL=https://veervrat-uat-web.${{ needs.prepare.outputs.uat_domain }}'
-              echo 'NEXT_PUBLIC_FEEDBACK_MODE=test'
               echo 'NEXT_PUBLIC_COMMIT_SHA=${{ needs.prepare.outputs.image_tag }}'
               echo EOF
             } >> "$GITHUB_OUTPUT"

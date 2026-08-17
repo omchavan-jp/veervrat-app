@@ -51,6 +51,23 @@ vi.mock('@/lib/api/client', () => ({
 }));
 
 import SignupPage from '../../app/(public)/signup/page';
+import { RuntimeConfigProvider } from '@/lib/runtime-config-provider';
+
+// The page resolves the api base URL from runtime config, which the root layout supplies in
+// the real app. Without the provider getRuntimeConfig() throws deliberately, rather than
+// silently defaulting to localhost and hiding a misconfigured environment.
+const renderSignup = () =>
+  render(
+    <RuntimeConfigProvider
+      config={{
+        apiBaseUrl: 'http://localhost:3001/api/v1',
+        siteUrl: 'http://localhost:3000',
+        feedbackMode: 'off',
+      }}
+    >
+      <SignupPage />
+    </RuntimeConfigProvider>,
+  );
 
 describe('SignupPage', () => {
   beforeEach(() => {
@@ -63,7 +80,7 @@ describe('SignupPage', () => {
   });
 
   it('renders all required fields', () => {
-    render(<SignupPage />);
+    renderSignup();
     expect(screen.getByPlaceholderText('auth.signup.displayNamePlaceholder')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('auth.signup.usernamePlaceholder')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('auth.signup.emailPlaceholder')).toBeInTheDocument();
@@ -73,7 +90,7 @@ describe('SignupPage', () => {
 
   it('calls checkUsername API after 400ms debounce', async () => {
     mockCheckUsername.mockResolvedValue(true);
-    render(<SignupPage />);
+    renderSignup();
 
     const usernameInput = screen.getByPlaceholderText('auth.signup.usernamePlaceholder');
     fireEvent.change(usernameInput, { target: { value: 'new_user' } });
@@ -89,7 +106,7 @@ describe('SignupPage', () => {
 
   it('shows username available text when check returns true', async () => {
     mockCheckUsername.mockResolvedValue({ available: true });
-    render(<SignupPage />);
+    renderSignup();
 
     const usernameInput = screen.getByPlaceholderText('auth.signup.usernamePlaceholder');
     fireEvent.change(usernameInput, { target: { value: 'available_name' } });
@@ -104,7 +121,7 @@ describe('SignupPage', () => {
 
   it('shows username taken text when check returns false', async () => {
     mockCheckUsername.mockResolvedValue({ available: false, reason: 'taken' });
-    render(<SignupPage />);
+    renderSignup();
 
     const usernameInput = screen.getByPlaceholderText('auth.signup.usernamePlaceholder');
     fireEvent.change(usernameInput, { target: { value: 'taken_name' } });
@@ -118,7 +135,7 @@ describe('SignupPage', () => {
   });
 
   it('has language radio buttons with EN selected by default', () => {
-    render(<SignupPage />);
+    renderSignup();
     const enRadio = screen.getByDisplayValue('EN') as HTMLInputElement;
     const mrRadio = screen.getByDisplayValue('MR') as HTMLInputElement;
     expect(enRadio.checked).toBe(true);

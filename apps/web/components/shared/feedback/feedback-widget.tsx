@@ -5,11 +5,9 @@ import { animate, motion, useMotionValue } from 'framer-motion';
 import { MessageSquarePlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { FeedbackModal } from './feedback-modal';
+import { useRuntimeConfig } from '@/lib/runtime-config-provider';
 
 export type FeedbackMode = 'test' | 'public';
-
-const RAW_MODE = process.env.NEXT_PUBLIC_FEEDBACK_MODE;
-const MODE: FeedbackMode | null = RAW_MODE === 'test' || RAW_MODE === 'public' ? RAW_MODE : null;
 
 type Corner = 'tl' | 'tr' | 'bl' | 'br';
 const STORAGE_KEY = 'veervrat.feedback.corner';
@@ -45,11 +43,13 @@ function loadCorner(): Corner {
 
 // Floating beta-feedback entry point. Draggable; snaps to the nearest viewport corner
 // on release and persists the corner (not raw coordinates, so it survives viewport
-// changes). Rendered only inside the authenticated shell and only when
-// NEXT_PUBLIC_FEEDBACK_MODE is 'test' or 'public'.
+// changes). Rendered only inside the authenticated shell and only when the environment's
+// feedback mode is 'test' or 'public' — read at runtime, since one image serves both UAT
+// and prod and this must be able to differ between them.
 export function FeedbackWidget() {
-  if (!MODE) return null;
-  return <FeedbackWidgetInner mode={MODE} />;
+  const { feedbackMode } = useRuntimeConfig();
+  if (feedbackMode === 'off') return null;
+  return <FeedbackWidgetInner mode={feedbackMode} />;
 }
 
 function FeedbackWidgetInner({ mode }: { mode: FeedbackMode }) {
