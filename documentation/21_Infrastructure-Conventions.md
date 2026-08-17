@@ -1025,3 +1025,34 @@ was involved.
 `az acr build` fallback (`../DEPLOYMENT.md` §2) just to route around a platform blip — it ships
 an image that CI never gated, and it hides whether the failure was actually ours. Reserve it
 for a genuine, prolonged outage, and say explicitly that you are deviating.
+
+## 20. Secrets the app needs but Terraform must not own (2026-08-17)
+
+Three kinds of secret, handled three different ways — the distinction is worth stating because
+getting it wrong is silent.
+
+| Kind | Example | How |
+|---|---|---|
+| Terraform **generates** it | session secret, Postgres password | `random_password` → Key Vault. Terraform owns value and existence. |
+| Someone **else** issues it | SMTP password, Google client secret | Terraform creates the Key Vault secret with a **placeholder** and `ignore_changes = [value]`; the real value is set out of band with `az keyvault secret set`. |
+| Not actually secret | Google **client ID**, tenant/subscription IDs | Plain variable, committed. |
+
+**Why the middle row exists.** A value Terraform does not generate has to reach it somehow — a
+`-var` flag, a `.tfvars` file, an environment variable in CI. Every one of those puts the secret
+somewhere additional: shell history, a CI log, a file that might get committed. Creating the
+secret empty and filling it out of band keeps the credential in exactly two places: the vault,
+and whoever issued it.
+
+`ignore_changes = [value]` is what makes it stable. Without it the next `apply` reverts the real
+credential to the placeholder — and for something like SMTP that fails *silently*, because the
+app falls back to console logging and simply stops sending mail.
+
+**This does not keep secrets out of Terraform state** (§5) — the placeholder is in state, and
+so is any value Terraform ever saw. It keeps them out of git, CI logs, and shell history, which
+are the paths that leak to people rather than to storage.
+
+⚠️ **Never pass a real secret as a plain container env value.** `GOOGLE_CLIENT_SECRET` was
+originally wired that way, which would have left it readable to anyone who could run
+`az containerapp show` — a wider audience than the vault's RBAC. It was moved to a Key Vault
+reference on 2026-08-17, deliberately *before* real credentials were issued rather than after,
+because a secret that has been exposed has to be rotated, not just relocated.

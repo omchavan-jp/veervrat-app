@@ -82,6 +82,12 @@ resource "azurerm_container_app" "api" {
     identity            = azurerm_user_assigned_identity.api.id
   }
 
+  secret {
+    name                = "google-client-secret"
+    key_vault_secret_id = azurerm_key_vault_secret.google_client_secret.versionless_id
+    identity            = azurerm_user_assigned_identity.api.id
+  }
+
   ingress {
     external_enabled = true
     target_port      = 3001
@@ -181,8 +187,8 @@ resource "azurerm_container_app" "api" {
         value = var.google_client_id
       }
       env {
-        name  = "GOOGLE_CLIENT_SECRET"
-        value = var.google_client_secret
+        name        = "GOOGLE_CLIENT_SECRET"
+        secret_name = "google-client-secret"
       }
       # ⚠️ Points at the API origin, not the web origin. It used to be the web host because the
       # Next rewrite proxy forwarded /api/v1/* to the api; with the proxy gone, that path on the
