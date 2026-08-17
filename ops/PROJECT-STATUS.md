@@ -232,15 +232,20 @@ a GitHub Issue or is promoted to an O-thread above.
 
 **p2 — real, not blocking**
 
-- **B16 · Password reset does not verify the email, leaving a dead end.** Found 2026-08-17.
-  Login refuses an unverified address (`auth.service.ts` → `EmailNotVerifiedException`), but
-  `resetPassword` only updates the password hash — it never sets `emailVerifiedAt`. So a user
-  who signs up, never receives the verification mail, and then uses "forgot password"
-  *successfully resets* and **still cannot log in**, with nothing in the UI explaining why or
-  offering a way out. Completing a reset proves control of the mailbox exactly as well as
-  clicking a verification link, so it should mark the address verified. Also missing: a
-  **resend-verification endpoint** — there is none (`auth.controller.ts` has `forgot-password`
-  and `verify-email` only), so a lost verification email is unrecoverable by the user.
+- **B16 · An unverified account is a permanent dead end — three ways in, no way out.** p1-ish.
+  Login refuses any address with `emailVerifiedAt` null (`auth.service.ts` →
+  `EmailNotVerifiedException`), and **nothing else in the system ever sets it**:
+  1. `resetPassword` only updates the password hash. Reset succeeds; login still refuses.
+  2. `linkGoogleAccount` verifies the user's password and issues a session but does not set it
+     either — so **Google has proven ownership of the address, Google sign-in works, and
+     credential sign-in on the very same account still says "verify your email"**. Hit for real
+     2026-08-18.
+  3. There is **no resend-verification endpoint** (`auth.controller.ts` has only
+     `forgot-password` and `verify-email`), so a lost verification mail is unrecoverable.
+
+  Each of (1) and (2) proves control of the mailbox at least as well as clicking a verification
+  link, so both should mark the address verified; (3) should exist regardless. The UI also
+  explains none of this — it just refuses. Any beta tester who misses one email lands here.
 - **B17 · No way to administer data in a deployed environment.** There is no admin user (the
   seed creates content only), no `az containerapp exec` runbook, and Postgres allows only
   "Azure services" through its firewall — so removing a test account or fixing a row on UAT has

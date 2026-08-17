@@ -500,9 +500,13 @@ Vratarthi are on personal Gmail, so Internal would lock out every real user. Thi
 easiest setting to get wrong here, and it fails at Google's end where it is hard to trace.
 
 **Testing, not Published.** Publishing needs privacy-policy and terms URLs, and the app has
-**neither page** (B18). While in Testing only listed test users can sign in, and each sees an
-"unverified app" interstitial once (*Advanced → Go to Veervrat*) — expected, worth warning
-testers about so it does not read as broken.
+**neither page** (B18). While in Testing, only listed test users can sign in.
+
+**No "unverified app" interstitial appears** — verified by real sign-in 2026-08-18. That warning
+is tied to *sensitive or restricted* scopes; with only `email`, `profile` and `openid` Google
+shows an ordinary consent screen. Testers see "Sign in to continue to jnanaprabodhini.org",
+taken from the authorized domain. So Testing mode costs nothing in user experience here — the
+only real limit is the 100-user cap.
 
 ⚠️ Publishing needs **no Google review**, because the scopes are non-sensitive. The two pages
 are the entire blocker. Adding any further scope (Drive, Calendar, contacts) would pull the app
