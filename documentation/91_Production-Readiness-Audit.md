@@ -10,7 +10,7 @@
 > | no deployment | UAT live on Azure, prod infra provisioned |
 > | no CI/CD | CD pipeline live (OIDC, build→migrate→deploy) |
 > | no backups | Postgres Flexible Server, 7-day UAT / 35-day prod retention + PITR |
-> | no error tracking | ⚠️ **still true** — decided (D8) but unimplemented, backlog B13 |
+> | no error tracking | ⚠️ **still true** — decided (D8) but unimplemented, issue #79 |
 >
 > Current status lives in `01_System-Decisions-and-Status.md` and `../ops/PROJECT-STATUS.md`.
 

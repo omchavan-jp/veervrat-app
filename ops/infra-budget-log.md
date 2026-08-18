@@ -7,7 +7,7 @@ are discovered.
 Origin: the original task was to compile a professional budget for JP. That work uncovered
 the Microsoft nonprofit grant (US$2,000) and the option to reuse `jnanaprabodhini.org` via a
 subdomain, which redirected effort into claiming the grant and building the deployment. The
-proposal itself is still outstanding — see `PROJECT-STATUS.md` B12.
+proposal itself is still outstanding — see issue #84.
 
 > 📌 **Superseded decisions below.** This log records what was believed *at the time* — that is
 > its value as an evidence base, so it is not rewritten. Two entries have since changed: email

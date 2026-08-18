@@ -23,10 +23,10 @@ This document is the canonical reference for all library, tooling, and architect
 | WebSocket (multi-instance) | Socket.IO Redis adapter | `@socket.io/redis-adapter` | **Required before running more than one API replica.** Socket.IO keeps room membership in per-process memory, so without a shared backplane a message published on replica A never reaches a client connected to replica B — silently, with no error. Uses two duplicated `ioredis` clients (pub/sub) from the existing `REDIS_CLIENT`. |
 | Background jobs (v1) | @nestjs/schedule | `@nestjs/schedule` | Single-instance cron. Known limitation: not multi-instance safe. |
 | Background jobs (v2 path) | BullMQ | `bullmq` | Upgrade path when horizontal scaling is needed. Redis-backed. |
-| Email transport | **SMTP (JP IT relay)** | `nodemailer` *(to add — B14)* | Replaces Resend per D9. Port 587 STARTTLS: `secure: false, requireTLS: true`. `resend` to be removed. Console logging in local dev. |
+| Email transport | **SMTP (JP IT relay)** | `nodemailer` ✅ | Replaced Resend per D9, shipped 2026-08-17; `resend` removed. Port 587 STARTTLS: `secure: false, requireTLS: true`. Console logging in local dev. |
 | Email templates | React Email | `@react-email/components`, `react`, `react-dom` | JSX-based, type-safe, renders HTML + plain text, bilingual support. |
-| Error tracking | **Sentry** (free tier) | `@sentry/nextjs`, `@sentry/node` | D8 — GlitchTip dropped 2026-08. SDK already installed; still reads `GLITCHTIP_DSN`, rename pending (B13) |
-| Platform telemetry | **Azure Application Insights** | *not yet installed* | D8 — answers "is the system healthy", which Sentry does not. No SDK and no Terraform resource yet (B13) |
+| Error tracking | **Sentry** (free tier) | `@sentry/nextjs`, `@sentry/node` | D8 — GlitchTip dropped 2026-08. SDK already installed; still reads `GLITCHTIP_DSN`, rename pending (issue #79) |
+| Platform telemetry | **Azure Application Insights** | *not yet installed* | D8 — answers "is the system healthy", which Sentry does not. No SDK and no Terraform resource yet (issue #79) |
 | Object storage client | AWS SDK S3 compatible | `@aws-sdk/client-s3` | Works with MinIO (S3-compatible API). Provider-agnostic. |
 | HEIC→JPEG conversion | heic-convert | `heic-convert` | Converts iPhone HEIC/HEIF uploads to JPEG server-side (Chrome/Firefox can't render HEIC). Pure-JS (libheif/wasm) — no native/libvips build. |
 | Search | Meilisearch | `meilisearch` | Already decided. See Search Architecture doc. |

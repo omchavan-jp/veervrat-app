@@ -19,13 +19,13 @@ This is the master reference for all technology and architecture decisions. Read
 | File storage | MinIO locally · **Azure Blob** in cloud | ⚠️ Decided but **not implemented** — code still speaks S3 (`@aws-sdk/client-s3`), which Azure Blob does not. Uploads degrade gracefully (chat images disabled). O15 / B-items |
 | Hosting | **Azure** (Container Apps, Central India) | ✅ **UAT live and serving**; prod deployed 2026-08-16 but 🔴 **not usable** — prod web talks to UAT's api (O22) and no login path works (O23). See `../DEPLOYMENT.md` |
 | CI / CD | GitHub Actions | ✅ Both — CI gates PRs; CD builds → migrates → deploys UAT on merge, prod by `prod-*` tag |
-| Observability | Sentry (app errors) + Azure App Insights (platform) | ⚠️ Decided 2026-08 (**replaces GlitchTip**) but **not implemented** — Sentry SDK still reads `GLITCHTIP_DSN`, App Insights not wired at all. Backlog B13 |
+| Observability | Sentry (app errors) + Azure App Insights (platform) | ⚠️ Decided 2026-08 (**replaces GlitchTip**) but **not implemented** — Sentry SDK still reads `GLITCHTIP_DSN`, App Insights not wired at all. Issue #79 |
 | Rich text editor | Tiptap + JSON AST storage | ✅ Built |
 | i18n | next-intl | ✅ Built — no URL routing, user preference, en + mr |
 | WebSocket | NestJS Gateway + Socket.IO | ⚠️ Built with Redis adapter, but **has never run successfully in production** — the rewrite proxy blocks upgrades. Custom domains are now live (2026-08-17), so the remaining blocker is removing the proxy — `runtime-environment-config`, then O8 |
 | Animation | Framer Motion | ✅ Built |
 | Background jobs | @nestjs/schedule (v1), BullMQ path (v2) | ✅ Built — dormant-journeys + notifications crons |
-| Auth | Custom in NestJS (cookie sessions, OAuth + credentials) | ✅ Built — see `openspec/specs/auth/spec.md`. 🔴 Google OAuth credentials are still `placeholder-not-configured` in **both** environments (O23). Credential signup now works on UAT (email delivers, B14); **prod still has no working login path** — its Key Vault holds a placeholder SMTP password |
+| Auth | Custom in NestJS (cookie sessions, OAuth + credentials) | ✅ Built — see `openspec/specs/auth/spec.md`. 🔴 Google OAuth credentials are still `placeholder-not-configured` in **both** environments (O23). ✅ **Google sign-in configured in both environments** 2026-08-18 and verified on UAT; credential signup works too (email delivers). Prod's SMTP password is now the real one |
 | Email | **JP IT's SMTP relay** (prod) + console logging (dev) | ✅ **Delivering** — verified 2026-08-17, a real message reached an external Gmail inbox (not spam). nodemailer over `dhoomketu.in:587` STARTTLS. ⚠️ Prod's Key Vault still holds the placeholder password |
 | Monorepo | pnpm workspaces + Turborepo | ✅ Built |
 | UI | Tailwind CSS (v4, CSS-first) + shadcn/ui | ✅ Built — design system implemented, see 15 |
@@ -80,14 +80,14 @@ a test message reached a Gmail inbox rather than spam, before the decision was t
 
 **Status**: ✅ **Live on UAT, verified 2026-08-17** — a real password-reset email reached an
 external Gmail inbox, not spam, which also proved the relay delivers outside JP's own domain
-(never previously tested). nodemailer replaced the Resend SDK in B14.
+(never previously tested). nodemailer replaced the Resend SDK.
 
 ⚠️ **Prod's Key Vault still holds the placeholder password** — set `smtp-password` there before
 the next prod deploy, or prod will silently log mail to the console instead of sending.
 
 ⚠️ Two gaps found while verifying: there is **no resend-verification endpoint**, and password
 reset does **not** mark an address verified — so a user who loses the verification email is
-locked out with no self-service route (**B16**).
+locked out with no self-service route (issue **#74**).
 
 ### 9. Meilisearch for search
 **Decision**: Meilisearch for full-text search.
@@ -131,11 +131,11 @@ These are acknowledged but not yet decided in detail:
 | ~~Realtime~~ | ✅ Decided — NestJS Gateway + Socket.IO. See 10_Platform-Engineering-Standard.md |
 | ~~Notifications~~ | ✅ Decided — in-app bell + email (JP IT's SMTP relay; was Resend, see D9). See spec/decisions/25_notifications.md |
 | ~~Testing~~ | ✅ Decided — Vitest + supertest + Playwright. See 16_Testing-Strategy.md |
-| ~~Observability~~ | ✅ Decided 2026-08 — **Sentry** (app errors) + **Azure App Insights** (platform) + Pino structured JSON. **Supersedes the earlier GlitchTip decision** (D8 in `../ops/PROJECT-STATUS.md`). Implementation still pending — see backlog B13. Standard: 18_Observability-Standard.md |
+| ~~Observability~~ | ✅ Decided 2026-08 — **Sentry** (app errors) + **Azure App Insights** (platform) + Pino structured JSON. **Supersedes the earlier GlitchTip decision** (D8 in `../ops/PROJECT-STATUS.md`). Implementation still pending — see issue **#79**. Standard: 18_Observability-Standard.md |
 | ~~Security baseline~~ | ✅ CSRF (double-submit cookie), rate limiting, upload rules, brute force. See 10_Platform-Engineering-Standard.md + 14_Auth-Architecture-Decision.md (§15-16) |
 | ~~Hosting~~ | ✅ Decided 2026-08 — **Azure**, Central India, single cloud + Terraform. Container Apps (not self-run Kubernetes), managed Postgres/Redis, zero VMs. See `../ops/azure-account-facts.md` and `21_Infrastructure-Conventions.md` |
 | ~~Release process~~ | ✅ Decided 2026-08-16 (O6) — single `main` trunk, UAT auto-deploys on merge, prod ships by `prod-*` tag promoting the same image. See `../AGENTS.md` → Git conventions |
-| ~~CI/CD~~ | ✅ **Both built** (O18) — CI gates PRs; CD does build → migrate → deploy with GitHub OIDC to Azure, no stored secrets. ⚠️ Merge is **not** blocked on green checks: branch protection is paywalled on this plan (B5) |
+| ~~CI/CD~~ | ✅ **Both built** (O18) — CI gates PRs; CD does build → migrate → deploy with GitHub OIDC to Azure, no stored secrets. ⚠️ Merge is **not** blocked on green checks: branch protection is paywalled on this plan (issue #85) |
 | Object storage | Provider decided (Azure Blob) but **not implemented** — app still uses the S3 API via `@aws-sdk/client-s3`; needs an `@azure/storage-blob` swap |
 | ~~AI/recommendations~~ | ✅ Deferred to v2 explicitly. See spec/decisions/08_out-of-scope.md |
 | ~~Visual design system~~ | ✅ Decided **and built** — tokens, typography, dark mode, motion, component language. `15_Design-System.md` (now merged with the former design-language doc) + `15a_UI-Consistency-Rules.md` |

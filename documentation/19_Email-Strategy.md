@@ -1,7 +1,7 @@
 # Email Strategy — v1
 
 > **Provider changed 2026-08-17: Resend → JP's own SMTP relay** (decision D9, implemented as
-> B14). The strategy below — categories, templates, bilingual handling — is unchanged; only the
+> issue, now shipped). The strategy below — categories, templates, bilingual handling — is unchanged; only the
 > transport is different. Email is **live and delivering**; see "Implementation status" at the
 > foot of this page for what is and is not done.
 
@@ -190,15 +190,15 @@ There is no separate `SMTP_REQUIRE_TLS`: `requireTLS` is derived as the inverse 
 `SMTP_SECURE`, so the two cannot be set to a contradictory pair.
 
 **Credential handling:** the password lives in `~/.secrets/veervrat/smtp-jp.env` (mode 600,
-outside the repo) until B14 moves it into per-environment Key Vault. It must never enter git —
+outside the repo) as the working copy; the live value is in each environment's Key Vault. It must never enter git —
 see the credential rule in `../AGENTS.md`.
 
 ## Packages
 
 | Package | State |
 |---|---|
-| `nodemailer` | ❌ **to add** (B14) — plus `@types/nodemailer` |
-| `resend` | ⚠️ `^4.5.2` installed, **to be removed** by B14 |
+| `nodemailer` | ✅ installed (with `@types/nodemailer`) |
+| ~~`resend`~~ | ✅ removed 2026-08-17 |
 | `@react-email/components` | ✅ `^0.0.36` — unaffected, renders HTML for any transport |
 | `react` | ✅ `^19.0.0` |
 
@@ -213,7 +213,7 @@ delivered, and it also proved the relay handles external domains, which had neve
 (JP's own test message went to a `@jnanaprabodhini.org` address).
 
 - ✅ `EmailModule` + `email.service.ts` with a console fallback
-- ✅ Transport is **nodemailer over JP IT's relay** (B14, 2026-08-17). `resend` removed.
+- ✅ Transport is **nodemailer over JP IT's relay** (2026-08-17). `resend` removed.
 - ✅ 8 of the ~18 templates listed above exist (`EmailChangeEmail`, `NotificationEmail`,
   `PasswordResetEmail`, `PlatformInvitationEmail`, `VerifyEmailEmail`, …). The full list above
   is the target, not the current state
@@ -224,7 +224,7 @@ delivered, and it also proved the relay handles external domains, which had neve
   set it before the next prod deploy.
 - ⚠️ **Verification email cannot be resent.** No such endpoint exists, and password reset does
   not mark the address verified — so a user who loses the verification mail is locked out with
-  no self-service route. See B16.
+  no self-service route. See issue #74.
 
 **No longer blocked on DNS.** The old blocker (verify a sending domain, add SPF/DKIM/DMARC on
 a subdomain we control) disappeared with D9: JP IT owns the sending domain and its mail
@@ -232,7 +232,7 @@ records. Nothing on the DNS side is outstanding for email.
 
 🔴 **This gates credential signup entirely.** `auth.service.ts:148` throws
 `EmailNotVerifiedException` on login when `emailVerifiedAt` is null, and only a delivered
-verification email can set it. Until B14 ships, a user who signs up with email and password
-**can never log in**. Google OAuth bypasses this (it sets `emailVerifiedAt` on account
+verification email can set it. That transport now works, but an account that never received
+one still **cannot recover** — see issue #74. Google OAuth bypasses this (it sets `emailVerifiedAt` on account
 creation) — but prod's Google credentials are placeholders (O23), so today prod has no working
 signup path at all.

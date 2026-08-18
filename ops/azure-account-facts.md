@@ -463,7 +463,7 @@ Managed Redis, Container Apps Environment — see §5)
 - [x] DNS via **Rahul** → Shantanoo: done 2026-08-16, per-record instead of NS delegation
       (met Shantanoo directly — see `ops/PROJECT-STATUS.md` O1/D14)
 - [ ] Consider adding JP's PAN/GSTIN to the billing account (Tax ID currently "None provided") — ask finance
-- [x] ~~After Phase 2B: data migration~~ → cancelled (D19, fresh seed instead). Email is now JP's SMTP relay (D9); code swap tracked as B14
+- [x] ~~After Phase 2B: data migration~~ → cancelled (D19, fresh seed instead). Email is now JP's SMTP relay (D9); code shipped 2026-08-17
 
 See `infra-budget-log.md` for the decision trail and budget analysis.
 
@@ -500,7 +500,7 @@ Vratarthi are on personal Gmail, so Internal would lock out every real user. Thi
 easiest setting to get wrong here, and it fails at Google's end where it is hard to trace.
 
 **Testing, not Published.** Publishing needs privacy-policy and terms URLs, and the app has
-**neither page** (B18). While in Testing, only listed test users can sign in.
+**neither page** (issue #81). While in Testing, only listed test users can sign in.
 
 **No "unverified app" interstitial appears** — verified by real sign-in 2026-08-18. That warning
 is tied to *sensitive or restricted* scopes; with only `email`, `profile` and `openid` Google
