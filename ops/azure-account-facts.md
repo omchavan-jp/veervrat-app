@@ -4,7 +4,7 @@ Operational reference for Jnana Prabodhini's Microsoft tenant and the Veervrat A
 **This is the base truth.** If something here disagrees with memory, this file wins — and if
 reality diverges from this file, update the file in the same session.
 
-Last verified: **2026-08-16**
+Last verified: **2026-08-18**
 
 > Sensitive-ish but not secret: tenant/subscription IDs are identifiers, not credentials. No
 > passwords, keys, or card numbers belong in this file — ever.
@@ -85,7 +85,7 @@ balance stays US$2,000.00 — a display artefact, not a double grant.*
 | Type | Usage based · **Microsoft Azure Plan (MCA)** — *not* legacy Sponsorship |
 | Purchased | 2026-08-14 · Billing frequency **Monthly** · Next invoice 2026-09-09 |
 | Currency | **INR** (~₹95.65/USD per the credit conversion) |
-| Status | Active · **UAT running** (app live 2026-08-16); prod not yet created |
+| Status | Active · **UAT and prod both running** — UAT live 2026-08-16, prod live 2026-08-16 and correctly wired since `prod-2026-08-17` |
 | Parent management group | Tenant Root Group |
 | Target region | **Central India (Pune)** |
 
@@ -143,7 +143,7 @@ state matches reality.
 |---|---|---|---|
 | `veervrat-shared` | Central India | `project=veervrat`, `environment=shared` | DNS zone (imported), ACR, tfstate storage account |
 | `veervrat-uat` | Central India | `project=veervrat`, `environment=uat` | Key Vault, Postgres, Redis, Container Apps env + **api/web apps + migration job**, identities, alerting |
-| `veervrat-prod` | *(not yet created — Phase 2B)* | | mirrors `veervrat-uat` |
+| `veervrat-prod` | Central India | `project=veervrat`, `environment=prod` | mirrors `veervrat-uat` — Key Vault, Postgres (35-day backups), Redis, Container Apps env + api/web + jobs, identities, alerting |
 
 Environments are split by **resource group**, not by subscription (D12). Shared,
 cross-environment resources live in `veervrat-shared`.
@@ -154,7 +154,7 @@ Basic tier (~$5/mo), `admin_enabled=false` — **no admin password exists**; app
 user-assigned managed identity with AcrPull. Created by Terraform 2026-08-16. Contents
 listed under the UAT section below.
 
-### Per-environment Key Vaults — `veervrat-uat-kv` (prod's counterpart lands with Phase 2B)
+### Per-environment Key Vaults — `veervrat-uat-kv` and `veervrat-prod-kv`
 
 **Not shared across environments** — a Phase 1 mistake, caught and corrected same-day: the
 original `veervrat-kv` in `veervrat-shared` was deleted (confirmed 0 secrets) once it became
@@ -426,7 +426,7 @@ under JP's identity at all (vs a standalone `veervrat.com`) is **institutional �
 | **Neon** | Postgres (us-east-1, PG 18.4) | live — ⚠️ **migration CANCELLED 2026-08-16 (D19)**; dump kept as an archive only. Decommission once nothing references it. |
 | **Upstash** | Redis (us-east-1) | live |
 | **Cloudflare R2** | object storage, bucket `veervrat-uploads-dev` | live, **empty** |
-| **Google Cloud** | OAuth client (Google sign-in) | live |
+| **Google Cloud** | OAuth client (Google sign-in) | live — project `veervrat`, owned by the **jnanaprabodhini.org org**, see §9 |
 | ~~**Resend**~~ | transactional email | **not used** — D9 (2026-08-17) moved email to JP IT's SMTP relay; no account was ever created |
 | **Railway** | previous host | **removed** (trial expired) — app currently **down** |
 
@@ -468,3 +468,92 @@ Managed Redis, Container Apps Environment — see §5)
 See `infra-budget-log.md` for the decision trail and budget analysis.
 
 See `infra-budget-log.md` for the decision trail and budget analysis.
+
+
+---
+
+## 9. Google Cloud / Google sign-in
+
+Set up 2026-08-17 (O23). Recorded in full because the console UI has already been renamed once
+and the settings that matter are not discoverable from the app side.
+
+| Field | Value |
+|---|---|
+| Project name / ID | `veervrat` |
+| Organisation | **`jnanaprabodhini.org`** — institutional, not a personal Google account |
+| Created and owned by | `veervrat@jnanaprabodhini.org` (shared JP mailbox) |
+| Console area | **Google Auth Platform** (formerly "OAuth consent screen") |
+| User type | **External** |
+| Publishing status | **Testing** — capped at 100 test users for the app's lifetime |
+| Scopes | `userinfo.email`, `userinfo.profile`, `openid` — all **non-sensitive** |
+
+### Why each of those, in the terms that will matter later
+
+**Org-owned, not personal.** Two earlier OAuth clients existed in personal projects
+(`om-dev-463114`, `nifty-expanse-498201-b8`), both with only `localhost` redirects. Sign-in for
+an institutional product should not depend on one person's Google account; the consent screen
+also displays the publisher.
+
+**External, despite being an institutional app.** *Internal* restricts sign-in to
+`@jnanaprabodhini.org` accounts only — it describes *who may sign in*, not who owns the app.
+Vratarthi are on personal Gmail, so Internal would lock out every real user. This is the single
+easiest setting to get wrong here, and it fails at Google's end where it is hard to trace.
+
+**Testing, not Published.** Publishing needs privacy-policy and terms URLs, and the app has
+**neither page** (B18). While in Testing, only listed test users can sign in.
+
+**No "unverified app" interstitial appears** — verified by real sign-in 2026-08-18. That warning
+is tied to *sensitive or restricted* scopes; with only `email`, `profile` and `openid` Google
+shows an ordinary consent screen. Testers see "Sign in to continue to jnanaprabodhini.org",
+taken from the authorized domain. So Testing mode costs nothing in user experience here — the
+only real limit is the 100-user cap.
+
+⚠️ Publishing needs **no Google review**, because the scopes are non-sensitive. The two pages
+are the entire blocker. Adding any further scope (Drive, Calendar, contacts) would pull the app
+into a verification process taking weeks — so do not add scopes casually.
+
+**Test users are Google accounts, not app accounts.** A Gmail plus-alias such as
+`om.chavan501+uat@gmail.com` receives mail but is **not** a Google account and cannot be a test
+user. Related: signing in with Google as `om.chavan501@gmail.com` creates a Veervrat account
+*separate* from a credential account registered under the plus-alias — the app does not
+auto-link on email match by design.
+
+### OAuth clients — one per environment, deliberately
+
+Split so that a UAT credential leak cannot authenticate against production; Terraform already
+takes the client id and secret per environment.
+
+| Client | Redirect URIs |
+|---|---|
+| `Veervrat — prod` | `https://api.veervrat.jnanaprabodhini.org/api/v1/auth/google/callback` |
+| `Veervrat — uat + local` | `https://api.uat.veervrat.jnanaprabodhini.org/api/v1/auth/google/callback` and `http://localhost:3001/api/v1/auth/google/callback` |
+
+⚠️ **Redirect URIs are on the `api` host, not the web host.** They moved there when the Next.js
+rewrite proxy was removed (see `documentation/21_Infrastructure-Conventions.md` §17); the old
+`https://veervrat.jnanaprabodhini.org/api/v1/...` form now returns 404. A mismatch fails with
+`redirect_uri_mismatch` *after* the user has already approved — the least debuggable point in
+the flow.
+
+**Authorized JavaScript origins are intentionally empty.** The app uses the server-side
+authorization-code flow via Passport; origins matter only for browser-side SDK flows.
+
+### Where the credentials live
+
+- Downloaded JSONs: `~/.secrets/veervrat/veervrat-prod-client.json` and
+  `veervrat-uat-and-local-client.json` — mode 600, **outside the repo**.
+- The **client secret** is a Key Vault secret (`google-client-secret`) per environment, set out
+  of band; see `documentation/21_Infrastructure-Conventions.md` §20.
+- The **client ID** is not a secret — it is sent to the browser on every sign-in — so it lives
+  in Terraform as a plain variable.
+
+### Console path, as of 2026-08-17
+
+The flow was rewritten and no longer matches most guides:
+
+1. **Google Auth Platform → Branding → Get started** — a four-step wizard (App Information →
+   Audience → Contact Information → Finish). This creates only the consent configuration.
+2. The rest are **separate sidebar pages**, not continuations of the wizard:
+   **Audience** (user type, publishing status, test users), **Data access** (scopes),
+   **Clients** (create OAuth clients).
+3. Each panel has its own **Save / Update** button. Closing a panel without pressing it
+   discards silently — check the page behind shows the change before moving on.

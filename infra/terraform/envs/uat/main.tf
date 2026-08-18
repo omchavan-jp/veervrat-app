@@ -74,6 +74,10 @@ module "environment" {
   smtp_user  = "do-not-reply-veervrat@notifications.jnanaprabodhini.org"
   email_from = "Veervrat <do-not-reply-veervrat@notifications.jnanaprabodhini.org>"
 
+  # Google sign-in (O23). The client ID is public — it is sent to the browser on every sign-in.
+  # The matching secret is a Key Vault reference, set out of band; see keyvault.tf.
+  google_client_id = "294902498600-b7mogl0b0d60jt30t36bj772ckivtnua.apps.googleusercontent.com"
+
   image_tag       = var.image_tag
   app_image_tag   = var.app_image_tag
   deploy_apps     = var.deploy_apps
