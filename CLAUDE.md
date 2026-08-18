@@ -34,6 +34,15 @@ along the way.
 - Conventional commits. `main` must always be releasable.
 - Merging to `main` deploys **UAT**. Production ships only by pushing a `prod-YYYY-MM-DD` tag.
 
+## Checkpoints — run these at the trigger, not from memory
+
+- **Before ending a session, or after a batch of merges:** `./scripts/unmerged-work.sh`.
+  Catches commits that exist only on this machine. `git branch --no-merged` cannot do this —
+  squash-merging breaks ancestry, so it reports every merged branch as unmerged.
+- **Before `terraform apply`:** read the plan's summary line. An unexpected non-zero *destroy*
+  count means stop, not scroll past.
+- **Before saying "verified":** name what you actually tested, and what you did not.
+
 ## Editing files
 
 **Use `Edit` and `Write`.** They fail loudly on a stale assumption; `sed`, `perl -pi` and
