@@ -20,20 +20,19 @@ returns the web origin with credentials, cookies are `Secure; SameSite=Lax` host
 credential login needs email that is not wired. So the browser-only checks (session persists,
 CSRF passes across hosts) are still outstanding. See step 8 below and §18.
 
-🔴 **Prod is deployed but NOT usable — do not send anyone there.** The `prod-2026-08-16`
-tag deployed cleanly and `/ready` is green, but two defects found 2026-08-17 mean no real user
-can use it:
+✅ **Prod is live and correctly wired** as of `prod-2026-08-17`. The defect that had prod's web
+tier reading and writing **UAT's database** is fixed: prod now calls
+`api.veervrat.jnanaprabodhini.org`, the old `/api/v1` proxy path returns 404, and `og:url` names
+the prod domain. `/ready` green on both tiers.
 
-- **O22** — prod still runs the pre-fix image (`5576918`), whose web tier proxies `/api/v1` to
-  **UAT's api**, so prod traffic would read and write UAT's database. The fix is merged and
-  live on UAT, but prod only moves on a `prod-*` tag — **which must not be cut until the
-  browser checks above are done.** See `documentation/21_Infrastructure-Conventions.md` §17.
-- **O23** — prod's Google OAuth holds `placeholder-not-configured`, and credential login
-  requires an email-verification link that cannot be sent yet (email transport unwired, B14).
-  **No login path works on prod.**
+Remaining gaps on prod, none of them blocking:
 
-Neither was visible to `/ready`, which checks each service alone and never asks whether the
-tiers are wired to their own environment.
+- **Google OAuth is still `placeholder-not-configured`** (O23). Credential signup works, so
+  there is a login path, but Google sign-in fails.
+- **Email from prod is configured but unproven.** The real SMTP password is in prod's Key Vault
+  and the config matches UAT's working setup, but no message has actually been sent from prod —
+  deliberately, because B17 means a test account created there cannot be deleted. Expect the
+  first real signup to be the proof.
 
 Neon migration is **cancelled** (D19) — prod will be created fresh and seeded, exactly as CD
 already does for UAT. The dump at `../backups/veervrat-neon-20260809T184831Z.dump` is retained
