@@ -191,6 +191,30 @@ Note the hook only protects branches that *contain* it: checking out an older co
 `.githooks/` disables it silently. That is inherent to version-controlled hooks and worth
 knowing rather than being surprised by.
 
+### Checking for stranded work
+
+```bash
+./scripts/unmerged-work.sh          # problems only
+./scripts/unmerged-work.sh --all    # plus in-flight and historical branches
+```
+
+Run it before ending a session and after any batch of merges.
+
+**Do not use `git branch --no-merged main`** — it cannot work here. We squash-merge, so a merged
+branch shares no ancestry with its merge commit and *every* branch we have ever merged reports
+as unmerged: 42 of them, of which 3 held real work. That noise is how commit `5ca19d0` stayed
+lost for a day — committed, never pushed, and therefore silently absent from the squash-merged
+PR, which only ever saw the remote.
+
+The script deliberately does **not** try to answer "did this branch merge?" After a squash,
+nothing answers that reliably: ancestry is broken by design, `git cherry` patch-ids only match
+single-commit branches, and branches predating the PR convention were merged into the retired
+`dev` with no PR at all. Guessing produced ~27 false alarms — and a check that cries wolf gets
+ignored, which is worse than no check (`documentation/21_Infrastructure-Conventions.md` §17).
+
+It reports only what is unambiguous: **commits that exist on this machine and nowhere else**,
+and **work behind a PR closed without merging**. Both are actionable; neither needs a guess.
+
 ### Branching — single trunk (`main`), releases by tag
 
 Settled 2026-08-16 (O6). Replaces the earlier `dev`/`main` two-branch model, which existed
