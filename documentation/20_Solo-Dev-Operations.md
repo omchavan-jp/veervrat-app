@@ -68,14 +68,23 @@ meant to drain to zero). Route by kind:
   schema (item numbers, payback tracking); not for tester-driven ideas.
 - **Raw, still-untriaged note** → the **Inbox** section of `../ops/PROJECT-STATUS.md`,
   which drains to empty at the next triage.
-- **Noticed but not yet scheduled** → the **Backlog** (`B<n>`) section of the same file.
-  Promote a `B` item to an **O-thread** when it gets an owner and a slot in the working
-  order — *move* it, never copy it. (Two separate registers previously produced three
-  duplicated items; that is why there is now one file.)
+- **Noticed but not yet scheduled** → **a GitHub issue**, labelled by type and priority.
+  Not a list in a file. A second backlog *was* kept in `ops/PROJECT-STATUS.md` as `B<n>` items
+  and drifted from the issues within weeks — the admin dashboard sat as `p3` in one and `p1` in
+  the other. Migrated into Issues on 2026-08-18; do not start a third.
+- Promote an issue to an **O-thread** in `ops/PROJECT-STATUS.md` only when it is actively in
+  flight with someone waiting. The issue stays open and remains the record; the O-thread is a
+  pointer, not a copy.
 
 Keep the Inbox free of long-lived "future" sections — file those as `deferred` issues
 instead. Already-triaged history lives in `../ops/triage-archive.md`, which is append-only
 and never actionable.
+
+**Priority vs sequence.** Labels (`p0`–`p3`) say how much something matters; they do not say
+what happens next. Ordering lives in the **Working order** section of `ops/PROJECT-STATUS.md`,
+which names only the next few items by issue number. GitHub has no inherent issue ordering, so
+if these two ever disagree, the working order wins — it is the one a human maintains
+deliberately.
 
 ## Loop 3 — Implement
 

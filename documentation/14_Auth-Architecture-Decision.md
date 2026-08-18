@@ -114,4 +114,4 @@ If last authentication was not recent, prompt for password or OAuth re-auth befo
 - **Account lockout:** after 10 failed login attempts for the same email within 1 hour, the account is temporarily locked for 15 minutes. The user is informed ("Too many attempts, try again in 15 minutes"). Lockout state stored in Redis.
 - **Password policy (v1):** minimum 8 characters, at least one letter and one digit. No dictionary check. Strength meter shown in UI (weak/ok/strong) but does not block submission.
 - **Abuse monitoring:** all auth failures (login, password reset, OAuth errors) are logged with IP, user-agent, and email. Spike detection (>50 auth failures/min globally) triggers a **Sentry** alert
-(GlitchTip was dropped — D8; implementation pending, B13). No automated IP banning in v1 — manual review.
+(GlitchTip was dropped — D8; implementation pending, issue #79). No automated IP banning in v1 — manual review.

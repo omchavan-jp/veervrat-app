@@ -934,7 +934,7 @@ configuration choice. Known instances at time of writing:
 |---|---|
 | `API_ORIGIN` (via `rewrites()`) | **prod web → UAT api** — this defect |
 | `NEXT_PUBLIC_SITE_URL` | `og:url`/`og:image` point at UAT — every link preview wrong |
-| `NEXT_PUBLIC_FEEDBACK_MODE` | cannot differ between UAT and prod (drove B1) |
+| `NEXT_PUBLIC_FEEDBACK_MODE` | cannot differ between UAT and prod (drove #40) |
 | `NEXT_PUBLIC_CONTENT_EDIT` | same |
 
 `NEXT_PUBLIC_COMMIT_SHA` is *correctly* baked — it describes the image, not the environment.
@@ -989,13 +989,13 @@ invisible until someone tries to sign in and it blocks verification of anything 
 - Google OAuth carries the `placeholder-not-configured` Terraform default in **both** UAT and
   prod, so the OAuth path fails before it reaches Google.
 - Credential login refuses any account whose email is unverified
-  (`auth.service.ts` → `EmailNotVerifiedException`), and email delivery is not wired (B14).
+  (`auth.service.ts` → `EmailNotVerifiedException`), and at the time email delivery was not wired.
 
 So a new environment reaches "green `/ready`, correct wiring, fully seeded" while remaining
 **impossible to log into**. Health checks cannot see this: every service is genuinely healthy.
 
 **Consequence for sequencing:** any change to cookies, CORS, CSRF or sessions can only be
-verified by a real browser session, so wiring email (B14) or real OAuth credentials (O23) is a
+verified by a real browser session, so wiring email or real OAuth credentials is a
 *prerequisite* for validating auth work — not a follow-up to it. Add this to the zero-to-running
 sequence in `../DEPLOYMENT.md`: an environment is not "done" until someone can log in.
 
@@ -1016,6 +1016,12 @@ downloading a third-party action — nothing to do with the code in the commit. 
 Actions endpoints only; `/repos/<owner>/<repo>` answered normally with the same token. When a
 failure is upstream of your own build steps, or an API contradicts itself between endpoints,
 suspect the platform before debugging your change.
+
+**Confirmed as a real GitHub incident** (checked 2026-08-17): a widespread outage with error
+rates around 20% on both web and API traffic, roughly half of archive/raw-content downloads
+failing, and GitHub Actions degraded. So the diagnosis above was right for the right reason —
+worth noting that "retry a few times" was the correct response to a genuine 1-in-5 failure rate,
+not superstition.
 
 **What worked:** simply retrying. Failed jobs were re-run several times each; the build
 eventually passed, then `deploy-uat` failed and was re-run until it passed too. No code change

@@ -1,6 +1,6 @@
 # Observability Standard — v1
 
-> **This describes the target state. It is not yet implemented — see backlog B13.**
+> **This describes the target state. It is not yet implemented — see issue #79.**
 > Rewritten 2026-08-16: GlitchTip was dropped in favour of Sentry + Azure Application
 > Insights (D8). The logging schema, metrics and privacy rules below survived that swap
 > unchanged — only the tools differ.
@@ -14,14 +14,14 @@ the other, and both are free at this scale.
 
 | Concern | Tool | Status |
 |---|---|---|
-| Error tracking (app) | **Sentry** free tier | SDK installed (`instrument.ts`) but **reads `GLITCHTIP_DSN`** — rename pending, B13 |
+| Error tracking (app) | **Sentry** free tier | SDK installed (`instrument.ts`) but **reads `GLITCHTIP_DSN`** — rename pending, issue #79 |
 | Platform telemetry | **Azure Application Insights** | ❌ Not wired — no SDK, and **no Terraform resource** either. Only Log Analytics exists, and that is for Container Apps logs |
 | Structured logging | Pino (NestJS) + browser console (Next.js) | ✅ Working — Pino → stdout in prod, collected by Container Apps |
 | Alerting (infra) | Azure Monitor metric alerts | ✅ Partially — Postgres `storage_percent > 80%` is live (see `21_Infrastructure-Conventions.md` §13) |
-| Alerting (app errors) | Sentry alert rules | ❌ Pending B13 |
+| Alerting (app errors) | Sentry alert rules | ❌ Pending issue #79 |
 | Uptime | External ping (UptimeRobot free tier or similar) | ❌ Not set up |
 
-⚠️ **Until B13 lands there is no application error tracking in any deployed environment.**
+⚠️ **Until issue #79 lands there is no application error tracking in any deployed environment.**
 This should close before beta testers reach prod.
 
 ---
@@ -83,7 +83,7 @@ Every log line is JSON with these fields:
 | Background job failure | Log-based (job logs error level) | Any failure triggers alert |
 | WebSocket connection count | NestJS Gateway metric | Informational — no alert |
 | Search query latency | Meilisearch built-in metrics | > 500ms p95 — *Meilisearch is deferred, not deployed* |
-| Notification delivery failure | log-based (SMTP send errors) | Any send failure — *email not yet wired, B14*. Note: an SMTP relay gives no bounce webhook, unlike Resend — bounces are invisible to us, so log-based send-failure alerting is all we get |
+| Notification delivery failure | log-based (SMTP send errors) | Any send failure — *email delivers since 2026-08-17; this alerting is still unbuilt*. Note: an SMTP relay gives no bounce webhook, unlike Resend — bounces are invisible to us, so log-based send-failure alerting is all we get |
 | Uptime | External ping | < 99.5% in 24h window |
 
 ---
@@ -93,7 +93,7 @@ Every log line is JSON with these fields:
 ### Backend (`@sentry/node`)
 - DSN from **`SENTRY_DSN`**, sourced from the environment's Key Vault — never an inline value.
   ⚠️ *Today the code reads `GLITCHTIP_DSN` (`apps/api/src/instrument.ts`); GlitchTip is
-  Sentry-protocol-compatible, which is why the SDK was pointed at it. Renaming is part of B13
+  Sentry-protocol-compatible, which is why the SDK was pointed at it. Renaming is part of issue #79
   and touches the Joi schema, `.env.example`, and the Container App env in Terraform.*
 - Capture: unhandled exceptions, unhandled promise rejections
 - **Release = the git SHA already used as the image tag.** CD builds every image tagged with
@@ -105,7 +105,7 @@ Every log line is JSON with these fields:
 ### Frontend (`@sentry/nextjs`)
 - DSN via **`NEXT_PUBLIC_SENTRY_DSN`** — ⚠️ `NEXT_PUBLIC_*` is **inlined at build time**, so
   it is baked into the image and cannot differ between UAT and prod on a promoted image. Same
-  constraint that forces B1. Decide with B13 whether the frontend DSN is shared across
+  constraint that forces #40. Decide with #79 whether the frontend DSN is shared across
   environments (distinguished by the `environment` tag) or the gating moves server-side
 - Capture: unhandled JS errors, React error boundaries, failed API calls
 - Source maps uploaded on build for readable stack traces
@@ -121,7 +121,7 @@ mailboxes exist but nobody reads them, so an alert delivered there is functional
 
 ## Application Insights configuration (platform health)
 
-Not yet provisioned. When B13 lands it needs both an `azurerm_application_insights` resource
+Not yet provisioned. When #79 lands it needs both an `azurerm_application_insights` resource
 in `modules/environment` (so UAT and prod each get their own, like every other stateful
 resource) and the SDK wired in the api. It should answer: request rate and latency,
 dependency calls to Postgres/Redis, container restarts, and cold-start frequency — the last

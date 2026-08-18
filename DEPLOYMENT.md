@@ -31,7 +31,7 @@ Remaining gaps on prod, none of them blocking:
   there is a login path, but Google sign-in fails.
 - **Email from prod is configured but unproven.** The real SMTP password is in prod's Key Vault
   and the config matches UAT's working setup, but no message has actually been sent from prod —
-  deliberately, because B17 means a test account created there cannot be deleted. Expect the
+  deliberately, because issue #75 means a test account created there cannot be deleted. Expect the
   first real signup to be the proof.
 
 Neon migration is **cancelled** (D19) — prod will be created fresh and seeded, exactly as CD
@@ -248,7 +248,7 @@ one of these must be true before the environment counts as done:
 - Real Google OAuth credentials are in place — the Terraform default is
   `placeholder-not-configured`, which fails before reaching Google.
 
-Neither was true for UAT or prod as of 2026-08-17 (B14 / O23), which is also why any change
+Neither was true for UAT or prod as of 2026-08-17, which is also why any change
 to cookies, CORS, CSRF or sessions cannot be verified yet: those need a real browser session.
 See `documentation/21_Infrastructure-Conventions.md` §18.
 
@@ -399,7 +399,7 @@ Runtime — set on the Container App, changed with a restart, no rebuild:
 |---|---|
 | `API_BASE_URL` | absolute api URL incl. `/api/v1`. The browser calls the api directly — there is no proxy |
 | `SITE_URL` | og:image / canonical URL base |
-| `FEEDBACK_MODE` | `test` = list + form, `public` = form only, `off`/unset = hidden. Environment-level only; per-user is B1 |
+| `FEEDBACK_MODE` | `test` = list + form, `public` = form only, `off`/unset = hidden. Environment-level only; per-user is issue #40 |
 
 Build-time, and only these:
 
@@ -458,7 +458,7 @@ they're only *implied* by the gotchas above — hence the explicit list.
       adapter) are only now resolved.
 - [ ] **Rotate the exposed secrets (O12):** GitHub PAT, `SESSION_SECRET`, R2 keys — all
       sat in plaintext in `apps/api/.env.railway`.
-- [ ] Wire email: swap `email.service.ts` to SMTP (B14). **No DNS work needed** — D9 moved
+- [x] Wire email: `email.service.ts` now speaks SMTP (shipped 2026-08-17). **No DNS work needed** — D9 moved
       sending to JP IT's relay, so JP owns SPF/DKIM/DMARC on
       `notifications.jnanaprabodhini.org` and we add no mail records at all.
 - [ ] Point beta testers at the new URL.
@@ -494,7 +494,7 @@ migration.
 |---|---|
 | App not deployed anywhere | first image push + migration job (next step) |
 | Custom domain, HTTPS, working chat | NS delegation from JP (O1) — external |
-| Email (verification, password reset) doesn't deliver | transport not swapped to SMTP yet (B14) |
+| Email (verification, password reset) doesn't deliver | check `SMTP_HOST` is set on the api — without it the service silently logs to console instead of sending |
 | Object storage | app uses the S3 API; Azure Blob doesn't speak it — needs `@azure/storage-blob` swap |
 | Beta data still in Neon | migration after prod exists |
 | Search | Meilisearch deferred |
