@@ -72,10 +72,14 @@ same. Only an email that actually arrives proves this.
 
 ---
 
-## Carried forward, not done
+## Bilingual verification — completed 2026-08-20
 
-- **4.2** the email was confirmed to arrive and render in **English only**. Marathi rendering is
-  unverified — the templates are bilingual and take a `language` prop, but no Marathi message has
-  actually been looked at. Worth one check with an `MR` account before beta.
-- **5.1** the browser checks belonging to `runtime-environment-config` — see that change's own
-  carried-forward note.
+- **4.2** Marathi rendering ✅ — account language set to मराठी, password-reset triggered, and the
+  email arrived **in Marathi**. `user.language` reaches the template correctly.
+
+Worth noting because it was the one item expected to fail: the templates take a `language` prop
+and had never had a Marathi message actually rendered, so this was untested rather than known
+good. It works.
+
+- **5.1** the browser checks belonging to `runtime-environment-config` are complete — see that
+  change.

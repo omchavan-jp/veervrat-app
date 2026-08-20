@@ -92,17 +92,20 @@ a login, because the risk is that cookies stop being *sent* — which no `curl` 
 
 ---
 
-## Carried forward, not done (recorded rather than quietly ticked)
+## Browser verification — completed 2026-08-20
 
-Archived 2026-08-20 with three checks outstanding. Everything a machine can verify passed; these
-three need a human with a browser and were never performed:
+All three outstanding checks performed on UAT and **passed**:
 
-- **4.1** session persists across a reload
-- **4.3** logout clears the session
-- **4.4** devtools shows no request to a `*.azurecontainerapps.io` host
+- **4.1** session persists across a hard reload ✅
+- **4.3** logout clears the session; the back button lands on login ✅
+- **4.4** DevTools network, filtered on `azurecontainerapps` — **zero** matches. Every request
+  goes to `api.uat.veervrat.jnanaprabodhini.org` ✅
 
-Partial evidence exists — completing onboarding exercised several cross-host state-changing
-writes, so CSRF double-submit and credentialed CORS are genuinely proven (4.2), and the served
-HTML was confirmed by request to name the correct api. But a reload and a logout are different
-code paths and remain unverified. Ticking them would have been a lie; leaving the change open
-indefinitely would have been worse. Tracked as the residue of this change.
+That last one is the direct regression check for the defect this change existed to fix: prod's
+web tier calling UAT's api. Filtering for the platform hostname and finding nothing is the
+strongest available evidence that the runtime-config path is genuinely in use and nothing fell
+back to a baked value.
+
+Together with 4.2 (onboarding exercised several cross-host state-changing writes, proving CSRF
+double-submit and credentialed CORS), the change is verified end to end by a real browser
+session — not only by request-level checks.
