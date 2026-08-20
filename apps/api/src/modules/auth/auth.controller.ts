@@ -274,7 +274,11 @@ export class AuthController {
   }
 
   private setSessionCookie(res: Response, token: string): void {
-    res.cookie(this.cookieName, token, authCookieOptions({ httpOnly: true, maxAgeMs: this.cookieMaxAgeMs }));
+    res.cookie(
+      this.cookieName,
+      token,
+      authCookieOptions({ httpOnly: true, maxAgeMs: this.cookieMaxAgeMs }),
+    );
   }
 
   private clearSessionCookie(res: Response): void {

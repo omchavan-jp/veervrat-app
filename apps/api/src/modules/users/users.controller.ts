@@ -113,7 +113,11 @@ export class UsersController {
       dto.currentPassword,
       dto.newPassword,
     );
-    res.cookie(this.cookieName, sessionToken, authCookieOptions({ httpOnly: true, maxAgeMs: this.cookieMaxAgeMs }));
+    res.cookie(
+      this.cookieName,
+      sessionToken,
+      authCookieOptions({ httpOnly: true, maxAgeMs: this.cookieMaxAgeMs }),
+    );
     return { success: true };
   }
 
