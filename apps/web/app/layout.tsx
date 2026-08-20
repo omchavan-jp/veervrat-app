@@ -4,6 +4,7 @@ import { geistSans, geistMono, newsreader, tiroDevanagari } from './fonts';
 import { Providers } from '@/lib/providers';
 import { RuntimeConfigProvider } from '@/lib/runtime-config-provider';
 import { readServerRuntimeConfig } from '@/lib/runtime-config';
+import { decodeSessionUser, SESSION_USER_HEADER } from '@/lib/session-user';
 import './globals.css';
 
 const description = 'A platform for self-reliance and personal growth — Jnana Prabodhini.';
@@ -43,6 +44,9 @@ export default async function RootLayout({
   const headerStore = await headers();
   const locale = headerStore.get('X-Next-Locale') ?? 'en';
   const runtimeConfig = readServerRuntimeConfig();
+  // Resolved once by the middleware and passed by header, so the first client render already
+  // knows who is signed in — no fetch, no loading state, no spinner before content.
+  const initialUser = decodeSessionUser(headerStore.get(SESSION_USER_HEADER));
 
   return (
     <html
@@ -52,7 +56,7 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <RuntimeConfigProvider config={runtimeConfig}>
-          <Providers>{children}</Providers>
+          <Providers initialUser={initialUser}>{children}</Providers>
         </RuntimeConfigProvider>
       </body>
     </html>

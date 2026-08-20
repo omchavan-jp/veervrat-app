@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/hooks/use-auth';
 import { AppShell } from '@/components/layout/app-shell';
-import { Spinner } from '@/components/ui/spinner';
 import { FeedbackWidget } from '@/components/shared/feedback/feedback-widget';
 import dynamic from 'next/dynamic';
 
@@ -19,12 +18,10 @@ const ContentEditor =
     : () => null;
 
 export function AppLayoutClient({ children }: { children: React.ReactNode }) {
-  const { user, isAuthenticated, isLoading } = useAuth();
-  const tCommon = useTranslations('common');
+  const { user, isAuthenticated } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (isLoading) return;
     // Guard with else-if so onboarding and login redirects can never both fire in a
     // single effect run (avoids a double-navigation race on mid-update state).
     if (!isAuthenticated) {
@@ -32,15 +29,11 @@ export function AppLayoutClient({ children }: { children: React.ReactNode }) {
     } else if (user && user.onboardingCompletedAt === null) {
       router.replace('/onboarding');
     }
-  }, [isAuthenticated, isLoading, user, router]);
+  }, [isAuthenticated, user, router]);
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-dvh items-center justify-center bg-bg">
-        <Spinner size="lg" label={tCommon('loading')} />
-      </div>
-    );
-  }
+  // No isLoading branch — auth is seeded server-side, so the first render already knows. The
+  // branch previously unmounted the whole subtree while the query ran, which is what let a
+  // remount re-trigger the query and storm the api (#101).
 
   if (!isAuthenticated || !user || user.onboardingCompletedAt === null) {
     return null;
