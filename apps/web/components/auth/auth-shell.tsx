@@ -1,4 +1,5 @@
 import { Logo } from './logo';
+import { PreAppControls } from '@/components/shared/pre-app-controls';
 
 type HeroContent = {
   eyebrow: string;
@@ -43,7 +44,10 @@ export function AuthShell({ hero, children }: AuthShellProps) {
       </div>
 
       {/* Right panel — form */}
-      <div className="flex flex-col justify-center bg-surface px-7 py-10 lg:px-14">
+      <div className="relative flex flex-col justify-center bg-surface px-7 py-10 lg:px-14">
+        {/* Language and theme, available before any account exists. Placed over the form panel
+            rather than the hero so it stays reachable on mobile, where the hero collapses. */}
+        <PreAppControls className="absolute right-7 top-6 lg:right-14" />
         <div className="mx-auto w-full max-w-[380px]">{children}</div>
       </div>
     </div>

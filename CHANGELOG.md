@@ -9,6 +9,11 @@ Note: merging to `main` ships to **UAT**, not to users. A line here is live for 
 testers only once a `prod-*` tag has been deployed.
 
 ## Unreleased
+- You can now switch language and light/dark mode from the login, signup and password-recovery
+  screens, and during onboarding — previously these only appeared after you were fully signed in
+  and past onboarding, so a Marathi reader had no way to read the very page they needed to get
+  in. Signing in still restores the language saved on your account.
+- Onboarding now has a way out: you can log out part-way through instead of closing the tab.
 - If your account was never verified, you can now get back in. Signing in with an unverified
   address explains what's wrong and offers to send a fresh verification email, instead of just
   refusing. Completing a password reset, or linking your Google account, now also verifies the

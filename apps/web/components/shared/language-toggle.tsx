@@ -35,8 +35,6 @@ export function LanguageToggle({
 
   useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
 
-  if (!isAuthenticated) return null;
-
   const currentLabel = locale === 'mr' ? t('mr') : t('en');
   const next = locale === 'mr' ? 'en' : 'mr';
   const nextLabel = next === 'mr' ? t('mr') : t('en');
@@ -51,6 +49,13 @@ export function LanguageToggle({
     // round-trip; the PATCH then persists the durable preference.
     setLocaleCookie(next);
     router.refresh();
+
+    // Signed-out (login, signup, forgot-password …) the cookie is the whole mechanism: the
+    // middleware already reads it without a session, so anonymous switching works with no
+    // second mechanism. Skipping the PATCH avoids a pointless 401 — it is not a silent
+    // failure, there is simply no account to save a preference against yet.
+    if (!isAuthenticated) return;
+
     try {
       await usersApi.updateMe({ language: next.toUpperCase() });
     } catch {
