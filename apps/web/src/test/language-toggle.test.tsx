@@ -50,10 +50,25 @@ describe('LanguageToggle', () => {
     expect(screen.getAllByRole('button')).toHaveLength(1);
   });
 
-  it('renders nothing when not authenticated', () => {
+  // Previously this asserted the toggle rendered NOTHING when signed out, which is what left
+  // /login unreadable for a Marathi-first visitor: no session means locale falls back to
+  // Accept-Language or English, and the only toggle lived past signup and onboarding.
+  it('renders when NOT authenticated — the login page needs it most', () => {
     mockIsAuthenticated.value = false;
-    const { container } = render(<LanguageToggle />);
-    expect(container.firstChild).toBeNull();
+    render(<LanguageToggle />);
+    expect(screen.getAllByRole('button')).toHaveLength(1);
+  });
+
+  it('signed out: writes the cookie but does not call updateMe', async () => {
+    mockIsAuthenticated.value = false;
+    render(<LanguageToggle />);
+
+    fireEvent.click(screen.getByRole('button'));
+
+    // The cookie is the whole mechanism when signed out — the middleware reads it without a
+    // session. Calling updateMe would just earn a 401 for no benefit.
+    await waitFor(() => expect(mockRouterRefresh).toHaveBeenCalled());
+    expect(mockUpdateMe).not.toHaveBeenCalled();
   });
 
   it('shows the target language (मराठी) when current locale is EN', () => {

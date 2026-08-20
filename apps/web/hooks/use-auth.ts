@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { authApi } from '@/lib/api/auth';
 import type { User } from '@/lib/api/auth';
+import { setLocaleCookie } from '@/lib/locale';
 import { queryKeys } from '@/lib/api/query-keys';
 
 export function useAuth() {
@@ -28,6 +29,15 @@ export function useLogin() {
     mutationFn: authApi.login,
     onSuccess: (user) => {
       queryClient.setQueryData(queryKeys.auth.me, user);
+      // The account's saved language wins at the moment of signing in, overwriting whatever
+      // the visitor picked while anonymous. Logging in is the point where a stated preference
+      // becomes known, so it is honoured; any toggle afterwards is deliberate and sticks.
+      //
+      // This also matters on a shared device: the cookie lives a year, so without this the
+      // previous person's choice would silently follow the next account signed in here.
+      if (user.language) {
+        setLocaleCookie(user.language);
+      }
       router.push(user.onboardingCompletedAt ? '/dashboard' : '/onboarding');
     },
   });
