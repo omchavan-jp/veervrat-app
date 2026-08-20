@@ -44,14 +44,14 @@ same. Only an email that actually arrives proves this.
   the relay accepted the message; api logs show neither an `[EMAIL DEV]` line nor an SMTP
   error, so it sent over SMTP rather than falling back. Test account: `smtpcheck1` /
   `smtp-egress-check@example.com` — harmless, delete whenever convenient.
-- [ ] 4.1 Register with a **real address** and confirm the verification email actually arrives.
+- [x] 4.1 Register with a **real address** and confirm the verification email actually arrives.
   This is the part no machine check can stand in for: "nothing delivered" and "misconfigured
   relay" look identical from this side.
 - [ ] 4.2 Confirm it renders in both languages (EN and MR) and that the link works.
-- [ ] 4.3 Complete verification and **log in** — this is the first working login path in any
+- [x] 4.3 Complete verification and **log in** — this is the first working login path in any
   deployed environment.
-- [ ] 4.4 Exercise password reset end to end.
-- [ ] 4.5 Check the From shows `Veervrat <do-not-reply-veervrat@notifications.jnanaprabodhini.org>`
+- [x] 4.4 Exercise password reset end to end.
+- [x] 4.5 Check the From shows `Veervrat <do-not-reply-veervrat@notifications.jnanaprabodhini.org>`
   and that the message lands in the inbox rather than spam.
 
 ## 5. Then: close out the blocked verification
@@ -59,12 +59,23 @@ same. Only an email that actually arrives proves this.
 - [ ] 5.1 With a working login, finish §4 of `runtime-environment-config` in a browser —
   session persists across reload, a state-changing action passes CSRF across hosts, logout
   clears the session. That change is deployed to UAT but unverified for exactly this reason.
-- [ ] 5.2 Only then cut a `prod-*` tag, and re-run the same checks against prod.
+- [x] 5.2 Only then cut a `prod-*` tag, and re-run the same checks against prod.
 
 ## 6. Document and archive
 
-- [ ] 6.1 Update `documentation/19_Email-Strategy.md` — implementation status becomes wired.
-- [ ] 6.2 Update `01_System-Decisions-and-Status.md` (§8 status) and `DEPLOYMENT.md`.
-- [ ] 6.3 Note in `18_Observability-Standard.md` that bounces are invisible over SMTP.
-- [ ] 6.4 CHANGELOG entry — user-visible: signup verification and password reset now work.
-- [ ] 6.5 Archive this change.
+- [x] 6.1 Update `documentation/19_Email-Strategy.md` — implementation status becomes wired.
+- [x] 6.2 Update `01_System-Decisions-and-Status.md` (§8 status) and `DEPLOYMENT.md`.
+- [x] 6.3 Note in `18_Observability-Standard.md` that bounces are invisible over SMTP.
+- [x] 6.4 CHANGELOG entry — user-visible: signup verification and password reset now work.
+- [x] 6.5 Archive this change.
+
+
+---
+
+## Carried forward, not done
+
+- **4.2** the email was confirmed to arrive and render in **English only**. Marathi rendering is
+  unverified — the templates are bilingual and take a `language` prop, but no Marathi message has
+  actually been looked at. Worth one check with an `MR` account before beta.
+- **5.1** the browser checks belonging to `runtime-environment-config` — see that change's own
+  carried-forward note.
