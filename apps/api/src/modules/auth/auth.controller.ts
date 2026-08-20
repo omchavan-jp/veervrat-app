@@ -26,7 +26,7 @@ import { SessionGuard } from './guards/session.guard';
 import { GoogleOAuthGuard } from './guards/google-oauth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { SkipCsrf } from '../../common/guards/csrf.guard';
-import { authCookieOptions } from '../../common/http/cookie';
+import { authCookieOptions, clearLegacyHostOnlyCookie } from '../../common/http/cookie';
 import { Audited } from '../audit/audited.decorator';
 import { LinkGoogleDto } from './dto/link-google.dto';
 import type { SessionUser, GoogleProfile } from './types/auth.types';
@@ -274,6 +274,9 @@ export class AuthController {
   }
 
   private setSessionCookie(res: Response, token: string): void {
+    // Remove any pre-scope-change cookie first, or the browser holds two of the same name and
+    // sends both — the state that made logout itself return 401 on UAT.
+    clearLegacyHostOnlyCookie(res, this.cookieName);
     res.cookie(
       this.cookieName,
       token,
@@ -285,5 +288,6 @@ export class AuthController {
     // Must match how it was SET, domain included — a cookie cleared with a different scope is
     // not cleared at all, and the user stays signed in.
     res.clearCookie(this.cookieName, authCookieOptions({ httpOnly: true }));
+    clearLegacyHostOnlyCookie(res, this.cookieName);
   }
 }

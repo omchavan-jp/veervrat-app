@@ -49,3 +49,29 @@ export function authCookieOptions(opts: { httpOnly: boolean; maxAgeMs?: number }
     ...(opts.maxAgeMs !== undefined ? { maxAge: opts.maxAgeMs } : {}),
   };
 }
+
+/**
+ * Clear the pre-COOKIE_DOMAIN cookie left in browsers from before the scope changed.
+ *
+ * Changing a cookie's Domain does not move the old one — it creates a SECOND cookie with the
+ * same name at a different scope. Both are then sent to the api, which picks one arbitrarily,
+ * so a signed-in user can find themselves half-authenticated: pages render, and actions fail
+ * with 401. Observed exactly that on UAT — logout itself returned unauthorised, while a private
+ * window worked perfectly because it had no orphan.
+ *
+ * Omitting `domain` targets the host-only variant specifically, leaving the correctly scoped
+ * cookie untouched. Safe to call unconditionally and safe to remove once no browser could still
+ * be holding a cookie from before 2026-08-20.
+ */
+export function clearLegacyHostOnlyCookie(
+  res: { clearCookie: (name: string, options?: Record<string, unknown>) => void },
+  name: string,
+): void {
+  if (!cookieDomain()) return; // nothing to disambiguate from
+  res.clearCookie(name, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: cookieSameSite(),
+    path: '/',
+  });
+}
