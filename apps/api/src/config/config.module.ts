@@ -56,6 +56,10 @@ import * as Joi from 'joi';
         // Read directly from process.env by common/http/cookie.ts; declared here so an invalid
         // value fails at boot rather than silently falling back.
         COOKIE_SAMESITE: Joi.string().valid('lax', 'strict', 'none').optional(),
+        // Domain scope for auth cookies. MUST be set in any environment where web and api are
+        // on different hosts, or the web tier cannot read the session and login silently fails
+        // to persist. Unset locally, where both run on localhost. See common/http/cookie.ts.
+        COOKIE_DOMAIN: Joi.string().optional(),
         // In-context content editor (dev-only tooling; hard-off in production). All default
         // off/empty so production, CI, and local dev are unaffected unless explicitly enabled.
         CONTENT_EDIT_ENABLED: Joi.boolean().default(false),

@@ -141,6 +141,19 @@ resource "azurerm_container_app" "api" {
         name  = "COOKIE_SAMESITE"
         value = var.cookie_samesite
       }
+      # ⚠️ Load-bearing, and its absence fails in a way that looks like something else.
+      #
+      # Without it the session cookie is host-only to the api, so the WEB tier never receives
+      # it — and the web tier now reads the session in middleware to resolve auth server-side.
+      # The result is that login succeeds and then does not survive a refresh, which looks like
+      # a session bug rather than a cookie-scope one. It shipped exactly that way once.
+      #
+      # Derived from the web host: web `uat.veervrat.…` and api `api.uat.veervrat.…` share
+      # `uat.veervrat.…`, which is the web host itself.
+      env {
+        name  = "COOKIE_DOMAIN"
+        value = var.public_web_host
+      }
       # Outbound email via JP IT's relay (D9). ⚠️ SMTP_SECURE stays false: port 587 upgrades
       # with STARTTLS, whereas true would mean implicit TLS on 465 and fail the handshake.
       env {

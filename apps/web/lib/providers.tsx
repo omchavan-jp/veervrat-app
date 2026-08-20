@@ -22,7 +22,18 @@ export function Providers({
   // genuinely dangerous failure mode of seeding (see the change's design.md, Q2).
   const [queryClient] = useState(() => {
     const client = makeQueryClient();
-    client.setQueryData(queryKeys.auth.me, initialUser ?? null);
+    // Seed ONLY when the server actually resolved someone.
+    //
+    // Seeding `null` would be worse than not seeding: null counts as data, so staleTime
+    // suppresses the fetch that would have discovered the truth, and any hiccup in
+    // server-side resolution becomes a confident "you are logged out" that persists.
+    // That is precisely how a missing cookie Domain turned into "login does not survive a
+    // refresh" — see common/http/cookie.ts.
+    //
+    // Absence of a seed means "unknown, go and find out", which is the safe default.
+    if (initialUser) {
+      client.setQueryData(queryKeys.auth.me, initialUser);
+    }
     return client;
   });
 

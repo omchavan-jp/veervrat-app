@@ -26,7 +26,7 @@ import { SessionGuard } from './guards/session.guard';
 import { GoogleOAuthGuard } from './guards/google-oauth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { SkipCsrf } from '../../common/guards/csrf.guard';
-import { cookieSameSite } from '../../common/http/cookie';
+import { authCookieOptions } from '../../common/http/cookie';
 import { Audited } from '../audit/audited.decorator';
 import { LinkGoogleDto } from './dto/link-google.dto';
 import type { SessionUser, GoogleProfile } from './types/auth.types';
@@ -274,21 +274,12 @@ export class AuthController {
   }
 
   private setSessionCookie(res: Response, token: string): void {
-    res.cookie(this.cookieName, token, {
-      httpOnly: true,
-      secure: this.isProduction,
-      sameSite: cookieSameSite(),
-      maxAge: this.cookieMaxAgeMs,
-      path: '/',
-    });
+    res.cookie(this.cookieName, token, authCookieOptions({ httpOnly: true, maxAgeMs: this.cookieMaxAgeMs }));
   }
 
   private clearSessionCookie(res: Response): void {
-    res.clearCookie(this.cookieName, {
-      httpOnly: true,
-      secure: this.isProduction,
-      sameSite: cookieSameSite(),
-      path: '/',
-    });
+    // Must match how it was SET, domain included — a cookie cleared with a different scope is
+    // not cleared at all, and the user stays signed in.
+    res.clearCookie(this.cookieName, authCookieOptions({ httpOnly: true }));
   }
 }
