@@ -21,7 +21,7 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateVisibilityDto } from './dto/update-visibility.dto';
 import { UpdateSettingsDto } from './dto/update-settings.dto';
 import { ChangePasswordDto, DeleteAccountDto } from './dto/change-password.dto';
-import { cookieSameSite } from '../../common/http/cookie';
+import { authCookieOptions } from '../../common/http/cookie';
 import { SessionGuard } from '../auth/guards/session.guard';
 import { OptionalSessionGuard } from '../auth/guards/optional-session.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -113,13 +113,7 @@ export class UsersController {
       dto.currentPassword,
       dto.newPassword,
     );
-    res.cookie(this.cookieName, sessionToken, {
-      httpOnly: true,
-      secure: this.isProduction,
-      sameSite: cookieSameSite(),
-      maxAge: this.cookieMaxAgeMs,
-      path: '/',
-    });
+    res.cookie(this.cookieName, sessionToken, authCookieOptions({ httpOnly: true, maxAgeMs: this.cookieMaxAgeMs }));
     return { success: true };
   }
 
@@ -155,12 +149,9 @@ export class UsersController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const result = await this.usersService.selfDelete(user.id, dto.currentPassword);
-    res.clearCookie(this.cookieName, {
-      httpOnly: true,
-      secure: this.isProduction,
-      sameSite: cookieSameSite(),
-      path: '/',
-    });
+    // Same scope as it was set with, domain included — otherwise the cookie survives account
+    // deletion and the browser keeps presenting a session for a user that no longer exists.
+    res.clearCookie(this.cookieName, authCookieOptions({ httpOnly: true }));
     return result;
   }
 
