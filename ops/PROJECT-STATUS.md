@@ -42,30 +42,24 @@ a design the app now implements.
 
 ---
 
-## Current state (2026-08-17)
+## Current state (2026-08-20)
 
-**UAT is LIVE on Azure, deployed by CD.** `/ready` green, schema migrated + seeded, web
-serving. CD (GitHub OIDC → Azure, no stored secret) proven end-to-end on multiple real runs.
+**Both environments are live, correctly wired, and can be signed into.**
 
-**Prod is deployed but NOT usable — do not send anyone there yet.** First `prod-2026-08-16`
-tag deployed 2026-08-16, `deploy-prod` succeeded on its first run, `/ready` green. But two
-defects found 2026-08-17 mean no real user can use it:
+- **UAT** — deployed by CD on every merge. Signup → verification email → verify → login proven
+  end to end, plus Google sign-in.
+- **Prod** — live since `prod-2026-08-17`. The defect that had prod's web tier reading and
+  writing **UAT's database** is fixed and verified from outside. Google sign-in configured.
 
-- ✅ **O22 CLOSED** — prod's web tier now reaches **its own** api. Verified on prod after
-  `prod-2026-08-17`: the served page names `api.veervrat.jnanaprabodhini.org`, the old proxy
-  path returns 404, `og:url` names the prod domain.
-- ✅ **Credential login works** — email delivers, so signup → verify → login is a real
-  path. Proven end to end on UAT 2026-08-17.
-- 🔴 **O23** — Google OAuth still holds placeholder credentials in **both** environments. Not
-  blocking (credential login works), but it is half the intended sign-in options.
+Not yet true of prod, and tracked as issues rather than assumed:
 
-Both were invisible to `/ready`, which checks each service in isolation and never asks whether
-the tiers are wired to their own environment.
+- **#88** — prod's email is configured but has **never actually sent**. Config-verified is not
+  delivering, and the failure mode is silent (falls back to console logging and looks healthy).
+- **#92** — `min_replicas = 0`, so the first tester after an idle period pays a cold start.
+- **#74** — an account that misses its verification email is permanently locked out, with no
+  resend and no self-service route. Any tester can land here.
 
-⚠️ **O23 now blocks verifying O22.** The cookie/CORS/CSRF changes can only be proven by a real
-browser session, and there is no way to obtain one — the seed creates content but **zero
-users**. That made wiring email a *prerequisite* for closing O22, not a follow-up. See
-`veervrat-app/documentation/21_Infrastructure-Conventions.md` §18.
+**Backlog lives in GitHub Issues** (`gh issue list`), not in this file — see below.
 
 The old Neon database still holds the only historical data (12 users, 10 journeys), plus a local
 dump — **migration cancelled, see D19**; it is an archive, not a source.
@@ -78,10 +72,10 @@ dump — **migration cancelled, see D19**; it is an archive, not a source.
 | Domain | `veervrat.jnanaprabodhini.org` — **finalised** (O2 closed 2026-08-16) + `veervrat.com` to buy defensively |
 | UAT web | `https://uat.veervrat.jnanaprabodhini.org` |
 | UAT api | `https://api.uat.veervrat.jnanaprabodhini.org` |
-| Prod web | `https://veervrat.jnanaprabodhini.org` — 🔴 deployed, not usable (O22/O23) |
+| Prod web | `https://veervrat.jnanaprabodhini.org` — ✅ live and correctly wired since `prod-2026-08-17` |
 | Prod api | `https://api.veervrat.jnanaprabodhini.org` |
 | Terraform | `veervrat-app/infra/terraform/` — `envs/shared`, `envs/uat`, `envs/prod` all applied, plans clean |
-| CD | `.github/workflows/cd.yml` — merge to `main` auto-deploys UAT; `prod-*` tag deploys prod (proven 2026-08-16, first run, no bugs) |
+| CD | `.github/workflows/cd.yml` — merge to `main` auto-deploys UAT; `prod-*` tag deploys prod. Both paths proven; doc-only merges skip the build |
 | Images | `veervratacr` — `veervrat-api`, `veervrat-api-migrate`, `veervrat-web`, built + cached in CI (GitHub Actions cache, not the registry) |
 | DNS | ✅ **live 2026-08-17** — 4 hostnames (web + api, UAT + prod) on `*.veervrat.jnanaprabodhini.org`, per-record via Shantanoo, managed TLS bound (O1/D14) |
 
@@ -127,9 +121,9 @@ dropped build args). Every one is now documented with its guard.
 |---|---|---|---|
 | O6 | ✅ **CLOSED 2026-08-16** — single `main` trunk, UAT auto-deploys on merge, prod by `prod-*` tag promoting the same image. Documented in `veervrat-app/AGENTS.md` + `DEPLOYMENT.md`. Transition done — `main` fast-forwarded, `dev` retired | — | — |
 | O18 | ✅ **CLOSED 2026-08-16** — CD pipeline live. GitHub↔Azure via OIDC (no stored secret), `.github/workflows/cd.yml` + `.github/actions/deploy-environment`. Parallel cached builds, per-job auth, migrate-before-deploy enforced. UAT **and now prod** deploys proven end-to-end — `deploy-prod` succeeded on its first run (`prod-2026-08-16`), the only CD path all the others' bug hunts hadn't yet touched. Also fixed same day: doc-only merges no longer trigger a pointless rebuild+redeploy — verified live with a real doc-only PR that skipped `build`/`deploy-uat` in 21s (see `veervrat-app/documentation/21_Infrastructure-Conventions.md` §14–16) | — | — |
-| O1 | **DNS per-record, not delegation** (revised 2026-08-16, see D14). Met Shantanoo 2026-08-16 — the earlier Azure zone + NS-delegation request is superseded, he added records directly. **Web hostnames live and verified 2026-08-17**: `https://veervrat.jnanaprabodhini.org` (prod) and `https://uat.veervrat.jnanaprabodhini.org` (UAT), both serving real traffic with Azure-managed DigiCert TLS certs, hostnames bound `SniEnabled`. Caught and fixed same day: Shantanoo hit Azure's default 404 page hitting the domain — records were live, but the hostname wasn't yet bound to the Container App on our side (that step was always ours, not his). ⚠️ D14's original "only 2 hostnames are ever public" was wrong: `DEPLOYMENT.md`'s pre-existing DNS-cutover checklist (predates this thread) calls for **api hostnames too** (`api.veervrat.…`, `api.uat.veervrat.…`), specifically to enable same-site cookies and remove the Next.js rewrite proxy — the proxy is the documented reason WebSocket chat has never worked in production (O8). 4 more records requested from Shantanoo 2026-08-17; confirmed live same day, hostnames bound, managed certs issued — **all 4 hostnames now serve real traffic with valid TLS**: `veervrat.jnanaprabodhini.org`, `uat.veervrat.…`, `api.veervrat.…`, `api.uat.veervrat.…`. ✅ **DNS side closed.** Not yet done: the actual cookie/proxy-removal code change (`COOKIE_SAMESITE=lax`, drop the Next.js rewrite) — that's O8's work, a separate deliberate change, not a side effect of DNS landing. The now-unused Azure DNS zone (`veervrat.jnanaprabodhini.org`, `envs/shared/dns.tf`) is ready to decommission — see **#80** | — | O8 (chat) |
+| O1 | ✅ **CLOSED 2026-08-17** — DNS per-record, not delegation (revised 2026-08-16, see D14). Met Shantanoo 2026-08-16 — the earlier Azure zone + NS-delegation request is superseded, he added records directly. **Web hostnames live and verified 2026-08-17**: `https://veervrat.jnanaprabodhini.org` (prod) and `https://uat.veervrat.jnanaprabodhini.org` (UAT), both serving real traffic with Azure-managed DigiCert TLS certs, hostnames bound `SniEnabled`. Caught and fixed same day: Shantanoo hit Azure's default 404 page hitting the domain — records were live, but the hostname wasn't yet bound to the Container App on our side (that step was always ours, not his). ⚠️ D14's original "only 2 hostnames are ever public" was wrong: `DEPLOYMENT.md`'s pre-existing DNS-cutover checklist (predates this thread) calls for **api hostnames too** (`api.veervrat.…`, `api.uat.veervrat.…`), specifically to enable same-site cookies and remove the Next.js rewrite proxy — the proxy is the documented reason WebSocket chat has never worked in production (O8). 4 more records requested from Shantanoo 2026-08-17; confirmed live same day, hostnames bound, managed certs issued — **all 4 hostnames now serve real traffic with valid TLS**: `veervrat.jnanaprabodhini.org`, `uat.veervrat.…`, `api.veervrat.…`, `api.uat.veervrat.…`. ✅ **DNS side closed.** Not yet done: the actual cookie/proxy-removal code change (`COOKIE_SAMESITE=lax`, drop the Next.js rewrite) — that's O8's work, a separate deliberate change, not a side effect of DNS landing. The now-unused Azure DNS zone (`veervrat.jnanaprabodhini.org`, `envs/shared/dns.tf`) is ready to decommission — see **#80** | — | O8 (chat) |
 | O22 | ✅ **CLOSED 2026-08-17** — prod's frontend was talking to UAT's backend. Found 2026-08-17, reproduced 3/3, while prod was live with `/ready` green on both tiers. `next.config.ts` reads `API_ORIGIN` at module scope; Next bakes `rewrites()` destinations into the build at **build time**, so the runtime env var Terraform sets on prod was silently ignored, and the promoted image kept UAT's value. Every prod request would have read/written **UAT's database**. Blast radius zero — prod had no users. Not one bad variable but a category error: **anything build-time cannot vary per environment under "promote, never rebuild"** — same root cause as the `NEXT_PUBLIC_SITE_URL` og-tag bug and the `NEXT_PUBLIC_FEEDBACK_MODE` problem behind **#40**. Written up as `documentation/21_Infrastructure-Conventions.md` §17. Fix is OpenSpec change `runtime-environment-config` (runtime config + drop the proxy + `SameSite=Lax` + CORS + a post-deploy wiring check); also unblocks O8's WebSocket transport | Claude | prod usable at all |
-| O23 | **Google OAuth is not configured in EITHER environment** — `GOOGLE_CLIENT_ID`/`SECRET` are the literal Terraform default `placeholder-not-configured` (`modules/environment/variables.tf`) on UAT *and* prod, so the OAuth redirect reaches Google with a placeholder client id and fails. ⚠️ The callback URL also **changed** with the proxy removal — it is now on the api origin (`api.veervrat…`/`api.uat.veervrat…`), so that is what must be registered in the Google console. Combined with credential login throwing `EmailNotVerifiedException` (`auth.service.ts:148`) while email is unwired, **there is currently no way for anyone to sign up or log in on prod, by any path.** Needs a Google console entry for the prod callback URL (external dependency — start early) and real secrets into Key Vault. Sequenced after `runtime-environment-config`, because the callback URL changes when the proxy is removed | Om + Claude | any prod login |
+| O23 | ✅ **CLOSED 2026-08-18** — Google sign-in configured in **both** environments. Project `veervrat` under the `jnanaprabodhini.org` org, one OAuth client per environment, each secret in that environment's Key Vault, callback URLs on the **api** origin (they moved when the proxy was removed). Verified by a real sign-in on UAT. Testing mode, 100-user cap; no "unverified app" interstitial, since the scopes are non-sensitive. Full setup recorded in `azure-account-facts.md` §9 | — | — |
 | O21 | ✅ **CLOSED 2026-08-17** — email goes through JP's SMTP relay, not Resend (**D9 flipped**), **implemented and delivering** — a real message reached an external Gmail inbox, not spam. Every open question answered: sends as `notifications.jnanaprabodhini.org` (dedicated notifications subdomain, not staff mail — which is what resolved the D9 reputation concern); credentials received and **verified authenticating** (`235`); Shantanoo's test mail reached a Gmail **inbox, not spam**. Mailbox is `do-not-reply-veervrat@` (his naming, already provisioned — we adopt it, not the `noreply-` I'd suggested). Creds stored at `~/.secrets/veervrat/smtp-jp.env` (600, outside git). Code shipped 2026-08-17. | — | — |
 | O2 | ✅ **CLOSED 2026-08-16** — `veervrat.jnanaprabodhini.org` finalised over `veervrat.com` | — | — |
 | O3 | Buy `veervrat.com` defensively (~$10) | Om | — |
@@ -138,7 +132,7 @@ dropped build args). Every one is now documented with its guard.
 | O7 | ✅ **CLOSED 2026-08-16** — **UAT:** feedback widget for all users, content editor for Nachiket (his content-review role). **Prod:** feedback widget for granted users only; **content editor never, for anyone**. Access is DB-backed and managed from the admin dashboard (D20), not env vars. Implementation is **#40** | — | — |
 | O8 | **Chat production-readiness** — own work packet. The gateway is competently built (auth on connect, rooms, sequence numbers, image upload) but **has never once run successfully in production** — the Next.js rewrite proxy blocked WebSocket upgrades from day one, so all real-world behaviour is unverified. Redis adapter now fixed; transport half needs the custom domain. Needs: reconnection, delivery guarantees, offline/unread, push notifications, UX review | later | scaling >1 replica |
 | O9 | ✅ **CLOSED 2026-08-15** — Round 1 app fixes shipped (shutdown, distributed throttler, socket adapter, DB pool) | — | — |
-| O10 | Terraform — **Phase 1 + 2A done, UAT app LIVE**. Phase 2B (prod) outstanding | Claude | prod |
+| O10 | ✅ **CLOSED 2026-08-18** — Terraform complete: `envs/shared`, `envs/uat`, `envs/prod` all applied, both environments verify `No changes` against `main`. Phase 2B landed 2026-08-16 and prod has been serving since `prod-2026-08-17` | — | — |
 | O15 | **Blob storage** — app speaks S3 (`@aws-sdk/client-s3`); Azure Blob does not. Needs an SDK swap before Blob can be provisioned | Claude | uploads (degrades gracefully meanwhile) |
 | O16 | ✅ **CLOSED 2026-08-16** — migration job built + proven (`veervrat-uat-migrate`, build-stage image, manual trigger, `replica_retry_limit=0`) | — | — |
 | O17 | **ACR purge task** — retention policies are Premium-only; on Basic use a scheduled `acr purge`. Needed once CD pushes an image per merge | Claude | registry cost |
@@ -263,8 +257,15 @@ History of already-triaged items: `triage-archive.md`.
     OpenSpec change lane
 16. **Then #40** — per-user capability grants + admin dashboard, OpenSpec full cycle. The last
     thing between prod and real beta testers, now that people can actually log in
-17. Blob storage (O15) → decommission Neon/Upstash/R2 → #84 (budget proposal owed to JP
+17. **Before inviting the first tester:** #88 (prove prod actually sends email) and #92
+    (`min_replicas=1`, so nobody's first impression is a cold start). Both are small; both are
+    invisible until a real person hits them
+18. Blob storage (O15) → decommission Neon/Upstash/R2 → #84 (budget proposal owed to JP
     finance — not blocking, but a human commitment that silently slips)
+19. Not urgent, but do not lose: #89 (backups have never been restored — untested is not a
+    backup), #93 (no hard spending cap; grant expiry silently bills a personal card), #90
+    (Terraform state RBAC is broader than it should be), #91 (VNet/private endpoints, deferred
+    with a trigger rather than a date)
 
 Rationale for 5-before-6: CD automates a deploy you understand. Written first, every
 first-time deployment surprise surfaces as a red CI log instead of in front of you.
