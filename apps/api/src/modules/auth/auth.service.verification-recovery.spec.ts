@@ -59,7 +59,9 @@ describe('resendVerification — anti-enumeration', () => {
 
   it('already-verified address: returns sent, sends nothing', async () => {
     const repo = makeRepo({
-      findUserByEmail: vi.fn().mockResolvedValue({ ...UNVERIFIED_USER, emailVerifiedAt: new Date() }),
+      findUserByEmail: vi
+        .fn()
+        .mockResolvedValue({ ...UNVERIFIED_USER, emailVerifiedAt: new Date() }),
     });
     const mail = { sendTransactional: vi.fn() };
     const service = makeService(repo, mail);
@@ -130,7 +132,7 @@ describe('resetPassword marks the address verified', () => {
   });
 });
 
-describe('linkGoogleAccount honours Google\'s email_verified claim', () => {
+describe("linkGoogleAccount honours Google's email_verified claim", () => {
   const linkRow = (emailVerified: unknown) => ({
     id: 'tok-2',
     token: 'valid',
