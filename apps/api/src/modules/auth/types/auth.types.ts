@@ -26,6 +26,12 @@ export type GoogleProfile = {
   googleId: string;
   email: string;
   name: string | null;
+  /**
+   * Google's own assertion that it verified this address. Read rather than assumed: most
+   * Gmail/Workspace identities set it, some federated ones do not, and we mark an address
+   * verified on the strength of this claim (see linkGoogleAccount).
+   */
+  emailVerified: boolean;
 };
 
 export type AuthResult = {

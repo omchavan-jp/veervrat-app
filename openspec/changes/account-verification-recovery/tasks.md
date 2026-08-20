@@ -1,46 +1,46 @@
 ## 0. Read first
 
-- [ ] 0.1 `documentation/14_Auth-Architecture-Decision.md` §15–16 (throttles, lockout) and the
+- [x] 0.1 `documentation/14_Auth-Architecture-Decision.md` §15–16 (throttles, lockout) and the
   anti-enumeration shape of `forgotPassword` in `auth.service.ts`. This change is mostly about
   matching an existing pattern, not inventing one.
 
 ## 1. Repository + strategy groundwork
 
-- [ ] 1.1 Add `markEmailVerified(userId)` to `auth.repository.ts`. The update currently exists
-  only inline in the verify-email path; three callers now need it.
-- [ ] 1.2 Carry Google's `email_verified` claim through `strategies/google.strategy.ts` — it is
+- [x] 1.1 ~~Add `markEmailVerified(userId)`~~ — **already existed** in `auth.repository.ts`; the
+  proposal's claim that it was inline was wrong. Three callers now use it.
+- [x] 1.2 Carry Google's `email_verified` claim through `strategies/google.strategy.ts` — it is
   present in the profile and currently dropped. Without it, decision 2 cannot be honoured.
 
 ## 2. Verify on proof of mailbox control
 
-- [ ] 2.1 `resetPassword` marks the address verified on success.
-- [ ] 2.2 `linkGoogleAccount` marks it verified **only when** Google's `email_verified` is true.
-- [ ] 2.3 Unit tests for both, including the negative: `email_verified` false or absent links the
+- [x] 2.1 `resetPassword` marks the address verified on success.
+- [x] 2.2 `linkGoogleAccount` marks it verified **only when** Google's `email_verified` is true.
+- [x] 2.3 Unit tests for both, including the negative: `email_verified` false or absent links the
   account but leaves the address unverified.
 
 ## 3. Resend endpoint
 
-- [ ] 3.1 `resendVerification(email)` in `auth.service.ts`. Returns `'sent'` unconditionally;
+- [x] 3.1 `resendVerification(email)` in `auth.service.ts`. Returns `'sent'` unconditionally;
   sends only for an unverified credential account. Invalidate outstanding
   `EMAIL_VERIFICATION` tokens first, as `forgotPassword` does.
-- [ ] 3.2 `POST /auth/resend-verification` in `auth.controller.ts`, under the **strict auth
+- [x] 3.2 `POST /auth/resend-verification` in `auth.controller.ts`, under the **strict auth
   throttle** — same treatment as `forgot-password`.
-- [ ] 3.3 Tests for all four input cases (unknown / verified / Google-only / unverified),
+- [x] 3.3 Tests for all four input cases (unknown / verified / Google-only / unverified),
   asserting **response equality**, not just success. A test that only checks 200 will not catch
   a body or shape difference creeping in later.
-- [ ] 3.4 Test that a second resend invalidates the first link.
+- [x] 3.4 Test that a second resend invalidates the first link.
 
 ## 4. The interface
 
-- [ ] 4.1 Surface `EMAIL_NOT_VERIFIED` on the login page as an explanation plus a resend action,
+- [x] 4.1 Surface `EMAIL_NOT_VERIFIED` on the login page as an explanation plus a resend action,
   rather than a bare failure.
-- [ ] 4.2 Strings in `en.json` and `mr.json` — no hardcoded text.
-- [ ] 4.3 Confirm the resend action reports success identically whatever the address, so the UI
+- [x] 4.2 Strings in `en.json` and `mr.json` — no hardcoded text.
+- [x] 4.3 Confirm the resend action reports success identically whatever the address, so the UI
   does not undo the API's anti-enumeration property.
 
 ## 5. Verification
 
-- [ ] 5.1 Full unit + integration suite green.
+- [x] 5.1 Full unit + integration suite green.
 - [ ] 5.2 **On UAT, in a browser:** register a throwaway `+` alias, ignore the first email, use
   resend, verify, log in. That is the whole user journey this change exists for.
 - [ ] 5.3 **On UAT:** confirm the maintainer's existing dead account recovers — reset the
