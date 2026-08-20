@@ -39,6 +39,7 @@ User (1) ──→ (many) VerificationToken  # email verify + password reset
 | `/auth/login` | POST | No | Validate credentials, create session; checks account lockout first |
 | `/auth/logout` | POST | Yes | Delete session, clear cookie |
 | `/auth/verify-email` | POST | No | Confirm email ownership |
+| `/auth/resend-verification` | POST | No | Re-send the verification email. **Identical response for every input** — unknown address, already verified, Google-only, or genuinely unverified — and sends only in the last case. Strict auth throttle; invalidates prior verification tokens |
 | `/auth/forgot-password` | POST | No | Send reset token (always 200) |
 | `/auth/reset-password` | POST | No | Change password via token |
 | `/auth/google` | GET | No | Redirect to Google OAuth |
@@ -52,7 +53,7 @@ All under `/api/v1/` prefix.
 ## Business Rules
 
 1. Email verification mandatory before login
-2. Google OAuth: no auto-link if email matches existing account
+2. Google OAuth: no auto-link if email matches existing account — a link token is issued and the user confirms with their existing password
 3. New OAuth users get `onboardingCompletedAt=null` → redirect to `/onboarding`
 4. Forgot-password always returns 200 (no email enumeration)
 5. Password reset invalidates all sessions
@@ -61,6 +62,16 @@ All under `/api/v1/` prefix.
 8. Account lockout: 10 failed logins within 1 hour → 15-minute Redis lock (see `account-lockout` spec)
 9. `completeOnboarding` accepts optional username (uniqueness validated), displayName, language — all individually optional
 10. `check-username` format validation: `/^[a-z0-9_]{3,30}$/` — invalid format returns `available: false`
+11. **An unverified address must always be recoverable.** Login refuses an unverified address, so
+    any flow that proves mailbox ownership marks it verified — otherwise a missed verification
+    email leaves the account permanently unusable:
+    - completing a **password reset** verifies the address (the token was delivered to it)
+    - **linking a Google account** verifies it, but only when Google's own `email_verified`
+      claim is true — read, never assumed
+    - `/auth/resend-verification` exists so a lost verification email is recoverable at all
+12. **Resend and forgot-password must be indistinguishable across inputs.** Any difference in
+    status, body or timing answers "does this address have an account?" for any address tried.
+    Rate-limit rejections (429) are per-IP and therefore safe to surface; nothing else is.
 
 ## Database Schema
 
@@ -136,11 +147,11 @@ All pages use React Hook Form + Zod for validation, TanStack Query for server st
 
 ## Not Yet Implemented
 
-- Account linking/unlinking
 - Re-authentication for sensitive actions
-- Email change flow
-- Audit logging of auth events
 - Admin force-logout
+
+*(Account linking, the email-change flow and auth audit logging have since been built —
+corrected 2026-08-20 while archiving `account-verification-recovery`.)*
 
 ## References
 

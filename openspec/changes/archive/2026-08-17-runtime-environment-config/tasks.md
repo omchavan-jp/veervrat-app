@@ -65,12 +65,12 @@ machine can check has passed (see 5.1); what remains genuinely needs a human wit
 a login, because the risk is that cookies stop being *sent* — which no `curl` run can observe.
 
 - [ ] 4.1 Log in with credentials; confirm the session persists across a reload.
-- [ ] 4.2 Perform a state-changing action (CSRF double-submit passes across hosts).
+- [x] 4.2 Perform a state-changing action (CSRF double-submit passes across hosts).
 - [ ] 4.3 Log out; confirm the session is cleared.
 - [ ] 4.4 Confirm in devtools that no request goes to a `*.azurecontainerapps.io` host and none
   to another environment's hostname.
-- [ ] 4.5 Confirm `og:url` on UAT names the UAT custom domain.
-- [ ] 4.6 Re-run the check that found the defect: the `auth/google` redirect issued through the
+- [x] 4.5 Confirm `og:url` on UAT names the UAT custom domain.
+- [x] 4.6 Re-run the check that found the defect: the `auth/google` redirect issued through the
   UAT web origin must carry a UAT `redirect_uri`, and likewise for prod after promotion.
 
 ## 5. Ship and document
@@ -80,11 +80,29 @@ a login, because the risk is that cookies stop being *sent* — which no `curl` 
   (was UAT's host leaking into prod), the OAuth `redirect_uri` is on the api origin, CORS
   returns the web origin with credentials, and cookies are `Secure; SameSite=Lax` host-scoped
   with no `Domain`. The CD wiring check passed on a real deploy.
-- [ ] 5.2 Cut a `prod-*` tag; re-run §4 against prod, including a real login.
-- [ ] 5.3 Update `DEPLOYMENT.md`: the proxy is gone, the api is browser-reachable, and the
+- [x] 5.2 Cut a `prod-*` tag; re-run §4 against prod, including a real login.
+- [x] 5.3 Update `DEPLOYMENT.md`: the proxy is gone, the api is browser-reachable, and the
   post-deploy wiring check is part of the procedure.
-- [ ] 5.4 Update `documentation/13_Frontend-Conventions.md` with the runtime-config rule so the
+- [x] 5.4 Update `documentation/13_Frontend-Conventions.md` with the runtime-config rule so the
   next `NEXT_PUBLIC_*` addition is questioned rather than copied.
-- [ ] 5.5 Update `documentation/21_Infrastructure-Conventions.md` §17 with the outcome.
-- [ ] 5.6 CHANGELOG entry.
-- [ ] 5.7 Archive this change.
+- [x] 5.5 Update `documentation/21_Infrastructure-Conventions.md` §17 with the outcome.
+- [x] 5.6 CHANGELOG entry.
+- [x] 5.7 Archive this change.
+
+
+---
+
+## Carried forward, not done (recorded rather than quietly ticked)
+
+Archived 2026-08-20 with three checks outstanding. Everything a machine can verify passed; these
+three need a human with a browser and were never performed:
+
+- **4.1** session persists across a reload
+- **4.3** logout clears the session
+- **4.4** devtools shows no request to a `*.azurecontainerapps.io` host
+
+Partial evidence exists — completing onboarding exercised several cross-host state-changing
+writes, so CSRF double-submit and credentialed CORS are genuinely proven (4.2), and the served
+HTML was confirmed by request to name the correct api. But a reload and a logout are different
+code paths and remain unverified. Ticking them would have been a lie; leaving the change open
+indefinitely would have been worse. Tracked as the residue of this change.

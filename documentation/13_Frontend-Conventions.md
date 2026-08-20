@@ -148,6 +148,38 @@ lib/
 - never use raw `fetch` in components — always go through the API client
 - error handling: the client throws typed errors that components can catch
 
+## 8b. Environment configuration — runtime, never `NEXT_PUBLIC_*`
+
+**Do not add a `NEXT_PUBLIC_*` variable for anything that differs between environments.**
+
+CD builds one web image and promotes that exact image from UAT to production without
+rebuilding. `NEXT_PUBLIC_*` is inlined into the client bundle at build time, so its value is
+frozen into the image and is identical wherever that image runs — the environment's own setting
+is silently ignored.
+
+This is not hypothetical. `API_ORIGIN` was baked this way and **production's web tier called
+UAT's api**, reading and writing the wrong database for a day, while every health check stayed
+green. `NEXT_PUBLIC_SITE_URL` did the same to link previews. See
+`21_Infrastructure-Conventions.md` §17.
+
+Use `lib/runtime-config.ts` instead — read server-side per request, supplied to client
+components through `RuntimeConfigProvider`:
+
+```ts
+import { getRuntimeConfig } from '@/lib/runtime-config';   // non-component callers
+import { useRuntimeConfig } from '@/lib/runtime-config-provider'; // components
+```
+
+Two things follow from the same rule:
+
+- `next.config.ts` evaluation is also build-time. **Never put a per-environment value in
+  `rewrites()`, `redirects()` or `headers()`** — that is precisely how the defect above shipped.
+- The test before adding *any* build-time value: **does it describe the image, or where the
+  image runs?** `NEXT_PUBLIC_COMMIT_SHA` describes the image and is correctly baked.
+  `NEXT_PUBLIC_CONTENT_EDIT` is the deliberate exception — being inlined lets the bundler drop
+  the editor's code entirely, so dev tooling never ships to users; that is the point of it being
+  build-time, and it is never passed by CD.
+
 ## 9. Component conventions
 
 ### File structure
