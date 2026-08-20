@@ -5,7 +5,6 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '@/hooks/use-auth';
 import { AppShell } from '@/components/layout/app-shell';
 import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
 
 // Guest-browseable content shell (virtues/pothi/shlokas/resources/community — spec/09
 // guest access). Authenticated members get the full app chrome (left rail + pill nav)
@@ -13,17 +12,11 @@ import { Spinner } from '@/components/ui/spinner';
 // Actual guests get the minimal top bar with a wordmark and a Log in CTA.
 export function ContentLayoutClient({ children }: { children: React.ReactNode }) {
   const t = useTranslations('common.nav');
-  const tCommon = useTranslations('common');
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
-  // Avoid a flash of the guest bar before the session resolves: hold on a spinner.
-  if (isLoading) {
-    return (
-      <div className="flex min-h-dvh items-center justify-center bg-bg">
-        <Spinner size="lg" label={tCommon('loading')} />
-      </div>
-    );
-  }
+  // The guest-bar flash this used to guard against is gone: auth arrives with the HTML, so the
+  // correct chrome renders first time. The spinner it replaced also unmounted the subtree while
+  // the query ran, which is what allowed the request storm in #101.
 
   if (isAuthenticated && user) {
     return <AppShell user={user}>{children}</AppShell>;

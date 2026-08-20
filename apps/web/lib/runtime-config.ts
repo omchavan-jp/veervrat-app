@@ -20,6 +20,16 @@ export type RuntimeConfig = {
   feedbackMode: FeedbackMode;
 };
 
+/**
+ * The session as resolved by the middleware, seeded so the first client render already knows
+ * who is signed in.
+ *
+ * Kept separate from RuntimeConfig on purpose: RuntimeConfig describes the ENVIRONMENT and is
+ * identical for every visitor, whereas this is per-request and per-person. Merging them would
+ * invite someone to cache or memoise the pair and leak one user's identity to another.
+ */
+export type SeededAuth = { user: import('./session-user').SessionUser | null };
+
 function parseFeedbackMode(raw: string | undefined): FeedbackMode {
   return raw === 'test' || raw === 'public' ? raw : 'off';
 }

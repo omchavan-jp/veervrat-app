@@ -139,36 +139,67 @@ describe('middleware locale resolution', () => {
     expect(capturedRequestHeaders?.get('X-Next-Locale')).toBe('en');
   });
 
-  it('uses the NEXT_LOCALE cookie without calling the API (fast path)', async () => {
-    const fetchSpy = vi.fn();
+  // The fast path narrowed deliberately (openspec/changes/server-resolved-auth). It used to skip
+  // the API for ANY request with a cached locale cookie. Signed-in users now always resolve the
+  // session server-side, so the client can render with auth already known instead of fetching it
+  // and gating the whole tree on a spinner — the shape that caused the #101 request storm.
+  it('signed in: resolves the session even when NEXT_LOCALE is cached', async () => {
+    const fetchSpy = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: { id: 'u1', language: 'MR', displayName: 'Om' } }),
+    });
     vi.stubGlobal('fetch', fetchSpy);
 
     const { NextRequest } = await import('next/server');
     const req = new (NextRequest as unknown as new (url: string, init?: { cookies?: Record<string, string> }) => unknown)(
       'http://localhost/dashboard',
-      { cookies: { veervrat_session: 'valid-token', NEXT_LOCALE: 'mr' } },
+      { cookies: { veervrat_session: 'valid-token', NEXT_LOCALE: 'en' } },
     );
 
     await middleware(req as Parameters<typeof middleware>[0]);
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    // The user's stored language wins over the cached cookie — otherwise a language change made
+    // on another device would be masked by a stale cookie for up to a year.
+    expect(capturedRequestHeaders?.get('X-Next-Locale')).toBe('mr');
+    expect(capturedRequestHeaders?.get('X-Session-User')).toBeTruthy();
+  });
+
+  // Anonymous visitors keep the fast path in full: public pages are the most trafficked and must
+  // not gain a round trip. resolveUser returns null without touching the API when there is no
+  // session cookie.
+  it('anonymous: uses the NEXT_LOCALE cookie and never calls the API', async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal('fetch', fetchSpy);
+
+    const { NextRequest } = await import('next/server');
+    const req = new (NextRequest as unknown as new (url: string, init?: { cookies?: Record<string, string> }) => unknown)(
+      'http://localhost/login',
+      { cookies: { NEXT_LOCALE: 'mr' } },
+    );
+
+    await middleware(req as Parameters<typeof middleware>[0]);
+
     expect(fetchSpy).not.toHaveBeenCalled();
     expect(capturedRequestHeaders?.get('X-Next-Locale')).toBe('mr');
+    expect(capturedRequestHeaders?.get('X-Session-User')).toBeNull();
     expect(setResponseCookies).toHaveLength(0);
   });
 
-  it('ignores an invalid NEXT_LOCALE cookie and self-heals it from the API', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ data: { language: 'mr' } }),
-    }));
+  it('a failed /auth/me degrades to anonymous rather than erroring', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('api unreachable')));
 
     const { NextRequest } = await import('next/server');
     const req = new (NextRequest as unknown as new (url: string, init?: { cookies?: Record<string, string> }) => unknown)(
       'http://localhost/dashboard',
-      { cookies: { veervrat_session: 'valid-token', NEXT_LOCALE: 'xx' } },
+      { cookies: { veervrat_session: 'valid-token' } },
     );
 
+    // The site should look logged out, not break, if the api is down.
     await middleware(req as Parameters<typeof middleware>[0]);
-    expect(capturedRequestHeaders?.get('X-Next-Locale')).toBe('mr');
-    expect(setResponseCookies).toEqual([{ name: 'NEXT_LOCALE', value: 'mr' }]);
+
+    expect(capturedRequestHeaders?.get('X-Session-User')).toBeNull();
+    expect(capturedRequestHeaders?.get('X-Next-Locale')).toBeTruthy();
   });
+
 });
