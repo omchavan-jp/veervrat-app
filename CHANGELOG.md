@@ -8,6 +8,12 @@ line here (see `documentation/20_Solo-Dev-Operations.md`).
 Note: merging to `main` ships to **UAT**, not to users. A line here is live for beta
 testers only once a `prod-*` tag has been deployed.
 
+## Unreleased
+- If your account was never verified, you can now get back in. Signing in with an unverified
+  address explains what's wrong and offers to send a fresh verification email, instead of just
+  refusing. Completing a password reset, or linking your Google account, now also verifies the
+  address — since both already prove you own it.
+
 ## 2026-08-17 (prod-2026-08-17)
 - **Signing up with an email address now works.** Verification and password-reset emails
   actually send — they never have before in any deployed environment, so an account created

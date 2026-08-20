@@ -234,7 +234,11 @@
       "oauthConflict": "An account with this email already exists. Please sign in with your email and password.",
       "authError": "Authentication failed. Please try again.",
       "rateLimitExceeded": "Too many attempts. Please wait a moment and try again.",
-      "accountLocked": "Too many failed login attempts. Please try again later."
+      "accountLocked": "Too many failed login attempts. Please try again later.",
+      "emailNotVerified": "Your email address hasn't been verified yet. Check your inbox for the verification link — including your spam folder.",
+      "resendVerification": "Send a new verification email",
+      "resendVerificationSent": "If that address needs verifying, a new link is on its way. Please check your inbox.",
+      "resendVerificationSending": "Sending…"
     },
     "linkAccount": {
       "title": "Link your Google account",

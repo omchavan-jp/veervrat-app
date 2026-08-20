@@ -216,6 +216,9 @@ export class AuthService {
           googleId: profile.googleId,
           googleEmail: profile.email,
           displayName: profile.name ?? null,
+          // Carried so linkGoogleAccount can decide whether to mark the address verified
+          // without re-contacting Google.
+          emailVerified: profile.emailVerified,
         },
       });
       return { action: 'link_pending', token: linkToken };
@@ -285,7 +288,12 @@ export class AuthService {
     ) {
       throw new TokenInvalidException();
     }
-    const metadata = raw as { googleId: string; googleEmail: string; displayName: string | null };
+    const metadata = raw as {
+      googleId: string;
+      googleEmail: string;
+      displayName: string | null;
+      emailVerified?: boolean;
+    };
 
     await this.authRepository.addAuthAccount({
       userId: verificationToken.userId,
@@ -294,6 +302,16 @@ export class AuthService {
     });
 
     await this.authRepository.markTokenUsed(verificationToken.id);
+
+    // Google has confirmed this address AND the user proved the account password, so ownership
+    // is established twice over. Without this the account links, Google sign-in works, and
+    // credential sign-in on the SAME account still refuses for an unverified email.
+    //
+    // Gated on Google's own claim rather than assumed: `emailVerified` absent (an older token,
+    // or a federated identity Google has not confirmed) leaves the address unverified.
+    if (metadata.emailVerified === true) {
+      await this.authRepository.markEmailVerified(verificationToken.userId);
+    }
 
     const sessionToken = await this.createSession({
       userId: verificationToken.userId,
@@ -339,6 +357,63 @@ export class AuthService {
   // Enumeration prevention (spec/27, Auth Architecture): the response must never reveal
   // whether an account exists. We still do the real work when applicable, but the caller
   // sees a uniform result.
+  /**
+   * Re-send the verification email for an unverified credential account.
+   *
+   * ALWAYS returns 'sent', for every input. An address with no account, an already-verified
+   * address, and a Google-only account are indistinguishable from a genuine resend — any
+   * observable difference would turn this into "does this person have a Veervrat account?",
+   * answerable for any address someone cares to try. `forgotPassword` below takes the same
+   * shape for the same reason.
+   *
+   * The route is under the strict auth throttle: it sends mail to a caller-chosen address, so
+   * without a limit it is a way to deliver repeated mail to someone else's inbox.
+   */
+  async resendVerification(email: string): Promise<'sent'> {
+    const user = await this.authRepository.findUserByEmail(email);
+    if (!user) {
+      return 'sent';
+    }
+
+    if (user.emailVerifiedAt) {
+      return 'sent';
+    }
+
+    const emailAccount = await this.authRepository.findEmailAccountByUserId(user.id);
+    if (!emailAccount) {
+      // Google-only account: verification is meaningless here, they sign in with Google.
+      return 'sent';
+    }
+
+    // Invalidate first, so a burst of requests cannot leave several usable links live against
+    // one inbox.
+    await this.authRepository.invalidateTokensByUserAndType(
+      user.id,
+      VerificationType.EMAIL_VERIFICATION,
+    );
+
+    const verificationToken = this.generateToken();
+    await this.authRepository.createVerificationToken({
+      userId: user.id,
+      token: verificationToken,
+      type: VerificationType.EMAIL_VERIFICATION,
+      expiresAt: this.hoursFromNow(VERIFICATION_TOKEN_EXPIRY_HOURS),
+    });
+
+    const verifyUrl = `${this.configService.get<string>('FRONTEND_URL', 'http://localhost:3000')}/verify-email?token=${verificationToken}`;
+    const lang = user.language ?? 'EN';
+    const { html, text } = await this.emailService.renderTemplate(
+      createElement(VerifyEmailEmail, {
+        displayName: user.displayName,
+        verifyUrl,
+        language: lang,
+      }),
+    );
+    await this.emailService.sendTransactional(email, getVerifySubject(lang), html, text);
+
+    return 'sent';
+  }
+
   async forgotPassword(email: string): Promise<'sent'> {
     const user = await this.authRepository.findUserByEmail(email);
     if (!user) {
@@ -403,6 +478,10 @@ export class AuthService {
 
     await this.authRepository.updatePasswordHash(emailAccount.id, passwordHash);
     await this.authRepository.markTokenUsed(verificationToken.id);
+    // Completing a reset means the user received a token sent to their address — the same
+    // proof the verification link provides. Without this, a user can reset successfully and
+    // still be refused at login for an unverified email, with nothing offering a way out.
+    await this.authRepository.markEmailVerified(verificationToken.userId);
     await this.authRepository.deleteAllUserSessions(verificationToken.userId);
   }
 

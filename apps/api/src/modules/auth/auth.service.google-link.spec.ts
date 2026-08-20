@@ -31,6 +31,7 @@ const GOOGLE_PROFILE = {
   googleId: 'gid-123',
   email: 'om@example.com',
   name: 'Om Chavan',
+  emailVerified: true,
 };
 
 const LINK_TOKEN_ROW = {

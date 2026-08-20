@@ -34,6 +34,11 @@ export const authApi = {
   verifyEmail: (token: string) =>
     api.post<Wrapped<AuthResponse>>('/auth/verify-email', { token }).then((r) => r.data),
 
+  resendVerification: (email: string) =>
+    api
+      .post<Wrapped<{ status: 'sent' }>>('/auth/resend-verification', { email })
+      .then((r) => r.data),
+
   forgotPassword: (email: string) =>
     api.post<Wrapped<{ status: 'sent' }>>('/auth/forgot-password', { email }).then((r) => r.data),
 

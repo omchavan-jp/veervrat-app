@@ -17,6 +17,7 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResendVerificationDto } from './dto/resend-verification.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { CompleteOnboardingDto } from './dto/complete-onboarding.dto';
@@ -108,6 +109,24 @@ export class AuthController {
   })
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     const status = await this.authService.forgotPassword(dto.email);
+    return { status };
+  }
+
+  // Same throttle as forgot-password, and for a stronger reason: this sends mail to an address
+  // the caller chooses, so an unlimited version is a way to bombard someone else's inbox.
+  //
+  // The response is deliberately identical for every input — see AuthService.resendVerification.
+  // Do not add an early return or a distinct message for "unknown address"; that reintroduces
+  // account enumeration.
+  @Post('resend-verification')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { ttl: 3600000, limit: 5 } })
+  @Audited({
+    action: 'auth.verification_resend_request',
+    metadata: (ctx) => ({ email: (ctx.body as { email?: string })?.email }),
+  })
+  async resendVerification(@Body() dto: ResendVerificationDto) {
+    const status = await this.authService.resendVerification(dto.email);
     return { status };
   }
 
