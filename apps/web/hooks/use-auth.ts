@@ -3,21 +3,42 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { authApi } from '@/lib/api/auth';
+import { ApiError } from '@/lib/api/client';
 import type { User } from '@/lib/api/auth';
 import { setLocaleCookie } from '@/lib/locale';
 import { queryKeys } from '@/lib/api/query-keys';
 
 export function useAuth() {
-  const { data: user, isLoading, error } = useQuery({
+  const { data: user, isLoading } = useQuery({
     queryKey: queryKeys.auth.me,
-    queryFn: authApi.getMe,
+    // A 401 is not a failure — it is the answer "nobody is signed in". Returning null makes it
+    // a SUCCESSFUL result, which matters for more than tidiness: an errored query is refetched
+    // on every fresh mount regardless of staleTime, and that produced a request storm.
+    //
+    // PublicLayoutClient unmounts its children while loading. When loading ended, the children
+    // mounted, a second useAuth consumer subscribed, the errored query refetched, isLoading
+    // flipped back to true, the children unmounted again — and round it went at roughly
+    // 200 requests/second until the rate limiter caught it. Measured: 1311 requests in 8s,
+    // reproduced locally with Playwright.
+    queryFn: async () => {
+      try {
+        return await authApi.getMe();
+      } catch (err) {
+        if (err instanceof ApiError && err.statusCode === 401) return null;
+        throw err;
+      }
+    },
     retry: false,
+    // Belt and braces: even for a genuine error (network, 500), do not refetch merely because
+    // a new component subscribed. Without this, any conditional render around an auth-gated
+    // subtree can recreate the loop above.
+    retryOnMount: false,
   });
 
   return {
     user: user ?? null,
     isLoading,
-    isAuthenticated: !!user && !error,
+    isAuthenticated: !!user,
   };
 }
 

@@ -12,6 +12,9 @@ testers only once a `prod-*` tag has been deployed.
 - Fixed: if your session ended while the app was open — you signed out in another window, or
   reset your password elsewhere — the app kept looking signed in and showed "please try again"
   errors on every page. It now takes you to the login page instead.
+- Fixed: pages could hang on the loading spinner for many seconds while the app repeatedly
+  asked the server who you were — hundreds of times a second, until the server started
+  refusing. Affected every screen, signed in or out.
 - You can now switch language and light/dark mode from the login, signup and password-recovery
   screens, and during onboarding — previously these only appeared after you were fully signed in
   and past onboarding, so a Marathi reader had no way to read the very page they needed to get
