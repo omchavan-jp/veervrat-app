@@ -99,9 +99,11 @@ benefit, because "sometimes seeded" still requires every consumer to handle "not
 4. **Does this deprecate the `NEXT_LOCALE` fast path?** If auth is resolved on document requests,
    `language` comes with it and the cookie becomes a cache of something already known. Possibly a
    simplification worth taking, possibly an unnecessary coupling of two concerns.
-5. **Does any of this change what an unauthenticated visitor costs?** For anonymous users there is
-   no session cookie, so no `/auth/me` call is made at all — the fast path already short-circuits.
-   That is worth confirming rather than assuming, since public pages are the most-hit.
+5. ~~**Does this change what an unauthenticated visitor costs?**~~ **Answered — no.**
+   `resolveLocale` returns early when `veervrat_session` is absent, so no `/auth/me` call is made
+   for anonymous visitors and none would be added. The latency cost of C2 therefore falls **only
+   on signed-in users, and only on document requests** — which materially improves the trade-off,
+   since public pages are the most-hit and are unaffected.
 
 ## Risks
 
