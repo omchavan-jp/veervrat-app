@@ -86,20 +86,56 @@ cached but auth would not be. Two possibilities, and this is the main open quest
 **C2 is the honest version.** C1 keeps the latency win but delivers none of the structural
 benefit, because "sometimes seeded" still requires every consumer to handle "not seeded".
 
-## Open questions — genuinely open, to settle before implementing
+## Decisions taken 2026-08-20
 
-1. **Is a document-request round trip acceptable?** It is the price of C2. Measurable first:
-   warm api is ~40ms, so on a warm path this is minor; on a cold start it is seconds (#92, where
-   we deliberately declined to pay for always-on replicas). These two decisions interact.
-2. **What happens when seeded state and client state disagree?** A session can expire between the
-   HTML being rendered and the user clicking. Proposal: the client query is authoritative for
-   *changes*; seeded state is the initial value only, never re-applied.
-3. **Do the layout guards disappear or merely change?** They still need to handle sign-out during
-   a session. Likely they stop gating *first render* while keeping a redirect for state changes.
-4. **Does this deprecate the `NEXT_LOCALE` fast path?** If auth is resolved on document requests,
-   `language` comes with it and the cookie becomes a cache of something already known. Possibly a
-   simplification worth taking, possibly an unnecessary coupling of two concerns.
-5. ~~**Does this change what an unauthenticated visitor costs?**~~ **Answered — no.**
+**Chosen: C2 — resolve the session on every document request, and pay the round trip.**
+
+Rejected B (local token verification) on security grounds rather than performance: logout,
+password reset and admin force-logout invalidate sessions *immediately* today, and a locally
+verified token would keep working until it expired. Trading that away to save latency is the
+wrong direction for an auth change.
+
+Rejected C1 (seed only on a locale cache miss) because "sometimes seeded" still forces all 18
+consumers to keep a not-seeded path — the latency saving with none of the structural benefit.
+
+The cost is bounded and now understood: **signed-in users only, document requests only**.
+Anonymous visitors are untouched, so the public pages that get the most traffic are unaffected.
+Warm that is ~40ms; cold it is seconds, which is a consequence of scale-to-zero (#92) rather than
+of this change — and worth revisiting there, not here.
+
+### Consequence: the `NEXT_LOCALE` fast path narrows
+
+Today the cookie lets middleware skip `/auth/me` entirely. Once auth must be resolved on every
+document request for signed-in users, that skip no longer applies to them — `language` simply
+arrives with the user object. The cookie remains useful for **anonymous** visitors (who never had
+an `/auth/me` call) and as the mechanism for instant client-side switching, so it stays; it just
+stops being an auth-avoidance mechanism.
+
+This is a simplification worth taking deliberately: two concerns (locale caching and auth
+avoidance) were coupled in one cookie, and this separates them.
+
+## Open questions — resolved
+
+**Q2 — what if seeded state and client state disagree?**
+Seeded state is the **initial value only** and is never re-applied. The client query remains
+authoritative for *changes*: login, logout, expiry mid-session. A session that expires between
+HTML render and the next click is handled the way it is today — the api rejects the request and
+the client updates. Re-applying seeded state on any later render would resurrect stale auth,
+which is the one genuinely dangerous failure mode here.
+
+**Q3 — do the layout guards disappear?**
+They stop gating **first render**, since there is no initial loading state to gate on. They keep
+their **redirects**, which handle state *changes* — signing out in one tab, or a session expiring
+while the app is open. So the guards shrink rather than vanish, and the mount/unmount feedback
+shape that caused #101 goes with the loading branch.
+
+**Q4 — does this deprecate the `NEXT_LOCALE` fast path?**
+No — see above. It narrows to anonymous visitors and to instant client-side switching, which is
+what it is actually good at.
+
+## Previously open, answered during the design
+
+1. ~~**Does this change what an unauthenticated visitor costs?**~~ **Answered — no.**
    `resolveLocale` returns early when `veervrat_session` is absent, so no `/auth/me` call is made
    for anonymous visitors and none would be added. The latency cost of C2 therefore falls **only
    on signed-in users, and only on document requests** — which materially improves the trade-off,
