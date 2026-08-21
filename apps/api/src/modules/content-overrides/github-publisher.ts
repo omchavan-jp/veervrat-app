@@ -18,7 +18,7 @@ export class GithubPublisher {
   constructor(private readonly config: ConfigService) {
     this.token = this.config.get<string>('CONTENT_EDIT_GITHUB_TOKEN');
     this.repo = this.config.get<string>('CONTENT_EDIT_GITHUB_REPO');
-    this.baseBranch = this.config.get<string>('CONTENT_EDIT_GITHUB_BASE_BRANCH', 'dev');
+    this.baseBranch = this.config.get<string>('CONTENT_EDIT_GITHUB_BASE_BRANCH', 'main');
   }
 
   get configured(): boolean {
