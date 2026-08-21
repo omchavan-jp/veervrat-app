@@ -97,9 +97,37 @@ runs:
         IMAGE_TAG: ${{ inputs.image_tag }}
       run: |
         set -euo pipefail
+
+        # ⚠️ Do NOT pass --image here. `az containerapp job start --image` does not override
+        # just the image — it replaces the whole container spec, dropping `command`, `args`
+        # and `env`. The execution then runs the image's default entrypoint with no
+        # DATABASE_URL and no prisma command: it does nothing, prints nothing, and exits 0.
+        # Container Apps reports Succeeded and this step reports "migrations applied".
+        #
+        # That is exactly what happened. Prod ran three "successful" migrations between
+        # 2026-08-16 and 2026-08-21 against a database that never had a single table, and
+        # nothing anywhere reported an error. Verified by comparing an execution started with
+        # --image (container `veervrat-<env>-migrate`, command None, env None) against the job
+        # definition (container `migrate`, command /bin/sh -c, env DATABASE_URL).
+        #
+        # The flag was never needed: step 1's apply already moved the JOB to the new image —
+        # only the apps are held back, via app_image_tag. Starting the job with no overrides
+        # runs the Terraform-defined spec, which is what we want.
+        #
+        # Asserted rather than assumed, since a silent mismatch here is invisible again.
+        CONFIGURED=$(az containerapp job show \
+          -n "veervrat-$ENVIRONMENT-migrate" -g "veervrat-$ENVIRONMENT" \
+          --query "properties.template.containers[0].image" -o tsv)
+        EXPECTED="veervratacr.azurecr.io/veervrat-api-migrate:$IMAGE_TAG"
+        if [ "$CONFIGURED" != "$EXPECTED" ]; then
+          echo "::error::migrate job is on $CONFIGURED but this deploy is $EXPECTED"
+          echo "::error::step 1's terraform apply should have moved it — not starting the job"
+          exit 1
+        fi
+        echo "migrate job image confirmed: $CONFIGURED"
+
         EXEC=$(az containerapp job start \
           -n "veervrat-$ENVIRONMENT-migrate" -g "veervrat-$ENVIRONMENT" \
-          --image "veervratacr.azurecr.io/veervrat-api-migrate:$IMAGE_TAG" \
           --query name -o tsv)
         echo "migration execution: $EXEC"
 
@@ -110,7 +138,43 @@ runs:
             -n "veervrat-$ENVIRONMENT-migrate" -g "veervrat-$ENVIRONMENT" \
             --job-execution-name "$EXEC" --query properties.status -o tsv 2>/dev/null || echo Unknown)
           case "$STATUS" in
-            Succeeded) echo "migrations applied"; exit 0 ;;
+            Succeeded)
+              # Exit 0 is NOT proof the migration ran — see the --image note above, where a
+              # no-op container exited 0 three times against an empty database. Prisma's own
+              # output is the evidence, so require it.
+              #
+              # Job logs land in Log Analytics with ContainerAppName_s empty and
+              # ContainerName_s = "migrate" (they are not app rows), and ingestion lags the
+              # execution by up to ~2 minutes, hence the poll.
+              WS=$(az monitor log-analytics workspace show \
+                -g "veervrat-$ENVIRONMENT" -n "veervrat-$ENVIRONMENT-logs" \
+                --query customerId -o tsv)
+              QUERY_OK=0
+              for _ in $(seq 1 18); do
+                if OUT=$(az monitor log-analytics query -w "$WS" --analytics-query \
+                  "ContainerAppConsoleLogs_CL | where TimeGenerated > ago(20m) | where ContainerName_s == 'migrate' | project TimeGenerated, Log_s | order by TimeGenerated asc" \
+                  --query "[].Log_s" -o tsv 2>/dev/null); then
+                  QUERY_OK=1
+                  if echo "$OUT" | grep -q "migrations found in prisma/migrations"; then
+                    echo "--- prisma output ---"; echo "$OUT"
+                    echo "migrations applied"; exit 0
+                  fi
+                fi
+                sleep 10
+              done
+
+              # Never block a deploy on an observability problem: if the query itself could
+              # not run, we have no evidence either way, so warn loudly and continue. Only a
+              # working query that found no prisma output proves the no-op case.
+              if [ "$QUERY_OK" -eq 0 ]; then
+                echo "::warning::could not read job logs — migration NOT verified, only its exit code"
+                exit 0
+              fi
+
+              echo "::error::job reported Succeeded but produced no prisma output"
+              echo "::error::the container almost certainly ran without its command/env — it did NOT migrate"
+              echo "--- what was captured, if anything ---"; echo "${OUT:-<nothing>}"
+              exit 1 ;;
             Failed|Degraded)
               echo "::error::migration $EXEC failed"
               az containerapp job logs show -n "veervrat-$ENVIRONMENT-migrate" \
