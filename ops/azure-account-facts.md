@@ -186,6 +186,8 @@ First successful Azure deploy 2026-08-16. `/ready` returns `database: up, redis:
 | api | `veervrat-uat-api` | scale-to-zero → 2 replicas, `DATABASE_POOL_MAX=5`, liveness `/health`, readiness `/ready` |
 | web | `veervrat-uat-web` | scale-to-zero → 2 replicas |
 | Migration job | `veervrat-uat-migrate` | manual trigger only, `replica_retry_limit=0`, runs the **build**-stage image |
+| Seed job | `veervrat-uat-seed` | manual trigger only; reference content, idempotent upserts |
+| Grant-admin job | `veervrat-uat-grant-admin` | manual trigger only. ⚠️ **Can mint an administrator** — targets `bootstrap_admin_email`, empty by default. Refuses unverified addresses unless deliberately overridden. Kept on purpose: it is the only way back in if admin access is lost. See conventions §22 |
 | Identities | `veervrat-uat-api-id`, `veervrat-uat-web-id` | user-assigned; AcrPull on the registry, api additionally Key Vault Secrets User. **No registry password or connection string anywhere** |
 | Alerting | `veervrat-uat-ops` + `veervrat-uat-psql-storage` | storage > 80%, hourly → `om.chavan@jnanaprabodhini.org` |
 

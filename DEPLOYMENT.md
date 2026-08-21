@@ -487,6 +487,75 @@ they're only *implied* by the gotchas above — hence the explicit list.
 ## Verifying a deploy
 
 ```bash
+
+---
+
+## Bootstrapping the first admin
+
+The admin dashboard is gated on the `ADMIN` role. Signup assigns `VRATARTHI`, the seed creates
+no users, and changing roles requires an endpoint that already needs `ADMIN` — so a fresh
+environment has a complete admin surface that nobody can open. The `grant-admin` job is the way
+in.
+
+**It matches on an existing account**, so that person must sign up in this environment first.
+
+```bash
+ENV=uat   # prove it here before prod
+
+cd infra/terraform/envs/$ENV
+terraform apply -var="image_tag=$SHA" -var="deploy_apps=true" \
+  -var='bootstrap_admin_email=someone@jnanaprabodhini.org'
+
+az containerapp job start -n veervrat-$ENV-grant-admin -g veervrat-$ENV
+```
+
+Verify by its **output**, never its exit code (§21 — a job that reports Succeeded having done
+nothing is the failure this project has already shipped once):
+
+```bash
+WS=$(az monitor log-analytics workspace show -g veervrat-$ENV -n veervrat-$ENV-logs --query customerId -o tsv)
+az monitor log-analytics query -w "$WS" --analytics-query \
+  "ContainerAppConsoleLogs_CL | where TimeGenerated > ago(30m) | where ContainerName_s == 'grant-admin' | project TimeGenerated, Log_s | order by TimeGenerated asc" -o table
+```
+
+Expected:
+
+```
+granting ADMIN to someone@jnanaprabodhini.org (a1b2...)
+roles: [VRATARTHI] -> [VRATARTHI, ADMIN]
+audit event recorded: admin.role.bootstrap_granted
+```
+
+**Then reset the variable**, so the standing default targets nobody:
+
+```bash
+terraform apply -var="image_tag=$SHA" -var="deploy_apps=true"
+```
+
+**Unverified addresses are refused.** Admin is effectively superadmin — any admin can add or
+remove `ADMIN` on anyone — so handing it to an address nobody has proven they own is not a
+default worth having. Override deliberately, and only for recovery (no admins left, mail
+delivery broken):
+
+```bash
+terraform apply ... -var='bootstrap_admin_allow_unverified=true'
+```
+
+The override is recorded in the audit row's `emailVerified: false`, so it is visible later
+rather than living in someone's memory.
+
+**Other outcomes:**
+
+| Output | Meaning |
+|---|---|
+| `nothing to do` | no email configured — the job is safe to start unconfigured |
+| `No user with email ...` (exit 1) | typo, or that account has not signed up here yet |
+| `already an admin — no change` | idempotent; no audit row is written for a non-grant |
+
+**Keep the job after use.** The day admin access is lost — and the self-lockout guard is
+per-person, so reaching zero admins is possible — this is the only way back in. Idle Container
+Apps jobs cost nothing.
+
 curl https://<api-url>/health   # cheap liveness — process is up
 curl https://<api-url>/ready    # actually pings Postgres + Redis
 ```

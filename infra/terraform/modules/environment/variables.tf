@@ -234,3 +234,23 @@ variable "email_from" {
   type        = string
   default     = ""
 }
+
+# Email of the account to grant ADMIN, for the grant-admin job. Empty (the default) means the
+# job exists but targets nobody — it prints "nothing to do" and exits 0.
+#
+# Set it, apply, run the job, then set it back to empty so the standing default points at no
+# one. See grant-admin-job.tf for why an env var is acceptable here.
+variable "bootstrap_admin_email" {
+  description = "Email of the account to grant ADMIN via the grant-admin job. Empty = no target."
+  type        = string
+  default     = ""
+}
+
+# Deliberate override for granting ADMIN to an address whose owner has not verified it. Off by
+# default: admin is effectively superadmin, so proving ownership matters. Exists for the
+# recovery case where mail delivery is the thing that is broken.
+variable "bootstrap_admin_allow_unverified" {
+  description = "Allow the grant-admin job to grant ADMIN to an unverified email address."
+  type        = bool
+  default     = false
+}
