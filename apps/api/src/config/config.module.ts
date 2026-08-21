@@ -66,7 +66,11 @@ import * as Joi from 'joi';
         CONTENT_EDITOR_USER_IDS: Joi.string().default(''),
         CONTENT_EDIT_GITHUB_TOKEN: Joi.string().optional(),
         CONTENT_EDIT_GITHUB_REPO: Joi.string().optional(),
-        CONTENT_EDIT_GITHUB_BASE_BRANCH: Joi.string().default('dev'),
+        // ⚠️ `main`, not `dev`. `dev` was the live branch on Railway and was retired as a
+        // deployment path on 2026-08-16 — but the branch still exists, so a PR based on it
+        // merges cleanly, reports "Merged", and reaches nobody. Content edits from the Railway
+        // era did exactly that (#21, recovered by #110).
+        CONTENT_EDIT_GITHUB_BASE_BRANCH: Joi.string().default('main'),
       }),
       validationOptions: {
         abortEarly: false,
