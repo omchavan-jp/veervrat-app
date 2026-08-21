@@ -6,6 +6,38 @@ const apiBaseUrl = () => getRuntimeConfig().apiBaseUrl;
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
+/**
+ * Called when the api says the session is gone.
+ *
+ * Without this a dead session shows a BROKEN app rather than a logged-out one: every request
+ * 401s, each surfaces its own "please try again" error, and the signed-in chrome stays on
+ * screen because nothing tells the auth state it is no longer true. Observed after signing out
+ * in a second window — navigating still "worked", personal data panels just failed, and only a
+ * manual refresh redirected.
+ *
+ * Registered by Providers rather than imported, because this module has no React context.
+ */
+let onUnauthorized: (() => void) | null = null;
+
+export function setUnauthorizedHandler(fn: (() => void) | null): void {
+  onUnauthorized = fn;
+}
+
+/**
+ * A 401 means "you are not signed in" and should end the session everywhere.
+ *
+ * Two deliberate exclusions:
+ *  - `/auth/me`, where a 401 is the ANSWER ("nobody is signed in"), not a failure — treating it
+ *    as a sign-out would fire on every anonymous page load.
+ *  - 403, which is a permission decision, not a dead session. Signing someone out for opening a
+ *    page they simply may not see would be worse than the bug this fixes.
+ */
+function notifyIfSessionEnded(status: number, path: string): void {
+  if (status !== 401) return;
+  if (path.startsWith('/auth/me')) return;
+  onUnauthorized?.();
+}
+
 type RequestOptions = {
   method?: string;
   body?: unknown;
@@ -81,6 +113,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   }
 
   if (!res.ok) {
+    notifyIfSessionEnded(res.status, path);
     const errorBody = await res.json().catch(() => ({}));
     throw new ApiError(
       res.status,
