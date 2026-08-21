@@ -71,7 +71,7 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
     },
     onError: onErr,
   });
-  const { environment } = useRuntimeConfig();
+  const { environment, contentEditEnabled } = useRuntimeConfig();
   const toggleCapability = useMutation({
     mutationFn: ({ capability, has }: { capability: AdminCapability; has: boolean }) =>
       adminUsersApi.updateCapabilities(id, has ? { remove: [capability] } : { add: [capability] }),
@@ -141,7 +141,9 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
   const u = detail.data;
   const roleSet = new Set(u.roles.map((r) => r.role));
   const capabilityMap = new Map((u.capabilities ?? []).map((c) => [c.capability, c]));
-  const isContentEditAvailable = environment !== 'prod';
+  // Both gates, not just the environment name: the editor can be off on UAT too, and a toggle
+  // that saves without taking effect is the footgun the unavailable state exists to prevent.
+  const isContentEditAvailable = environment !== 'prod' && contentEditEnabled;
   const reasonValid = reasonInput.trim().length >= 3;
   const reasonPending = anonymise.isPending || override.isPending;
   const submitReason = () => {

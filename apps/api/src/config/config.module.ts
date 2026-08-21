@@ -66,12 +66,13 @@ import * as Joi from 'joi';
         ENVIRONMENT: Joi.string().valid('local', 'uat', 'prod').default('local'),
         // Whether the beta feedback widget exists in this environment, and for whom.
         //   off     — nobody, whatever they have been granted
-        //   all     — every authenticated user (UAT: reviewers need no setup)
-        //   granted — only holders of the FEEDBACK_WIDGET capability (prod)
+        //   granted — only holders of the FEEDBACK_WIDGET capability
+        // UAT mirrors prod deliberately: an environment that differs on the very mechanism it
+        // exists to test never exercises it before prod.
         // ⚠️ Must be set on the API too, not only the web tier. It was web-only until 2026-08-21,
         // which is why the widget was hidden rather than denied and the API accepted feedback
         // from anyone signed in.
-        FEEDBACK_MODE: Joi.string().valid('off', 'all', 'granted').default('off'),
+        FEEDBACK_MODE: Joi.string().valid('off', 'granted').default('off'),
         // In-context content editor (dev-only tooling; hard-off in production). All default
         // off/empty so production, CI, and local dev are unaffected unless explicitly enabled.
         CONTENT_EDIT_ENABLED: Joi.boolean().default(false),

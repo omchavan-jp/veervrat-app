@@ -168,11 +168,13 @@ export type VmRelationshipResourceSlim = {
 /**
  * Whether a gated feature exists in this environment at all.
  *
- * `all` exists because UAT genuinely wants every user (Nachiket and reviewers need no setup),
- * and expressing that as "grant every user" would be busywork that drifts the moment someone
- * new signs up.
+ * Two modes, both exercised. An earlier `all` (every authenticated user, grants ignored) was
+ * used on UAT so reviewers needed no setup — decided before the admin dashboard existed, when
+ * granting was expensive. It made UAT differ from prod on the very mechanism UAT exists to
+ * test: the grant path was never run before prod. Removed rather than left as an untested
+ * branch, the same reasoning that removed the unused `public` feedback mode.
  */
-export type FeatureMode = 'off' | 'all' | 'granted';
+export type FeatureMode = 'off' | 'granted';
 
 // ─── Discriminated union resource ─────────────────────────────────────────────
 

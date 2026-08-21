@@ -223,7 +223,8 @@ ones that matter under pressure.
 
 | | UAT | Prod |
 |---|---|---|
-| `feedback_mode` | `all` — widget on for everyone (Nachiket reviews here, no per-user setup) | `granted` — per-user, from `/admin/users/[id]` (D20/#40, shipped 2026-08-21) |
+| `feedback_mode` | `granted` — **mirrors prod deliberately**, so the grant path is exercised before it reaches users | `granted` — per-user, from `/admin/users/[id]` (D20/#40) |
+| `content_edit_enabled` | `true` — Nachiket reviews copy here; WHO may edit is still a per-user grant | `false` — and the API refuses `content.edit` outright when `ENVIRONMENT=prod` (O7) |
 | `ENVIRONMENT` | `uat` | `prod` — `content.edit` is refused outright at the API when this is `prod` (O7), not merely disabled by config |
 | Postgres backups | 7 days | 35 days — **immutable after creation** |
 | Google OAuth client | its own client + secret | its own client + secret; callback on the **api** origin |

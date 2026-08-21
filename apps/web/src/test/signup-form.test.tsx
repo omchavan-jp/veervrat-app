@@ -70,6 +70,7 @@ const renderSignup = () =>
         siteUrl: 'http://localhost:3000',
         feedbackMode: 'off',
         environment: 'local',
+        contentEditEnabled: false,
       }}
     >
       <SignupPage />

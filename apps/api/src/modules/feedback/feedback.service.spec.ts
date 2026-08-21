@@ -55,7 +55,10 @@ function makeRepo(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function makeCapabilities(mode: 'off' | 'all' | 'granted' = 'all', grants: string[] = []) {
+function makeCapabilities(
+  mode: 'off' | 'granted' = 'granted',
+  grants: string[] = [Capability.FEEDBACK_WIDGET],
+) {
   return {
     grantsFor: vi.fn().mockResolvedValue(grants),
     featureMode: vi.fn().mockReturnValue(mode),

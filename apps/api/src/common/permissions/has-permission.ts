@@ -19,7 +19,6 @@ import type { FeatureMode } from './types';
  * The composition rule, in one place so it cannot drift between the two features that use it.
  *
  *   off     — nobody, whatever they have been granted
- *   all     — every authenticated user; grants are irrelevant
  *   granted — only holders of the capability
  *
  * An absent mode is treated as `off`. Failing closed matters here: a missing env var must not
@@ -31,7 +30,6 @@ function allowedByFeature(
   grants: Capability[] | undefined,
   capability: Capability,
 ): boolean {
-  if (mode === 'all') return true;
   if (mode === 'granted') return (grants ?? []).includes(capability);
   return false;
 }

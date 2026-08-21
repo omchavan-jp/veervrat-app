@@ -14,14 +14,16 @@
  * Whether the feedback widget exists in this environment, and for whom.
  *
  *   off     — nobody, whatever they have been granted
- *   all     — every authenticated user (UAT: reviewers need no setup)
- *   granted — only holders of the FEEDBACK_WIDGET capability (prod)
+ *   granted — only holders of the FEEDBACK_WIDGET capability
  *
- * Replaces the old `test` / `public` pair, which described *how open* the widget was without
- * being able to express "these specific people" — the gap that made per-user beta access cost
- * a full deploy cycle per person.
+ * UAT mirrors prod deliberately. An earlier `all` (everyone, grants ignored) was used there so
+ * reviewers needed no setup, which meant the grant path was never exercised before prod — the
+ * opposite of what UAT is for.
+ *
+ * Replaces the older `test` / `public` pair, which described *how open* the widget was without
+ * being able to express "these specific people".
  */
-export type FeedbackMode = 'off' | 'all' | 'granted';
+export type FeedbackMode = 'off' | 'granted';
 
 export type RuntimeConfig = {
   /** Absolute base URL of the api, including the /api/v1 prefix. */
@@ -35,6 +37,15 @@ export type RuntimeConfig = {
    * everyone (O7), so an admin must not be able to toggle a grant that can never take effect.
    */
   environment: 'local' | 'uat' | 'prod';
+  /**
+   * Whether the in-context content editor exists in this environment.
+   *
+   * Read by the admin UI so the CONTENT_EDIT toggle is shown as *unavailable* rather than
+   * merely inert. Inferring it from `environment` was not enough — the editor can be off on UAT
+   * too, and an admin offered a toggle that saves and does nothing is exactly the footgun the
+   * unavailable state exists to prevent. It shipped that way once.
+   */
+  contentEditEnabled: boolean;
 };
 
 /**
@@ -53,7 +64,7 @@ function parseEnvironment(raw: string | undefined): 'local' | 'uat' | 'prod' {
 
 function parseFeedbackMode(raw: string | undefined): FeedbackMode {
   // Unrecognised values fail closed: a typo must not open a gated feature.
-  return raw === 'all' || raw === 'granted' ? raw : 'off';
+  return raw === 'granted' ? 'granted' : 'off';
 }
 
 /**
@@ -66,6 +77,7 @@ export function readServerRuntimeConfig(): RuntimeConfig {
     siteUrl: process.env.SITE_URL || 'http://localhost:3000',
     feedbackMode: parseFeedbackMode(process.env.FEEDBACK_MODE),
     environment: parseEnvironment(process.env.ENVIRONMENT),
+    contentEditEnabled: process.env.CONTENT_EDIT_ENABLED === 'true',
   };
 }
 

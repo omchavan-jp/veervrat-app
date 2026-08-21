@@ -43,6 +43,6 @@ export class CapabilitiesService {
 
     // Unrecognised values fail closed — a typo in config must not open a gated feature.
     const raw = this.config.get<string>('FEEDBACK_MODE', 'off');
-    return raw === 'all' || raw === 'granted' ? raw : 'off';
+    return raw === 'granted' ? 'granted' : 'off';
   }
 }
