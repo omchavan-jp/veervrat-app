@@ -52,6 +52,28 @@ corrupted a file here.
 The one exception: a bulk mechanical edit across many files may be scripted, but it **must**
 assert every target and print a per-file result. Never a bare regex substitution in place.
 
+## Whose decision is it
+
+**Implementation is yours. Policy is the user's.** The test when unsure: *would they be
+surprised to learn this was decided without them?* If yes, ask — even mid-task, even if it
+slows you down.
+
+**Theirs, always:**
+- how environments relate to each other (what UAT does that prod does not, and why)
+- removing or changing user-visible behaviour, including modes and options that look unused
+- anything that ships new code to production, or creates data there
+- reversing a decision already recorded in `spec/decisions/`, an `O`-thread or an issue
+
+**Yours:** how to structure the code that carries out a decision already made.
+
+Announcing a decision is not the same as making it jointly. "I decided X, flagging it so you can
+overrule" still puts the burden on them to catch it — fine for a naming choice, wrong for
+anything above.
+
+Worked example, 2026-08-21: `feedback_mode = all` on UAT was set without asking. It reads like
+configuration and it was policy — it made UAT differ from prod on the exact mechanism UAT exists
+to test, so the grant path first ran for real in production, and a working feature looked broken.
+
 ## Verification — how you may conclude something works
 
 - **An empty result is not a pass.** State the observable you expect *before* running a check,
@@ -63,16 +85,36 @@ assert every target and print a per-file result. Never a bare regex substitution
   A 2xx does not prove a downstream side effect. A green `/ready` does not prove the tiers are
   wired to each other. Say plainly what remains unverified.
 - **Prefer mechanism over memory.** If a rule can be a hook, a schema, a CI step or an
-  assertion, make it one.
+  assertion, make it one. When a rule keeps being broken *despite being written down*, the
+  answer is a guard, not a louder rule — this file already said "anything build-time cannot vary
+  per environment" while a build-time flag was silently disabling a feature in every deployed
+  environment.
+- **A completion record is a claim, not evidence.** Do not tick a task, close an issue or write
+  "verified" for something you have not observed. And when you find a record that is false,
+  **un-tick it** — work marked done is work nobody looks at again. Three in one day
+  (2026-08-21): `O16` read "migration job built + proven" while it had never applied a single
+  migration anywhere; `ui-ux-remediation` task 1.15 was ticked and absent from the code; #40 sat
+  open while shipped and deployed.
 
-## Before recording a fact, search for the fact it replaces
+## Before recording a fact — or filing work — search for what already covers it
 
 ```bash
 grep -rn "<the superseded thing>" --include="*.md" .
+gh issue list --search "<topic>" --state all
+ls openspec/changes/            # including archive/
 ```
 
-Reconcile every hit. A fact stated in two places will eventually be wrong in one of them —
-this doc set has already contradicted itself 92 lines apart.
+Reconcile every hit. A fact stated in two places will eventually be wrong in one of them — this
+doc set has already contradicted itself 92 lines apart.
+
+The same applies to **new work**: an issue or a proposal written without checking is usually a
+duplicate of something better-informed. #121 was filed as "the app has no loader" while
+`openspec/changes/ui-ux-remediation` had already built `Spinner`, `EmptyState` and
+`QueryBoundary` and swept the route groups.
+
+And when you do find prior work, read enough of it to describe it accurately. Generalising from
+one narrow fact — "0 admin routes use `QueryBoundary`" — into a broad claim — "admin was never
+swept" — points the follow-up at the wrong problem.
 
 ## Code
 

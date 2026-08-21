@@ -300,6 +300,15 @@ old *merged* branches deliberately — don't switch merge strategy.
   `migrate reset` against a deployed database.
 - Full procedure: `DEPLOYMENT.md`.
 
+## Whose decision is it
+
+`CLAUDE.md` → "Whose decision is it" is the rule. In short: **implementation is the agent's,
+policy is the user's**, and the test when unsure is whether the user would be surprised to learn
+it was decided without them.
+
+Announcing a decision is not the same as making it jointly — it still leaves the user to catch
+it.
+
 ## When asking the user a question
 
 Never present a bare question or a bare recommendation. Every time you ask the user to
