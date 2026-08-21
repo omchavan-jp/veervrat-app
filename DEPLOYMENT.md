@@ -455,6 +455,55 @@ console entry, and it should point at whichever origin makes the `Set-Cookie` fi
 
 ---
 
+## External dependencies — what we do NOT run
+
+Two pieces of the production stack are **not ours**, are **not on Azure**, and are **not in
+Terraform**. Anyone deploying, migrating, or costing this system needs them stated plainly,
+because none of it is discoverable from the code.
+
+### DNS — managed by JP IT
+
+`veervrat.jnanaprabodhini.org` is a **subdomain of Jnana Prabodhini's existing domain**, and the
+records are added by **JP IT (Shantanoo Mahajan)** on their nameservers, per-record.
+
+- We do **not** control the zone. Adding or changing a hostname is a **request to a person**, not
+  a `terraform apply`. Plan for human turnaround.
+- Four records are live: `veervrat`, `uat.veervrat`, `api.veervrat`, `api.uat.veervrat`.
+- An Azure DNS zone exists from the abandoned NS-delegation plan and is **unused** — see #80.
+- ⚠️ The hostname must also be **bound to the Container App** on our side, and a managed
+  certificate issued. DNS being live is not the same as the site working — that gap produced a
+  404 on the real domain once, which looked like JP IT's problem and was ours.
+
+**Cost: nil.** We use an existing domain. A standalone domain would be a new annual cost, and a
+new thing to own.
+
+### Email — JP IT's SMTP relay
+
+Outbound mail goes through **JP IT's relay** (`dhoomketu.in:587`, STARTTLS), sending as
+`do-not-reply-veervrat@notifications.jnanaprabodhini.org` — a dedicated *notifications*
+subdomain, deliberately not staff mail, which is what resolved the sender-reputation concern
+behind **D9**.
+
+- Credentials are issued by JP IT and live in each environment's Key Vault (`smtp-password`),
+  set **out of band** — Terraform creates the secret with a placeholder.
+- ⚠️ `SMTP_SECURE=false` is correct: port 587 upgrades via STARTTLS. `true` means implicit TLS on
+  465 and fails with an error that does not name the cause.
+- Replaced Resend (D9), removing an external account and its 3,000/month ceiling.
+
+**Cost: nil**, and no per-message ceiling.
+
+### Why this matters beyond deployment
+
+Both are **portability assets**. Neither depends on Azure, so both survive a move to any other
+host untouched — email and DNS are simply not part of a cloud migration.
+
+Both are also **organisational dependencies**: they rely on JP IT's goodwill and on one named
+person's availability. That belongs in the risk register alongside the technical ones. If the
+relationship or the person changes, the replacement costs are a paid mail service (~$10–20/month
+at this volume) and a domain (~$10–15/year) — small, but not zero, and they would need owners.
+
+---
+
 ## DNS cutover checklist
 
 Runs once, when JP's NS delegation lands (O1). Several of these are easy to forget because
