@@ -1144,3 +1144,62 @@ az monitor log-analytics query -w "$WS" --analytics-query \
 `az containerapp job logs show` is unreliable for finished jobs — the replica is reaped
 within seconds and the stream returns only its own connection banner. Ingestion lags the
 execution by up to ~2 minutes.
+
+---
+
+## 22. The first admin comes from a job, because it cannot come from the app
+
+**The closed loop.** `/admin` is gated on the `ADMIN` role. Signup assigns `VRATARTHI`. The seed
+creates content and no users. The only way to change roles is `PATCH /admin/users/:id/roles`,
+which requires `ADMIN`. So every environment ships 10 admin pages and 25 admin routes that are
+unreachable in principle — not by misconfiguration, but by construction.
+
+Something outside the application has to break the loop. That is `grant-admin-job.tf`.
+
+**Why an env var here, having rejected env-var allowlists in #40.** The objection to
+`CONTENT_EDITOR_USER_IDS` is that it costs a full deploy cycle *per person*: sign up, find the
+UUID, edit Terraform, PR, deploy. This costs one deploy *once per environment, ever* — after
+that the admin promotes everyone else through the UI. Same tool, different problem.
+
+It also creates no new trust boundary. Anyone who can apply this Terraform already holds full
+Azure access, the database included.
+
+**Why a separate job, not a command override on `seed`.** See §21: overriding replaces the whole
+container spec, and an overridden execution produces no retrievable logs. The most privileged
+operation in the system must not run through the one mechanism guaranteed to hide what it did.
+Separate jobs also keep execution history legible — a job named "seed" that sometimes grants
+admin is confusing exactly when logs are read under pressure.
+
+**Why the audit write blocks, when `AuditService` is deliberately fire-and-forget.**
+`AuditService.record()` never throws, because an audit failure must not fail a user's request
+(spec/17). Here the trade reverses: a job that grants `ADMIN` and fails to record it has done the
+most privileged thing in the system invisibly. The script awaits the `AuditEvent` write and fails
+the job if it fails. Same table, opposite policy, for a reason worth stating rather than
+discovering.
+
+**Why unverified addresses are refused by default.** Admin is already effectively superadmin —
+`PATCH /admin/users/:id/roles` lets any admin add or remove `ADMIN` on anyone, guarded only
+against removing their own. Granting that to an address nobody has proven they own is not a
+sensible default. The `bootstrap_admin_allow_unverified` override exists because the recovery
+case — no admins left, mail delivery broken — is precisely when this job matters most, and a
+guard with no escape hatch would lock the door it exists to open. The override is recorded in the
+audit metadata.
+
+**Why "no such user" is a hard failure.** Exiting 0 on a mistyped email would report success
+without acting. That is the shape of the migration bug in §21, and it is not repeated here.
+
+**Why the job is kept after use.** The self-lockout guard is per-*person*, not global: two admins
+can remove each other, so zero admins is reachable — and that is exactly when a way back in is
+needed. Idle Container Apps jobs are billed nothing, so the keep/delete question is security
+posture, not cost. Default target is empty, so the standing job points at nobody.
+
+### Prisma outside repository files, deliberately
+
+`AGENTS.md` says *no Prisma outside repository files — ever*. That rule governs the Nest
+application layers, where a stray query bypasses the repository boundary. Standalone database
+scripts are an established exception: `src/database/seed.ts` has constructed `PrismaClient`
+directly since the project began, and `grant-admin.ts` follows it. Booting the whole Nest
+container — config validation, Redis, every module — to write one row would be the worse trade.
+
+Named here so it reads as a decision rather than an oversight.
+

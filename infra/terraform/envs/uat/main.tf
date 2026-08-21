@@ -54,6 +54,18 @@ variable "app_image_tag" {
   default     = ""
 }
 
+variable "bootstrap_admin_email" {
+  description = "Email of the account to grant ADMIN via the grant-admin job. Empty = no target."
+  type        = string
+  default     = ""
+}
+
+variable "bootstrap_admin_allow_unverified" {
+  description = "Allow granting ADMIN to an unverified email address. Recovery escape hatch."
+  type        = bool
+  default     = false
+}
+
 module "environment" {
   source      = "../../modules/environment"
   environment = "uat"
@@ -77,6 +89,9 @@ module "environment" {
   # Google sign-in (O23). The client ID is public — it is sent to the browser on every sign-in.
   # The matching secret is a Key Vault reference, set out of band; see keyvault.tf.
   google_client_id = "294902498600-b7mogl0b0d60jt30t36bj772ckivtnua.apps.googleusercontent.com"
+
+  bootstrap_admin_email            = var.bootstrap_admin_email
+  bootstrap_admin_allow_unverified = var.bootstrap_admin_allow_unverified
 
   image_tag       = var.image_tag
   app_image_tag   = var.app_image_tag

@@ -9,6 +9,9 @@ Note: merging to `main` ships to **UAT**, not to users. A line here is live for 
 testers only once a `prod-*` tag has been deployed.
 
 ## Unreleased
+- Fixed, internal: every environment shipped a complete admin dashboard that nobody could open —
+  the role it requires could only be granted by someone who already had it. There is now a
+  deliberate, audited way to grant the first administrator.
 - Fixed: if your session ended while the app was open — you signed out in another window, or
   reset your password elsewhere — the app kept looking signed in and showed "please try again"
   errors on every page. It now takes you to the login page instead.
