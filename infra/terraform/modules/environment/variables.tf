@@ -198,13 +198,13 @@ variable "cookie_samesite" {
 # Feedback widget availability for the environment as a whole: "test" (list + form), "public"
 # (form only), "off" (absent). Per-user gating is a separate concern — see D20 and B1.
 variable "feedback_mode" {
-  description = "Who may use the feedback widget here: off | all | granted."
+  description = "Who may use the feedback widget here: off | granted."
   type        = string
   default     = "off"
 
   validation {
-    condition     = contains(["off", "all", "granted"], var.feedback_mode)
-    error_message = "feedback_mode must be one of: off, all, granted."
+    condition     = contains(["off", "granted"], var.feedback_mode)
+    error_message = "feedback_mode must be one of: off, granted."
   }
 }
 
@@ -254,3 +254,19 @@ variable "bootstrap_admin_allow_unverified" {
   type        = bool
   default     = false
 }
+
+# Whether the in-context content editor exists in this environment at all.
+#
+# Two independent gates, and prod must fail both: this flag, and the API's own refusal when
+# ENVIRONMENT=prod (O7 — content editor never on prod, for anyone). Belt and braces on purpose,
+# because the failure mode of getting it wrong is unpublished copy reaching real users.
+#
+# ⚠️ Without this, the CONTENT_EDIT capability is INERT: featureMode() reads CONTENT_EDIT_ENABLED,
+# which defaults false, so a granted user is still refused. That shipped once — the grant saved
+# and did nothing.
+variable "content_edit_enabled" {
+  description = "Whether the in-context content editor is available in this environment."
+  type        = bool
+  default     = false
+}
+

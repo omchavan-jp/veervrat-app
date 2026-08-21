@@ -74,9 +74,14 @@ module "environment" {
   # every generated link must be built from them rather than the *.azurecontainerapps.io FQDN.
   public_web_host = "uat.veervrat.jnanaprabodhini.org"
   public_api_host = "api.uat.veervrat.jnanaprabodhini.org"
-  # Everyone on UAT: Nachiket and reviewers need no per-user setup, and expressing
-  # "everyone" as a grant per user would drift the moment someone new signs up.
-  feedback_mode = "all"
+  # Nachiket reviews unreleased copy here. WHO may edit is the CONTENT_EDIT capability,
+  # granted per user from the admin dashboard — this only says the feature exists here.
+  content_edit_enabled = true
+
+  # Mirrors prod deliberately. UAT used to be "everyone, grants ignored" so reviewers needed no
+  # setup — which meant the grant path was never exercised before prod, the opposite of what
+  # UAT is for. Reviewers are granted once from the admin dashboard instead.
+  feedback_mode = "granted"
 
   # Outbound email via JP IT's relay (D9). The password is NOT here — Terraform creates the
   # Key Vault secret with a placeholder and the real value is set out of band; see

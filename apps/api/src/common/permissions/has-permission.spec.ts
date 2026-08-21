@@ -981,11 +981,6 @@ describe('capability-gated: feedback', () => {
         expect(hasPermission(VA, resource, action)).toBe(false);
       });
 
-      it('allows any authenticated user when the mode is `all`', () => {
-        const resource = { type: 'platform' as const, grants: [], featureMode: 'all' as const };
-        expect(hasPermission(VA, resource, action)).toBe(true);
-      });
-
       it('allows a granted user when the mode is `granted`', () => {
         const resource = {
           type: 'platform' as const,

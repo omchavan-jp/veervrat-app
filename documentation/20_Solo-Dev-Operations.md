@@ -37,9 +37,12 @@ was *hidden* rather than *denied* while the API accepted feedback from anyone si
   not the backlog — once triaged they carry a link to the GH issue.
 - **Who sees it** — runtime config `FEEDBACK_MODE`, set on **both** the api and web containers:
   - `off` — nobody, whatever they have been granted
-  - `all` — every authenticated user (UAT, so reviewers need no setup)
   - `granted` — only holders of the `FEEDBACK_WIDGET` capability, granted per person from
-    `/admin/users/[id]` (prod)
+    `/admin/users/[id]`
+
+  **Both environments use `granted`.** UAT briefly used an `all` mode so reviewers needed no
+  setup; that made UAT differ from prod on the mechanism UAT exists to test, so the grant path
+  first ran for real in production. Reviewers are granted once instead.
 
   The old `test` / `public` pair is gone. `public` was configured in no environment and its
   branch was never exercised; `test` also silently controlled whether the observations list

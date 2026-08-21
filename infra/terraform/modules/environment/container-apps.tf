@@ -128,6 +128,12 @@ resource "azurerm_container_app" "api" {
         name  = "FEEDBACK_MODE"
         value = var.feedback_mode
       }
+      # Whether the content editor exists here. WHO may use it is the CONTENT_EDIT capability,
+      # granted per user. Both are required — and prod is refused at the API regardless (O7).
+      env {
+        name  = "CONTENT_EDIT_ENABLED"
+        value = var.content_edit_enabled ? "true" : "false"
+      }
       env {
         name  = "PORT"
         value = "3001"
@@ -324,6 +330,14 @@ resource "azurerm_container_app" "web" {
       env {
         name  = "ENVIRONMENT"
         value = var.environment
+      }
+      # Read by the admin UI so a capability the environment does not support is shown as
+      # UNAVAILABLE rather than merely inert. Inferring this from the environment name was not
+      # enough: the editor can be off on UAT too, and an admin must not be offered a toggle that
+      # saves and does nothing.
+      env {
+        name  = "CONTENT_EDIT_ENABLED"
+        value = var.content_edit_enabled ? "true" : "false"
       }
       env {
         name  = "PORT"

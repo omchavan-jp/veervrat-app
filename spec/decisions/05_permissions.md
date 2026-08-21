@@ -71,11 +71,12 @@ VA and VM acting as participants. A user who is also admin holds these only for 
 
 **⚙️ `feedback.*` is capability-gated, not role-gated.** Two conditions, both required:
 
-1. the environment allows the feature — `FEEDBACK_MODE` is `all` (everyone) or `granted`
-2. when `granted`, the user holds the `FEEDBACK_WIDGET` capability (`user_capabilities`)
+1. the environment allows the feature — `FEEDBACK_MODE=granted`
+2. the user holds the `FEEDBACK_WIDGET` capability (`user_capabilities`)
 
 `off` denies everyone regardless of grants, and an unrecognised value **fails closed**. Holding
-`ADMIN` grants nothing here — these are grants, not privilege levels.
+`ADMIN` grants nothing here — these are grants, not privilege levels. Both UAT and prod use
+`granted`, so the grant path is exercised before it reaches users.
 
 > ⚠️ **This table used to read "any authenticated user", and that was accurate.** Until
 > 2026-08-21 `hasPermission` returned `true` for these three actions for anyone signed in, while

@@ -79,8 +79,12 @@ module "environment" {
   # every generated link must be built from them rather than the *.azurecontainerapps.io FQDN.
   public_web_host = "veervrat.jnanaprabodhini.org"
   public_api_host = "api.veervrat.jnanaprabodhini.org"
-  # Per-user on prod (D20/#40): which users see the widget is data, managed from the admin
-  # dashboard, not config. The API enforces this too — it is not just a hidden control.
+  # Never on prod, for anyone (O7). Belt and braces: the API also refuses content.edit
+  # outright when ENVIRONMENT=prod, so this flag is not the only thing standing in the way.
+  content_edit_enabled = false
+
+  # Per-user (D20/#40): which users see the widget is data, managed from the admin dashboard,
+  # not config. The API enforces this too — it is not just a hidden control.
   feedback_mode = "granted"
 
   # Outbound email via JP IT's relay (D9). The password is NOT here — Terraform creates the

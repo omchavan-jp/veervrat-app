@@ -14,6 +14,8 @@ testers only once a `prod-*` tag has been deployed.
   change and a deployment for each person.
 - Fixed, internal: the feedback widget was hidden rather than blocked for people who should not
   have had it. The button was not shown, but the underlying endpoint accepted anyone signed in.
+- Fixed, internal: granting someone content-editor access saved but did nothing — the feature's
+  environment switch was read by the code and set nowhere, so the grant could never take effect.
 - Fixed, internal: every environment shipped a complete admin dashboard that nobody could open —
   the role it requires could only be granted by someone who already had it. There is now a
   deliberate, audited way to grant the first administrator.

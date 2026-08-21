@@ -56,7 +56,7 @@ export function FeedbackWidget() {
   // stayed open to anyone who called it directly. The API now enforces the same decision; if
   // these two ever disagree, the API is right and this is a bug.
   if (feedbackMode === 'off') return null;
-  if (feedbackMode === 'granted' && !user?.grants?.includes('FEEDBACK_WIDGET')) return null;
+  if (!user?.grants?.includes('FEEDBACK_WIDGET')) return null;
 
   return <FeedbackWidgetInner />;
 }

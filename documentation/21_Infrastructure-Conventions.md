@@ -1223,9 +1223,21 @@ an env-var allowlist costs signup → find UUID → edit Terraform → PR → de
 deploy cycle **per person**. `CONTENT_EDITOR_USER_IDS` demonstrated this so well that it was
 never once populated in any environment before being deleted.
 
-`FEEDBACK_MODE` values: `off` (nobody), `all` (every authenticated user — UAT, so reviewers need
-no setup), `granted` (holders of the capability — prod). Unrecognised values **fail closed**: a
-typo must not open a gated feature.
+`FEEDBACK_MODE` values: `off` (nobody) and `granted` (holders of the capability). Unrecognised
+values **fail closed** — a typo, or a stale `all` left in config, must not open a gated feature.
+
+**UAT mirrors prod.** An earlier `all` mode (every authenticated user, grants ignored) was used
+on UAT so reviewers needed no setup. It meant the grant path was never exercised before prod —
+the opposite of what UAT is for, and it hid two defects on the day the feature shipped. Removed
+rather than left as an untested branch, the same reasoning that removed the unused `public`
+mode. Reviewers are granted once from the admin dashboard.
+
+⚠️ **An environment gate that is never set is not "off by default", it is a dead feature.**
+`CONTENT_EDIT_ENABLED` was read by the code but wired into no Terraform, so `CONTENT_EDIT`
+grants saved and could never take effect — while the admin UI, which inferred availability from
+the environment *name*, showed the toggle as available. That is exactly the footgun the
+unavailable state exists to prevent. Availability must be read from the same gate the server
+enforces, never inferred.
 
 ### Hiding a control is not access control
 
