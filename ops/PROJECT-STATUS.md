@@ -42,22 +42,44 @@ a design the app now implements.
 
 ---
 
-## Current state (2026-08-20)
+## Current state (2026-08-21)
 
-**Both environments are live, correctly wired, and can be signed into.**
+**Both environments are live, correctly wired, signed into, and — as of today — actually
+usable.** Prod was none of those last things until 2026-08-21, while appearing to be all of
+them.
 
 - **UAT** — deployed by CD on every merge. Signup → verification email → verify → login proven
   end to end, plus Google sign-in.
-- **Prod** — live since `prod-2026-08-17`. The defect that had prod's web tier reading and
-  writing **UAT's database** is fixed and verified from outside. Google sign-in configured.
+- **Prod** — live since `prod-2026-08-17`, but its **database had no schema at all** until
+  2026-08-21. Not a missing migration: no tables, while `/health` and `/ready` both returned
+  200. Every signup returned 500. Fixed, seeded, and verified by a real signup, a real
+  verification email, a password reset and a login that survived a refresh.
 
-Not yet true of prod, and tracked as issues rather than assumed:
+**What today changed, and why it matters beyond today:**
 
-- **#88** — prod's email is configured but has **never actually sent**. Config-verified is not
-  delivering, and the failure mode is silent (falls back to console logging and looks healthy).
-- **#92** — `min_replicas = 0`, so the first tester after an idle period pays a cold start.
-- **#74** — an account that misses its verification email is permanently locked out, with no
-  resend and no self-service route. Any tester can land here.
+- **#112** — the migration job had never applied a migration in *any* environment. CD started it
+  with `--image`, which replaces the whole container spec, so it ran the image's default
+  entrypoint with no `DATABASE_URL`, did nothing, and exited 0 → recorded **Succeeded**. Three
+  such "successful" migrations. CD now requires prisma's own output before accepting one.
+- **#113** — overridden job executions also produce **no retrievable logs**, so an override
+  removes the evidence that would reveal it misbehaved. No per-execution overrides, ever.
+- **#114** — every environment shipped a complete admin dashboard nobody could open. There is
+  now a deliberate, audited way to grant the first administrator.
+- **#88 closed** — prod email confirmed *delivered*, not merely configured.
+
+**The pattern worth carrying forward:** three separate failures this week — the migration job,
+a PR merged to the retired `dev` branch, and a green health check on a schema-less database —
+were all the same shape. **A green signal standing in for evidence.** The fixes that held were
+the ones that demanded the artifact itself: prisma's output, the merge base, the seed counts.
+Written up as conventions §21.
+
+Still not true of prod, and tracked as issues rather than assumed:
+
+- **#92** — `min_replicas = 0`, so the first tester after an idle period pays a 5–20s cold start.
+  Declined at ~$14/mo while there were no users; revisit **before** testers arrive.
+- **#40** — per-user capability grants. The genuine gate before beta testers.
+- **#75** — break-glass data access. The admin-surface half is answered by #114; fixing an
+  arbitrary row still has no supported path, and override jobs are now ruled out as unobservable.
 
 **Backlog lives in GitHub Issues** (`gh issue list`), not in this file — see below.
 
@@ -84,7 +106,10 @@ dump — **migration cancelled, see D19**; it is an archive, not a source.
 📌 **Before deploying anything new, read the traps table in `azure-account-facts.md` §5.**
 The first deploy hit seven distinct ones (Docker context bloat, arch mismatch, tag drift,
 deploy-before-image, orphaned failed app, un-allow-listed Postgres extension, silently
-dropped build args). Every one is now documented with its guard.
+dropped build args). 2026-08-21 added four more, all about **false success**: job overrides
+replacing the container spec, overridden executions producing no logs, `/health` staying green
+on a schema-less database, and job logs not living where app logs do. Every one is documented
+with its guard.
 
 ---
 
@@ -134,7 +159,7 @@ dropped build args). Every one is now documented with its guard.
 | O9 | ✅ **CLOSED 2026-08-15** — Round 1 app fixes shipped (shutdown, distributed throttler, socket adapter, DB pool) | — | — |
 | O10 | ✅ **CLOSED 2026-08-18** — Terraform complete: `envs/shared`, `envs/uat`, `envs/prod` all applied, both environments verify `No changes` against `main`. Phase 2B landed 2026-08-16 and prod has been serving since `prod-2026-08-17` | — | — |
 | O15 | **Blob storage** — app speaks S3 (`@aws-sdk/client-s3`); Azure Blob does not. Needs an SDK swap before Blob can be provisioned | Claude | uploads (degrades gracefully meanwhile) |
-| O16 | ✅ **CLOSED 2026-08-16** — migration job built + proven (`veervrat-uat-migrate`, build-stage image, manual trigger, `replica_retry_limit=0`) | — | — |
+| O16 | ✅ **CLOSED 2026-08-21** — ⚠️ **This was closed wrongly on 2026-08-16 as "built + proven". It was built; it was never proven.** The job had not applied a single migration in any environment, ever. CD started it with `az containerapp job start --image`, which replaces the whole container spec — dropping `command`, `args` and `env`. Each run executed the image's default entrypoint with no `DATABASE_URL`, migrated nothing, printed nothing, and exited 0; Container Apps recorded **Succeeded** and CD reported "migrations applied". Prod's database was created 2026-08-16 and held **no tables at all** until 2026-08-21 — five days, three "successful" migrations. Surfaced only when a real signup returned 500 with `The table 'public.users' does not exist`. Fixed in **#112**: no overrides, the job's configured image asserted first, and prisma's own output **required** before a migration is accepted. Written up as `documentation/21_Infrastructure-Conventions.md` §21, with the general rule — *a success status is a claim, not evidence.* Now genuinely proven: prod migrated 2026-08-21 (`All migrations have been successfully applied.`), and the next prod deploy verified itself through the new guard | — | — |
 | O17 | **ACR purge task** — retention policies are Premium-only; on Basic use a scheduled `acr purge`. Needed once CD pushes an image per merge | Claude | registry cost |
 | O11 | UAT data policy — seeded, never real users (per D11) | settled in principle | — |
 | O12 | Rotate exposed secrets at cutover (PAT, session secret, R2 keys) | Om + Claude | cutover |

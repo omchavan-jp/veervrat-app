@@ -172,9 +172,14 @@ First successful Azure deploy 2026-08-16. `/ready` returns `database: up, redis:
 - web — `https://veervrat-uat-web.proudcoast-d3aa08a0.centralindia.azurecontainerapps.io`
 - api — `https://veervrat-uat-api.proudcoast-d3aa08a0.centralindia.azurecontainerapps.io`
 - Container Apps Environment default domain — `proudcoast-d3aa08a0.centralindia.azurecontainerapps.io`.
-  App URLs are `https://<app-name>.<default-domain>`, i.e. **predictable before the apps
-  exist** — which is what lets the web image be built knowing the api's URL, since
-  `NEXT_PUBLIC_*` is baked in at build time.
+  App URLs are `https://<app-name>.<default-domain>`, i.e. **predictable before the apps exist**,
+  which is useful for writing Terraform.
+  ⚠️ **It is NOT a reason to bake URLs into the web image.** This paragraph used to say the
+  predictability "lets the web image be built knowing the api's URL, since `NEXT_PUBLIC_*` is
+  baked in at build time". That reasoning caused **O22**: one image is promoted from UAT to prod
+  without rebuilding, so a baked URL carried UAT's value into production and prod's web tier
+  addressed **UAT's database** for a day. Per-environment URLs are runtime config now
+  (`apps/web/lib/runtime-config.ts`); see conventions §17.
 
 | Resource | Name | Notes |
 |---|---|---|
@@ -190,6 +195,41 @@ First successful Azure deploy 2026-08-16. `/ready` returns `database: up, redis:
 | Grant-admin job | `veervrat-uat-grant-admin` | manual trigger only. ⚠️ **Can mint an administrator** — targets `bootstrap_admin_email`, empty by default. Refuses unverified addresses unless deliberately overridden. Kept on purpose: it is the only way back in if admin access is lost. See conventions §22 |
 | Identities | `veervrat-uat-api-id`, `veervrat-uat-web-id` | user-assigned; AcrPull on the registry, api additionally Key Vault Secrets User. **No registry password or connection string anywhere** |
 | Alerting | `veervrat-uat-ops` + `veervrat-uat-psql-storage` | storage > 80%, hourly → `om.chavan@jnanaprabodhini.org` |
+
+### Prod environment — `veervrat-prod` (2026-08-16) — **app is LIVE**
+
+Mirrors UAT via the same Terraform module; only the parameters differ. Documented separately
+because "the same module" is not the same as "the same state", and prod's differences are the
+ones that matter under pressure.
+
+**URLs** — `https://veervrat.jnanaprabodhini.org` (web), `https://api.veervrat.jnanaprabodhini.org`
+(api). Custom domains bound 2026-08-17 with Azure-managed DigiCert certs.
+
+| Resource | Name | Notes |
+|---|---|---|
+| Postgres | `veervrat-prod-psql` | same SKU as UAT, **35-day backups** (the Flexible Server maximum; set at creation because it is immutable afterwards — UAT's 7 days is fine for disposable content) |
+| Redis | `veervrat-prod-redis` | Azure Managed Redis `Balanced_B0`, TLS-only |
+| Key Vault | `veervrat-prod-kv` | RBAC auth, 90-day soft-delete. Also holds `smtp-password` and `google-client-secret`, both set **out of band** — Terraform creates them with placeholders |
+| Container Apps env | `veervrat-prod-cae` | + Log Analytics `veervrat-prod-logs` |
+| api | `veervrat-prod-api` | **scale-to-zero** → 2 replicas, `DATABASE_POOL_MAX=5`. ⚠️ Deliberate: costs nothing idle, but the first request after idle is a **5–20s cold start** (#92). Revisit `min_replicas = 1` (~$14/mo) before beta testers arrive |
+| web | `veervrat-prod-web` | scale-to-zero → 2 replicas |
+| Migration job | `veervrat-prod-migrate` | manual trigger, `replica_retry_limit=0`. ⚠️ Reported success without migrating anything until 2026-08-21 — see the traps table and conventions §21 |
+| Seed job | `veervrat-prod-seed` | reference content, idempotent upserts. First run 2026-08-21: 6 virtues, 33 subvirtues, 35 weaknesses, 226 sentences, 128 resolutions, 82 exposures, 31 challenges |
+| Grant-admin job | `veervrat-prod-grant-admin` | manual trigger. ⚠️ **Can mint an administrator** — targets `bootstrap_admin_email`, empty by default. Refuses unverified addresses unless deliberately overridden. Kept on purpose: the only way back in if admin access is lost. Conventions §22 |
+| Identities | `veervrat-prod-api-id`, `veervrat-prod-web-id` | user-assigned; same grants as UAT |
+| Alerting | `veervrat-prod-ops` + `veervrat-prod-psql-storage` | storage > 80% |
+
+**Differences from UAT that have bitten or could:**
+
+| | UAT | Prod |
+|---|---|---|
+| `feedback_mode` | `test` — widget on for everyone (Nachiket reviews here) | `off` until #40 lands per-user grants |
+| Postgres backups | 7 days | 35 days — **immutable after creation** |
+| Google OAuth client | its own client + secret | its own client + secret; callback on the **api** origin |
+| `COOKIE_DOMAIN` | `uat.veervrat.jnanaprabodhini.org` | `veervrat.jnanaprabodhini.org` — ⚠️ absent until 2026-08-21; without it login succeeds and does not survive a refresh, which reads as a session bug rather than a cookie-scope one |
+
+⚠️ **Prod's database held no tables from 2026-08-16 to 2026-08-21.** Not a missing migration —
+no schema at all, while `/health` and `/ready` both returned 200. See the traps table.
 
 ### Container registry contents (`veervratacr`)
 
@@ -230,6 +270,10 @@ Each of these cost real time and would recur. Full detail in
 | **Postgres extension not allow-listed** | migration fails *after* earlier ones applied, leaving a half-migrated DB | `azure.extensions` server config, kept in sync with the migrations |
 | **A failed Prisma migration blocks all later ones** | `P3018`; every later `migrate deploy` refuses | deliberate override: `-var='migrate_command=migrate resolve --rolled-back <name>'`, then re-run normally. Never an automatic retry — hence `replica_retry_limit=0` |
 | **`NEXT_PUBLIC_*` build args silently dropped** | no warning; the value never arrives and a stale fallback ships | the Dockerfile must declare **both** `ARG` and `ENV`; never default a public URL to a real deployed host |
+| **`job start --image` silently replaces the container** | drops `command`, `args` and `env`; the job runs the image's default entrypoint, does nothing, exits 0, and is recorded **Succeeded**. Prod ran three "successful" migrations against a database with no tables | never override a job execution — change what it runs through Terraform. Conventions §21 |
+| **An overridden job execution produces no logs** | zero rows in Log Analytics under any container name, so nothing contradicts the false success | same guard — no overrides. Verified on prod 2026-08-21 |
+| **`/health` stays green on a schema-less database** | it is cheap by design so it will not flap on a DB blip; `/ready` pings Postgres, which was genuinely reachable. Nothing probes the **schema** | do not read a green health check as "the app works". Exercise a real write path after a deploy |
+| **Job logs are not where app logs are** | `ContainerAppName_s` is **empty** for jobs; filtering as you would for an app returns nothing and reads as "jobs do not log" | filter on `ContainerName_s`; allow ~2 min for ingestion. `az containerapp job logs show` misses finished jobs — the replica is reaped in seconds |
 | **Secrets are in Terraform state in plaintext** | anyone who can read state has every secret for that environment | state lives behind Azure AD RBAC on `veervrattfstate`; treat read access as equivalent to Key Vault admin |
 
 
@@ -394,10 +438,14 @@ tenant, other users, the nonprofit registration, or money — message Devavrat f
 
 ---
 
-## 8. ⏳ Open decision — subdomain vs path
+## 8. ✅ Decided — subdomain, not path
 
-Raised 2026-08-15: should Veervrat live at **`veervrat.jnanaprabodhini.org`** (subdomain) or
-**`jnanaprabodhini.org/veervrat`** (path on the existing site)?
+**Settled 2026-08-16 (O2): `veervrat.jnanaprabodhini.org`.** Live and serving since 2026-08-17,
+along with `uat.`, `api.` and `api.uat.`. The analysis below is kept for the reasoning, not
+because anything is still open.
+
+Originally raised 2026-08-15: should Veervrat live at **`veervrat.jnanaprabodhini.org`**
+(subdomain) or **`jnanaprabodhini.org/veervrat`** (path on the existing site)?
 
 **Technical recommendation: subdomain.** Not a close call.
 
@@ -450,24 +498,28 @@ calendar reminder for July 2027
 day — see §5) · Terraform Phase 2A (`veervrat-uat`: per-env Key Vault, Postgres 18, Azure
 Managed Redis, Container Apps Environment — see §5)
 
+**Also done ✅ (2026-08-17 → 21)** — Terraform Phase 2B (`veervrat-prod`, see §5) · CD pipeline
+live for both environments · custom domains + TLS on all four hostnames · email via JP's SMTP
+relay, delivering · Google sign-in in both environments · **prod's schema created and seeded**
+(2026-08-21, after five days with no tables — see the traps table) · migration job actually
+verified rather than assumed (#112) · first administrator grantable (#114, conventions §22)
+
 **Next**
-- [ ] Terraform Phase 2B — mirror Phase 2A's module to `veervrat-prod`
 - [ ] Small app change: swap `@aws-sdk/client-s3` for `@azure/storage-blob` in
       `apps/api/src/modules/uploads/uploads.service.ts` (currently speaks the S3 protocol,
-      which Azure Blob does not) — blocks provisioning Blob Storage
-- [ ] CD pipeline — builds/pushes images to `veervratacr`, which then unblocks the actual
-      `web`/`api` Container Apps (the Container Apps *Environment* exists; the apps don't yet)
+      which Azure Blob does not) — blocks provisioning Blob Storage (O15)
 - [ ] Update `infra-budget-log.md` target architecture: "Azure Cache Basic C0" → Azure Managed
       Redis `Balanced_B0` (the former no longer accepts new deployments — see §5)
-- [ ] Turn **off** Elevate access (root-scope UAA) — redundant now
+- [ ] Revisit `api_min_replicas = 1` on prod before beta testers arrive — scale-to-zero means a
+      5–20s cold start on the first request (#92), which is a poor first impression
+- [ ] Turn **off** Elevate access (root-scope UAA) — redundant now (O13)
 - [ ] Devavrat to **verify the billing email** (currently "Not verified" → notifications may not deliver)
-- [ ] Decide **subdomain vs path** with Rahul (section 7)
+- [ ] Consider adding JP's PAN/GSTIN to the billing account (Tax ID currently "None provided") — ask finance
+- [ ] Rotate the secrets exposed during the Railway era (O12) — PAT, session secret, R2 keys
 - [x] DNS via **Rahul** → Shantanoo: done 2026-08-16, per-record instead of NS delegation
       (met Shantanoo directly — see `ops/PROJECT-STATUS.md` O1/D14)
-- [ ] Consider adding JP's PAN/GSTIN to the billing account (Tax ID currently "None provided") — ask finance
+- [x] Decide subdomain vs path → subdomain, 2026-08-16 (§8)
 - [x] ~~After Phase 2B: data migration~~ → cancelled (D19, fresh seed instead). Email is now JP's SMTP relay (D9); code shipped 2026-08-17
-
-See `infra-budget-log.md` for the decision trail and budget analysis.
 
 See `infra-budget-log.md` for the decision trail and budget analysis.
 
