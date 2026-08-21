@@ -1,5 +1,5 @@
 # Veervrat — Domain Glossary
-_Last updated: 2026-05-31_
+_Last updated: 2026-08-21_
 
 **Vratarthi**
 The primary user of the app — a person working to overcome their weaknesses and build virtues through journeys.
@@ -9,9 +9,11 @@ _Avoid_: user, student, mentee
 A human mentor who guides a vratarthi. Always a real person, never AI. Can be scoped globally (one per vratarthi at a time) or to a specific journey.
 _Avoid_: mentor, coach, guide
 
-**Weakness**
+**Weakness** · मराठी: **उणीव** (sing.) / **उणीवा** (pl.)
 A named character flaw or behavioural deficit that a vratarthi works to overcome. Linked to one or more subvirtues that address it.
 _Avoid_: lacuna, problem, flaw
+_Avoid in Marathi_: कमजोरी — replaced throughout on 2026-08-21 (confirmed with Nachiket). It reads as "weakness" in the sense of frailty or inadequacy; उणीव carries the intended sense of something lacking that can be filled, which is the whole premise of a journey.
+_Oblique forms_ (Marathi inflects): उणिवेचा / उणिवेवर / उणिवेकडे (sing.), उणिवांचा / उणिवांकडे (pl.)
 
 **Virtue**
 A high-level character quality (e.g. Initiative, Resoluteness). Contains subvirtues.
