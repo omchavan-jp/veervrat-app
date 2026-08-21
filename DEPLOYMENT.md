@@ -368,8 +368,15 @@ identity, same manual trigger. Only the command differs:
 
 ```bash
 # Seed has its OWN job (seed-job.tf) with the command and DATABASE_URL already wired, so it
-# is started with no overrides — same rule as migrate.
+# is started with no overrides — same rule as migrate. Overridden executions also produce no
+# retrievable logs, so you would not be able to tell whether it worked. See §21.
 az containerapp job start -n veervrat-$ENV-seed -g veervrat-$ENV
+
+# Verify by its output, not its exit code:
+WS=$(az monitor log-analytics workspace show -g veervrat-$ENV -n veervrat-$ENV-logs --query customerId -o tsv)
+az monitor log-analytics query -w "$WS" --analytics-query \
+  "ContainerAppConsoleLogs_CL | where TimeGenerated > ago(30m) | where ContainerName_s == 'seed' | project TimeGenerated, Log_s | order by TimeGenerated asc" -o table
+# Expect "Seed complete:" followed by per-table counts.
 ```
 
 Per **O11**, UAT holds seeded reference data and **never real users**. Prod gets the same
