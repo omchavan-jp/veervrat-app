@@ -1,3 +1,5 @@
+export type Capability = 'FEEDBACK_WIDGET' | 'CONTENT_EDIT';
+
 /**
  * The user as resolved server-side from the session cookie and seeded into the client.
  *
@@ -19,7 +21,15 @@ export type SessionUser = {
   emailVerifiedAt: string | null;
   accountSetupCompletedAt: string | null;
   onboardingCompletedAt: string | null;
-  isContentEditor?: boolean;
+  /**
+   * What this person may try, as opposed to who they are (`roles`).
+   *
+   * Replaces the old `isContentEditor` boolean, which was computed from an environment
+   * allowlist while roles came from the database — two shapes for the same question. The UI
+   * reflects what the server would allow; it is not itself the rule (see the feedback widget,
+   * which used to be hidden by config while the API accepted anyone).
+   */
+  grants?: Capability[];
 };
 
 export const SESSION_USER_HEADER = 'X-Session-User';

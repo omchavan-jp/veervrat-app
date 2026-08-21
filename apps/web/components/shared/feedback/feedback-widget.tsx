@@ -6,8 +6,10 @@ import { MessageSquarePlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { FeedbackModal } from './feedback-modal';
 import { useRuntimeConfig } from '@/lib/runtime-config-provider';
+import { useAuth } from '@/hooks/use-auth';
 
-export type FeedbackMode = 'test' | 'public';
+// Re-exported from runtime-config so there is one definition, not two that can drift.
+export type { FeedbackMode } from '@/lib/runtime-config';
 
 type Corner = 'tl' | 'tr' | 'bl' | 'br';
 const STORAGE_KEY = 'veervrat.feedback.corner';
@@ -36,23 +38,30 @@ function cornerCoords(corner: Corner): { x: number; y: number } {
 
 function loadCorner(): Corner {
   const stored = localStorage.getItem(STORAGE_KEY);
-  return stored === 'tl' || stored === 'tr' || stored === 'bl' || stored === 'br'
-    ? stored
-    : 'br';
+  return stored === 'tl' || stored === 'tr' || stored === 'bl' || stored === 'br' ? stored : 'br';
 }
 
 // Floating beta-feedback entry point. Draggable; snaps to the nearest viewport corner
 // on release and persists the corner (not raw coordinates, so it survives viewport
-// changes). Rendered only inside the authenticated shell and only when the environment's
-// feedback mode is 'test' or 'public' — read at runtime, since one image serves both UAT
-// and prod and this must be able to differ between them.
+// changes). Rendered only inside the authenticated shell, and only for people the API would
+// actually accept feedback from — read at runtime, since one image serves both UAT and prod
+// and this must differ between them.
 export function FeedbackWidget() {
   const { feedbackMode } = useRuntimeConfig();
+  const { user } = useAuth();
+
+  // ⚠️ This is a REFLECTION of what the server will allow, not the rule itself. Until
+  // 2026-08-21 it was the only gate — FEEDBACK_MODE was set on the web tier alone and the API
+  // granted feedback to any authenticated user, so the widget was hidden while the endpoint
+  // stayed open to anyone who called it directly. The API now enforces the same decision; if
+  // these two ever disagree, the API is right and this is a bug.
   if (feedbackMode === 'off') return null;
-  return <FeedbackWidgetInner mode={feedbackMode} />;
+  if (feedbackMode === 'granted' && !user?.grants?.includes('FEEDBACK_WIDGET')) return null;
+
+  return <FeedbackWidgetInner />;
 }
 
-function FeedbackWidgetInner({ mode }: { mode: FeedbackMode }) {
+function FeedbackWidgetInner() {
   const t = useTranslations('feedback');
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -126,7 +135,7 @@ function FeedbackWidgetInner({ mode }: { mode: FeedbackMode }) {
         <MessageSquarePlus className="h-5 w-5" aria-hidden />
       </motion.button>
 
-      <FeedbackModal mode={mode} open={open} onOpenChange={setOpen} />
+      <FeedbackModal open={open} onOpenChange={setOpen} />
     </>
   );
 }

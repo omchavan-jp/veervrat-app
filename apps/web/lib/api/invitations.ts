@@ -32,10 +32,14 @@ export type SendInvitationInput = {
 
 export const invitationsApi = {
   accept: (token: string) =>
-    api.post<Wrapped<InvitationResult>>(`/invitations/${encodeURIComponent(token)}/accept`).then((r) => r.data),
+    api
+      .post<Wrapped<InvitationResult>>(`/invitations/${encodeURIComponent(token)}/accept`)
+      .then((r) => r.data),
 
   decline: (token: string) =>
-    api.post<Wrapped<InvitationResult>>(`/invitations/${encodeURIComponent(token)}/decline`).then((r) => r.data),
+    api
+      .post<Wrapped<InvitationResult>>(`/invitations/${encodeURIComponent(token)}/decline`)
+      .then((r) => r.data),
 
   send: (input: SendInvitationInput) =>
     api.post<Wrapped<Invitation>>('/invitations', input).then((r) => r.data),
@@ -43,8 +47,12 @@ export const invitationsApi = {
   list: () => api.get<Wrapped<Invitation[]>>('/invitations').then((r) => r.data),
 
   sendReminder: (id: string) =>
-    api.post<Wrapped<Invitation>>(`/invitations/${encodeURIComponent(id)}/reminder`).then((r) => r.data),
+    api
+      .post<Wrapped<Invitation>>(`/invitations/${encodeURIComponent(id)}/reminder`)
+      .then((r) => r.data),
 
   cancel: (id: string) =>
-    api.delete<Wrapped<InvitationResult>>(`/invitations/${encodeURIComponent(id)}`).then((r) => r.data),
+    api
+      .delete<Wrapped<InvitationResult>>(`/invitations/${encodeURIComponent(id)}`)
+      .then((r) => r.data),
 };

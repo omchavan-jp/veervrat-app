@@ -602,7 +602,8 @@ Requires, on top of the normal vars:
 |---|---|
 | `NEXT_PUBLIC_CONTENT_EDIT` (web) | `on` — build-time; mounts the editor + i18n overlay |
 | `CONTENT_EDIT_ENABLED` (api) | `true` — master gate; routes 404 when false |
-| `CONTENT_EDITOR_USER_IDS` | comma-separated UUIDs; empty = nobody (fail-closed) |
+| `ENVIRONMENT` | `local` \| `uat` \| `prod`. Named explicitly — `NODE_ENV` is `production` on UAT too. `content.edit` is refused outright when this is `prod` (O7) |
+| `FEEDBACK_MODE` | `off` \| `all` \| `granted`. ⚠️ Must be set on the **api** as well as the web tier, or the widget is hidden rather than denied |
 | `CONTENT_EDIT_GITHUB_TOKEN` | fine-grained PAT, this repo only, Contents + PR write |
 | `CONTENT_EDIT_GITHUB_REPO` | `veer-vrat/veervrat-app` |
 | `CONTENT_EDIT_GITHUB_BASE_BRANCH` | `main` |

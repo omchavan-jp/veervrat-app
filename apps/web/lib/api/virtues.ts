@@ -48,6 +48,8 @@ export type SentenceInfo = {
 export const virtuesApi = {
   list: () => api.get<Wrapped<VirtueSummary[]>>('/virtues').then((r) => r.data),
   getVirtue: (id: string) => api.get<Wrapped<VirtueDetail>>(`/virtues/${id}`).then((r) => r.data),
-  getSubvirtue: (id: string) => api.get<Wrapped<SubvirtueDetail>>(`/subvirtues/${id}`).then((r) => r.data),
-  getSentence: (id: string) => api.get<Wrapped<SentenceInfo>>(`/sentences/${id}`).then((r) => r.data),
+  getSubvirtue: (id: string) =>
+    api.get<Wrapped<SubvirtueDetail>>(`/subvirtues/${id}`).then((r) => r.data),
+  getSentence: (id: string) =>
+    api.get<Wrapped<SentenceInfo>>(`/sentences/${id}`).then((r) => r.data),
 };

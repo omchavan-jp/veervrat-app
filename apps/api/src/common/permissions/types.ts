@@ -1,4 +1,10 @@
-import { Role, ErcStatus, VmRelationshipState, ExperienceVisibility } from '@prisma/client';
+import {
+  Capability,
+  Role,
+  ErcStatus,
+  VmRelationshipState,
+  ExperienceVisibility,
+} from '@prisma/client';
 import { SessionUser } from '../../modules/auth/types/auth.types';
 
 // Re-export for convenience
@@ -159,13 +165,28 @@ export type VmRelationshipResourceSlim = {
   vratarthiId: string;
 };
 
+/**
+ * Whether a gated feature exists in this environment at all.
+ *
+ * `all` exists because UAT genuinely wants every user (Nachiket and reviewers need no setup),
+ * and expressing that as "grant every user" would be busywork that drifts the moment someone
+ * new signs up.
+ */
+export type FeatureMode = 'off' | 'all' | 'granted';
+
 // ─── Discriminated union resource ─────────────────────────────────────────────
 
 export type PermissionResource =
-  // `isContentEditor` is computed by the content-overrides service from the configured
-  // allowlist (like `viewerIsFriend` / `relationshipVerified` elsewhere) so hasPermission
-  // stays pure and synchronous; only the `content.edit` action reads it.
-  | { type: 'platform'; isContentEditor?: boolean }
+  // `grants` and `featureMode` are resolved by the caller (like `viewerIsFriend` /
+  // `relationshipVerified` elsewhere) so hasPermission stays pure and synchronous — no caller
+  // gains a database dependency it did not already have.
+  //
+  // Two questions, deliberately separate:
+  //   featureMode — does this feature exist in THIS ENVIRONMENT? (env config)
+  //   grants      — may THIS PERSON use it here? (database, admin-managed)
+  // Both must be satisfied. An environment with a feature off ignores grants entirely, which
+  // is what makes "content editor never on prod" enforceable whatever a future admin clicks.
+  | { type: 'platform'; grants?: Capability[]; featureMode?: FeatureMode }
   | { type: 'journey'; journey: JourneySlim }
   | { type: 'erc'; journey: JourneySlim; erc: ErcSlim }
   | {

@@ -79,9 +79,9 @@ module "environment" {
   # every generated link must be built from them rather than the *.azurecontainerapps.io FQDN.
   public_web_host = "veervrat.jnanaprabodhini.org"
   public_api_host = "api.veervrat.jnanaprabodhini.org"
-
-  # Stays off until B1 lands per-user grants — D20 says which users see it is data, not config.
-  feedback_mode = "off"
+  # Per-user on prod (D20/#40): which users see the widget is data, managed from the admin
+  # dashboard, not config. The API enforces this too — it is not just a hidden control.
+  feedback_mode = "granted"
 
   # Outbound email via JP IT's relay (D9). The password is NOT here — Terraform creates the
   # Key Vault secret with a placeholder and the real value is set out of band; see

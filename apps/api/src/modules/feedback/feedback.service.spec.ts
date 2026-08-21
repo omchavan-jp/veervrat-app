@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { Role, FeedbackStatus, FeedbackType } from '@prisma/client';
+import { Capability, Role, FeedbackStatus, FeedbackType } from '@prisma/client';
 import { FeedbackService } from './feedback.service';
 import {
   AccessDeniedException,
@@ -55,10 +55,17 @@ function makeRepo(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function makeService(repoOverrides: Record<string, unknown> = {}) {
+function makeCapabilities(mode: 'off' | 'all' | 'granted' = 'all', grants: string[] = []) {
+  return {
+    grantsFor: vi.fn().mockResolvedValue(grants),
+    featureMode: vi.fn().mockReturnValue(mode),
+  };
+}
+
+function makeService(repoOverrides: Record<string, unknown> = {}, caps = makeCapabilities()) {
   const repo = makeRepo(repoOverrides);
 
-  return { service: new FeedbackService(repo as any), repo };
+  return { service: new FeedbackService(repo as any, caps as any), repo, caps };
 }
 
 describe('FeedbackService', () => {
@@ -210,5 +217,71 @@ describe('FeedbackService', () => {
         }),
       ).rejects.toBeInstanceOf(AccessDeniedException);
     });
+  });
+});
+
+// ── The cosmetic-gating regression guard ─────────────────────────────────────
+//
+// Until 2026-08-21 the feedback widget was hidden by FEEDBACK_MODE on the WEB container, while
+// the API granted feedback.* to any authenticated user. The control was hidden, not denied:
+// anyone signed in could call the API directly.
+//
+// These assert the SERVICE refuses — deliberately not that the widget is hidden. A test that
+// only checks the UI would have passed throughout the entire period the bug existed.
+
+describe('FeedbackService — server-side capability enforcement', () => {
+  const user = makeUser([Role.VRATARTHI]);
+
+  it('refuses create for an ungranted user when the mode is `granted`', async () => {
+    const { service, repo } = makeService({}, makeCapabilities('granted', []));
+
+    await expect(
+      service.create(user, { type: FeedbackType.ISSUE, title: 'T' }, 'ua'),
+    ).rejects.toThrow();
+    expect(repo.create).not.toHaveBeenCalled();
+  });
+
+  it('refuses read for an ungranted user when the mode is `granted`', async () => {
+    const { service, repo } = makeService({}, makeCapabilities('granted', []));
+
+    await expect(service.list(user, false)).rejects.toThrow();
+    expect(repo.list).not.toHaveBeenCalled();
+  });
+
+  it('refuses upvote for an ungranted user when the mode is `granted`', async () => {
+    const { service, repo } = makeService({}, makeCapabilities('granted', []));
+
+    await expect(service.toggleUpvote(user, 'item-1')).rejects.toThrow();
+    expect(repo.findById).not.toHaveBeenCalled();
+  });
+
+  it('allows a granted user when the mode is `granted`', async () => {
+    const { service, repo } = makeService(
+      {},
+      makeCapabilities('granted', [Capability.FEEDBACK_WIDGET]),
+    );
+
+    await service.create(user, { type: FeedbackType.ISSUE, title: 'T' }, 'ua');
+    expect(repo.create).toHaveBeenCalled();
+  });
+
+  it('refuses everyone when the environment has feedback off', async () => {
+    const { service, repo } = makeService(
+      {},
+      makeCapabilities('off', [Capability.FEEDBACK_WIDGET]),
+    );
+
+    await expect(
+      service.create(user, { type: FeedbackType.ISSUE, title: 'T' }, 'ua'),
+    ).rejects.toThrow();
+    expect(repo.create).not.toHaveBeenCalled();
+  });
+
+  it('reads grants per request, so a revoke takes effect without re-login', async () => {
+    const caps = makeCapabilities('granted', [Capability.FEEDBACK_WIDGET]);
+    const { service } = makeService({}, caps);
+
+    await service.create(user, { type: FeedbackType.ISSUE, title: 'T' }, 'ua');
+    expect(caps.grantsFor).toHaveBeenCalledWith(user.id);
   });
 });

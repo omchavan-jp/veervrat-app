@@ -45,7 +45,7 @@ export function AppLayoutClient({ children }: { children: React.ReactNode }) {
     <AppShell user={user}>
       {children}
       <FeedbackWidget />
-      {user.isContentEditor && <ContentEditor />}
+      {user.grants?.includes('CONTENT_EDIT') && <ContentEditor />}
     </AppShell>
   );
 }

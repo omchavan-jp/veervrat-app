@@ -1276,6 +1276,14 @@
       "ONLY_ME": "फक्त मी",
       "FRIENDS": "मित्र",
       "PUBLIC": "सार्वजनिक"
+    },
+    "capabilities": "क्षमता",
+    "capabilityUnavailable": "या वातावरणात उपलब्ध नाही",
+    "unavailableShort": "अनुपलब्ध",
+    "grantedOn": "{date} रोजी दिले",
+    "capability": {
+      "FEEDBACK_WIDGET": "अभिप्राय विजेट",
+      "CONTENT_EDIT": "मजकूर संपादक"
     }
   },
   "audit": {

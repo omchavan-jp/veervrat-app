@@ -75,7 +75,8 @@ export const queryKeys = {
     detail: (id: string) => ['admin', 'users', id] as const,
   },
   audit: {
-    list: (action?: string, actorId?: string) => ['admin', 'audit', action ?? '', actorId ?? ''] as const,
+    list: (action?: string, actorId?: string) =>
+      ['admin', 'audit', action ?? '', actorId ?? ''] as const,
   },
   cms: {
     list: ['cms', 'list'] as const,

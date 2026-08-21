@@ -1,4 +1,4 @@
-import { ErcStatus, ExperienceVisibility } from '@prisma/client';
+import { Capability, ErcStatus, ExperienceVisibility } from '@prisma/client';
 import { SessionUser } from '../../modules/auth/types/auth.types';
 import {
   PermissionAction,
@@ -13,6 +13,28 @@ import {
   hasActiveJourneyVm,
   isRoomParticipant,
 } from './types';
+import type { FeatureMode } from './types';
+
+/**
+ * The composition rule, in one place so it cannot drift between the two features that use it.
+ *
+ *   off     — nobody, whatever they have been granted
+ *   all     — every authenticated user; grants are irrelevant
+ *   granted — only holders of the capability
+ *
+ * An absent mode is treated as `off`. Failing closed matters here: a missing env var must not
+ * silently open a gated feature, which is the failure mode that made the previous gating
+ * cosmetic.
+ */
+function allowedByFeature(
+  mode: FeatureMode | undefined,
+  grants: Capability[] | undefined,
+  capability: Capability,
+): boolean {
+  if (mode === 'all') return true;
+  if (mode === 'granted') return (grants ?? []).includes(capability);
+  return false;
+}
 
 export function hasPermission(
   user: SessionUser,
@@ -309,17 +331,27 @@ function checkLayerOne(
     // Any authenticated user may raise, read, and upvote feedback — identity is
     // established by the guard; no role or resource scoping applies.
 
+    // ── Beta feedback ────────────────────────────────────────────────────────
+    // ⚠️ These used to return `true` for any authenticated user, while the widget was hidden
+    // by a web-only FEEDBACK_MODE env var. The control was hidden, not denied: anyone signed
+    // in could call the API directly. Hiding a control is not access control.
     case 'feedback.create':
     case 'feedback.read':
     case 'feedback.upvote':
-      return resource.type === 'platform';
+      return (
+        resource.type === 'platform' &&
+        allowedByFeature(resource.featureMode, resource.grants, 'FEEDBACK_WIDGET')
+      );
 
-    // ── Content editing (dev-only in-context editor) ─────────────────────────
-    // Allowlist-backed: the content-overrides service computes membership from
-    // CONTENT_EDITOR_USER_IDS and passes it as resource.isContentEditor. Deliberately
-    // not granted by any role (not even admin) — least privilege for an outside editor.
+    // ── Content editing (in-context editor) ──────────────────────────────────
+    // Deliberately not granted by any role, not even admin — least privilege for an outside
+    // editor. Now grant-backed rather than allowlist-backed; the environment must also enable
+    // it, which is what keeps it off prod for everyone (O7).
     case 'content.edit':
-      return resource.type === 'platform' && resource.isContentEditor === true;
+      return (
+        resource.type === 'platform' &&
+        allowedByFeature(resource.featureMode, resource.grants, 'CONTENT_EDIT')
+      );
 
     // Layer 2 actions — not handled here
     default:

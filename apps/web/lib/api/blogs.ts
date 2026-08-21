@@ -48,10 +48,14 @@ export const blogsApi = {
   remove: (id: string) => api.delete<Wrapped<{ id: string }>>(`/blogs/${id}`).then((r) => r.data),
 
   list: (cursor?: string) =>
-    api.get<Wrapped<BlogListResponse>>(cursor ? `/blogs?cursor=${cursor}` : '/blogs').then((r) => r.data),
+    api
+      .get<Wrapped<BlogListResponse>>(cursor ? `/blogs?cursor=${cursor}` : '/blogs')
+      .then((r) => r.data),
 
   listMine: (cursor?: string) =>
-    api.get<Wrapped<BlogListResponse>>(cursor ? `/blogs/mine?cursor=${cursor}` : '/blogs/mine').then((r) => r.data),
+    api
+      .get<Wrapped<BlogListResponse>>(cursor ? `/blogs/mine?cursor=${cursor}` : '/blogs/mine')
+      .then((r) => r.data),
 
   getOne: (id: string) => api.get<Wrapped<BlogWithComments>>(`/blogs/${id}`).then((r) => r.data),
 
@@ -68,5 +72,7 @@ export const blogsApi = {
     api.post<Wrapped<BlogComment>>(`/blogs/${blogId}/comments/${cid}/hide`).then((r) => r.data),
 
   reportComment: (blogId: string, cid: string) =>
-    api.post<Wrapped<{ id: string; reported: boolean }>>(`/blogs/${blogId}/comments/${cid}/report`).then((r) => r.data),
+    api
+      .post<Wrapped<{ id: string; reported: boolean }>>(`/blogs/${blogId}/comments/${cid}/report`)
+      .then((r) => r.data),
 };

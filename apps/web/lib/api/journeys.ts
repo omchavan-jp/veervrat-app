@@ -152,10 +152,16 @@ export type JourneyActivityEvent = {
 
 export const checkinsApi = {
   logCheckin: (journeyId: string, resolutionId: string, status: CheckinStatus, note?: string) =>
-    api.post<Wrapped<ResolutionCheckin>>(`/journeys/${journeyId}/resolutions/${resolutionId}/checkins`, { status, note }).then((r) => r.data),
+    api
+      .post<
+        Wrapped<ResolutionCheckin>
+      >(`/journeys/${journeyId}/resolutions/${resolutionId}/checkins`, { status, note })
+      .then((r) => r.data),
 
   listCheckins: (journeyId: string, resolutionId: string) =>
-    api.get<Wrapped<CheckinsResponse>>(`/journeys/${journeyId}/resolutions/${resolutionId}/checkins`).then((r) => r.data),
+    api
+      .get<Wrapped<CheckinsResponse>>(`/journeys/${journeyId}/resolutions/${resolutionId}/checkins`)
+      .then((r) => r.data),
 };
 
 export const ercApi = {
@@ -166,16 +172,26 @@ export const ercApi = {
     api.get<Wrapped<JourneyErcItem[]>>(`/journeys/${journeyId}/${type}s`).then((r) => r.data),
 
   select: (journeyId: string, type: ErcType, poolItemId: string) =>
-    api.post<Wrapped<JourneyErcItem>>(`/journeys/${journeyId}/${type}s`, { poolItemId }).then((r) => r.data),
+    api
+      .post<Wrapped<JourneyErcItem>>(`/journeys/${journeyId}/${type}s`, { poolItemId })
+      .then((r) => r.data),
 
   updateStatus: (journeyId: string, type: ErcType, itemId: string, status: string) =>
-    api.patch<Wrapped<JourneyErcItem>>(`/journeys/${journeyId}/${type}s/${itemId}/status`, { status }).then((r) => r.data),
+    api
+      .patch<
+        Wrapped<JourneyErcItem>
+      >(`/journeys/${journeyId}/${type}s/${itemId}/status`, { status })
+      .then((r) => r.data),
 
   deactivate: (journeyId: string, type: ErcType, itemId: string) =>
-    api.post<Wrapped<JourneyErcItem>>(`/journeys/${journeyId}/${type}s/${itemId}/deactivate`).then((r) => r.data),
+    api
+      .post<Wrapped<JourneyErcItem>>(`/journeys/${journeyId}/${type}s/${itemId}/deactivate`)
+      .then((r) => r.data),
 
   reactivate: (journeyId: string, type: ErcType, itemId: string) =>
-    api.post<Wrapped<JourneyErcItem>>(`/journeys/${journeyId}/${type}s/${itemId}/reactivate`).then((r) => r.data),
+    api
+      .post<Wrapped<JourneyErcItem>>(`/journeys/${journeyId}/${type}s/${itemId}/reactivate`)
+      .then((r) => r.data),
 
   remove: (journeyId: string, type: ErcType, itemId: string) =>
     api.delete<void>(`/journeys/${journeyId}/${type}s/${itemId}`),
@@ -187,20 +203,30 @@ export const ercApi = {
 
   // ── VM actions ──
   approve: (journeyId: string, type: ErcType, itemId: string) =>
-    api.post<Wrapped<JourneyErcItem>>(`/journeys/${journeyId}/${type}s/${itemId}/approve`).then((r) => r.data),
+    api
+      .post<Wrapped<JourneyErcItem>>(`/journeys/${journeyId}/${type}s/${itemId}/approve`)
+      .then((r) => r.data),
 
   revisit: (journeyId: string, type: ErcType, itemId: string) =>
-    api.post<Wrapped<JourneyErcItem>>(`/journeys/${journeyId}/${type}s/${itemId}/revisit`).then((r) => r.data),
+    api
+      .post<Wrapped<JourneyErcItem>>(`/journeys/${journeyId}/${type}s/${itemId}/revisit`)
+      .then((r) => r.data),
 
   suggestSidenote: (journeyId: string, type: ErcType, itemId: string, text: string) =>
-    api.post<Wrapped<VmSidenote>>(`/journeys/${journeyId}/${type}s/${itemId}/suggest`, { text }).then((r) => r.data),
+    api
+      .post<Wrapped<VmSidenote>>(`/journeys/${journeyId}/${type}s/${itemId}/suggest`, { text })
+      .then((r) => r.data),
 
   // ── Custom ERC ──
   createCustom: (journeyId: string, type: ErcType, data: CustomErcInput) =>
-    api.post<Wrapped<JourneyErcItem>>(`/journeys/${journeyId}/${type}s/custom`, data).then((r) => r.data),
+    api
+      .post<Wrapped<JourneyErcItem>>(`/journeys/${journeyId}/${type}s/custom`, data)
+      .then((r) => r.data),
 
   submitForReview: (journeyId: string, type: ErcType, itemId: string) =>
-    api.post<Wrapped<JourneyErcItem>>(`/journeys/${journeyId}/${type}s/${itemId}/submit-for-review`).then((r) => r.data),
+    api
+      .post<Wrapped<JourneyErcItem>>(`/journeys/${journeyId}/${type}s/${itemId}/submit-for-review`)
+      .then((r) => r.data),
 };
 
 export type CustomErcInput = {
@@ -221,23 +247,32 @@ export const journeysApi = {
     api.post<Wrapped<JourneyDetail>>('/journeys', data).then((r) => r.data),
 
   list: (cursor?: string) =>
-    api.get<Wrapped<JourneyListResponse>>(cursor ? `/journeys?cursor=${cursor}` : '/journeys').then((r) => r.data),
+    api
+      .get<Wrapped<JourneyListResponse>>(cursor ? `/journeys?cursor=${cursor}` : '/journeys')
+      .then((r) => r.data),
 
-  detail: (id: string) =>
-    api.get<Wrapped<JourneyDetail>>(`/journeys/${id}`).then((r) => r.data),
+  detail: (id: string) => api.get<Wrapped<JourneyDetail>>(`/journeys/${id}`).then((r) => r.data),
 
   activity: (id: string) =>
     api.get<Wrapped<JourneyActivityEvent[]>>(`/journeys/${id}/activity`).then((r) => r.data),
 
   updateState: (id: string, action: 'pause' | 'resume') =>
-    api.patch<Wrapped<{ id: string; state: JourneyState }>>(`/journeys/${id}/state`, { action }).then((r) => r.data),
+    api
+      .patch<Wrapped<{ id: string; state: JourneyState }>>(`/journeys/${id}/state`, { action })
+      .then((r) => r.data),
 
   updateTitle: (id: string, title: string) =>
-    api.patch<Wrapped<{ id: string; title: string }>>(`/journeys/${id}/title`, { title }).then((r) => r.data),
+    api
+      .patch<Wrapped<{ id: string; title: string }>>(`/journeys/${id}/title`, { title })
+      .then((r) => r.data),
 
   complete: (id: string) =>
-    api.post<Wrapped<{ id: string; state: JourneyState }>>(`/journeys/${id}/complete`).then((r) => r.data),
+    api
+      .post<Wrapped<{ id: string; state: JourneyState }>>(`/journeys/${id}/complete`)
+      .then((r) => r.data),
 
   completeApprove: (id: string) =>
-    api.post<Wrapped<{ id: string; state: JourneyState }>>(`/journeys/${id}/complete/approve`).then((r) => r.data),
+    api
+      .post<Wrapped<{ id: string; state: JourneyState }>>(`/journeys/${id}/complete/approve`)
+      .then((r) => r.data),
 };

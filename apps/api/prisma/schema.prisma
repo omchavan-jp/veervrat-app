@@ -19,6 +19,23 @@ enum Role {
   @@map("role")
 }
 
+// What a person may *try*, as opposed to who they *are* (Role).
+//
+// Deliberately separate from Role: a person is a vratarthi AND a beta tester AND a content
+// editor at once, and roles are not additive in that way without becoming a bag. Adding
+// BETA_TESTER to Role would leak it into every switch that reasons about domain identity —
+// journey visibility, vratmitra relationships, moderation — none of which care.
+//
+// Feature-scoped, not person-scoped. A person-scoped BETA_TESTER would silently change meaning
+// each time a feature joined it, leaving audit rows that record a grant whose consequences
+// drifted after the fact.
+enum Capability {
+  FEEDBACK_WIDGET @map("feedback_widget")
+  CONTENT_EDIT    @map("content_edit")
+
+  @@map("capability")
+}
+
 enum Language {
   EN @map("en")
   MR @map("mr")
@@ -231,6 +248,7 @@ model User {
 
   // Relations
   roles              UserRole[]
+  capabilities       UserCapability[]
   authAccounts       AuthAccount[]
   sessions           Session[]
   verificationTokens VerificationToken[]
@@ -266,6 +284,23 @@ model UserRole {
 
   @@id([userId, role])
   @@map("user_roles")
+}
+
+// Per-user feature access, managed from the admin dashboard rather than environment config.
+//
+// grantedBy is on the row, not only in the audit log, so the *current state* answers "who gave
+// this to them?" without a log search. It is intentionally not a foreign key with a cascade:
+// deleting the granting admin must not erase the record of who granted.
+model UserCapability {
+  userId     String     @map("user_id") @db.Uuid
+  capability Capability
+  grantedAt  DateTime   @default(now()) @map("granted_at")
+  grantedBy  String?    @map("granted_by") @db.Uuid
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, capability])
+  @@map("user_capabilities")
 }
 
 model UserFollow {

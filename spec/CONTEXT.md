@@ -76,8 +76,16 @@ The lifecycle state of an individual exposure, resolution, or challenge within a
 _Avoid_: progress state, completion flag
 
 **Permission**
-A named, atomic capability in the system. Format: `resource.action` (e.g. `journey.view`, `erc.suggest`). Code always checks permissions, never role names directly. Permissions are the source of truth for access decisions.
-_Avoid_: right, privilege, access level
+A named, atomic action in the system. Format: `resource.action` (e.g. `journey.view`, `erc.suggest`). Code always checks permissions, never role names directly. Permissions are the source of truth for access decisions.
+_Avoid_: right, privilege, access level, **capability** — that word now names a different thing (below), and this entry used to use it loosely.
+
+**Capability (grant)**
+A per-user grant of access to a *feature*, stored in `user_capabilities` and managed from the admin dashboard: `FEEDBACK_WIDGET`, `CONTENT_EDIT`. Distinct from both:
+- a **Role** says who a person *is* in Veervrat (vratarthi, vratmitra, moderator, admin) and appears in domain logic. A person holds a role **and** capabilities at once.
+- a **Permission** is the atomic action being checked. A capability is one input to that check; the environment's feature mode is the other, and **both** must allow it.
+
+Feature-scoped, never person-scoped: `FEEDBACK_WIDGET`, not `BETA_TESTER`. A person-scoped grant silently changes meaning whenever a feature joins it, leaving audit rows whose consequences drifted after the fact.
+_Avoid_: flag, entitlement, permission (see above), role
 
 **Guidance Page**
 A top-level page aggregating all actionable items across all VMs and journeys for a VA — pending approvals, VM suggestions, new ERC available, journey closures awaiting VM. Functions as an inbox. Name is a placeholder (alternatives: Actions, Pending, My Queue).

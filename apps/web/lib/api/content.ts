@@ -69,8 +69,11 @@ export const contentApi = {
     if (type) q.set('type', type);
     if (cursor) q.set('cursor', cursor);
     const qs = q.toString();
-    return api.get<Wrapped<Paginated<ResourceSummary>>>(`/resources${qs ? `?${qs}` : ''}`).then((r) => r.data);
+    return api
+      .get<Wrapped<Paginated<ResourceSummary>>>(`/resources${qs ? `?${qs}` : ''}`)
+      .then((r) => r.data);
   },
 
-  resource: (id: string) => api.get<Wrapped<ResourceDetail>>(`/resources/${id}`).then((r) => r.data),
+  resource: (id: string) =>
+    api.get<Wrapped<ResourceDetail>>(`/resources/${id}`).then((r) => r.data),
 };

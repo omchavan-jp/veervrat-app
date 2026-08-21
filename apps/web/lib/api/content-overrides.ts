@@ -23,7 +23,9 @@ export type UpsertOverrideInput = {
 export const contentOverridesApi = {
   // PATCH (never PUT, per conventions): sets a single message key's override for a locale.
   upsert: (input: UpsertOverrideInput): Promise<{ key: string; locale: string }> =>
-    api.patch<Wrapped<{ key: string; locale: string }>>('/content-overrides', input).then((r) => r.data),
+    api
+      .patch<Wrapped<{ key: string; locale: string }>>('/content-overrides', input)
+      .then((r) => r.data),
 
   publish: (): Promise<{ prUrl: string; branch: string }> =>
     api

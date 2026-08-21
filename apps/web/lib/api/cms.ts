@@ -30,6 +30,8 @@ export const cmsApi = {
       .catch(() => null),
 
   list: () => api.get<Wrapped<CmsPage[]>>('/admin/cms-pages').then((r) => r.data),
-  upsert: (b: CmsPageInput) => api.post<Wrapped<CmsPage>>('/admin/cms-pages', b).then((r) => r.data),
-  remove: (key: string) => api.delete<Wrapped<{ id: string }>>(`/admin/cms-pages/${key}`).then((r) => r.data),
+  upsert: (b: CmsPageInput) =>
+    api.post<Wrapped<CmsPage>>('/admin/cms-pages', b).then((r) => r.data),
+  remove: (key: string) =>
+    api.delete<Wrapped<{ id: string }>>(`/admin/cms-pages/${key}`).then((r) => r.data),
 };

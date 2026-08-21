@@ -24,8 +24,6 @@ export type EntitySearchScope = 'all' | 'concept' | 'mine';
 export const entitySearchApi = {
   search: (q: string, scope: EntitySearchScope = 'all') =>
     api
-      .get<Wrapped<EntitySearchHit[]>>(
-        `/entity-search?q=${encodeURIComponent(q)}&scope=${scope}`,
-      )
+      .get<Wrapped<EntitySearchHit[]>>(`/entity-search?q=${encodeURIComponent(q)}&scope=${scope}`)
       .then((r) => r.data),
 };

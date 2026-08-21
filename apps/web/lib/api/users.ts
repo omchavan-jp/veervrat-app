@@ -112,13 +112,17 @@ export const usersApi = {
   restartTour: () => api.post<Wrapped<OwnProfile>>('/users/me/restart-tour').then((r) => r.data),
 
   changePassword: (currentPassword: string, newPassword: string) =>
-    api.patch<Wrapped<{ success: boolean }>>('/users/me/password', { currentPassword, newPassword }).then((r) => r.data),
+    api
+      .patch<Wrapped<{ success: boolean }>>('/users/me/password', { currentPassword, newPassword })
+      .then((r) => r.data),
 
   listConnectedAccounts: () =>
     api.get<Wrapped<ConnectedAccount[]>>('/users/me/connected-accounts').then((r) => r.data),
 
   disconnectAccount: (provider: string) =>
-    api.delete<Wrapped<{ provider: string }>>(`/users/me/connected-accounts/${provider}`).then((r) => r.data),
+    api
+      .delete<Wrapped<{ provider: string }>>(`/users/me/connected-accounts/${provider}`)
+      .then((r) => r.data),
 
   deleteAccount: (currentPassword: string) =>
     api.delete<Wrapped<{ id: string }>>('/users/me', { currentPassword }).then((r) => r.data),
@@ -128,17 +132,23 @@ export const usersApi = {
 
   getPublicExperiences: (username: string, cursor?: string) =>
     api
-      .get<Wrapped<ExperienceListResponse>>(
-        `/users/${encodeURIComponent(username)}/experience-logs${cursor ? `?cursor=${cursor}` : ''}`,
-      )
+      .get<
+        Wrapped<ExperienceListResponse>
+      >(`/users/${encodeURIComponent(username)}/experience-logs${cursor ? `?cursor=${cursor}` : ''}`)
       .then((r) => r.data),
 
   search: (q: string) =>
-    api.get<Wrapped<UserSearchResult[]>>(`/users/search?q=${encodeURIComponent(q)}`).then((r) => r.data),
+    api
+      .get<Wrapped<UserSearchResult[]>>(`/users/search?q=${encodeURIComponent(q)}`)
+      .then((r) => r.data),
 
   follow: (username: string) =>
-    api.post<Wrapped<{ following: boolean }>>(`/users/${encodeURIComponent(username)}/follow`).then((r) => r.data),
+    api
+      .post<Wrapped<{ following: boolean }>>(`/users/${encodeURIComponent(username)}/follow`)
+      .then((r) => r.data),
 
   unfollow: (username: string) =>
-    api.delete<Wrapped<{ following: boolean }>>(`/users/${encodeURIComponent(username)}/follow`).then((r) => r.data),
+    api
+      .delete<Wrapped<{ following: boolean }>>(`/users/${encodeURIComponent(username)}/follow`)
+      .then((r) => r.data),
 };

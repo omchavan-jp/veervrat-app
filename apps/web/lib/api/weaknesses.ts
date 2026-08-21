@@ -61,8 +61,7 @@ export type WeaknessDetailResponse = {
 };
 
 export const weaknessesApi = {
-  list: () =>
-    api.get<Wrapped<WeaknessListResponse>>('/weaknesses').then((r) => r.data),
+  list: () => api.get<Wrapped<WeaknessListResponse>>('/weaknesses').then((r) => r.data),
 
   detail: (id: string) =>
     api.get<Wrapped<WeaknessDetailResponse>>(`/weaknesses/${id}`).then((r) => r.data),
