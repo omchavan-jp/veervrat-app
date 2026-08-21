@@ -105,7 +105,7 @@ Decisions needed, none of them technical:
 | All application data | Azure Postgres Flexible Server, **Central India (Pune)** |
 | Sessions / cache | Azure Managed Redis, same region |
 | Secrets | Azure Key Vault, per environment |
-| Object storage | **none yet** — S3-compatible, unprovisioned |
+| Object storage | **none yet** — Azure Blob planned (O15); no files exist |
 | Email in transit | JP IT's relay (`dhoomketu.in`), sending as `notifications.jnanaprabodhini.org` |
 | Logs incl. IP/user agent | Azure Log Analytics, 30-day retention |
 | **Terraform state** | ⚠️ Holds **every secret in plaintext** — see #90 |
