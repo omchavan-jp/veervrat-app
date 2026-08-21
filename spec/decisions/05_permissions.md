@@ -65,9 +65,26 @@ VA and VM acting as participants. A user who is also admin holds these only for 
 | `vm_invitation.decline` | ❌ | ✅ (as invitee) |
 | `vm_relationship.withdraw` | ❌ | ✅ (own assignments) |
 | `global_vm.view_va_guidance` | ❌ | ✅ (assigned VA only, global VM only) |
-| `feedback.create` | ✅ (any authenticated user) | ✅ (any authenticated user) |
-| `feedback.read` | ✅ (any authenticated user) | ✅ (any authenticated user) |
-| `feedback.upvote` | ✅ (any authenticated user, one per item) | ✅ (any authenticated user, one per item) |
+| `feedback.create` | ⚙️ capability-gated (see below) | ⚙️ capability-gated (see below) |
+| `feedback.read` | ⚙️ capability-gated (see below) | ⚙️ capability-gated (see below) |
+| `feedback.upvote` | ⚙️ capability-gated (see below), one per item | ⚙️ capability-gated (see below), one per item |
+
+**⚙️ `feedback.*` is capability-gated, not role-gated.** Two conditions, both required:
+
+1. the environment allows the feature — `FEEDBACK_MODE` is `all` (everyone) or `granted`
+2. when `granted`, the user holds the `FEEDBACK_WIDGET` capability (`user_capabilities`)
+
+`off` denies everyone regardless of grants, and an unrecognised value **fails closed**. Holding
+`ADMIN` grants nothing here — these are grants, not privilege levels.
+
+> ⚠️ **This table used to read "any authenticated user", and that was accurate.** Until
+> 2026-08-21 `hasPermission` returned `true` for these three actions for anyone signed in, while
+> the widget was hidden by `FEEDBACK_MODE` on the **web** container alone — which the API never
+> even received. The control was hidden, not denied: calling the endpoint directly worked.
+> Fixed in #117; see `documentation/21_Infrastructure-Conventions.md` §23. Recorded here rather
+> than quietly overwritten, because this file is the authority someone would consult to decide
+> whether the code is correct.
+
 
 #### Layer 2 — Platform permissions (admin/moderator actions)
 Acting *on* data, not *as* participants.

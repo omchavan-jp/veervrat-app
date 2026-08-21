@@ -16,6 +16,21 @@ _Last updated: 2026-05-31 | Round: R1_
 - **Moderator permissions:** fully covered in `decisions/17_moderation.md`. Moderator = curates content + reviews custom ERC proposals + manages display content. Cannot access taxonomy, journey state overrides, or user management.
 - **Vratmitra credibility:** count of journeys completed as VM. Shown as a neutral stat on VM's public profile ("Guided X journeys to completion"). No score, no ranking, no comparison to others. Satisfies "no visible hierarchy" — it's a fact, not a grade.
 
+## Not a role: capabilities
+
+Roles say who a person **is** in Veervrat. What a person may **try** — the beta feedback widget,
+the in-context content editor — is a separate concept, a *capability*, granted per user and
+stored in `user_capabilities` (see `05_permissions.md` and conventions §23).
+
+The distinction is load-bearing, and the tempting shortcut is to add e.g. `BETA_TESTER` to the
+`Role` enum. Don't: a person is a vratarthi **and** a beta tester **and** a content editor at
+once, and every switch that reasons about domain identity — journey visibility, vratmitra
+relationships, moderation — would then need a case meaning "ignore this one".
+
+Capabilities are feature-scoped (`FEEDBACK_WIDGET`, `CONTENT_EDIT`), never person-scoped: a
+person-scoped grant silently changes meaning whenever a feature joins it, leaving audit rows
+whose consequences drifted after the fact.
+
 ## Open Questions (area-specific)
 _(none — area closed)_
 

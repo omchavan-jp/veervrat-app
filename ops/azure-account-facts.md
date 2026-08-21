@@ -223,7 +223,8 @@ ones that matter under pressure.
 
 | | UAT | Prod |
 |---|---|---|
-| `feedback_mode` | `test` — widget on for everyone (Nachiket reviews here) | `off` until #40 lands per-user grants |
+| `feedback_mode` | `all` — widget on for everyone (Nachiket reviews here, no per-user setup) | `granted` — per-user, from `/admin/users/[id]` (D20/#40, shipped 2026-08-21) |
+| `ENVIRONMENT` | `uat` | `prod` — `content.edit` is refused outright at the API when this is `prod` (O7), not merely disabled by config |
 | Postgres backups | 7 days | 35 days — **immutable after creation** |
 | Google OAuth client | its own client + secret | its own client + secret; callback on the **api** origin |
 | `COOKIE_DOMAIN` | `uat.veervrat.jnanaprabodhini.org` | `veervrat.jnanaprabodhini.org` — ⚠️ absent until 2026-08-21; without it login succeeds and does not survive a refresh, which reads as a session bug rather than a cookie-scope one |
