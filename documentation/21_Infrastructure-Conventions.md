@@ -1099,9 +1099,30 @@ An execution started with `--image` shows `name: veervrat-<env>-migrate`, `comma
 `env: [DATABASE_URL]`. That divergence *is* the bug.
 
 **The rule.** Start one-off jobs with **no overrides**. Change what a job runs through
-Terraform (`image_tag`, `migrate_command`) so the spec stays complete and reviewable. If a
-per-execution override is ever genuinely required, pass `--command`, `--args` **and**
-`--env-vars` together — supplying only some of them is what silently drops the rest.
+Terraform (`image_tag`, `migrate_command`) so the spec stays complete and reviewable.
+
+Overriding *anything* replaces the whole container, so a partial override is never enough —
+and this is stronger than it first appears. Passing `--command`/`--args`/`--env-vars`
+without `--image` fails outright:
+
+```
+(ContainerAppImageRequired) Container with name 'veervrat-<env>-seed' must have an
+'Image' property specified.
+```
+
+That error is the *lucky* case, because it is loud. The unlucky case is `--image` alone,
+which is accepted and silently drops the command and env — the failure this section exists
+to document.
+
+**Worse, an overridden execution produces no retrievable console logs.** Verified on prod
+2026-08-21: an override run emitted zero rows to Log Analytics under any container name,
+while the same job started with no overrides logged normally. So an override is not merely
+risky — it is *unobservable*, which removes the one thing that would tell you it went wrong.
+
+The practical consequence: **do not use per-execution overrides at all.** If a one-off task
+needs a different command, give it its own job definition in Terraform (as `seed-job.tf`
+does) or parameterise an existing one (`migrate_command`). A task worth running against a
+deployed database is worth a reviewable spec.
 
 **The general lesson**, which outlives this flag: *a success status is a claim, not
 evidence.* Where a step can succeed without doing its work, verify the work — CD now
