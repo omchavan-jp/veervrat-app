@@ -15,6 +15,9 @@ import { test, expect } from '@playwright/test';
  * It lives here rather than in jsdom because it was only ever reproducible in a real browser —
  * component-level tests of each half passed cleanly while the app was unusable.
  */
+// Since auth is now resolved server-side and seeded, an anonymous visitor should make NO
+// client call at all — but the assertion stays a small upper bound rather than exactly zero,
+// so the test keeps guarding against a storm even if seeding changes shape.
 test.describe('auth query must settle', () => {
   test('anonymous visitor triggers /auth/me once, not continuously', async ({ page }) => {
     let calls = 0;

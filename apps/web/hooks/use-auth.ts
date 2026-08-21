@@ -13,13 +13,18 @@ export function useAuth() {
     queryKey: queryKeys.auth.me,
     // A 401 is not a failure — it is the answer "nobody is signed in". Returning null makes it
     // a SUCCESSFUL result, which matters for more than tidiness: an errored query is refetched
-    // on every fresh mount regardless of staleTime, and that produced a request storm.
+    // on every fresh mount regardless of staleTime.
     //
-    // PublicLayoutClient unmounts its children while loading. When loading ended, the children
-    // mounted, a second useAuth consumer subscribed, the errored query refetched, isLoading
-    // flipped back to true, the children unmounted again — and round it went at roughly
-    // 200 requests/second until the rate limiter caught it. Measured: 1311 requests in 8s,
-    // reproduced locally with Playwright.
+    // That fuelled a request storm — ~200 calls a second until the rate limiter intervened,
+    // measured at 1311 in 8 seconds. The layouts used to unmount their children while auth
+    // loaded, so when loading ended the children mounted, a second useAuth consumer
+    // subscribed, the errored query refetched, loading resumed, and the children unmounted
+    // again.
+    //
+    // Those loading branches are gone (auth is now seeded server-side), so the loop cannot
+    // form the same way today. This stays because it removes the *fuel* rather than one
+    // arrangement of it: any future conditional render around an auth-gated subtree would
+    // otherwise light it again.
     queryFn: async () => {
       try {
         return await authApi.getMe();
@@ -29,9 +34,8 @@ export function useAuth() {
       }
     },
     retry: false,
-    // Belt and braces: even for a genuine error (network, 500), do not refetch merely because
-    // a new component subscribed. Without this, any conditional render around an auth-gated
-    // subtree can recreate the loop above.
+    // Belt and braces for the genuine-error case (network, 500): do not refetch merely because
+    // a new component subscribed.
     retryOnMount: false,
   });
 
