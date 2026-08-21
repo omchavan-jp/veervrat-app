@@ -3,7 +3,9 @@ import { cookies, headers } from 'next/headers';
 import { SUPPORTED_LOCALES, type Locale } from '@/lib/i18n-constants';
 import { applyOverrides, type NestedMessages } from '@/lib/content-editor/messages';
 
-const CONTENT_EDIT = process.env.NEXT_PUBLIC_CONTENT_EDIT === 'on';
+// Server-side, so it reads the runtime variable directly. Not NEXT_PUBLIC_*: that is baked at
+// build time, and one image serves both UAT and prod (§17).
+const CONTENT_EDIT = process.env.CONTENT_EDIT_ENABLED === 'true';
 
 export default getRequestConfig(async () => {
   const headerStore = await headers();
