@@ -83,6 +83,11 @@ Still not true of prod, and tracked as issues rather than assumed:
 
 **Backlog lives in GitHub Issues** (`gh issue list`), not in this file — see below.
 
+**Data map:** `ops/data-map.md` — what personal data exists, where it lives, what anonymisation
+actually clears, and what has no retention policy. The shared input for the privacy policy (#81),
+DPDP work, the backup policy, and the migration plan. Written 2026-08-22 so those four do not
+each invent their own answer.
+
 The old Neon database still holds the only historical data (12 users, 10 journeys), plus a local
 dump — **migration cancelled, see D19**; it is an archive, not a source.
 
