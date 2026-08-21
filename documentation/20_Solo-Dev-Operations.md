@@ -16,21 +16,35 @@ in-app feedback  ──▶   GitHub Issues (canonical) ──▶  branch → PR 
 
 ## Loop 1 — Capture
 
-**Channel: the in-app feedback widget** (test mode). A floating, corner-snapping
-button (position in `localStorage`), rendered when `NEXT_PUBLIC_FEEDBACK_MODE=test`.
+**Channel: the in-app feedback widget.** A floating, corner-snapping button (position in
+`localStorage`), rendered when the environment allows it **and** the person is allowed it.
+
+⚠️ Not `NEXT_PUBLIC_FEEDBACK_MODE`. That was wrong twice over: `NEXT_PUBLIC_*` is inlined at
+build time, so one promoted image could not differ between UAT and prod (§17, the defect that
+had prod addressing UAT's database); and the value lived on the web tier alone, so the widget
+was *hidden* rather than *denied* while the API accepted feedback from anyone signed in (§23).
 
 - Modal tab 1: open observations — title, tag (`issue` | `improvement`), status
   chip, +1 button (dedup pressure valve).
 - Modal tab 2: raise new — type + title + optional description. Everything else
   is auto-captured: route, user id + role, locale, viewport, user agent, commit
   SHA (`NEXT_PUBLIC_COMMIT_SHA`, set from the git SHA at build time by CD).
-- Backend: `feedback` module — Prisma model, `POST /feedback` + `POST /feedback/:id/upvote`
-  (any logged-in user), `GET /feedback` (list, open items), `PATCH /feedback/:id`
-  (status, admin only). Rate-limited.
+- Backend: `feedback` module — Prisma model, `POST /feedback` + `POST /feedback/:id/upvote`,
+  `GET /feedback` (list, open items), `PATCH /feedback/:id` (status, admin only). Rate-limited.
+  Access is **enforced server-side** against the same rule the widget reflects; if the two ever
+  disagree, the API is right and the UI is a bug.
 - Feedback row lifecycle: `new → triaged → done | declined`. Rows are an **inbox**,
   not the backlog — once triaged they carry a link to the GH issue.
-- **Public phase:** set `NEXT_PUBLIC_FEEDBACK_MODE=public` — list tab hidden,
-  form only (or relocate to a help menu). Same plumbing.
+- **Who sees it** — runtime config `FEEDBACK_MODE`, set on **both** the api and web containers:
+  - `off` — nobody, whatever they have been granted
+  - `all` — every authenticated user (UAT, so reviewers need no setup)
+  - `granted` — only holders of the `FEEDBACK_WIDGET` capability, granted per person from
+    `/admin/users/[id]` (prod)
+
+  The old `test` / `public` pair is gone. `public` was configured in no environment and its
+  branch was never exercised; `test` also silently controlled whether the observations list
+  showed, which is now on for anyone who can see the widget — the point being that testers see
+  and +1 each other's observations.
 - Out of v1 scope (add only if triage suffers): screenshots, comment threads,
   email notifications.
 
