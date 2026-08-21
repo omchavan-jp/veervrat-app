@@ -1,3 +1,4 @@
+export type AdminCapability = 'FEEDBACK_WIDGET' | 'CONTENT_EDIT';
 import { api } from './client';
 
 type Wrapped<T> = { data: T };
@@ -16,6 +17,7 @@ export type AdminUserRow = {
   createdAt: string;
   lastActiveAt: string | null;
   roles: { role: AdminRole }[];
+  capabilities?: { capability: AdminCapability; grantedAt: string; grantedBy: string | null }[];
 };
 
 export type NameRef = { id: string; nameEn: string; nameMr: string | null };
@@ -34,7 +36,13 @@ export type AdminUserDetail = AdminUserRow & {
     sentence: { id: string; textEn: string; textMr: string | null } | null;
     weaknesses: NameRef[];
   }[];
-  testAttempts: { id: string; weakness: NameRef; isDraft: boolean; submittedAt: string | null; createdAt: string }[];
+  testAttempts: {
+    id: string;
+    weakness: NameRef;
+    isDraft: boolean;
+    submittedAt: string | null;
+    createdAt: string;
+  }[];
   experienceLogs: { id: string; visibility: string; isDraft: boolean; createdAt: string }[];
 };
 
@@ -48,15 +56,34 @@ export const adminUsersApi = {
     const qs = p.toString();
     return api.get<Wrapped<AdminUserList>>(`/admin/users${qs ? `?${qs}` : ''}`).then((r) => r.data);
   },
-  detail: (id: string) => api.get<Wrapped<AdminUserDetail>>(`/admin/users/${id}`).then((r) => r.data),
+  detail: (id: string) =>
+    api.get<Wrapped<AdminUserDetail>>(`/admin/users/${id}`).then((r) => r.data),
   updateRoles: (id: string, body: { add?: AdminRole[]; remove?: AdminRole[] }) =>
     api.patch<Wrapped<unknown>>(`/admin/users/${id}/roles`, body).then((r) => r.data),
+
+  // Capabilities are what a person may TRY (feedback widget, content editor), as opposed to
+  // roles, which are who they ARE in Veervrat. Deliberately a separate endpoint and a separate
+  // concept — see openspec `capability-grants/design.md`.
+  updateCapabilities: (id: string, body: { add?: AdminCapability[]; remove?: AdminCapability[] }) =>
+    api.patch<Wrapped<unknown>>(`/admin/users/${id}/capabilities`, body).then((r) => r.data),
   suspend: (id: string, suspended: boolean) =>
-    api.post<Wrapped<{ id: string; suspendedAt: string | null }>>(`/admin/users/${id}/suspend`, { suspended }).then((r) => r.data),
+    api
+      .post<
+        Wrapped<{ id: string; suspendedAt: string | null }>
+      >(`/admin/users/${id}/suspend`, { suspended })
+      .then((r) => r.data),
   forceLogout: (id: string) =>
-    api.post<Wrapped<{ id: string; loggedOut: boolean }>>(`/admin/users/${id}/force-logout`, {}).then((r) => r.data),
+    api
+      .post<Wrapped<{ id: string; loggedOut: boolean }>>(`/admin/users/${id}/force-logout`, {})
+      .then((r) => r.data),
   anonymise: (id: string, reason: string) =>
-    api.post<Wrapped<{ id: string }>>(`/admin/users/${id}/anonymise`, { reason }).then((r) => r.data),
+    api
+      .post<Wrapped<{ id: string }>>(`/admin/users/${id}/anonymise`, { reason })
+      .then((r) => r.data),
   overrideJourneyState: (journeyId: string, state: string, reason: string) =>
-    api.patch<Wrapped<{ id: string; from: string; to: string }>>(`/admin/journeys/${journeyId}/state`, { state, reason }).then((r) => r.data),
+    api
+      .patch<
+        Wrapped<{ id: string; from: string; to: string }>
+      >(`/admin/journeys/${journeyId}/state`, { state, reason })
+      .then((r) => r.data),
 };

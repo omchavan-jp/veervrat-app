@@ -1276,6 +1276,14 @@
       "ONLY_ME": "Only me",
       "FRIENDS": "Friends",
       "PUBLIC": "Public"
+    },
+    "capabilities": "Capabilities",
+    "capabilityUnavailable": "Not available in this environment",
+    "unavailableShort": "unavailable",
+    "grantedOn": "Granted on {date}",
+    "capability": {
+      "FEEDBACK_WIDGET": "Feedback widget",
+      "CONTENT_EDIT": "Content editor"
     }
   },
   "audit": {

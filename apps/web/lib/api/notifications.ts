@@ -32,7 +32,9 @@ export type UnreadCountResponse = {
 export const notificationsApi = {
   list: (cursor?: string): Promise<NotificationsListResponse> => {
     const params = cursor ? `?cursor=${encodeURIComponent(cursor)}` : '';
-    return api.get<Wrapped<NotificationsListResponse>>(`/notifications${params}`).then((r) => r.data);
+    return api
+      .get<Wrapped<NotificationsListResponse>>(`/notifications${params}`)
+      .then((r) => r.data);
   },
 
   getUnreadCount: (): Promise<UnreadCountResponse> =>

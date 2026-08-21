@@ -113,6 +113,21 @@ resource "azurerm_container_app" "api" {
         name  = "NODE_ENV"
         value = "production"
       }
+      # Which deployment this is. Named explicitly rather than inferred: NODE_ENV is
+      # "production" on UAT too, and sniffing the hostname breaks the first time one changes.
+      # `content.edit` is refused outright when this is "prod" (O7).
+      env {
+        name  = "ENVIRONMENT"
+        value = var.environment
+      }
+      # ⚠️ The API needs this too, not just the web tier. It was web-only until 2026-08-21,
+      # which is why the feedback widget was HIDDEN rather than DENIED: the endpoint accepted
+      # feedback from anyone signed in who called it directly. Hiding a control is not access
+      # control — the server has to know the rule to enforce it.
+      env {
+        name  = "FEEDBACK_MODE"
+        value = var.feedback_mode
+      }
       env {
         name  = "PORT"
         value = "3001"
@@ -302,6 +317,13 @@ resource "azurerm_container_app" "web" {
       env {
         name  = "FEEDBACK_MODE"
         value = var.feedback_mode
+      }
+      # So the admin UI can show environment-unavailable controls as unavailable rather than
+      # inert — content editing is refused on prod for everyone (O7), and a toggle that saves
+      # but never takes effect is a footgun.
+      env {
+        name  = "ENVIRONMENT"
+        value = var.environment
       }
       env {
         name  = "PORT"

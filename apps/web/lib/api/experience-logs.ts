@@ -73,9 +73,9 @@ export const experienceLogsApi = {
 
   getMine: (cursor?: string) =>
     api
-      .get<Wrapped<ExperienceListResponse>>(
-        cursor ? `/experience-logs?cursor=${cursor}` : '/experience-logs',
-      )
+      .get<
+        Wrapped<ExperienceListResponse>
+      >(cursor ? `/experience-logs?cursor=${cursor}` : '/experience-logs')
       .then((r) => r.data),
 
   getOne: (id: string) =>
@@ -83,8 +83,8 @@ export const experienceLogsApi = {
 
   getPublic: (cursor?: string) =>
     api
-      .get<Wrapped<ExperienceListResponse>>(
-        cursor ? `/experience-logs/public?cursor=${cursor}` : '/experience-logs/public',
-      )
+      .get<
+        Wrapped<ExperienceListResponse>
+      >(cursor ? `/experience-logs/public?cursor=${cursor}` : '/experience-logs/public')
       .then((r) => r.data),
 };

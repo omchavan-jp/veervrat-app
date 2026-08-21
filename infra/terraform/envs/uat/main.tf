@@ -74,9 +74,9 @@ module "environment" {
   # every generated link must be built from them rather than the *.azurecontainerapps.io FQDN.
   public_web_host = "uat.veervrat.jnanaprabodhini.org"
   public_api_host = "api.uat.veervrat.jnanaprabodhini.org"
-
-  # Nachiket reviews unreleased changes here, so the widget is on for everyone.
-  feedback_mode = "test"
+  # Everyone on UAT: Nachiket and reviewers need no per-user setup, and expressing
+  # "everyone" as a grant per user would drift the moment someone new signs up.
+  feedback_mode = "all"
 
   # Outbound email via JP IT's relay (D9). The password is NOT here — Terraform creates the
   # Key Vault secret with a placeholder and the real value is set out of band; see

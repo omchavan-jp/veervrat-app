@@ -5,22 +5,21 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
-export const signupSchema = z
-  .object({
-    displayName: z.string().min(1, 'Display name is required').max(255),
-    username: z
-      .string()
-      .min(3, 'Username must be at least 3 characters')
-      .max(30, 'Username must be 30 characters or less')
-      .regex(/^[a-z0-9_]+$/, 'Lowercase letters, numbers, and underscores only'),
-    email: z.email(),
-    password: z
-      .string()
-      .min(8, 'Password must be at least 8 characters')
-      .regex(/[a-zA-Z]/, 'Password must contain at least one letter')
-      .regex(/[0-9]/, 'Password must contain at least one number'),
-    language: z.enum(['EN', 'MR']),
-  });
+export const signupSchema = z.object({
+  displayName: z.string().min(1, 'Display name is required').max(255),
+  username: z
+    .string()
+    .min(3, 'Username must be at least 3 characters')
+    .max(30, 'Username must be 30 characters or less')
+    .regex(/^[a-z0-9_]+$/, 'Lowercase letters, numbers, and underscores only'),
+  email: z.email(),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[a-zA-Z]/, 'Password must contain at least one letter')
+    .regex(/[0-9]/, 'Password must contain at least one number'),
+  language: z.enum(['EN', 'MR']),
+});
 
 export const forgotPasswordSchema = z.object({
   email: z.email(),

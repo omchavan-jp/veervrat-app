@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { Role } from '@prisma/client';
+import { Capability, Role } from '@prisma/client';
+import { CapabilitiesRepository } from '../capabilities/capabilities.repository';
+import { AuditService } from '../audit/audit.service';
 import { AdminUsersRepository } from './admin-users.repository';
 import { AuthService } from '../auth/auth.service';
 import { JourneysService } from '../journeys/journeys.service';
@@ -11,7 +13,12 @@ import {
   EntityInUseException,
   EntityNotFoundException,
 } from '../../common/exceptions/app.exceptions';
-import { AnonymiseUserDto, OverrideJourneyStateDto, UpdateRolesDto } from './dto/admin-users.dto';
+import {
+  AnonymiseUserDto,
+  OverrideJourneyStateDto,
+  UpdateCapabilitiesDto,
+  UpdateRolesDto,
+} from './dto/admin-users.dto';
 
 @Injectable()
 export class AdminUsersService {
@@ -20,6 +27,8 @@ export class AdminUsersService {
     private readonly auth: AuthService,
     private readonly journeys: JourneysService,
     private readonly users: UsersService,
+    private readonly capabilitiesRepo: CapabilitiesRepository,
+    private readonly audit: AuditService,
   ) {}
 
   private assertManage(user: SessionUser): void {
@@ -63,6 +72,51 @@ export class AdminUsersService {
     await this.repo.removeRoles(id, dto.remove ?? []);
     await this.repo.addRoles(id, dto.add ?? []);
     return this.repo.findById(id);
+  }
+
+  /**
+   * Grant and revoke feature capabilities. Separate from roles on purpose — roles say who a
+   * person IS in Veervrat, capabilities say what they may TRY. See openspec
+   * `capability-grants/design.md`.
+   *
+   * Returns what actually changed, so the caller can audit real grants rather than every click.
+   * An audit log full of no-op grants is worse than no log.
+   */
+  async updateCapabilities(user: SessionUser, id: string, dto: UpdateCapabilitiesDto) {
+    this.assertManage(user);
+    const target = await this.repo.findById(id);
+    if (!target) throw new EntityNotFoundException('User', id);
+
+    const granted: Capability[] = [];
+    const revoked: Capability[] = [];
+
+    for (const capability of dto.remove ?? []) {
+      if (await this.capabilitiesRepo.revoke(id, capability)) revoked.push(capability);
+    }
+    for (const capability of dto.add ?? []) {
+      if (await this.capabilitiesRepo.grant(id, capability, user.id)) granted.push(capability);
+    }
+
+    for (const capability of granted) {
+      this.audit.record({
+        actorId: user.id,
+        action: 'admin.capability.granted',
+        resourceType: 'user',
+        resourceId: id,
+        metadata: { capability, displayName: target.displayName },
+      });
+    }
+    for (const capability of revoked) {
+      this.audit.record({
+        actorId: user.id,
+        action: 'admin.capability.revoked',
+        resourceType: 'user',
+        resourceId: id,
+        metadata: { capability, displayName: target.displayName },
+      });
+    }
+
+    return { capabilities: await this.capabilitiesRepo.listDetailedForUser(id) };
   }
 
   async setSuspended(user: SessionUser, id: string, suspended: boolean) {

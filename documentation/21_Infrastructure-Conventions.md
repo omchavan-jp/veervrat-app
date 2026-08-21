@@ -1203,3 +1203,62 @@ container — config validation, Redis, every module — to write one row would 
 
 Named here so it reads as a decision rather than an oversight.
 
+---
+
+## 23. Environment config answers *whether*; the database answers *who*
+
+Two questions look alike and are not:
+
+| Question | Answered by | Example |
+|---|---|---|
+| Does this feature exist **in this environment**? | env config | `FEEDBACK_MODE`, `CONTENT_EDIT_ENABLED` |
+| May **this person** use it here? | database (`user_capabilities`) | a beta tester's `FEEDBACK_WIDGET` grant |
+
+Both must be satisfied. An environment with the feature off ignores grants entirely, which is
+what makes "content editor never on prod, for anyone" (O7) enforceable no matter what a future
+admin clicks.
+
+**Why env config cannot answer "who".** A user can only be allowlisted *after* they sign up, so
+an env-var allowlist costs signup → find UUID → edit Terraform → PR → deploy → access. A full
+deploy cycle **per person**. `CONTENT_EDITOR_USER_IDS` demonstrated this so well that it was
+never once populated in any environment before being deleted.
+
+`FEEDBACK_MODE` values: `off` (nobody), `all` (every authenticated user — UAT, so reviewers need
+no setup), `granted` (holders of the capability — prod). Unrecognised values **fail closed**: a
+typo must not open a gated feature.
+
+### Hiding a control is not access control
+
+Until 2026-08-21 the feedback widget was gated by `FEEDBACK_MODE` on the **web** container only,
+while the API granted `feedback.*` to any authenticated user:
+
+```ts
+case 'feedback.create':
+  return resource.type === 'platform';   // i.e. anyone signed in
+```
+
+So the widget was **hidden, not denied**. Anyone signed in who called the endpoint directly was
+accepted. The feature looked correctly gated from every angle a person would normally check.
+
+Two things made it survivable and both are now fixed: the api container did not even receive
+`FEEDBACK_MODE`, so it *could not* have enforced the rule; and those permission rows had **no
+test coverage at all**, so nothing objected.
+
+**The rule:** a capability check belongs on the server, and the UI reflects it. If the two
+disagree, the server is right and the UI is a bug. Every capability needs a test that the **API**
+refuses — a test that the control is hidden would have passed throughout the entire period this
+bug existed.
+
+### Capabilities are not roles
+
+Roles say who a person **is** in Veervrat (vratarthi, vratmitra, moderator, admin) and appear in
+real product logic. Capabilities say what they may **try** — operational, additive, unrelated to
+the practice. A person is a vratarthi *and* a beta tester *and* a content editor at once.
+
+Adding `BETA_TESTER` to the `Role` enum would leak it into every switch that reasons about domain
+identity, each of which would then need a case meaning "ignore this one".
+
+Capabilities are **feature-scoped** (`FEEDBACK_WIDGET`, `CONTENT_EDIT`), not person-scoped. A
+person-scoped `BETA_TESTER` silently changes meaning every time a feature joins it — leaving
+audit rows that record a grant whose consequences drifted after the fact.
+

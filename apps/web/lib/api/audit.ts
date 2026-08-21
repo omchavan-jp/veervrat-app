@@ -23,6 +23,8 @@ export const auditApi = {
     if (filters?.actorId) p.set('actorId', filters.actorId);
     if (filters?.cursor) p.set('cursor', filters.cursor);
     const qs = p.toString();
-    return api.get<Wrapped<AuditList>>(`/admin/audit-events${qs ? `?${qs}` : ''}`).then((r) => r.data);
+    return api
+      .get<Wrapped<AuditList>>(`/admin/audit-events${qs ? `?${qs}` : ''}`)
+      .then((r) => r.data);
   },
 };

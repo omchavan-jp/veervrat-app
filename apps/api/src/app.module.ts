@@ -29,6 +29,7 @@ import { FollowsModule } from './modules/follows/follows.module';
 import { SearchModule } from './modules/search/search.module';
 import { BlogsModule } from './modules/blogs/blogs.module';
 import { VirtuesModule } from './modules/virtues/virtues.module';
+import { CapabilitiesModule } from './modules/capabilities/capabilities.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { ModerationModule } from './modules/moderation/moderation.module';
 import { ContentModule } from './modules/content/content.module';
@@ -93,6 +94,7 @@ import { CsrfGuard } from './common/guards/csrf.guard';
     BlogsModule,
     VirtuesModule,
     AuditModule,
+    CapabilitiesModule,
     ModerationModule,
     ContentModule,
     AdminModule,

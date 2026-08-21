@@ -19,6 +19,7 @@ import {
   AnonymiseUserDto,
   OverrideJourneyStateDto,
   SuspendUserDto,
+  UpdateCapabilitiesDto,
   UpdateRolesDto,
 } from './dto/admin-users.dto';
 
@@ -53,6 +54,24 @@ export class AdminUsersController {
     @Body() dto: UpdateRolesDto,
   ) {
     return this.admin.updateRoles(user, id, dto);
+  }
+
+  @Patch('admin/users/:id/capabilities')
+  @Audited({
+    action: 'admin.manage_user_capabilities',
+    resourceType: 'user',
+    resourceIdParam: 'id',
+    metadata: (c) => ({
+      added: (c.body as UpdateCapabilitiesDto)?.add ?? [],
+      removed: (c.body as UpdateCapabilitiesDto)?.remove ?? [],
+    }),
+  })
+  updateCapabilities(
+    @CurrentUser() user: SessionUser,
+    @Param('id') id: string,
+    @Body() dto: UpdateCapabilitiesDto,
+  ) {
+    return this.admin.updateCapabilities(user, id, dto);
   }
 
   @Post('admin/users/:id/suspend')

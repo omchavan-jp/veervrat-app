@@ -63,10 +63,23 @@ function makeService(
   const publisher = opts.publisher ?? makePublisher();
   const config = makeConfig({
     CONTENT_EDIT_ENABLED: opts.enabled ?? true,
-    CONTENT_EDITOR_USER_IDS: opts.editorIds ?? EDITOR_ID,
   });
-  const service = new ContentOverridesService(repo as any, publisher as any, config as any);
-  return { service, repo, publisher };
+  // The editor allowlist is now a capability grant, not an env var. `editorIds` is kept as the
+  // spec's way of saying "this user is an editor" so the existing cases still read the same.
+  const editorId = opts.editorIds ?? EDITOR_ID;
+  const capabilities = {
+    grantsFor: vi.fn((userId: string) =>
+      Promise.resolve(userId === editorId ? ['CONTENT_EDIT'] : []),
+    ),
+    featureMode: vi.fn(() => ((opts.enabled ?? true) ? 'granted' : 'off')),
+  };
+  const service = new ContentOverridesService(
+    repo as any,
+    publisher as any,
+    config as any,
+    capabilities as any,
+  );
+  return { service, repo, publisher, capabilities };
 }
 
 describe('ContentOverridesService', () => {

@@ -48,6 +48,12 @@ export class AdminUsersRepository {
       where: { id },
       select: {
         ...LIST_SELECT,
+        // Shown in the admin UI beside roles, with who granted each and when — so the current
+        // state answers "who gave this to them?" without searching the audit log.
+        capabilities: {
+          select: { capability: true, grantedAt: true, grantedBy: true },
+          orderBy: { grantedAt: 'asc' },
+        },
         gender: true,
         dob: true,
         language: true,

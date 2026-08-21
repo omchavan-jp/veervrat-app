@@ -43,7 +43,9 @@ export const feedbackApi = {
     if (cursor) search.set('cursor', cursor);
     if (includeResolved) search.set('includeResolved', 'true');
     const qs = search.toString();
-    return api.get<Wrapped<FeedbackListResponse>>(`/feedback${qs ? `?${qs}` : ''}`).then((r) => r.data);
+    return api
+      .get<Wrapped<FeedbackListResponse>>(`/feedback${qs ? `?${qs}` : ''}`)
+      .then((r) => r.data);
   },
 
   create: (input: CreateFeedbackInput): Promise<FeedbackItem> =>

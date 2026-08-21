@@ -42,12 +42,18 @@ vi.mock('@/components/ui/input', () => ({
   Input: (props: React.InputHTMLAttributes<HTMLInputElement>) => <input {...props} />,
 }));
 vi.mock('@/components/ui/button', () => ({
-  Button: ({ children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { nativeButton?: boolean; render?: React.ReactElement }) => (
-    <button {...props}>{children}</button>
-  ),
+  Button: ({
+    children,
+    ...props
+  }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
+    nativeButton?: boolean;
+    render?: React.ReactElement;
+  }) => <button {...props}>{children}</button>,
 }));
 vi.mock('@/lib/api/client', () => ({
-  ApiError: class ApiError extends Error { error = 'API_ERROR'; },
+  ApiError: class ApiError extends Error {
+    error = 'API_ERROR';
+  },
 }));
 
 import SignupPage from '../../app/(public)/signup/page';
@@ -63,6 +69,7 @@ const renderSignup = () =>
         apiBaseUrl: 'http://localhost:3001/api/v1',
         siteUrl: 'http://localhost:3000',
         feedbackMode: 'off',
+        environment: 'local',
       }}
     >
       <SignupPage />

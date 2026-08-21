@@ -13,6 +13,7 @@ import {
 import { Throttle } from '@nestjs/throttler';
 import { ConfigService } from '@nestjs/config';
 import type { Request, Response } from 'express';
+import { CapabilitiesService } from '../capabilities/capabilities.service';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -41,6 +42,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
+    private readonly capabilities: CapabilitiesService,
   ) {
     const ttlDays = this.configService.get<number>('SESSION_TTL_DAYS', 30);
     this.cookieName = this.configService.get<string>('SESSION_COOKIE_NAME', 'veervrat_session');
@@ -270,7 +272,10 @@ export class AuthController {
   @UseGuards(SessionGuard)
   async me(@CurrentUser() user: SessionUser) {
     const me = await this.authService.getCurrentUser(user.id);
-    return { ...me, isContentEditor: this.authService.isContentEditor(me.id) };
+    // One coherent set of grants, not flags from two different sources. `isContentEditor` used
+    // to be computed from an env allowlist here while roles came from the database — two shapes
+    // for the same question, which is the drift #40 exists to end.
+    return { ...me, grants: await this.capabilities.grantsFor(me.id) };
   }
 
   private setSessionCookie(res: Response, token: string): void {

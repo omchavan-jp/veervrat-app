@@ -96,7 +96,7 @@ Acting on platform copy through the dev-only in-context content editor.
 
 | Permission | Granted to |
 |---|---|
-| `content.edit` | Only users whose ID is listed in `CONTENT_EDITOR_USER_IDS`. **Not** implied by any role, including admin (least privilege for an outside content editor). Fail-closed when the allowlist is empty — the production default. Enforced via `hasPermission(user, { type: 'platform', isContentEditor }, 'content.edit')` where the service computes `isContentEditor` from the allowlist; publish actions are audit-logged. |
+| `content.edit` | Only users holding the `CONTENT_EDIT` capability (`user_capabilities`, granted from `/admin/users/[id]`). **Not** implied by any role, including admin (least privilege for an outside content editor). The environment must also allow it: refused outright when `ENVIRONMENT=prod` (O7), so a grant that could never take effect cannot be issued. Enforced via `hasPermission(user, { type: 'platform', grants, featureMode }, 'content.edit')`; publish actions are audit-logged. Was an env allowlist (`CONTENT_EDITOR_USER_IDS`) until 2026-08-21 — see conventions §23. |
 
 ### Scoping Rules
 - **Global VM**: sees all of a VA's journeys, test results, experience logs — full picture. When also assigned as journey VM for a specific journey, their role in that journey is to interact specifically around it, but their view scope remains global.

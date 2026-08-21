@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { ErcStatus, Role, VmRelationshipState, ExperienceVisibility } from '@prisma/client';
+import {
+  Capability,
+  ErcStatus,
+  Role,
+  VmRelationshipState,
+  ExperienceVisibility,
+} from '@prisma/client';
 import { hasPermission } from './has-permission';
 import {
   JourneySlim,
@@ -952,5 +958,97 @@ describe('multi-role user (VA + VM)', () => {
       erc: makeErc(),
     };
     expect(hasPermission(VA_ALSO_VM, assignedErc, 'erc.suggest')).toBe(true);
+  });
+});
+
+// ── Capability-gated features ────────────────────────────────────────────────
+//
+// These rows had NO test coverage before 2026-08-21, which is why nothing objected while
+// `feedback.*` returned true for every authenticated user and the widget was merely hidden by a
+// web-only env var. The auth matrix below is the regression guard for that.
+
+describe('capability-gated: feedback', () => {
+  const FEEDBACK_ACTIONS = ['feedback.create', 'feedback.read', 'feedback.upvote'] as const;
+
+  for (const action of FEEDBACK_ACTIONS) {
+    describe(action, () => {
+      it('denies when the feature is off in this environment, even for a granted user', () => {
+        const resource = {
+          type: 'platform' as const,
+          grants: [Capability.FEEDBACK_WIDGET],
+          featureMode: 'off' as const,
+        };
+        expect(hasPermission(VA, resource, action)).toBe(false);
+      });
+
+      it('allows any authenticated user when the mode is `all`', () => {
+        const resource = { type: 'platform' as const, grants: [], featureMode: 'all' as const };
+        expect(hasPermission(VA, resource, action)).toBe(true);
+      });
+
+      it('allows a granted user when the mode is `granted`', () => {
+        const resource = {
+          type: 'platform' as const,
+          grants: [Capability.FEEDBACK_WIDGET],
+          featureMode: 'granted' as const,
+        };
+        expect(hasPermission(VA, resource, action)).toBe(true);
+      });
+
+      it('denies an ungranted user when the mode is `granted`', () => {
+        const resource = { type: 'platform' as const, grants: [], featureMode: 'granted' as const };
+        expect(hasPermission(VA, resource, action)).toBe(false);
+      });
+
+      it('denies an ungranted ADMIN too — this is a grant, not a privilege level', () => {
+        const resource = { type: 'platform' as const, grants: [], featureMode: 'granted' as const };
+        expect(hasPermission(ADMIN, resource, action)).toBe(false);
+      });
+
+      it('fails closed when the mode is absent', () => {
+        const resource = { type: 'platform' as const, grants: [Capability.FEEDBACK_WIDGET] };
+        expect(hasPermission(VA, resource, action)).toBe(false);
+      });
+
+      it('is not satisfied by holding a different capability', () => {
+        const resource = {
+          type: 'platform' as const,
+          grants: [Capability.CONTENT_EDIT],
+          featureMode: 'granted' as const,
+        };
+        expect(hasPermission(VA, resource, action)).toBe(false);
+      });
+    });
+  }
+});
+
+describe('capability-gated: content.edit', () => {
+  it('allows a granted user when the environment enables it', () => {
+    const resource = {
+      type: 'platform' as const,
+      grants: [Capability.CONTENT_EDIT],
+      featureMode: 'granted' as const,
+    };
+    expect(hasPermission(VA, resource, 'content.edit')).toBe(true);
+  });
+
+  it('denies an ungranted user', () => {
+    const resource = { type: 'platform' as const, grants: [], featureMode: 'granted' as const };
+    expect(hasPermission(VA, resource, 'content.edit')).toBe(false);
+  });
+
+  // Least privilege for an outside editor: deliberately not granted by any role.
+  it('denies an ungranted ADMIN', () => {
+    const resource = { type: 'platform' as const, grants: [], featureMode: 'granted' as const };
+    expect(hasPermission(ADMIN, resource, 'content.edit')).toBe(false);
+  });
+
+  it('denies even a granted user when the environment has it off — how prod stays closed', () => {
+    const resource = {
+      type: 'platform' as const,
+      grants: [Capability.CONTENT_EDIT],
+      featureMode: 'off' as const,
+    };
+    expect(hasPermission(VA, resource, 'content.edit')).toBe(false);
   });
 });

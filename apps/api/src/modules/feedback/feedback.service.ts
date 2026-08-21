@@ -5,7 +5,9 @@ import {
   EntityNotFoundException,
 } from '../../common/exceptions/app.exceptions';
 import { hasPermission } from '../../common/permissions';
+import type { PermissionAction } from '../../common/permissions/types';
 import type { SessionUser } from '../auth/types/auth.types';
+import { CapabilitiesService } from '../capabilities/capabilities.service';
 import { FeedbackRepository, FeedbackPage, FeedbackRecord } from './feedback.repository';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
 import { UpdateFeedbackDto } from './dto/update-feedback.dto';
@@ -14,7 +16,10 @@ const USER_AGENT_MAX = 300;
 
 @Injectable()
 export class FeedbackService {
-  constructor(private readonly repository: FeedbackRepository) {}
+  constructor(
+    private readonly repository: FeedbackRepository,
+    private readonly capabilities: CapabilitiesService,
+  ) {}
 
   // Reporter identity and role are stamped from the session — body values for these
   // fields do not exist on the DTO and are stripped by the validation pipe.
@@ -23,7 +28,7 @@ export class FeedbackService {
     dto: CreateFeedbackDto,
     userAgent: string | undefined,
   ): Promise<FeedbackRecord> {
-    if (!hasPermission(user, { type: 'platform' }, 'feedback.create')) {
+    if (!(await this.allowed(user, 'feedback.create'))) {
       throw new AccessDeniedException();
     }
 
@@ -51,7 +56,7 @@ export class FeedbackService {
     cursor?: string,
     pageSize?: number,
   ): Promise<FeedbackPage> {
-    if (!hasPermission(user, { type: 'platform' }, 'feedback.read')) {
+    if (!(await this.allowed(user, 'feedback.read'))) {
       throw new AccessDeniedException();
     }
     return this.repository.list(user.id, includeResolved, cursor, pageSize);
@@ -61,7 +66,7 @@ export class FeedbackService {
     user: SessionUser,
     feedbackItemId: string,
   ): Promise<{ hasUpvoted: boolean; upvoteCount: number }> {
-    if (!hasPermission(user, { type: 'platform' }, 'feedback.upvote')) {
+    if (!(await this.allowed(user, 'feedback.upvote'))) {
       throw new AccessDeniedException();
     }
     const item = await this.repository.findById(feedbackItemId);
@@ -91,5 +96,16 @@ export class FeedbackService {
       user.id,
     );
     return { ...updated, previousStatus: item.status };
+  }
+  /**
+   * ⚠️ These checks used to be `hasPermission(user, { type: 'platform' }, ...)`, which returned
+   * true for ANY authenticated user. The widget was hidden by a web-only FEEDBACK_MODE env var,
+   * so the feature looked gated while the API accepted feedback from anyone signed in. Hiding a
+   * control is not access control.
+   */
+  private async allowed(user: SessionUser, action: PermissionAction): Promise<boolean> {
+    const grants = await this.capabilities.grantsFor(user.id);
+    const featureMode = this.capabilities.featureMode('FEEDBACK_WIDGET');
+    return hasPermission(user, { type: 'platform', grants, featureMode }, action);
   }
 }

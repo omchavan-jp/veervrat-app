@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { JourneyState, Role } from '@prisma/client';
+import { Capability, JourneyState, Role } from '@prisma/client';
 import { AdminUsersService } from './admin-users.service';
 import {
   AccessDeniedException,
@@ -61,12 +61,21 @@ function make(
   const users = {
     anonymiseAccount: vi.fn().mockResolvedValue({ id: 'u9', anonymisedAt: new Date() }),
   } as any;
+  const capabilitiesRepo = {
+    listForUser: vi.fn().mockResolvedValue([]),
+    listDetailedForUser: vi.fn().mockResolvedValue([]),
+    grant: vi.fn().mockResolvedValue(true),
+    revoke: vi.fn().mockResolvedValue(true),
+  } as any;
+  const audit = { record: vi.fn() } as any;
   return {
-    service: new AdminUsersService(repo, auth, journeys, users),
+    service: new AdminUsersService(repo, auth, journeys, users, capabilitiesRepo, audit),
     repo,
     auth,
     journeys,
     users,
+    capabilitiesRepo,
+    audit,
   };
 }
 
@@ -165,5 +174,74 @@ describe('AdminUsersService', () => {
     await expect(
       service.overrideJourneyState(MOD, 'j1', { state: JourneyState.PAUSED, reason: 'x' }),
     ).rejects.toBeInstanceOf(AccessDeniedException);
+  });
+});
+
+describe('AdminUsersService.updateCapabilities', () => {
+  const admin = ADMIN;
+
+  it('grants and audits exactly what changed', async () => {
+    const { service, capabilitiesRepo, audit } = make();
+
+    await service.updateCapabilities(admin, 'u9', { add: [Capability.FEEDBACK_WIDGET] });
+
+    expect(capabilitiesRepo.grant).toHaveBeenCalledWith('u9', Capability.FEEDBACK_WIDGET, admin.id);
+    expect(audit.record).toHaveBeenCalledTimes(1);
+    expect(audit.record).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'admin.capability.granted', resourceId: 'u9' }),
+    );
+  });
+
+  it('does not audit a grant that changed nothing', async () => {
+    // An audit log that fills with grants that did not happen is worse than no log.
+    const { service, capabilitiesRepo, audit } = make();
+    capabilitiesRepo.grant.mockResolvedValue(false);
+
+    await service.updateCapabilities(admin, 'u9', { add: [Capability.FEEDBACK_WIDGET] });
+
+    expect(audit.record).not.toHaveBeenCalled();
+  });
+
+  it('audits a revoke', async () => {
+    const { service, audit } = make();
+
+    await service.updateCapabilities(admin, 'u9', { remove: [Capability.FEEDBACK_WIDGET] });
+
+    expect(audit.record).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'admin.capability.revoked' }),
+    );
+  });
+
+  it('does not audit a revoke that changed nothing', async () => {
+    const { service, capabilitiesRepo, audit } = make();
+    capabilitiesRepo.revoke.mockResolvedValue(false);
+
+    await service.updateCapabilities(admin, 'u9', { remove: [Capability.FEEDBACK_WIDGET] });
+
+    expect(audit.record).not.toHaveBeenCalled();
+  });
+
+  it('revokes before granting, so add+remove of the same capability ends granted', async () => {
+    const { service, capabilitiesRepo } = make();
+
+    await service.updateCapabilities(admin, 'u9', {
+      add: [Capability.FEEDBACK_WIDGET],
+      remove: [Capability.FEEDBACK_WIDGET],
+    });
+
+    expect(capabilitiesRepo.revoke.mock.invocationCallOrder[0]).toBeLessThan(
+      capabilitiesRepo.grant.mock.invocationCallOrder[0],
+    );
+  });
+
+  it('refuses a non-admin', async () => {
+    const { service, capabilitiesRepo } = make();
+
+    await expect(
+      service.updateCapabilities(VA, 'u9', {
+        add: [Capability.FEEDBACK_WIDGET],
+      }),
+    ).rejects.toThrow();
+    expect(capabilitiesRepo.grant).not.toHaveBeenCalled();
   });
 });

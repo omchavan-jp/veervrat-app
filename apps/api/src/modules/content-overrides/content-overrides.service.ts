@@ -2,8 +2,8 @@ import { Injectable, NotFoundException, ServiceUnavailableException } from '@nes
 import { ConfigService } from '@nestjs/config';
 import { AccessDeniedException, ValidationException } from '../../common/exceptions/app.exceptions';
 import { hasPermission } from '../../common/permissions';
-import { parseContentEditorIds } from '../../common/content-editor-allowlist';
 import type { SessionUser } from '../auth/types/auth.types';
+import { CapabilitiesService } from '../capabilities/capabilities.service';
 import { ContentOverridesRepository, OverridesByLocale } from './content-overrides.repository';
 import { GithubPublisher, type PublishFile } from './github-publisher';
 import {
@@ -17,15 +17,13 @@ import { placeholdersEqual } from './icu-placeholders';
 @Injectable()
 export class ContentOverridesService {
   private readonly enabled: boolean;
-  private readonly editorIds: Set<string>;
-
   constructor(
     private readonly repository: ContentOverridesRepository,
     private readonly publisher: GithubPublisher,
     private readonly config: ConfigService,
+    private readonly capabilities: CapabilitiesService,
   ) {
     this.enabled = this.config.get<boolean>('CONTENT_EDIT_ENABLED', false);
-    this.editorIds = parseContentEditorIds(this.config.get<string>('CONTENT_EDITOR_USER_IDS', ''));
   }
 
   // The staged overrides for the web to merge over its baked messages, returned only to an
@@ -33,7 +31,7 @@ export class ContentOverridesService {
   // copy from ever reaching other users — even if the feature flag is on. Disabled ⇒ 404.
   async getAllForMerge(user: SessionUser): Promise<OverridesByLocale> {
     this.ensureEnabled();
-    this.assertEditor(user);
+    await this.assertEditor(user);
     return this.repository.readAll();
   }
 
@@ -42,7 +40,7 @@ export class ContentOverridesService {
     dto: UpsertOverrideDto,
   ): Promise<{ key: string; locale: string }> {
     this.ensureEnabled();
-    this.assertEditor(user);
+    await this.assertEditor(user);
 
     // Immediate guardrail against dropping/adding interpolation args; the authoritative
     // check runs at publish against the canonical git files.
@@ -70,7 +68,7 @@ export class ContentOverridesService {
     locale: OverrideLocale,
   ): Promise<{ key: string; locale: string }> {
     this.ensureEnabled();
-    this.assertEditor(user);
+    await this.assertEditor(user);
     const map = await this.repository.readLocale(locale);
     if (key in map) {
       delete map[key];
@@ -81,7 +79,7 @@ export class ContentOverridesService {
 
   async publish(user: SessionUser): Promise<{ prUrl: string; branch: string }> {
     this.ensureEnabled();
-    this.assertEditor(user);
+    await this.assertEditor(user);
     if (!this.publisher.configured) {
       throw new ServiceUnavailableException('Content publishing is not configured');
     }
@@ -137,9 +135,10 @@ export class ContentOverridesService {
     if (!this.enabled) throw new NotFoundException('Not found');
   }
 
-  private assertEditor(user: SessionUser): void {
-    const isContentEditor = this.editorIds.has(user.id);
-    if (!hasPermission(user, { type: 'platform', isContentEditor }, 'content.edit')) {
+  private async assertEditor(user: SessionUser): Promise<void> {
+    const grants = await this.capabilities.grantsFor(user.id);
+    const featureMode = this.capabilities.featureMode('CONTENT_EDIT');
+    if (!hasPermission(user, { type: 'platform', grants, featureMode }, 'content.edit')) {
       throw new AccessDeniedException();
     }
   }

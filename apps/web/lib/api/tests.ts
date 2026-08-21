@@ -53,17 +53,24 @@ export type TestDetail = {
 };
 
 export const testsApi = {
-  getTest: (testId: string) =>
-    api.get<Wrapped<TestDetail>>(`/tests/${testId}`).then((r) => r.data),
+  getTest: (testId: string) => api.get<Wrapped<TestDetail>>(`/tests/${testId}`).then((r) => r.data),
 
   createOrResume: (weaknessId: string) =>
     api.post<Wrapped<TestDraft>>('/tests', { weaknessId }).then((r) => r.data),
 
   saveAnswers: (testId: string, answers: { sentenceId: string; score: number }[]) =>
-    api.patch<Wrapped<{ id: string; answeredCount: number }>>(`/tests/${testId}/answers`, { answers }).then((r) => r.data),
+    api
+      .patch<
+        Wrapped<{ id: string; answeredCount: number }>
+      >(`/tests/${testId}/answers`, { answers })
+      .then((r) => r.data),
 
   submit: (testId: string) =>
-    api.post<Wrapped<{ id: string; isDraft: boolean; submittedAt: string }>>(`/tests/${testId}/submit`).then((r) => r.data),
+    api
+      .post<
+        Wrapped<{ id: string; isDraft: boolean; submittedAt: string }>
+      >(`/tests/${testId}/submit`)
+      .then((r) => r.data),
 
   report: (testId: string) =>
     api.get<Wrapped<TestReport>>(`/tests/${testId}/report`).then((r) => r.data),

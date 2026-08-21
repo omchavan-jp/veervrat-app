@@ -60,10 +60,21 @@ import * as Joi from 'joi';
         // on different hosts, or the web tier cannot read the session and login silently fails
         // to persist. Unset locally, where both run on localhost. See common/http/cookie.ts.
         COOKIE_DOMAIN: Joi.string().optional(),
+        // Which deployment this is. Named explicitly rather than inferred from NODE_ENV, which
+        // is `production` on UAT too, or from the hostname, which changes. `content.edit` is
+        // refused outright when this is `prod` (O7: content editor never on prod, for anyone).
+        ENVIRONMENT: Joi.string().valid('local', 'uat', 'prod').default('local'),
+        // Whether the beta feedback widget exists in this environment, and for whom.
+        //   off     — nobody, whatever they have been granted
+        //   all     — every authenticated user (UAT: reviewers need no setup)
+        //   granted — only holders of the FEEDBACK_WIDGET capability (prod)
+        // ⚠️ Must be set on the API too, not only the web tier. It was web-only until 2026-08-21,
+        // which is why the widget was hidden rather than denied and the API accepted feedback
+        // from anyone signed in.
+        FEEDBACK_MODE: Joi.string().valid('off', 'all', 'granted').default('off'),
         // In-context content editor (dev-only tooling; hard-off in production). All default
         // off/empty so production, CI, and local dev are unaffected unless explicitly enabled.
         CONTENT_EDIT_ENABLED: Joi.boolean().default(false),
-        CONTENT_EDITOR_USER_IDS: Joi.string().default(''),
         CONTENT_EDIT_GITHUB_TOKEN: Joi.string().optional(),
         CONTENT_EDIT_GITHUB_REPO: Joi.string().optional(),
         // ⚠️ `main`, not `dev`. `dev` was the live branch on Railway and was retired as a

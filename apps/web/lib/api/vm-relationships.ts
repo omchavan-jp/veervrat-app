@@ -29,5 +29,7 @@ export const vmRelationshipsApi = {
   // (keep = leave them; unassign = also end them). Used for both "remove" and the first
   // half of "change" (then send a fresh global invite via the invitations flow).
   removeGlobalVm: (cascade: GlobalVmCascade) =>
-    api.delete<Wrapped<RemoveGlobalVmResult>>('/vm-relationships/global', { cascade }).then((r) => r.data),
+    api
+      .delete<Wrapped<RemoveGlobalVmResult>>('/vm-relationships/global', { cascade })
+      .then((r) => r.data),
 };

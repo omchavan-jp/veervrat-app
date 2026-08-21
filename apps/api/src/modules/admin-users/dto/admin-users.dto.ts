@@ -8,7 +8,7 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { JourneyState, Role } from '@prisma/client';
+import { Capability, JourneyState, Role } from '@prisma/client';
 
 export class UpdateRolesDto {
   @IsOptional()
@@ -44,4 +44,18 @@ export class OverrideJourneyStateDto {
   @MinLength(3)
   @MaxLength(500)
   reason!: string;
+}
+
+export class UpdateCapabilitiesDto {
+  @IsOptional()
+  @IsArray()
+  @IsEnum(Capability, { each: true })
+  @ArrayMaxSize(10)
+  add?: Capability[];
+
+  @IsOptional()
+  @IsArray()
+  @IsEnum(Capability, { each: true })
+  @ArrayMaxSize(10)
+  remove?: Capability[];
 }

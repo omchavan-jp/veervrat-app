@@ -1,4 +1,5 @@
 import { api } from './client';
+import type { Capability } from '../session-user';
 
 export type User = {
   id: string;
@@ -14,15 +15,20 @@ export type User = {
   accountSetupCompletedAt: string | null;
   onboardingCompletedAt: string | null;
   // Present on /auth/me only — true when the user may use the in-context content editor.
-  isContentEditor?: boolean;
+  grants?: Capability[];
 };
 
 type AuthResponse = User & { message: string };
 type Wrapped<T> = { data: T };
 
 export const authApi = {
-  register: (data: { email: string; password: string; displayName: string; username: string; language?: string }) =>
-    api.post<Wrapped<AuthResponse>>('/auth/register', data).then((r) => r.data),
+  register: (data: {
+    email: string;
+    password: string;
+    displayName: string;
+    username: string;
+    language?: string;
+  }) => api.post<Wrapped<AuthResponse>>('/auth/register', data).then((r) => r.data),
 
   login: (data: { email: string; password: string }) =>
     api.post<Wrapped<User>>('/auth/login', data).then((r) => r.data),
@@ -49,16 +55,26 @@ export const authApi = {
     api.post<Wrapped<{ message: string }>>('/auth/request-email-change', data).then((r) => r.data),
 
   confirmEmailChange: (token: string) =>
-    api.post<Wrapped<{ message: string }>>('/auth/confirm-email-change', { token }).then((r) => r.data),
+    api
+      .post<Wrapped<{ message: string }>>('/auth/confirm-email-change', { token })
+      .then((r) => r.data),
 
-  completeOnboarding: (data: { displayName?: string; username?: string; language?: string; gender?: string; dob?: string }) =>
-    api.post<Wrapped<User>>('/auth/complete-onboarding', data).then((r) => r.data),
+  completeOnboarding: (data: {
+    displayName?: string;
+    username?: string;
+    language?: string;
+    gender?: string;
+    dob?: string;
+  }) => api.post<Wrapped<User>>('/auth/complete-onboarding', data).then((r) => r.data),
 
-  completeFramework: () =>
-    api.post<Wrapped<User>>('/auth/complete-framework').then((r) => r.data),
+  completeFramework: () => api.post<Wrapped<User>>('/auth/complete-framework').then((r) => r.data),
 
   checkUsername: (username: string) =>
-    api.get<Wrapped<{ available: boolean; reason?: 'invalid' | 'taken' }>>(`/auth/check-username?username=${encodeURIComponent(username)}`).then((r) => r.data),
+    api
+      .get<
+        Wrapped<{ available: boolean; reason?: 'invalid' | 'taken' }>
+      >(`/auth/check-username?username=${encodeURIComponent(username)}`)
+      .then((r) => r.data),
 
   linkGoogle: (data: { token: string; password: string }) =>
     api.post<Wrapped<User>>('/auth/link-google', data).then((r) => r.data),

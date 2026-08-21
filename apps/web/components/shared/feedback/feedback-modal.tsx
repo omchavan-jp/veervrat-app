@@ -46,17 +46,19 @@ const STATUS_STYLES: Record<FeedbackItem['status'], string> = {
 };
 
 export function FeedbackModal({
-  mode,
   open,
   onOpenChange,
 }: {
-  mode: FeedbackMode;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
   const t = useTranslations('feedback');
-  const showList = mode === 'test';
-  const [tab, setTab] = useState<'list' | 'raise'>(showList ? 'list' : 'raise');
+  // Anyone who can see the widget can see the observations list and +1 others' items — that
+  // was the feature's point. This used to be `mode === 'test'`, distinguishing an internal
+  // review mode from a submit-only 'public' mode; 'public' was configured in no environment
+  // and its branch was never exercised, so it is gone rather than carried forward untested.
+  const showList = true;
+  const [tab, setTab] = useState<'list' | 'raise'>('list');
 
   return (
     <Dialog
@@ -189,7 +191,11 @@ function ObservationsList({ enabled }: { enabled: boolean }) {
       <ul className="flex max-h-[50dvh] flex-col gap-2 overflow-y-auto pr-1">
         {data.items.map((item) => {
           const resolutionNote =
-            item.status === 'DONE' ? item.doneNote : item.status === 'DECLINED' ? item.declineReason : null;
+            item.status === 'DONE'
+              ? item.doneNote
+              : item.status === 'DECLINED'
+                ? item.declineReason
+                : null;
           const hasDetails = Boolean(item.description) || Boolean(resolutionNote);
           const expanded = showAllDetails || expandedIds.has(item.id);
           return (
@@ -301,7 +307,11 @@ function RaiseForm({ onDone }: { onDone: () => void }) {
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['feedback', 'list'] });
-      toast.add({ title: t('form.successTitle'), description: t('form.successDescription'), type: 'success' });
+      toast.add({
+        title: t('form.successTitle'),
+        description: t('form.successDescription'),
+        type: 'success',
+      });
       reset({ type: 'ISSUE', title: '', description: '' });
       onDone();
     },

@@ -10,7 +10,18 @@
 // the image runs in?** `NEXT_PUBLIC_COMMIT_SHA` describes the image and is correctly baked.
 // Everything here describes the environment and must not be.
 
-export type FeedbackMode = 'off' | 'test' | 'public';
+/**
+ * Whether the feedback widget exists in this environment, and for whom.
+ *
+ *   off     — nobody, whatever they have been granted
+ *   all     — every authenticated user (UAT: reviewers need no setup)
+ *   granted — only holders of the FEEDBACK_WIDGET capability (prod)
+ *
+ * Replaces the old `test` / `public` pair, which described *how open* the widget was without
+ * being able to express "these specific people" — the gap that made per-user beta access cost
+ * a full deploy cycle per person.
+ */
+export type FeedbackMode = 'off' | 'all' | 'granted';
 
 export type RuntimeConfig = {
   /** Absolute base URL of the api, including the /api/v1 prefix. */
@@ -18,6 +29,12 @@ export type RuntimeConfig = {
   /** Absolute origin this app is served from; used for canonical and og: URLs. */
   siteUrl: string;
   feedbackMode: FeedbackMode;
+  /**
+   * Which deployment this is. Used to show environment-unavailable controls as unavailable
+   * rather than merely inert — e.g. content editing, which the API refuses on prod for
+   * everyone (O7), so an admin must not be able to toggle a grant that can never take effect.
+   */
+  environment: 'local' | 'uat' | 'prod';
 };
 
 /**
@@ -30,8 +47,13 @@ export type RuntimeConfig = {
  */
 export type SeededAuth = { user: import('./session-user').SessionUser | null };
 
+function parseEnvironment(raw: string | undefined): 'local' | 'uat' | 'prod' {
+  return raw === 'uat' || raw === 'prod' ? raw : 'local';
+}
+
 function parseFeedbackMode(raw: string | undefined): FeedbackMode {
-  return raw === 'test' || raw === 'public' ? raw : 'off';
+  // Unrecognised values fail closed: a typo must not open a gated feature.
+  return raw === 'all' || raw === 'granted' ? raw : 'off';
 }
 
 /**
@@ -43,6 +65,7 @@ export function readServerRuntimeConfig(): RuntimeConfig {
     apiBaseUrl: process.env.API_BASE_URL || 'http://localhost:3001/api/v1',
     siteUrl: process.env.SITE_URL || 'http://localhost:3000',
     feedbackMode: parseFeedbackMode(process.env.FEEDBACK_MODE),
+    environment: parseEnvironment(process.env.ENVIRONMENT),
   };
 }
 
