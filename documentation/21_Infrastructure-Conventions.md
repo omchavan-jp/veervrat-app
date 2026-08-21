@@ -1232,6 +1232,15 @@ the opposite of what UAT is for, and it hid two defects on the day the feature s
 rather than left as an untested branch, the same reasoning that removed the unused `public`
 mode. Reviewers are granted once from the admin dashboard.
 
+⚠️ **A build-time flag cannot gate a per-environment feature — and it hides that it isn't.**
+The content editor was gated on `NEXT_PUBLIC_CONTENT_EDIT`, which CD never passed, so the
+component was compiled out of **every deployed build**. Granting `CONTENT_EDIT` therefore did
+nothing anywhere: the capability was enforced server-side, and there was no UI to show. Setting
+the flag would not have fixed it either — `NEXT_PUBLIC_*` is baked, and one image is promoted
+UAT → prod, so enabling it for UAT enables it for prod (§17, third occurrence). Now gated at
+runtime, with `dynamic()` keeping the code in a chunk nobody on prod fetches. Guarded by
+`apps/web/src/test/no-build-time-env-gates.test.ts`, which fails on any new `NEXT_PUBLIC_*` read.
+
 ⚠️ **An environment gate that is never set is not "off by default", it is a dead feature.**
 `CONTENT_EDIT_ENABLED` was read by the code but wired into no Terraform, so `CONTENT_EDIT`
 grants saved and could never take effect — while the admin UI, which inferred availability from

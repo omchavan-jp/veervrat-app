@@ -19,8 +19,6 @@ import { disambiguateKeys } from '@/lib/content-editor/disambiguate';
 import { ContentEditPanel } from './content-edit-panel';
 import { ContentStagedList } from './content-staged-list';
 
-const ENABLED = process.env.NEXT_PUBLIC_CONTENT_EDIT === 'on';
-
 type Edge = 'top' | 'bottom';
 const STORAGE_KEY = 'veervrat.contentEditor.pos';
 const EDGE_MARGIN = 16;
@@ -28,10 +26,11 @@ const EDGE_MARGIN = 16;
 const BOTTOM_NAV_CLEARANCE = 84;
 const SNAP_SPRING = { type: 'spring', stiffness: 400, damping: 30 } as const;
 
-// Dev-only in-context content editor. Rendered (and dynamically imported) only when
-// NEXT_PUBLIC_CONTENT_EDIT is 'on', so it is excluded from the production bundle.
+// In-context content editor. The caller decides whether to render this at all — it checks the
+// runtime environment gate and the user's CONTENT_EDIT grant. Deliberately no build-time flag
+// here: one image is promoted UAT -> prod, so anything baked cannot differ between them (§17).
+// The API refuses `content.edit` on prod regardless, so this is defence in depth, not the gate.
 export function ContentEditor() {
-  if (!ENABLED) return null;
   return <ContentEditorInner />;
 }
 

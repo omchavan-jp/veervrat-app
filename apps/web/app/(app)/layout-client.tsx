@@ -4,21 +4,30 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/hooks/use-auth';
+import { useRuntimeConfig } from '@/lib/runtime-config-provider';
 import { AppShell } from '@/components/layout/app-shell';
 import { FeedbackWidget } from '@/components/shared/feedback/feedback-widget';
 import dynamic from 'next/dynamic';
 
-// Dev-only in-context content editor: dynamically imported, and only when the build flag is
-// on, so it is completely excluded from the production bundle.
-const ContentEditor =
-  process.env.NEXT_PUBLIC_CONTENT_EDIT === 'on'
-    ? dynamic(() =>
-        import('@/components/shared/content-editor/content-editor').then((m) => m.ContentEditor),
-      )
-    : () => null;
+// In-context content editor. Lazily imported, and rendered only when the ENVIRONMENT allows it
+// AND this person holds the CONTENT_EDIT grant.
+//
+// ⚠️ This used to be gated on `NEXT_PUBLIC_CONTENT_EDIT`, a BUILD-time flag — which meant it was
+// compiled out of every deployed build, because CD never passed it. Granting CONTENT_EDIT to a
+// user therefore did nothing anywhere: the capability was enforced server-side, but there was no
+// component to render. And it could not be fixed by setting the flag: `NEXT_PUBLIC_*` is baked
+// at build time and one image is promoted UAT -> prod, so turning it on for UAT turns it on for
+// prod too (conventions §17 — the same category error as O22).
+//
+// `dynamic()` keeps the original intent: the editor lives in its own chunk, fetched only when it
+// actually renders. Nobody on prod renders it, so nobody downloads it.
+const ContentEditor = dynamic(() =>
+  import('@/components/shared/content-editor/content-editor').then((m) => m.ContentEditor),
+);
 
 export function AppLayoutClient({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated } = useAuth();
+  const { contentEditEnabled } = useRuntimeConfig();
   const router = useRouter();
 
   useEffect(() => {
@@ -45,7 +54,7 @@ export function AppLayoutClient({ children }: { children: React.ReactNode }) {
     <AppShell user={user}>
       {children}
       <FeedbackWidget />
-      {user.grants?.includes('CONTENT_EDIT') && <ContentEditor />}
+      {contentEditEnabled && user.grants?.includes('CONTENT_EDIT') && <ContentEditor />}
     </AppShell>
   );
 }

@@ -40,8 +40,6 @@ ENV NEXT_PUBLIC_COMMIT_SHA=${NEXT_PUBLIC_COMMIT_SHA}
 # security posture change, not a refactor. D20 wants the editor available on UAT for Nachiket
 # and never on prod, which one promoted image cannot express this way; resolving that belongs
 # with B1's per-user capability model, not here.
-ARG NEXT_PUBLIC_CONTENT_EDIT
-ENV NEXT_PUBLIC_CONTENT_EDIT=${NEXT_PUBLIC_CONTENT_EDIT}
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 COPY . .
