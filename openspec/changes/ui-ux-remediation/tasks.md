@@ -8,7 +8,20 @@
 > **Progress (session 2 — completion):**
 > - **Tier 1–3 sweep complete**: ~250 fixes across 64 files in 8 route-groups via parallel agents (auth-slice recipe), + shared-chrome done directly. 227 i18n keys merged (1171 en/mr, full parity). Commits `24e4d9f`, `e44e676`.
 > - **Verification**: tsc clean (0 errors), 113 web tests pass (7 component tests updated for new primitive markup; several strengthened), production build succeeds, manual browser re-walk verified login flow + dashboard + journeys + mobile (no overflow, pill-nav scrolls, touch targets, role label correct, console clean). Full deferred list: `/Users/omc1/Documents/om/jp/veervrat/ui-audit/sweep-deferred.json` (~25 items, all cross-file/ambiguous with reasons).
-> - **Known not-done**: 4.1 + 4.8 partial (see lines); 5.3 Playwright E2E not yet run (needs full docker stack). A handful of deferred items need shared-type/backend changes (Mr fields on API payloads) or new shared primitives (journey-state Badge, headless Command) — tracked for follow-up.
+> - **Known not-done**: 4.1 + 4.8 partial (see lines); 5.3 Playwright E2E not yet run (needs full docker stack).
+>
+> **Correction (2026-08-21).** Three claims above did not survive checking, found when a real
+> admin action gave no feedback and the operator had to ask whether it had worked:
+> - **1.15 was never implemented** and has been un-ticked. It is not in `query-client.ts`.
+> - **3.1 is true but thin**: `QueryBoundary` is used in 1 route file, not adopted broadly.
+> - **3.2 covered errors only.** Success confirmation was never in scope, anywhere.
+>
+> The route-group sweeps *were* done — admin has i18n, `Button`, `Spinner` and `EmptyState`. The
+> gap is narrower than "unswept": inconsistent mutation feedback (`useToast` in 9/17 mutating
+> pages, 1/7 in admin) and no success acknowledgement at all.
+>
+> Recorded here rather than in a new document, because a change archived as complete is a change
+> nobody reads again. A handful of deferred items need shared-type/backend changes (Mr fields on API payloads) or new shared primitives (journey-state Badge, headless Command) — tracked for follow-up.
 
 ## 1. Tier 0 — Primitive foundation (additive, no breakage)
 
@@ -26,7 +39,12 @@
 - [x] 1.12 Extend `Input`: add `underline`/`ghost` variant so auth pages stop overriding the primitive (RC05/CONSISTENCY). Update test.
 - [x] 1.13 Rebuild `StatusBanner` on top of `Alert` with `success`/`danger` tokens + `role="alert"` (RC06). Update test.
 - [x] 1.14 `QueryBoundary` helper (loading→Spinner, error→Alert+retry, empty→EmptyState) for RC03 adoption. Unit test.
-- [x] 1.15 Add default mutation `onError` toast at the QueryClient level (RC04). Test.
+- [ ] 1.15 Add default mutation `onError` toast at the QueryClient level (RC04). Test.
+  ⚠️ **Un-ticked 2026-08-21 — this was never implemented.** `apps/web/lib/query-client.ts` has no
+  `MutationCache` and no global `onError`; the whole file is `staleTime` + `refetchOnWindowFocus`.
+  The session-1 note says it was "folded into RC04/Tier 2", but RC04 (3.2) delivered *per-call*
+  error handling, so the global default it was folded into does not exist either. Without it,
+  every new mutation is silent-on-failure by default rather than safe by default.
 
 ## 2. Tier 1 — Mechanical adoption sweeps (parallelizable per route-group)
 
@@ -41,7 +59,18 @@
 ## 3. Tier 2 — State & accessibility sweeps (judgment)
 
 - [x] 3.1 RC03: adopt `QueryBoundary` (or explicit `isError`) on every query view; separate error from empty; kill infinite-spinner guards (`isLoading || !data`) in journey detail, profile, study test/report, weakness detail, dashboard suggestions, settings.
+  ⚠️ **Qualified 2026-08-21.** True as written — the `(or explicit isError)` clause was satisfied.
+  But `QueryBoundary`, built and unit-tested in 1.14 for exactly this, is adopted in **one** route
+  file app-wide. A primitive built to make a rule cheap to follow, then not used, leaves the rule
+  depending on each author remembering it. Worth revisiting as adoption, not as a new build.
 - [x] 3.2 RC04: per-instance `isPending` disabling keyed by `variables` (fixes "all accept buttons disable"); inline Alert for destructive flows; ensure every mutation has user-visible error feedback.
+  ⚠️ **Scope note added 2026-08-21.** This covered **error** feedback only. Nothing in this change
+  addresses **success confirmation** — an action that works says nothing. Found in use: revoking a
+  capability from the admin dashboard applied correctly server-side (verified: `/auth/me` updated
+  instantly, API returned 403) while the UI gave no acknowledgement at all, so the operator could
+  not tell whether their own action had worked. Measured adoption of `useToast` among pages that
+  mutate: **9 of 17** app-wide, **1 of 7** in admin. Tracked separately — this is a design question,
+  not a sweep.
 - [x] 3.3 RC05: convert raw `<label>`/`<input>`/`<textarea>` to `Field`+`Input`/`Textarea` with association + aria wiring across auth, onboarding, settings, journey detail, custom-erc, checkin, blog comment, chat composer.
 - [x] 3.4 RC09: swap hand-rolled widgets for primitives — `Tabs` for the journey tab bar, `Dialog`/`AlertDialog` for the exit-confirm + delete-account modals, `RadioGroup` for language/gender, `Collapsible` for disclosures, `ToggleGroup` for score/status; add `aria-label` to icon-only triggers (notification bell, mobile avatar).
 
