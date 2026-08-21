@@ -615,6 +615,111 @@ set and a dashboard loads.
 
 ---
 
+## Restoring the database from backup — rehearsed, not theoretical
+
+**Rehearsed on UAT 2026-08-21** (#89). Before that date "we have backups" was a configuration
+setting, not a demonstrated recovery. Never rehearse on prod.
+
+### The number that matters
+
+**9 minutes 1 second** from command to a `Ready` server (19:03:00 → 19:12:01 UTC), B1ms / 32GB.
+Deletion afterwards took 1m19s. Plan a recovery around ~10 minutes for the restore itself, plus
+whatever re-pointing the app needs.
+
+### ⚠️ You cannot restore in place
+
+Flexible Server always restores to a **new server**. There is no "roll this one back". So a real
+recovery is:
+
+1. restore to a new server (~9 min)
+2. verify it
+3. **re-point the app at it** — the connection string lives in Key Vault (`database-url`), so this
+   is a secret update plus a revision restart, not a Terraform change
+4. decide what happens to the old server — and to Terraform state, which still references it
+
+Step 4 is the one people meet at the worst moment. `prevent_destroy` is set on the Postgres
+resource, so Terraform will not remove the old server for you.
+
+### Doing it
+
+```bash
+ENV=uat   # never prod
+RESTORE_TIME=$(python3 -c "import datetime;print((datetime.datetime.now(datetime.timezone.utc)-datetime.timedelta(minutes=12)).strftime('%Y-%m-%dT%H:%M:%SZ'))")
+
+# Check the window first — PITR only reaches back backupRetentionDays.
+az postgres flexible-server show -n veervrat-$ENV-psql -g veervrat-$ENV \
+  --query "{retentionDays:backup.backupRetentionDays,earliest:backup.earliestRestoreDate}"
+
+az postgres flexible-server restore \
+  --name veervrat-$ENV-psql-rehearsal \
+  --source-server veervrat-$ENV-psql \
+  --restore-time "$RESTORE_TIME" \
+  -g veervrat-$ENV --no-wait
+
+until [ "$(az postgres flexible-server show -n veervrat-$ENV-psql-rehearsal -g veervrat-$ENV --query state -o tsv)" = "Ready" ]; do sleep 30; done
+```
+
+### Verifying it — connecting is the fiddly part
+
+Postgres admits **Azure services only**, so a laptop cannot reach the restored server until you
+say so. Add a rule **on the restored server only**, never the live one:
+
+```bash
+MYIP=$(curl -s https://api.ipify.org)
+az postgres flexible-server firewall-rule create -g veervrat-$ENV \
+  -s veervrat-$ENV-psql-rehearsal -n rehearsal-verify \
+  --start-ip-address $MYIP --end-ip-address $MYIP
+```
+
+⚠️ The server is `-s/--server-name` here and `-n/--name` is the *rule*. Passing `-n` for the
+server fails with an "unrecognized arguments" error that is easy to skim past as success — it
+was, once. Confirm with `firewall-rule list` rather than trusting the create.
+
+⚠️ `az postgres flexible-server execute` needs the `rdbms-connect` extension, whose `psycopg2`
+fails on macOS with a missing `libpq`. Use a container instead — no local install, works anywhere:
+
+```bash
+PW=$(az keyvault secret show --vault-name veervrat-$ENV-kv --name postgres-admin-password --query value -o tsv)
+docker run --rm -e PGPASSWORD="$PW" --platform linux/amd64 postgres:18-alpine \
+  psql -h veervrat-$ENV-psql-rehearsal.postgres.database.azure.com -U veervrat_admin -d veervrat \
+  -c "select count(*) from users;"
+```
+
+### What "verified" should mean
+
+Row counts alone are weak — they look right in a stale snapshot too. Check that the restored
+database is **internally consistent with its own history**:
+
+- reference content matches the seed job's output (6 virtues, 33 subvirtues, 35 weaknesses,
+  226 sentences, 128 resolutions, 82 exposures, 31 challenges)
+- `_prisma_migrations` contains the **most recent** migration — proof that schema changes are
+  captured, not just data
+- state matches the audit log. In the rehearsal, `user_capabilities` held exactly one grant, and
+  `audit_events` explained precisely why: every other grant had a matching revoke.
+
+That last check is what distinguishes a real restore from a plausible-looking one.
+
+### Clean up — part of the exercise, not an afterthought
+
+```bash
+az postgres flexible-server delete -n veervrat-$ENV-psql-rehearsal -g veervrat-$ENV --yes
+```
+
+The rehearsal server bills while it exists (~₹35/day at B1ms). Deleting it also removes its
+firewall rule. Confirm the **live** server is still `Ready` afterwards.
+
+### Retention, as configured
+
+| | UAT | Prod |
+|---|---|---|
+| Backup retention | 7 days | **35 days** — the Flexible Server maximum, set at creation because it is immutable afterwards |
+| Geo-redundant | Disabled | Disabled |
+
+⚠️ Geo-redundancy is off in both. A regional failure in Central India is not covered by this
+procedure. That is a deliberate beta trade-off, not an oversight — but it should be a stated one.
+
+---
+
 ## Rollback
 
 Deploy the previous `prod-*` tag's image. Because prod ships a promoted image rather than
