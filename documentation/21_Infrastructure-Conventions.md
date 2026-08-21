@@ -542,13 +542,13 @@ applied. Seed is content — idempotent upserts that must stay re-runnable, chan
 product cadence rather than an engineering one. Sharing one mechanism between two different
 lifecycles means every content fix becomes an unrepeatable schema change.
 
-It reuses the migration job's machinery (build-stage image, managed identity, manual
-trigger) with a different command — `az containerapp job start` accepts `--command`,
-`--args`, `--image` and `--env-vars` per execution, so one job definition serves both.
+Seed has its **own** job definition (`seed-job.tf`), with its command and `DATABASE_URL`
+wired in Terraform — it is not the migrate job run with different flags. See §21 for why
+that distinction is load-bearing rather than stylistic.
 
-That same `--image` override is what makes the **build → migrate → deploy** order
-enforceable in CD: the migration can run on the *new* image before Terraform updates the
-apps, without needing a second `terraform apply` or a `-target` hack.
+The **build → migrate → deploy** order is enforced by `app_image_tag`, not by per-execution
+overrides: step 1's apply moves the *job* to the new image while holding the *apps* on the
+old one.
 
 ### GitHub → Azure auth uses OIDC — there is no stored secret
 
@@ -1062,3 +1062,64 @@ originally wired that way, which would have left it readable to anyone who could
 `az containerapp show` — a wider audience than the vault's RBAC. It was moved to a Key Vault
 reference on 2026-08-17, deliberately *before* real credentials were issued rather than after,
 because a secret that has been exposed has to be rotated, not just relocated.
+
+---
+
+## 21. `az containerapp job start --image` silently replaces the whole container
+
+**The trap.** `--image` reads as "run this job, but with a different image". It is not. It
+replaces the execution's entire container spec — `command`, `args` and `env` all vanish. The
+execution then runs the image's default entrypoint with no `DATABASE_URL` and no `prisma`
+command. It does nothing, prints nothing, and exits 0. Container Apps records **Succeeded**.
+
+**What it cost.** Prod's database was created on 2026-08-16 and never had a single table.
+Three migrations reported success — 08-16, 08-17, 08-21 — and CD reported "migrations
+applied" each time. Nothing anywhere logged an error. It surfaced only when a signup attempt
+returned 500 with `The table 'public.users' does not exist`, five days later.
+
+**Why nothing caught it**, four independent gaps, each survivable alone:
+
+1. Exit code 0 was treated as proof the work happened.
+2. The job produced no logs, so there was nothing to contradict the status.
+3. `/health` is deliberately cheap and stays green on a schema-less database; `/ready` pings
+   Postgres, which was genuinely reachable — it is the *schema* nothing probes.
+4. Prod had no users, so no one exercised the database.
+
+**Diagnosing it.** Compare the execution against the job definition:
+
+```bash
+az containerapp job execution show -n veervrat-<env>-migrate -g veervrat-<env> \
+  --job-execution-name <exec> --query "properties.template.containers[0]"
+az containerapp job show -n veervrat-<env>-migrate -g veervrat-<env> \
+  --query "properties.template.containers[0]"
+```
+
+An execution started with `--image` shows `name: veervrat-<env>-migrate`, `command: null`,
+`env: null`. The definition shows `name: migrate`, `command: [/bin/sh, -c]`,
+`env: [DATABASE_URL]`. That divergence *is* the bug.
+
+**The rule.** Start one-off jobs with **no overrides**. Change what a job runs through
+Terraform (`image_tag`, `migrate_command`) so the spec stays complete and reviewable. If a
+per-execution override is ever genuinely required, pass `--command`, `--args` **and**
+`--env-vars` together — supplying only some of them is what silently drops the rest.
+
+**The general lesson**, which outlives this flag: *a success status is a claim, not
+evidence.* Where a step can succeed without doing its work, verify the work — CD now
+requires Prisma's own output before accepting a migration, and fails the deploy without it.
+
+### Reading job logs
+
+Job console logs reach Log Analytics, but not where app logs do: `ContainerAppName_s` is
+**empty** and the rows are identified by `ContainerName_s` alone. Filtering the way you
+would for an app finds nothing and looks like "jobs do not log" — which is exactly the wrong
+conclusion to draw here.
+
+```bash
+WS=$(az monitor log-analytics workspace show -g veervrat-<env> -n veervrat-<env>-logs --query customerId -o tsv)
+az monitor log-analytics query -w "$WS" --analytics-query \
+  "ContainerAppConsoleLogs_CL | where TimeGenerated > ago(30m) | where ContainerName_s == 'migrate' | project TimeGenerated, Log_s | order by TimeGenerated asc" -o table
+```
+
+`az containerapp job logs show` is unreliable for finished jobs — the replica is reaped
+within seconds and the stream returns only its own connection banner. Ingestion lags the
+execution by up to ~2 minutes.

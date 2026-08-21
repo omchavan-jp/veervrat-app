@@ -302,14 +302,27 @@ recovering a failed migration, or a one-off:
 ENV=uat   # or prod
 SHA=<git sha of an image already in the registry>
 
-# Migrate on the NEW image while the apps still run the OLD one. `--image` overrides the
-# job's image for this execution only, which is what makes the ordering enforceable without
-# a second terraform apply.
-az containerapp job start -n veervrat-$ENV-migrate -g veervrat-$ENV \
-  --image "veervratacr.azurecr.io/veervrat-api-migrate:$SHA"
+# Move the JOB (not the apps) to the new image, then run it. The apps stay on the old image
+# because app_image_tag holds them there — that is what enforces migrate-before-deploy.
+#
+# ⚠️ Never pass --image to `job start`. It does not override just the image: it replaces the
+# whole container spec, dropping command, args and env. The execution then runs the image's
+# default entrypoint with no DATABASE_URL, migrates nothing, and exits 0 — reported as
+# Succeeded. Prod ran three such "successful" migrations against an empty database.
+cd infra/terraform/envs/$ENV
+terraform apply -var="image_tag=$SHA" -var="app_image_tag=$CURRENT_SHA" -var="deploy_apps=true"
+az containerapp job start -n veervrat-$ENV-migrate -g veervrat-$ENV
 
 az containerapp job execution list -n veervrat-$ENV-migrate -g veervrat-$ENV -o table
-az containerapp job logs show -n veervrat-$ENV-migrate -g veervrat-$ENV --container migrate
+# Job logs: the replica is reaped quickly, so `logs show` usually misses them. Log Analytics
+# is the reliable source — note ContainerAppName_s is EMPTY for jobs, so filter on the
+# container name, and allow ~2 min for ingestion.
+WS=$(az monitor log-analytics workspace show -g veervrat-$ENV -n veervrat-$ENV-logs --query customerId -o tsv)
+az monitor log-analytics query -w "$WS" --analytics-query \
+  "ContainerAppConsoleLogs_CL | where TimeGenerated > ago(30m) | where ContainerName_s == 'migrate' | project TimeGenerated, Log_s | order by TimeGenerated asc" -o table
+
+# Expect "N migrations found in prisma/migrations". No output at all means the container ran
+# without its command — the migration did NOT happen, whatever the status says.
 
 # Only once migrations succeed:
 cd infra/terraform/envs/$ENV
@@ -354,10 +367,9 @@ It reuses the **same one-off job machinery as migrations** — same build-stage 
 identity, same manual trigger. Only the command differs:
 
 ```bash
-az containerapp job start -n veervrat-$ENV-migrate -g veervrat-$ENV \
-  --image "veervratacr.azurecr.io/veervrat-api-migrate:$SHA" \
-  --command "/bin/sh" "-c" \
-  --args "cd /app/apps/api && ./node_modules/.bin/ts-node --transpile-only src/database/seed.ts"
+# Seed has its OWN job (seed-job.tf) with the command and DATABASE_URL already wired, so it
+# is started with no overrides — same rule as migrate.
+az containerapp job start -n veervrat-$ENV-seed -g veervrat-$ENV
 ```
 
 Per **O11**, UAT holds seeded reference data and **never real users**. Prod gets the same
