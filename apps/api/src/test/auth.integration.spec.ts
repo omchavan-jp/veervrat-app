@@ -114,12 +114,14 @@ describe('Auth — integration', () => {
         .post('/api/v1/auth/complete-onboarding')
         .set('Cookie', `veervrat_session=${token}; csrf-token=${csrfToken}`)
         .set('X-CSRF-Token', csrfToken)
+        // No `dob` — it is collected and validated at account creation now, and onboarding
+        // rejects it as an unknown property. That rejection is the point: an age gate that can
+        // be revisited during onboarding is not a gate.
         .send({
           displayName: 'Updated Name',
           username: 'updated_unique',
           language: 'MR',
           gender: 'Male',
-          dob: '1995-06-15',
         });
 
       expect(res.status).toBe(200);
@@ -130,7 +132,8 @@ describe('Auth — integration', () => {
       expect(updated?.username).toBe('updated_unique');
       expect(updated?.language).toBe('MR');
       expect(updated?.gender).toBe('Male');
-      expect(updated?.dob).not.toBeNull();
+      // Unchanged by onboarding — it was set at account creation and is not editable here.
+      expect(updated?.dob?.toISOString().slice(0, 10)).toBe('1990-01-01');
       // Account setup is step 1 of the two-flag onboarding gate (I9-F1): it sets
       // accountSetupCompletedAt only. onboardingCompletedAt is granted separately by
       // the framework walkthrough, which keeps the framework un-skippable.
