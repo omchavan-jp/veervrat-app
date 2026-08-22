@@ -49,14 +49,22 @@
 
 ## 5. Run it
 
-- [ ] 5.1 UAT first: apply, run, **read the job's output** — not its exit code.
-- [ ] 5.2 Confirm `/admin` appears for `om.chavan@jnanaprabodhini.org` on UAT.
-- [ ] 5.3 Confirm `om.chavan501@gmail.com` is unchanged and still sees no admin nav.
-- [ ] 5.4 Prod: same, in the same order.
-- [ ] 5.5 Confirm the audit row is visible in `/admin/audit`.
-- [ ] 5.6 Reset `bootstrap_admin_email` to `""` and apply, so the standing default targets nobody.
+- [x] 5.1 UAT first: apply, run, **read the job's output** — not its exit code.
+- [x] 5.2 Confirm `/admin` appears for `om.chavan@jnanaprabodhini.org` on UAT.
+- [x] 5.3 Confirm `om.chavan501@gmail.com` is unchanged and still sees no admin nav.
+- [x] 5.4 Prod: same, in the same order.
+- [x] 5.5 Confirm the audit row is visible in `/admin/audit`.
+- [x] 5.6 Reset `bootstrap_admin_email` to `""` and apply, so the standing default targets nobody.
 
 ## 6. Close out
 
-- [ ] 6.1 Comment on #75 — the admin-surface half is now reachable; break-glass remains open.
-- [ ] 6.2 #40 is unblocked; note it there.
+- [x] 6.1 Comment on #75 — the admin-surface half is now reachable; break-glass remains open.
+- [x] 6.2 #40 is unblocked; note it there.
+
+> **Completed 2026-08-22.** Ran on UAT and then production. Both produced
+> `roles: [VRATARTHI] -> [VRATARTHI, ADMIN]` with an audit row recording
+> `emailVerified: true`, and the grant was additive rather than replacing. The admin dashboard
+> was confirmed reachable for the granted account and not for the other, and the audit entry was
+> visible in the dashboard. `bootstrap_admin_email` was reset to empty in both environments
+> afterwards, so the standing job targets nobody.
+

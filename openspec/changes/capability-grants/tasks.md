@@ -71,7 +71,19 @@
 
 ## 8. Verify on UAT
 
-- [ ] 8.1 Grant `FEEDBACK_WIDGET` to a test user on UAT, confirm the widget appears.
-- [ ] 8.2 Revoke it, confirm it disappears **and the API refuses** — check both, since the whole
+- [x] 8.1 Grant `FEEDBACK_WIDGET` to a test user on UAT, confirm the widget appears.
+- [x] 8.2 Revoke it, confirm it disappears **and the API refuses** — check both, since the whole
   point is that they can disagree.
-- [ ] 8.3 Confirm the audit rows in `/admin/audit`.
+- [x] 8.3 Confirm the audit rows in `/admin/audit`.
+
+> **Completed 2026-08-22.** Verified on UAT with two real accounts. Granting made the widget
+> appear; revoking removed it *and* the API returned 403 for `feedback.create`, `feedback.read`
+> and `feedback.upvote` — both halves checked, since the defect this change fixes was precisely
+> that they could disagree. Audit rows for grant and revoke were present.
+>
+> Three defects were found during implementation and are recorded on #40: the feedback widget's
+> gating was cosmetic (the environment variable reached only the web tier while the API admitted
+> any authenticated user); `CONTENT_EDIT_ENABLED` was read by the code and set in no
+> infrastructure, leaving the capability inert; and the content editor was compiled out of every
+> deployed build by a flag fixed at build time.
+

@@ -1283,3 +1283,39 @@ Capabilities are **feature-scoped** (`FEEDBACK_WIDGET`, `CONTENT_EDIT`), not per
 person-scoped `BETA_TESTER` silently changes meaning every time a feature joins it — leaving
 audit rows that record a grant whose consequences drifted after the fact.
 
+---
+
+## 24. No provider-specific service without an escape hatch
+
+**The only reason this platform runs on its current provider is a nonprofit grant.** If the grant
+lapses, is exhausted, or is withdrawn, the platform has to move — and the organisation funding it
+is a nonprofit, so every cost will eventually be asked to justify itself against a cheaper
+alternative. Portability is therefore a standing requirement, not a contingency.
+
+**The rule:** before adopting a managed service, name what replaces it elsewhere. If there is no
+answer, do not adopt it.
+
+The current stack passes:
+
+| In use | Replaced by |
+|---|---|
+| Managed container hosting | any Docker host |
+| Container registry | any OCI registry |
+| Managed PostgreSQL | any PostgreSQL 18 with `pg_trgm` |
+| Managed Redis | any Redis |
+| Managed secret store | any secret store, or environment variables |
+| Managed object storage | ⚠️ provider API — requires an adapter boundary in the application |
+
+Services that would **fail** this test, and are therefore excluded: proprietary databases with no
+open equivalent, function-runtime bindings, provider-specific message brokers, and
+provider-hosted identity as the primary authentication mechanism. Each is genuinely difficult to
+leave, and difficulty leaving is the cost being avoided.
+
+**Where a provider API is unavoidable**, put an interface between the application and the SDK so
+the provider is one implementation rather than a rewrite. Object storage is the current example.
+
+**The application already satisfies this and it is worth keeping that way.** It holds no
+provider SDK outside object storage: PostgreSQL and Redis are reached by connection URL, and
+everything provider-specific lives in the infrastructure definitions rather than the product.
+A migration re-expresses infrastructure; it does not rewrite the application.
+

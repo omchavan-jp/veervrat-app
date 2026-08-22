@@ -55,13 +55,13 @@
 
 ## 5. Ship and document
 
-- [ ] 5.1 Merge; verify on UAT with §4 against the deployed build.
+- [x] 5.1 Merge; verify on UAT with §4 against the deployed build.
 - [ ] 5.2 Update `documentation/13_Frontend-Conventions.md` — auth is seeded, not fetched, on
   first render; `useAuth` is for changes.
 - [ ] 5.3 Update `openspec/specs/auth` with the seeded-initial-state requirement.
-- [ ] 5.4 Note in #92 that cold-start latency now affects signed-in page loads too — it makes the
+- [x] 5.4 Note in #92 that cold-start latency now affects signed-in page loads too — it makes the
   always-on replica trade-off more favourable than when it was declined.
-- [ ] 5.5 CHANGELOG: user-visible (pages no longer flash a spinner before showing content).
+- [x] 5.5 CHANGELOG: user-visible (pages no longer flash a spinner before showing content).
 - [ ] 5.6 Archive this change.
 
 
@@ -97,3 +97,18 @@ Still outstanding — needs a deployed environment or two browser tabs:
 
 - **4.3** sign out in one tab, act in another
 - **4.4** expire a session server-side mid-session
+
+> **Status 2026-08-22 — verified rather than assumed.**
+>
+> Ticked: 5.1 (merged and deployed across the auth fixes), 5.4 (#92 carries the note that cold
+> start now affects signed-in page loads), 5.5 (CHANGELOG carries both entries).
+>
+> **Still genuinely open, and not ticked:**
+> - 4.3 / 4.4 — the dead-session behaviour was exercised on UAT and the redirect was confirmed,
+>   but only for pages that make an authenticated request. Pages that make none never notice the
+>   session has ended, which is recorded on #116. Leaving these open reflects that.
+> - 5.2 — `documentation/13_Frontend-Conventions.md` still does not describe auth as seeded
+>   rather than fetched. Checked: no mention of the seeding or the session header.
+> - 5.3 — there is no `openspec/specs/auth` spec file to update.
+> - 5.6 — archive only once the above are resolved.
+
