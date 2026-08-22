@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './auth.controller';
+import { PendingSignupsCron } from './pending-signups.cron';
 import { AuthService } from './auth.service';
 import { AuthRepository } from './auth.repository';
 import { SessionGuard } from './guards/session.guard';
@@ -11,7 +12,14 @@ import { EmailModule } from '../email/email.module';
 @Module({
   imports: [PassportModule, EmailModule],
   controllers: [AuthController],
-  providers: [AuthService, AuthRepository, GoogleStrategy, SessionGuard, OptionalSessionGuard],
+  providers: [
+    PendingSignupsCron,
+    AuthService,
+    AuthRepository,
+    GoogleStrategy,
+    SessionGuard,
+    OptionalSessionGuard,
+  ],
   exports: [AuthService, SessionGuard, OptionalSessionGuard],
 })
 export class AuthModule {}

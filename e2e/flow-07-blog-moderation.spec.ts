@@ -7,7 +7,10 @@ import { deleteUserByEmail } from './helpers/db';
 // Authoring + commenting + hide are driven through the real API (with role/permission
 // enforcement), and the published blog is asserted in the public UI. Moderator delete is the
 // final state assertion.
-const tiptap = (text: string) => ({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text }] }] });
+const tiptap = (text: string) => ({
+  type: 'doc',
+  content: [{ type: 'paragraph', content: [{ type: 'text', text }] }],
+});
 
 test.describe('Flow 7: blog create → comment → hide → moderator delete', () => {
   const author = makeUser('f7author');
@@ -34,7 +37,10 @@ test.describe('Flow 7: blog create → comment → hide → moderator delete', (
     expect(create.ok(), `create blog: ${create.status()}`).toBeTruthy();
     blogId = (await create.json()).data.id;
     // Publish (isDraft=false).
-    const pub = await ctx.patch(`/api/v1/blogs/${blogId}`, { headers: apiHeaders(csrf), data: { isDraft: false } });
+    const pub = await ctx.patch(`/api/v1/blogs/${blogId}`, {
+      headers: apiHeaders(csrf),
+      data: { isDraft: false },
+    });
     expect(pub.ok(), `publish: ${pub.status()}`).toBeTruthy();
     await ctx.dispose();
 
@@ -56,13 +62,17 @@ test.describe('Flow 7: blog create → comment → hide → moderator delete', (
 
     // Author hides the comment (blog-author may hide).
     const a = await loginApi(author);
-    const hide = await a.ctx.post(`/api/v1/blogs/${blogId}/comments/${commentId}/hide`, { headers: apiHeaders(a.csrf) });
+    const hide = await a.ctx.post(`/api/v1/blogs/${blogId}/comments/${commentId}/hide`, {
+      headers: apiHeaders(a.csrf),
+    });
     expect(hide.ok(), `hide: ${hide.status()}`).toBeTruthy();
     await a.ctx.dispose();
 
     // Moderator deletes the comment (moderator may delete any comment).
     const m = await loginApi(MODERATOR);
-    const del = await m.ctx.delete(`/api/v1/blogs/${blogId}/comments/${commentId}`, { headers: apiHeaders(m.csrf) });
+    const del = await m.ctx.delete(`/api/v1/blogs/${blogId}/comments/${commentId}`, {
+      headers: apiHeaders(m.csrf),
+    });
     expect(del.ok(), `moderator delete: ${del.status()}`).toBeTruthy();
     await m.ctx.dispose();
 

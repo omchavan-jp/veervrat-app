@@ -14,10 +14,7 @@ export function Avatar({ className, ...props }: React.HTMLAttributes<HTMLDivElem
 
 export function AvatarImage(props: React.ImgHTMLAttributes<HTMLImageElement>) {
   return (
-    <img
-      className={cn('aspect-square h-full w-full object-cover', props.className)}
-      {...props}
-    />
+    <img className={cn('aspect-square h-full w-full object-cover', props.className)} {...props} />
   );
 }
 

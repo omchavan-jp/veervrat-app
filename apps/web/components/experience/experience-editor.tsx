@@ -39,12 +39,18 @@ export function ExperienceEditor({
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
-  const [visibility, setVisibility] = useState<ExperienceVisibility>(existing?.visibility ?? 'ONLY_ME');
+  const [visibility, setVisibility] = useState<ExperienceVisibility>(
+    existing?.visibility ?? 'ONLY_ME',
+  );
   // Reactive emptiness flag so the submit guard re-evaluates as the user types
   // (editor.isEmpty alone does not trigger re-renders).
   const [isEmpty, setIsEmpty] = useState(true);
   const [tags, setTags] = useState<SelectedTag[]>(
-    (existing?.tags ?? []).map((tg) => ({ entityType: tg.entityType, entityId: tg.entityId, label: tg.entityId })),
+    (existing?.tags ?? []).map((tg) => ({
+      entityType: tg.entityType,
+      entityId: tg.entityId,
+      label: tg.entityId,
+    })),
   );
 
   const editor = useEditor({
@@ -62,7 +68,10 @@ export function ExperienceEditor({
   });
 
   const apiTags = () =>
-    tags.map((tg) => ({ entityType: tg.entityType as ExperienceTagEntityType, entityId: tg.entityId }));
+    tags.map((tg) => ({
+      entityType: tg.entityType as ExperienceTagEntityType,
+      entityId: tg.entityId,
+    }));
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: queryKeys.experiences.mine });
@@ -87,7 +96,12 @@ export function ExperienceEditor({
     mutationFn: async () => {
       const body = editor?.getJSON() as TiptapDoc;
       if (existing) {
-        return experienceLogsApi.update(existing.id, { body, visibility, isDraft: false, tags: apiTags() });
+        return experienceLogsApi.update(existing.id, {
+          body,
+          visibility,
+          isDraft: false,
+          tags: apiTags(),
+        });
       }
       const created = await experienceLogsApi.create({ body, journeyId, tags: apiTags() });
       return experienceLogsApi.update(created.id, { visibility, isDraft: false });
@@ -138,9 +152,26 @@ export function ExperienceEditor({
 
       {/* Toolbar */}
       <div className="mt-3 flex items-center gap-2">
-        <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/heic,image/heif,.heic,.heif" hidden onChange={onPickImage} />
-        <Button variant="outline" size="sm" type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} aria-busy={uploading}>
-          {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/gif,image/webp,image/heic,image/heif,.heic,.heif"
+          hidden
+          onChange={onPickImage}
+        />
+        <Button
+          variant="outline"
+          size="sm"
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          aria-busy={uploading}
+        >
+          {uploading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <ImageIcon className="h-4 w-4" />
+          )}
           <span className="ml-1.5">{uploading ? t('uploading') : t('addImage')}</span>
         </Button>
       </div>
@@ -154,7 +185,9 @@ export function ExperienceEditor({
       {/* Visibility + actions */}
       <div className="mt-7 flex flex-col gap-4 border-t border-border pt-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <div className="mb-2 text-[13px] font-medium" id="visibility-label">{t('visibility')}</div>
+          <div className="mb-2 text-[13px] font-medium" id="visibility-label">
+            {t('visibility')}
+          </div>
           <ToggleGroup
             value={[visibility]}
             onValueChange={(value) => {
@@ -166,14 +199,24 @@ export function ExperienceEditor({
             className="gap-2"
           >
             {VISIBILITIES.map((v) => (
-              <ToggleGroupItem key={v} value={v} size="sm" className="rounded-full px-3.5 py-1.5 text-[13px]">
+              <ToggleGroupItem
+                key={v}
+                value={v}
+                size="sm"
+                className="rounded-full px-3.5 py-1.5 text-[13px]"
+              >
                 {t(`visibilityOption.${v}`)}
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" type="button" onClick={() => saveDraft.mutate()} disabled={busy || !canSave}>
+          <Button
+            variant="outline"
+            type="button"
+            onClick={() => saveDraft.mutate()}
+            disabled={busy || !canSave}
+          >
             {saveDraft.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : t('saveDraft')}
           </Button>
           <Button type="button" onClick={() => publish.mutate()} disabled={busy || !canSave}>

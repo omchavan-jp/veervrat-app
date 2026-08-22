@@ -94,6 +94,37 @@ describe('UsersService — getPublicProfile', () => {
     expect(result.testsTaken).toBe(5);
   });
 
+  it('never returns a date of birth', async () => {
+    // A date of birth is an identity-verification token used by banks and government services.
+    // Returning it from a public endpoint hands out a credential, so this asserts absence rather
+    // than assuming the field simply was not added.
+    const repo = makeRepo();
+    const service = makeService(repo);
+
+    const result = await service.getPublicProfile('testuser');
+
+    expect(result).not.toHaveProperty('dob');
+    expect(JSON.stringify(result)).not.toContain('dob');
+  });
+
+  it('includes gender when the person provided one', async () => {
+    const repo = makeRepo({
+      findByUsername: vi.fn().mockResolvedValue(makeUser({ gender: 'Female' })),
+    });
+    const service = makeService(repo);
+
+    expect((await service.getPublicProfile('testuser')).gender).toBe('Female');
+  });
+
+  it('returns null gender when blank — leaving it blank is the opt-out', async () => {
+    const repo = makeRepo({
+      findByUsername: vi.fn().mockResolvedValue(makeUser({ gender: null })),
+    });
+    const service = makeService(repo);
+
+    expect((await service.getPublicProfile('testuser')).gender).toBeNull();
+  });
+
   it('throws EntityNotFoundException for private profile', async () => {
     const repo = makeRepo({
       findByUsername: vi.fn().mockResolvedValue(makeUser({ profilePrivate: true })),

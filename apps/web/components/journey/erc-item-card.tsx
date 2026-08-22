@@ -5,8 +5,15 @@ import { useTranslations } from 'next-intl';
 import { Repeat, Check } from 'lucide-react';
 import type { JourneyErcItem, ErcType } from '@/lib/api/journeys';
 import {
-  useUpdateErcStatus, useDeactivateErc, useReactivateErc, useRemoveErc, useAcknowledgeSidenote,
-  useApproveErc, useRevisitErc, useSuggestSidenote, useSubmitCustomForReview,
+  useUpdateErcStatus,
+  useDeactivateErc,
+  useReactivateErc,
+  useRemoveErc,
+  useAcknowledgeSidenote,
+  useApproveErc,
+  useRevisitErc,
+  useSuggestSidenote,
+  useSubmitCustomForReview,
 } from '@/hooks/use-journeys';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -80,30 +87,50 @@ export function ErcItemCard({ item, ercType, journeyId, hasVm, viewerIsVm = fals
     });
 
   const isPending =
-    updateStatus.isPending || deactivate.isPending || reactivate.isPending ||
-    remove.isPending || submitForReview.isPending;
+    updateStatus.isPending ||
+    deactivate.isPending ||
+    reactivate.isPending ||
+    remove.isPending ||
+    submitForReview.isPending;
   // VM actions share a single guard so concurrent clicks on sibling controls are blocked.
   const vmPending =
-    approve.isPending || revisit.isPending || suggestSidenote.isPending || acknowledgeSidenote.isPending;
+    approve.isPending ||
+    revisit.isPending ||
+    suggestSidenote.isPending ||
+    acknowledgeSidenote.isPending;
 
   return (
-    <div className={`rounded-xl border p-4 transition-opacity ${item.isDeactivated ? 'border-dashed border-border opacity-50' : 'border-border bg-surface'}`}>
+    <div
+      className={`rounded-xl border p-4 transition-opacity ${item.isDeactivated ? 'border-dashed border-border opacity-50' : 'border-border bg-surface'}`}
+    >
       <div className="mb-2 flex items-start justify-between gap-3">
         <div className="flex-1">
           <div className="mb-1 flex items-center gap-2">
             {item.tier && (
-              <span className={`rounded-full border px-2 py-0.5 text-[11px] ${TIER_BADGE[item.tier] ?? ''}`}>
+              <span
+                className={`rounded-full border px-2 py-0.5 text-[11px] ${TIER_BADGE[item.tier] ?? ''}`}
+              >
                 {TIER_LABEL_KEY[item.tier] ? t(TIER_LABEL_KEY[item.tier]) : item.tier}
               </span>
             )}
-            <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${STATUS_BADGE[item.status] ?? ''}`}>
+            <span
+              className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${STATUS_BADGE[item.status] ?? ''}`}
+            >
               {STATUS_LABEL_KEY[item.status] ? t(STATUS_LABEL_KEY[item.status]) : item.status}
             </span>
             {item.isDeactivated && (
-              <span className="rounded-full bg-muted/10 px-2 py-0.5 text-[11px] text-muted">{t('deactivated')}</span>
+              <span className="rounded-full bg-muted/10 px-2 py-0.5 text-[11px] text-muted">
+                {t('deactivated')}
+              </span>
             )}
           </div>
-          <BilingualText en={item.titleEn} mr={item.titleMr} size="sm" as="p" className="font-medium" />
+          <BilingualText
+            en={item.titleEn}
+            mr={item.titleMr}
+            size="sm"
+            as="p"
+            className="font-medium"
+          />
           {(item.descriptionMr || item.descriptionEn) && (
             <BilingualText
               en={item.descriptionEn ?? ''}
@@ -120,98 +147,112 @@ export function ErcItemCard({ item, ercType, journeyId, hasVm, viewerIsVm = fals
               {item.frequencyLabel}
             </p>
           )}
-          {item.durationWeeks && <p className="mt-0.5 text-[12px] text-muted">{t('weeks', { count: item.durationWeeks })}</p>}
-          {item.durationDays && <p className="mt-0.5 text-[12px] text-muted">{t('days', { count: item.durationDays })}</p>}
+          {item.durationWeeks && (
+            <p className="mt-0.5 text-[12px] text-muted">
+              {t('weeks', { count: item.durationWeeks })}
+            </p>
+          )}
+          {item.durationDays && (
+            <p className="mt-0.5 text-[12px] text-muted">
+              {t('days', { count: item.durationDays })}
+            </p>
+          )}
         </div>
       </div>
 
       {!viewerIsVm && (
-      <div className="flex flex-wrap gap-2">
-        {!item.isDeactivated && (
-          <>
-            {item.status === 'NOT_STARTED' && (
+        <div className="flex flex-wrap gap-2">
+          {!item.isDeactivated && (
+            <>
+              {item.status === 'NOT_STARTED' && (
+                <Button
+                  size="sm"
+                  onClick={() =>
+                    updateStatus.mutate({ itemId: item.id, status: 'in_progress' }, { onError })
+                  }
+                  disabled={isPending}
+                  className="bg-accent-2/10 px-3 py-1.5 text-[12px] font-medium text-accent-2 hover:bg-accent-2/20"
+                >
+                  {t('start')}
+                </Button>
+              )}
+              {item.status === 'IN_PROGRESS' && (
+                <Button
+                  size="sm"
+                  onClick={() =>
+                    updateStatus.mutate({ itemId: item.id, status: 'submitted' }, { onError })
+                  }
+                  disabled={isPending}
+                  className="bg-warning/10 px-3 py-1.5 text-[12px] font-medium text-warning hover:bg-warning/20"
+                >
+                  {t('submitForClosure')}
+                </Button>
+              )}
+              {item.status === 'SUBMITTED' && !hasVm && (
+                <Button
+                  size="sm"
+                  onClick={() =>
+                    updateStatus.mutate({ itemId: item.id, status: 'approved' }, { onError })
+                  }
+                  disabled={isPending}
+                  className="bg-success/10 px-3 py-1.5 text-[12px] font-medium text-success hover:bg-success/20"
+                >
+                  {t('markAsDone')}
+                </Button>
+              )}
+              {item.status === 'SUBMITTED' && hasVm && (
+                <span className="text-[12px] text-muted">{t('awaitingVm')}</span>
+              )}
+              {/* Custom items can be submitted for global review (once, before any review) */}
+              {item.isCustom && item.reviewStatus === null && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => submitForReview.mutate({ itemId: item.id }, { onError })}
+                  disabled={isPending}
+                  className="border-accent-2/40 px-3 py-1.5 text-[12px] font-medium text-accent-2 hover:bg-accent-2/10"
+                >
+                  {t('submitForReview')}
+                </Button>
+              )}
+              {item.isCustom && item.reviewStatus === 'pending' && (
+                <span className="text-[12px] italic text-muted">{t('reviewPending')}</span>
+              )}
+              {item.status !== 'APPROVED' && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => deactivate.mutate({ itemId: item.id }, { onError })}
+                  disabled={isPending}
+                  className="border-border-strong px-3 py-1.5 text-[12px] text-muted hover:bg-bg"
+                >
+                  {t('deactivate')}
+                </Button>
+              )}
+            </>
+          )}
+          {item.isDeactivated && (
+            <>
               <Button
                 size="sm"
-                onClick={() => updateStatus.mutate({ itemId: item.id, status: 'in_progress' }, { onError })}
+                onClick={() => reactivate.mutate({ itemId: item.id }, { onError })}
                 disabled={isPending}
-                className="bg-accent-2/10 px-3 py-1.5 text-[12px] font-medium text-accent-2 hover:bg-accent-2/20"
+                className="bg-accent-2/10 px-3 py-1.5 text-[12px] text-accent-2 hover:bg-accent-2/20"
               >
-                {t('start')}
+                {t('reactivate')}
               </Button>
-            )}
-            {item.status === 'IN_PROGRESS' && (
               <Button
                 size="sm"
-                onClick={() => updateStatus.mutate({ itemId: item.id, status: 'submitted' }, { onError })}
+                variant="ghost"
+                onClick={() => remove.mutate({ itemId: item.id }, { onError })}
                 disabled={isPending}
-                className="bg-warning/10 px-3 py-1.5 text-[12px] font-medium text-warning hover:bg-warning/20"
+                className="px-3 py-1.5 text-[12px] text-accent hover:underline"
               >
-                {t('submitForClosure')}
+                {t('remove')}
               </Button>
-            )}
-            {item.status === 'SUBMITTED' && !hasVm && (
-              <Button
-                size="sm"
-                onClick={() => updateStatus.mutate({ itemId: item.id, status: 'approved' }, { onError })}
-                disabled={isPending}
-                className="bg-success/10 px-3 py-1.5 text-[12px] font-medium text-success hover:bg-success/20"
-              >
-                {t('markAsDone')}
-              </Button>
-            )}
-            {item.status === 'SUBMITTED' && hasVm && (
-              <span className="text-[12px] text-muted">{t('awaitingVm')}</span>
-            )}
-            {/* Custom items can be submitted for global review (once, before any review) */}
-            {item.isCustom && item.reviewStatus === null && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => submitForReview.mutate({ itemId: item.id }, { onError })}
-                disabled={isPending}
-                className="border-accent-2/40 px-3 py-1.5 text-[12px] font-medium text-accent-2 hover:bg-accent-2/10"
-              >
-                {t('submitForReview')}
-              </Button>
-            )}
-            {item.isCustom && item.reviewStatus === 'pending' && (
-              <span className="text-[12px] italic text-muted">{t('reviewPending')}</span>
-            )}
-            {item.status !== 'APPROVED' && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => deactivate.mutate({ itemId: item.id }, { onError })}
-                disabled={isPending}
-                className="border-border-strong px-3 py-1.5 text-[12px] text-muted hover:bg-bg"
-              >
-                {t('deactivate')}
-              </Button>
-            )}
-          </>
-        )}
-        {item.isDeactivated && (
-          <>
-            <Button
-              size="sm"
-              onClick={() => reactivate.mutate({ itemId: item.id }, { onError })}
-              disabled={isPending}
-              className="bg-accent-2/10 px-3 py-1.5 text-[12px] text-accent-2 hover:bg-accent-2/20"
-            >
-              {t('reactivate')}
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => remove.mutate({ itemId: item.id }, { onError })}
-              disabled={isPending}
-              className="px-3 py-1.5 text-[12px] text-accent hover:underline"
-            >
-              {t('remove')}
-            </Button>
-          </>
-        )}
-      </div>
+            </>
+          )}
+        </div>
       )}
 
       {/* VM actions — approve/revisit a submitted item, or attach a sidenote (spec/15-16) */}
@@ -256,7 +297,9 @@ export function ErcItemCard({ item, ercType, journeyId, hasVm, viewerIsVm = fals
 
       {viewerIsVm && composing && (
         <div className="mt-3 rounded-xl border border-border bg-bg p-3">
-          <Label htmlFor={sidenoteId} className="sr-only">{t('vmAddSidenote')}</Label>
+          <Label htmlFor={sidenoteId} className="sr-only">
+            {t('vmAddSidenote')}
+          </Label>
           <Textarea
             id={sidenoteId}
             value={sidenoteText}
@@ -272,7 +315,13 @@ export function ErcItemCard({ item, ercType, journeyId, hasVm, viewerIsVm = fals
               onClick={() =>
                 suggestSidenote.mutate(
                   { itemId: item.id, text: sidenoteText.trim() },
-                  { onSuccess: () => { setComposing(false); setSidenoteText(''); }, onError },
+                  {
+                    onSuccess: () => {
+                      setComposing(false);
+                      setSidenoteText('');
+                    },
+                    onError,
+                  },
                 )
               }
               disabled={!sidenoteText.trim() || vmPending}
@@ -283,7 +332,10 @@ export function ErcItemCard({ item, ercType, journeyId, hasVm, viewerIsVm = fals
             <Button
               size="sm"
               variant="outline"
-              onClick={() => { setComposing(false); setSidenoteText(''); }}
+              onClick={() => {
+                setComposing(false);
+                setSidenoteText('');
+              }}
               className="border-border-strong px-3 py-1.5 text-[12px] text-muted hover:border-accent"
             >
               {t('vmSidenoteCancel')}

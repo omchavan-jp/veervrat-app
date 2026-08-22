@@ -3,9 +3,24 @@ import { userIdByEmail, grantRole, scalar, lit, deleteUserByEmail } from './db';
 
 // Shared, stable accounts the suite reuses across runs (idempotent — created once, reused
 // thereafter). Ephemeral per-test users are created inside each flow with unique emails.
-export const ADMIN: TestUser = { email: 'e2e_admin@e2e.local', password: 'E2ePass!2345', displayName: 'E2E Admin', username: 'e2e_admin' };
-export const MODERATOR: TestUser = { email: 'e2e_mod@e2e.local', password: 'E2ePass!2345', displayName: 'E2E Moderator', username: 'e2e_mod' };
-export const VM: TestUser = { email: 'e2e_vm@e2e.local', password: 'E2ePass!2345', displayName: 'E2E Vratmitra', username: 'e2e_vm' };
+export const ADMIN: TestUser = {
+  email: 'e2e_admin@e2e.local',
+  password: 'E2ePass!2345',
+  displayName: 'E2E Admin',
+  username: 'e2e_admin',
+};
+export const MODERATOR: TestUser = {
+  email: 'e2e_mod@e2e.local',
+  password: 'E2ePass!2345',
+  displayName: 'E2E Moderator',
+  username: 'e2e_mod',
+};
+export const VM: TestUser = {
+  email: 'e2e_vm@e2e.local',
+  password: 'E2ePass!2345',
+  displayName: 'E2E Vratmitra',
+  username: 'e2e_vm',
+};
 
 async function ensure(user: TestUser, roles: string[]): Promise<void> {
   // Idempotent, but self-healing: a fully-onboarded account is reused; a missing OR
@@ -13,7 +28,9 @@ async function ensure(user: TestUser, roles: string[]): Promise<void> {
   // is recreated cleanly so the suite always has a usable account.
   const onboarded =
     userIdByEmail(user.email) &&
-    scalar(`SELECT onboarding_completed_at IS NOT NULL FROM users WHERE email = ${lit(user.email)}`) === 't';
+    scalar(
+      `SELECT onboarding_completed_at IS NOT NULL FROM users WHERE email = ${lit(user.email)}`,
+    ) === 't';
   if (!onboarded) {
     if (userIdByEmail(user.email)) deleteUserByEmail(user.email);
     await registerAndOnboard(user);

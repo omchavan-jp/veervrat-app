@@ -117,7 +117,10 @@ export default function LinkAccountPage() {
 
       <p className="mt-6 text-center text-sm text-muted">
         {t('changedMind')}{' '}
-        <Link href="/login" className="text-accent underline decoration-accent/40 hover:no-underline">
+        <Link
+          href="/login"
+          className="text-accent underline decoration-accent/40 hover:no-underline"
+        >
           {t('backToLogin')}
         </Link>
       </p>

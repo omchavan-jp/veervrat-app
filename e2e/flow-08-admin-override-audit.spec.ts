@@ -13,7 +13,9 @@ test.describe('Flow 8: admin override journey state → audit log', () => {
 
   test.beforeAll(() => {
     // Pick any existing journey (the seeded VA has several).
-    journeyId = scalar(`SELECT id FROM journeys WHERE deleted_at IS NULL ORDER BY created_at LIMIT 1`)!;
+    journeyId = scalar(
+      `SELECT id FROM journeys WHERE deleted_at IS NULL ORDER BY created_at LIMIT 1`,
+    )!;
     priorState = journeyState(journeyId)!;
   });
 
@@ -50,6 +52,8 @@ test.describe('Flow 8: admin override journey state → audit log', () => {
     await loginUI(page, ADMIN);
     await page.goto('/admin/audit');
     // The override action appears in the audit list.
-    await expect(page.getByText(/override_journey_state|override journey/i).first()).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText(/override_journey_state|override journey/i).first()).toBeVisible({
+      timeout: 15_000,
+    });
   });
 });

@@ -104,7 +104,8 @@ export function useSelectErc(journeyId: string, type: ErcType) {
 
 export function useUpdateErcStatus(journeyId: string, type: ErcType) {
   return useErcMutation(
-    ({ itemId, status }: { itemId: string; status: string }) => ercApi.updateStatus(journeyId, type, itemId, status),
+    ({ itemId, status }: { itemId: string; status: string }) =>
+      ercApi.updateStatus(journeyId, type, itemId, status),
     journeyId,
     type,
   );

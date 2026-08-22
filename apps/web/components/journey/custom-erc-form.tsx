@@ -45,8 +45,13 @@ export function CustomErcForm({
   const [durationDays, setDurationDays] = useState('');
 
   const reset = () => {
-    setTitle(''); setDescription(''); setTier('LOCAL');
-    setDurationWeeks(''); setFrequencyPerWeek(''); setFrequencyLabel(''); setDurationDays('');
+    setTitle('');
+    setDescription('');
+    setTier('LOCAL');
+    setDurationWeeks('');
+    setFrequencyPerWeek('');
+    setFrequencyLabel('');
+    setDurationDays('');
   };
 
   const submit = () => {
@@ -66,12 +71,19 @@ export function CustomErcForm({
     }
 
     create.mutate(data, {
-      onSuccess: () => { reset(); onOpenChange(false); },
+      onSuccess: () => {
+        reset();
+        onOpenChange(false);
+      },
     });
   };
 
   const titleKey =
-    ercType === 'exposure' ? 'addCustomExposure' : ercType === 'resolution' ? 'addCustomResolution' : 'addCustomChallenge';
+    ercType === 'exposure'
+      ? 'addCustomExposure'
+      : ercType === 'resolution'
+        ? 'addCustomResolution'
+        : 'addCustomChallenge';
 
   const labelCls = 'mb-1.5 block font-mono text-[11px] uppercase tracking-[0.06em] text-muted';
 
@@ -82,8 +94,14 @@ export function CustomErcForm({
       title={t(titleKey)}
       footer={
         <>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>{t('customCancel')}</Button>
-          <Button onClick={submit} disabled={!title.trim() || create.isPending} loading={create.isPending}>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            {t('customCancel')}
+          </Button>
+          <Button
+            onClick={submit}
+            disabled={!title.trim() || create.isPending}
+            loading={create.isPending}
+          >
             {t('customCreate')}
           </Button>
         </>
@@ -92,16 +110,37 @@ export function CustomErcForm({
       <div className="space-y-4">
         {create.isError && (
           <Alert variant="destructive" className="border-destructive/40 bg-destructive/10">
-            <AlertDescription className="text-destructive">{t('customCreateError')}</AlertDescription>
+            <AlertDescription className="text-destructive">
+              {t('customCreateError')}
+            </AlertDescription>
           </Alert>
         )}
         <div>
-          <Label htmlFor={`${ids}-title`} className={labelCls}>{t('customTitle')}</Label>
-          <Input id={`${ids}-title`} value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t('customTitlePlaceholder')} maxLength={200} autoFocus />
+          <Label htmlFor={`${ids}-title`} className={labelCls}>
+            {t('customTitle')}
+          </Label>
+          <Input
+            id={`${ids}-title`}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder={t('customTitlePlaceholder')}
+            maxLength={200}
+            autoFocus
+          />
         </div>
         <div>
-          <Label htmlFor={`${ids}-description`} className={labelCls}>{t('customDescription')}</Label>
-          <Textarea id={`${ids}-description`} className="resize-none" rows={2} value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t('customDescriptionPlaceholder')} maxLength={500} />
+          <Label htmlFor={`${ids}-description`} className={labelCls}>
+            {t('customDescription')}
+          </Label>
+          <Textarea
+            id={`${ids}-description`}
+            className="resize-none"
+            rows={2}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder={t('customDescriptionPlaceholder')}
+            maxLength={500}
+          />
         </div>
 
         {ercType === 'exposure' && (
@@ -118,7 +157,13 @@ export function CustomErcForm({
                   onClick={() => setTier(tr)}
                   className={`flex-1 px-3 py-2 text-[13px] ${tier === tr ? 'border-accent bg-accent/10 text-accent' : 'border-border-strong text-muted hover:border-accent'}`}
                 >
-                  {t(tr === 'LOCAL' ? 'tierLocal' : tr === 'NATIONAL' ? 'tierNational' : 'tierInternational')}
+                  {t(
+                    tr === 'LOCAL'
+                      ? 'tierLocal'
+                      : tr === 'NATIONAL'
+                        ? 'tierNational'
+                        : 'tierInternational',
+                  )}
                 </Button>
               ))}
             </div>
@@ -128,24 +173,56 @@ export function CustomErcForm({
         {ercType === 'resolution' && (
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor={`${ids}-weeks`} className={labelCls}>{t('customDurationWeeks')}</Label>
-              <Input id={`${ids}-weeks`} type="number" min={1} value={durationWeeks} onChange={(e) => setDurationWeeks(e.target.value)} />
+              <Label htmlFor={`${ids}-weeks`} className={labelCls}>
+                {t('customDurationWeeks')}
+              </Label>
+              <Input
+                id={`${ids}-weeks`}
+                type="number"
+                min={1}
+                value={durationWeeks}
+                onChange={(e) => setDurationWeeks(e.target.value)}
+              />
             </div>
             <div>
-              <Label htmlFor={`${ids}-perweek`} className={labelCls}>{t('customFrequencyPerWeek')}</Label>
-              <Input id={`${ids}-perweek`} type="number" min={1} value={frequencyPerWeek} onChange={(e) => setFrequencyPerWeek(e.target.value)} />
+              <Label htmlFor={`${ids}-perweek`} className={labelCls}>
+                {t('customFrequencyPerWeek')}
+              </Label>
+              <Input
+                id={`${ids}-perweek`}
+                type="number"
+                min={1}
+                value={frequencyPerWeek}
+                onChange={(e) => setFrequencyPerWeek(e.target.value)}
+              />
             </div>
             <div className="col-span-2">
-              <Label htmlFor={`${ids}-freqlabel`} className={labelCls}>{t('customFrequencyLabel')}</Label>
-              <Input id={`${ids}-freqlabel`} value={frequencyLabel} onChange={(e) => setFrequencyLabel(e.target.value)} placeholder={t('customFrequencyLabelPlaceholder')} maxLength={80} />
+              <Label htmlFor={`${ids}-freqlabel`} className={labelCls}>
+                {t('customFrequencyLabel')}
+              </Label>
+              <Input
+                id={`${ids}-freqlabel`}
+                value={frequencyLabel}
+                onChange={(e) => setFrequencyLabel(e.target.value)}
+                placeholder={t('customFrequencyLabelPlaceholder')}
+                maxLength={80}
+              />
             </div>
           </div>
         )}
 
         {ercType === 'challenge' && (
           <div>
-            <Label htmlFor={`${ids}-days`} className={labelCls}>{t('customDurationDays')}</Label>
-            <Input id={`${ids}-days`} type="number" min={1} value={durationDays} onChange={(e) => setDurationDays(e.target.value)} />
+            <Label htmlFor={`${ids}-days`} className={labelCls}>
+              {t('customDurationDays')}
+            </Label>
+            <Input
+              id={`${ids}-days`}
+              type="number"
+              min={1}
+              value={durationDays}
+              onChange={(e) => setDurationDays(e.target.value)}
+            />
           </div>
         )}
       </div>

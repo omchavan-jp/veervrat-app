@@ -11,7 +11,10 @@ async function login(page: import('@playwright/test').Page) {
   await page.goto('/login');
   await page.getByRole('textbox').first().fill(VA.email);
   await page.locator('input[type="password"]').fill(VA.password);
-  await page.getByRole('button', { name: /log ?in|sign ?in/i }).first().click();
+  await page
+    .getByRole('button', { name: /log ?in|sign ?in/i })
+    .first()
+    .click();
   await page.waitForURL(/\/dashboard/, { timeout: 15_000 });
 }
 

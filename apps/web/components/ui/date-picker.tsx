@@ -15,7 +15,13 @@ type DatePickerProps = {
   max?: string; // YYYY-MM-DD
 };
 
-export function DatePicker({ value, onChange, placeholder = 'Pick a date', className, max }: DatePickerProps) {
+export function DatePicker({
+  value,
+  onChange,
+  placeholder = 'Pick a date',
+  className,
+  max,
+}: DatePickerProps) {
   const [open, setOpen] = React.useState(false);
 
   const selected = value ? parse(value, 'yyyy-MM-dd', new Date()) : undefined;
@@ -38,10 +44,7 @@ export function DatePicker({ value, onChange, placeholder = 'Pick a date', class
         </span>
         <CalendarIcon className="h-4 w-4 shrink-0 text-muted" />
       </PopoverTrigger>
-      <PopoverContent
-        align="start"
-        className="w-auto p-0"
-      >
+      <PopoverContent align="start" className="w-auto p-0">
         <Calendar
           mode="single"
           selected={validSelected}
@@ -50,7 +53,10 @@ export function DatePicker({ value, onChange, placeholder = 'Pick a date', class
             setOpen(false);
           }}
           captionLayout="dropdown"
-          defaultMonth={validSelected ?? (maxDate ? new Date(maxDate.getFullYear() - 25, maxDate.getMonth()) : undefined)}
+          defaultMonth={
+            validSelected ??
+            (maxDate ? new Date(maxDate.getFullYear() - 25, maxDate.getMonth()) : undefined)
+          }
           disabled={maxDate ? { after: maxDate } : undefined}
           startMonth={new Date(1920, 0)}
           endMonth={maxDate}

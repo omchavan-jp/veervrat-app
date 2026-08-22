@@ -33,7 +33,11 @@ export function DashboardStatsBar() {
   // Zone B — one dense, borderless row of personal counts (15a §5: status = dense, no
   // cards). Each metric appears exactly once (15a §1 / IA dedupe). The active-journey
   // count is the only lightly-emphasized value since it's the one tied to the hero.
-  const dot = <span className="text-border-strong" aria-hidden="true">·</span>;
+  const dot = (
+    <span className="text-border-strong" aria-hidden="true">
+      ·
+    </span>
+  );
 
   return (
     <div className="mb-8 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px] text-muted">
@@ -43,7 +47,8 @@ export function DashboardStatsBar() {
       {dot}
       <span className="text-fg">
         {t('statsJourneysActive', { count: data.journeys.active })}
-        {data.journeys.completed > 0 && ` · ${t('statsJourneysCompleted', { count: data.journeys.completed })}`}
+        {data.journeys.completed > 0 &&
+          ` · ${t('statsJourneysCompleted', { count: data.journeys.completed })}`}
       </span>
       {dot}
       <span>{t('statsWeaknesses', { count: data.weaknesses.explored })}</span>

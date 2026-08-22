@@ -27,8 +27,26 @@ export const authApi = {
     password: string;
     displayName: string;
     username: string;
+    dob: string;
+    consents: { documentKey: string; version: number }[];
     language?: string;
   }) => api.post<Wrapped<AuthResponse>>('/auth/register', data).then((r) => r.data),
+
+  /**
+   * Starts Google SIGNUP — deliberately distinct from Google sign-in.
+   *
+   * The age gate and consent are recorded before the browser leaves for Google, so no account
+   * can be created for someone who does not qualify. Returns an opaque id; the date of birth
+   * itself never travels in a URL.
+   */
+  startGoogleSignup: (data: {
+    dob: string;
+    consents: { documentKey: string; version: number }[];
+    language?: string;
+  }) =>
+    api
+      .post<Wrapped<{ pendingId: string }>>('/auth/google/signup', data)
+      .then((r) => r.data.pendingId),
 
   login: (data: { email: string; password: string }) =>
     api.post<Wrapped<User>>('/auth/login', data).then((r) => r.data),

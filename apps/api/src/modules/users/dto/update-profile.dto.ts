@@ -39,9 +39,11 @@ export class UpdateProfileDto {
   @IsString()
   gender?: string | null;
 
-  // Send null to clear, a date string to set, omit to leave unchanged
+  // Correctable, but never clearable: it is a required field, and it is re-validated against the
+  // minimum age on every change. Allowing a correction is worth it — a typo in a date of birth
+  // is easy to make and impossible to fix otherwise — and it is safe, because a corrected value
+  // still has to qualify. Omit to leave unchanged; null is rejected.
   @IsOptional()
-  @ValidateIf((o: UpdateProfileDto) => o.dob !== null && o.dob !== undefined)
   @IsDateString()
-  dob?: string | null;
+  dob?: string;
 }

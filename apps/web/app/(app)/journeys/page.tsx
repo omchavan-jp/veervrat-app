@@ -81,7 +81,9 @@ export default function JourneysPage() {
                           className="line-clamp-2 flex-1"
                         />
                       )}
-                      <span className={`shrink-0 rounded-full px-3 py-0.5 text-[12px] font-medium ${STATE_COLORS[journey.state]}`}>
+                      <span
+                        className={`shrink-0 rounded-full px-3 py-0.5 text-[12px] font-medium ${STATE_COLORS[journey.state]}`}
+                      >
                         {t(`stateBadge.${journey.state.toLowerCase()}`)}
                       </span>
                     </div>
@@ -108,7 +110,11 @@ export default function JourneysPage() {
                 ))}
               </div>
               <p className="mt-3 text-[12px] text-muted/60">
-                {format.dateTime(new Date(journey.updatedAt), { year: 'numeric', month: 'short', day: 'numeric' })}
+                {format.dateTime(new Date(journey.updatedAt), {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                })}
               </p>
             </Link>
           ))}

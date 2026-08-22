@@ -19,7 +19,13 @@ const STATUS_KEY: Record<ErcStatus, string> = {
   REVISIT: 'statusRevisit',
 };
 
-export function StatusBadge({ status, className }: { status: ErcStatus | string; className?: string }) {
+export function StatusBadge({
+  status,
+  className,
+}: {
+  status: ErcStatus | string;
+  className?: string;
+}) {
   const t = useTranslations('journey.erc');
   const key = (status in STATUS_STYLE ? status : 'NOT_STARTED') as ErcStatus;
   return (

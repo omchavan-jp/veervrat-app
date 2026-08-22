@@ -23,6 +23,17 @@ function StatCard({ label, value, sub }: { label: string; value: number | string
   );
 }
 
+/**
+ * Male and Female are known values with translations; anything else is free text the person
+ * wrote themselves and is shown as they wrote it. Translating a self-described identity would be
+ * worse than leaving it alone.
+ */
+function genderLabel(value: string, t: (key: string) => string): string {
+  if (value === 'Male') return t('genderMale');
+  if (value === 'Female') return t('genderFemale');
+  return value;
+}
+
 export default function PublicProfilePage() {
   const { username } = useParams<{ username: string }>();
   const t = useTranslations('publicProfile');
@@ -44,8 +55,7 @@ export default function PublicProfilePage() {
   });
 
   const toggleFollow = useMutation({
-    mutationFn: () =>
-      data?.isFollowing ? usersApi.unfollow(username) : usersApi.follow(username),
+    mutationFn: () => (data?.isFollowing ? usersApi.unfollow(username) : usersApi.follow(username)),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['public-profile', username] }),
   });
 
@@ -103,22 +113,42 @@ export default function PublicProfilePage() {
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
-          <h1 className="font-display text-[28px] font-medium tracking-tight">{data.displayName}</h1>
+          <h1 className="font-display text-[28px] font-medium tracking-tight">
+            {data.displayName}
+          </h1>
           <div className="text-[14px] text-muted">@{data.username}</div>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-muted">
             {data.isOnline && (
               <span className="text-success">
-                <span aria-hidden="true">● </span>{t('online')}
+                <span aria-hidden="true">● </span>
+                {t('online')}
               </span>
             )}
             {!data.isOnline && data.lastActiveAt && (
-              <span>{t('lastActive', { time: format.dateTime(new Date(data.lastActiveAt), { year: 'numeric', month: 'short', day: 'numeric' }) })}</span>
+              <span>
+                {t('lastActive', {
+                  time: format.dateTime(new Date(data.lastActiveAt), {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                  }),
+                })}
+              </span>
             )}
+            {/* Shown only when provided. Blank means the person chose not to say, which is a
+                deliberate answer rather than missing data. */}
+            {data.gender && <span>{genderLabel(data.gender, t)}</span>}
             {memberSince && <span>{t('memberSince', { date: memberSince })}</span>}
           </div>
           <div className="mt-2 flex items-center gap-4 text-[13px]">
-            <span><span className="font-semibold">{data.followerCount}</span> <span className="text-muted">{t('followers')}</span></span>
-            <span><span className="font-semibold">{data.followingCount}</span> <span className="text-muted">{t('following')}</span></span>
+            <span>
+              <span className="font-semibold">{data.followerCount}</span>{' '}
+              <span className="text-muted">{t('followers')}</span>
+            </span>
+            <span>
+              <span className="font-semibold">{data.followingCount}</span>{' '}
+              <span className="text-muted">{t('following')}</span>
+            </span>
           </div>
         </div>
         {!isOwnProfile && (
@@ -127,11 +157,18 @@ export default function PublicProfilePage() {
             variant={data.isFollowing ? 'outline' : 'default'}
             disabled={toggleFollow.isPending}
             onClick={() => {
-              if (!isAuthenticated) { router.push('/login'); return; }
+              if (!isAuthenticated) {
+                router.push('/login');
+                return;
+              }
               toggleFollow.mutate();
             }}
           >
-            {data.isFollowing ? <UserCheck className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
+            {data.isFollowing ? (
+              <UserCheck className="h-4 w-4" />
+            ) : (
+              <UserPlus className="h-4 w-4" />
+            )}
             <span className="ml-1.5">{data.isFollowing ? t('following') : t('follow')}</span>
           </Button>
         )}
@@ -153,7 +190,9 @@ export default function PublicProfilePage() {
         {data.journeysActive !== undefined && (
           <StatCard label={t('journeysActive')} value={data.journeysActive} />
         )}
-        {data.testsTaken !== undefined && <StatCard label={t('testsTaken')} value={data.testsTaken} />}
+        {data.testsTaken !== undefined && (
+          <StatCard label={t('testsTaken')} value={data.testsTaken} />
+        )}
         {data.weaknessesWorkedOn !== undefined && (
           <StatCard label={t('weaknesses')} value={data.weaknessesWorkedOn} />
         )}
@@ -180,7 +219,9 @@ export default function PublicProfilePage() {
       </div>
 
       {/* Public experience entries */}
-      {(experiences.isLoading || experiences.isError || (experiences.data?.items.length ?? 0) > 0) && (
+      {(experiences.isLoading ||
+        experiences.isError ||
+        (experiences.data?.items.length ?? 0) > 0) && (
         <div className="mt-8">
           <h2 className="mb-3 text-[15px] font-medium">{t('publicExperiences')}</h2>
           {experiences.isLoading ? (
@@ -202,9 +243,16 @@ export default function PublicProfilePage() {
           ) : (
             <div className="space-y-3">
               {(experiences.data?.items ?? []).map((e) => (
-                <article key={e.id} className="rounded-2xl border border-border bg-surface p-4 shadow-card">
+                <article
+                  key={e.id}
+                  className="rounded-2xl border border-border bg-surface p-4 shadow-card"
+                >
                   <div className="mb-1 text-[12px] text-muted">
-                    {format.dateTime(new Date(e.publishedAt ?? e.createdAt), { year: 'numeric', month: 'short', day: 'numeric' })}
+                    {format.dateTime(new Date(e.publishedAt ?? e.createdAt), {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    })}
                   </div>
                   <p className="text-[14px] leading-relaxed">{excerptFromDoc(e.body)}</p>
                 </article>

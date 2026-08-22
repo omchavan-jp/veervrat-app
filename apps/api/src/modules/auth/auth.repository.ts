@@ -50,14 +50,22 @@ export class AuthRepository {
     displayName: string;
     username: string;
     passwordHash: string;
+    dob: Date;
+    consents: { documentKey: string; version: number }[];
     language?: 'EN' | 'MR';
   }) {
+    // Consent rows are nested in the same `create`, so they land in the same transaction as the
+    // user. A crash between the two would leave an account whose agreement has no record, and
+    // that is the one state here that cannot be repaired afterwards — there is nothing to
+    // reconstruct it from.
     return this.prisma.user.create({
       data: {
         email: params.email,
         displayName: params.displayName,
         username: params.username,
+        dob: params.dob,
         language: params.language ?? 'EN',
+        consents: { create: params.consents },
         authAccounts: {
           create: {
             provider: AuthProvider.EMAIL,
@@ -71,6 +79,57 @@ export class AuthRepository {
     });
   }
 
+  // ─── Pending signups ────────────────────────────────────────────────────────
+  // Holds date of birth and consent across the OAuth round trip so they never travel in a URL.
+
+  async createPendingSignup(params: {
+    dob: Date;
+    consents: { documentKey: string; version: number }[];
+    language?: 'EN' | 'MR';
+    expiresAt: Date;
+  }) {
+    return this.prisma.pendingSignup.create({
+      data: {
+        dob: params.dob,
+        consents: params.consents,
+        language: params.language ?? 'EN',
+        expiresAt: params.expiresAt,
+      },
+      select: { id: true },
+    });
+  }
+
+  async consumePendingSignup(id: string) {
+    const pending = await this.prisma.pendingSignup.findUnique({ where: { id } });
+    if (!pending) return null;
+    // Deleted on read, whether or not it is still valid: a signup handoff is single-use, and
+    // leaving a consumed one behind invites replay.
+    await this.prisma.pendingSignup.delete({ where: { id } }).catch(() => undefined);
+    return pending.expiresAt.getTime() < Date.now() ? null : pending;
+  }
+
+  async deleteExpiredPendingSignups(now: Date = new Date()) {
+    const result = await this.prisma.pendingSignup.deleteMany({
+      where: { expiresAt: { lt: now } },
+    });
+    return result.count;
+  }
+
+  async findConsents(userId: string) {
+    return this.prisma.userConsent.findMany({
+      where: { userId },
+      select: { documentKey: true, version: true, acceptedAt: true },
+    });
+  }
+
+  async recordConsent(userId: string, documentKey: string, version: number) {
+    return this.prisma.userConsent.upsert({
+      where: { userId_documentKey_version: { userId, documentKey, version } },
+      create: { userId, documentKey, version },
+      update: {},
+    });
+  }
+
   async createUserWithOAuthAccount(params: {
     email: string;
     displayName: string;
@@ -78,13 +137,22 @@ export class AuthRepository {
     provider: AuthProvider;
     providerAccountId: string;
     emailVerifiedAt: Date;
+    dob: Date;
+    consents: { documentKey: string; version: number }[];
+    language?: 'EN' | 'MR';
   }) {
+    // dob and consents are required here too. The OAuth path is a second route to account
+    // creation, and a gate on only one route is not a gate — they come from the pending-signup
+    // record created before the redirect.
     return this.prisma.user.create({
       data: {
         email: params.email,
         displayName: params.displayName,
         username: params.username,
         emailVerifiedAt: params.emailVerifiedAt,
+        dob: params.dob,
+        language: params.language ?? 'EN',
+        consents: { create: params.consents },
         authAccounts: {
           create: {
             provider: params.provider,

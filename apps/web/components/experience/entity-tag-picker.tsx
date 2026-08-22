@@ -37,7 +37,12 @@ export function EntityTagPicker({
 
   const queryEnabled = query.trim().length >= 2;
 
-  const { data: hits, isLoading, isError, refetch } = useQuery({
+  const {
+    data: hits,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ['entity-search', 'tags', query],
     queryFn: () => entitySearchApi.search(query, 'all'),
     enabled: queryEnabled,
@@ -87,7 +92,11 @@ export function EntityTagPicker({
               className="inline-flex items-center gap-1 rounded-full bg-accent/12 px-2.5 py-1 text-[12px] text-accent"
             >
               {tg.label}
-              <button type="button" onClick={() => remove(tg.entityType, tg.entityId)} aria-label={t('removeTag')}>
+              <button
+                type="button"
+                onClick={() => remove(tg.entityType, tg.entityId)}
+                aria-label={t('removeTag')}
+              >
                 <X className="h-3 w-3" />
               </button>
             </span>
@@ -95,7 +104,10 @@ export function EntityTagPicker({
         </div>
       )}
       <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+        <Search
+          className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted"
+          aria-hidden="true"
+        />
         <Input
           ref={inputRef}
           role="combobox"

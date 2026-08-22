@@ -16,10 +16,14 @@ import { Spinner } from '@/components/ui/spinner';
 function BlogCard({ b }: { b: Blog }) {
   const format = useFormatter();
   return (
-    <Link href={`/community/blogs/${b.id}`} className="block rounded-2xl border border-border bg-surface p-5 shadow-card transition-colors hover:border-accent/30">
+    <Link
+      href={`/community/blogs/${b.id}`}
+      className="block rounded-2xl border border-border bg-surface p-5 shadow-card transition-colors hover:border-accent/30"
+    >
       <h2 className="font-display text-[20px] leading-tight tracking-tight">{b.title}</h2>
       <div className="mt-2 text-[12px] text-muted">
-        {b.author.displayName} · {format.dateTime(new Date(b.publishedAt ?? b.createdAt), { dateStyle: 'medium' })}
+        {b.author.displayName} ·{' '}
+        {format.dateTime(new Date(b.publishedAt ?? b.createdAt), { dateStyle: 'medium' })}
       </div>
     </Link>
   );
@@ -45,7 +49,9 @@ export default function CommunityBlogsPage() {
     enabled: searching,
   });
 
-  const items: Blog[] = searching ? (search.data ?? []) : (list.data?.pages.flatMap((p) => p.items) ?? []);
+  const items: Blog[] = searching
+    ? (search.data ?? [])
+    : (list.data?.pages.flatMap((p) => p.items) ?? []);
   const loading = searching ? search.isLoading : list.isLoading;
   const isError = searching ? search.isError : list.isError;
   const refetch = searching ? search.refetch : list.refetch;
@@ -68,7 +74,9 @@ export default function CommunityBlogsPage() {
 
       <div className="mt-6">
         {loading ? (
-          <div className="flex min-h-[30vh] items-center justify-center"><Spinner size="lg" /></div>
+          <div className="flex min-h-[30vh] items-center justify-center">
+            <Spinner size="lg" />
+          </div>
         ) : isError ? (
           <EmptyState
             icon={<BookOpen className="h-5 w-5" />}
@@ -80,13 +88,24 @@ export default function CommunityBlogsPage() {
             }
           />
         ) : items.length === 0 ? (
-          <EmptyState icon={<BookOpen className="h-5 w-5" />} title={searching ? t('noResults') : t('emptyTitle')} description={searching ? undefined : t('emptyHint')} />
+          <EmptyState
+            icon={<BookOpen className="h-5 w-5" />}
+            title={searching ? t('noResults') : t('emptyTitle')}
+            description={searching ? undefined : t('emptyHint')}
+          />
         ) : (
           <div className="space-y-3">
-            {items.map((b) => <BlogCard key={b.id} b={b} />)}
+            {items.map((b) => (
+              <BlogCard key={b.id} b={b} />
+            ))}
             {!searching && list.hasNextPage && (
               <div className="flex justify-center pt-2">
-                <Button variant="outline" size="sm" onClick={() => list.fetchNextPage()} disabled={list.isFetchingNextPage}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => list.fetchNextPage()}
+                  disabled={list.isFetchingNextPage}
+                >
                   {list.isFetchingNextPage ? t('loading') : t('loadMore')}
                 </Button>
               </div>

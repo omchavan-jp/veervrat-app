@@ -36,7 +36,9 @@ export default async function DashboardPage() {
     <div className="mx-auto max-w-3xl">
       {/* Zone A — Header · compact chrome */}
       <header className="mb-6">
-        <div className="mb-1 text-[12px] text-muted">{sakaDate} · {today}</div>
+        <div className="mb-1 text-[12px] text-muted">
+          {sakaDate} · {today}
+        </div>
         <DashboardGreeting />
       </header>
 

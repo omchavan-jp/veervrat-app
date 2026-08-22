@@ -1,16 +1,16 @@
-"use client"
+'use client';
 
-import { Toast as ToastPrimitive } from "@base-ui/react/toast"
+import { Toast as ToastPrimitive } from '@base-ui/react/toast';
 
-import { cn } from "@/lib/utils"
+import { cn } from '@/lib/utils';
 
 // Thin wrapper over base-ui's toast manager. App shell renders <ToastProvider>
 // with <Toaster/> inside; call sites use useToast().add({ title, description, type }).
-const ToastProvider = ToastPrimitive.Provider
+const ToastProvider = ToastPrimitive.Provider;
 
 /** Imperative toast API. `type` drives the accent edge color. */
 function useToast() {
-  return ToastPrimitive.useToastManager()
+  return ToastPrimitive.useToastManager();
 }
 
 function Toaster() {
@@ -20,21 +20,21 @@ function Toaster() {
         <ToastList />
       </ToastPrimitive.Viewport>
     </ToastPrimitive.Portal>
-  )
+  );
 }
 
 function ToastList() {
-  const { toasts } = ToastPrimitive.useToastManager()
+  const { toasts } = ToastPrimitive.useToastManager();
   return toasts.map((toast) => (
     <ToastPrimitive.Root
       key={toast.id}
       toast={toast}
       data-slot="toast"
       className={cn(
-        "rounded-lg border bg-surface p-3 text-sm shadow-toast transition-all",
-        "data-[type=error]:border-danger/40 data-[type=success]:border-success/40",
-        "data-[starting-style]:translate-x-4 data-[starting-style]:opacity-0",
-        "data-[ending-style]:translate-x-4 data-[ending-style]:opacity-0"
+        'rounded-lg border bg-surface p-3 text-sm shadow-toast transition-all',
+        'data-[type=error]:border-danger/40 data-[type=success]:border-success/40',
+        'data-[starting-style]:translate-x-4 data-[starting-style]:opacity-0',
+        'data-[ending-style]:translate-x-4 data-[ending-style]:opacity-0',
       )}
     >
       <ToastPrimitive.Title
@@ -52,7 +52,7 @@ function ToastList() {
         <span aria-hidden="true">×</span>
       </ToastPrimitive.Close>
     </ToastPrimitive.Root>
-  ))
+  ));
 }
 
-export { ToastProvider, Toaster, useToast }
+export { ToastProvider, Toaster, useToast };

@@ -5,7 +5,12 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { ChevronLeft } from 'lucide-react';
-import { useJourney, useUpdateJourneyState, useUpdateJourneyTitle, useCompleteJourney } from '@/hooks/use-journeys';
+import {
+  useJourney,
+  useUpdateJourneyState,
+  useUpdateJourneyTitle,
+  useCompleteJourney,
+} from '@/hooks/use-journeys';
 import type { JourneyState, ErcCounts } from '@/lib/api/journeys';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
@@ -103,7 +108,9 @@ export default function JourneyDetailPage() {
         <Alert variant="destructive" className="border-destructive/40 bg-destructive/10">
           <AlertTitle className="text-destructive">{t('detail.loadError')}</AlertTitle>
           <div className="mt-3">
-            <Button size="sm" variant="outline" onClick={() => refetch()}>{t('detail.retry')}</Button>
+            <Button size="sm" variant="outline" onClick={() => refetch()}>
+              {t('detail.retry')}
+            </Button>
           </div>
         </Alert>
       </div>
@@ -117,7 +124,12 @@ export default function JourneyDetailPage() {
           <AlertTitle>{t('detail.notFoundTitle')}</AlertTitle>
           <AlertDescription>{t('detail.notFoundBody')}</AlertDescription>
           <div className="mt-3">
-            <Button size="sm" variant="outline" nativeButton={false} render={<Link href="/journeys" />}>
+            <Button
+              size="sm"
+              variant="outline"
+              nativeButton={false}
+              render={<Link href="/journeys" />}
+            >
               {t('detail.backToJourneys')}
             </Button>
           </div>
@@ -178,7 +190,10 @@ export default function JourneyDetailPage() {
       <div className="border-b border-border bg-bg px-4 py-5">
         <div className="mx-auto max-w-4xl">
           <div className="mb-1">
-            <Link href="/journeys" className="inline-flex items-center gap-0.5 text-[12px] text-muted hover:text-fg">
+            <Link
+              href="/journeys"
+              className="inline-flex items-center gap-0.5 text-[12px] text-muted hover:text-fg"
+            >
               <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
               {t('detail.backToJourneys')}
             </Link>
@@ -194,13 +209,18 @@ export default function JourneyDetailPage() {
                 value={titleValue}
                 onChange={(e) => setTitleValue(e.target.value)}
                 onBlur={handleTitleBlur}
-                onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                }}
                 className="flex-1 border-b-accent py-0 font-display text-[clamp(26px,3vw,36px)] tracking-tight"
               />
             ) : (
               <Button
                 variant="ghost"
-                onClick={() => { setTitleValue(journey.title); setEditingTitle(true); }}
+                onClick={() => {
+                  setTitleValue(journey.title);
+                  setEditingTitle(true);
+                }}
                 title={t('detail.editTitleHint')}
                 // min-w-0 + shrink override the base button's shrink-0, and whitespace-normal
                 // overrides its whitespace-nowrap — otherwise a long title can't shrink or
@@ -210,17 +230,28 @@ export default function JourneyDetailPage() {
                 {journey.title}
               </Button>
             )}
-            <span className={`mt-1 shrink-0 rounded-full px-3 py-0.5 text-[12px] font-medium ${STATE_COLORS[journey.state]}`}>
+            <span
+              className={`mt-1 shrink-0 rounded-full px-3 py-0.5 text-[12px] font-medium ${STATE_COLORS[journey.state]}`}
+            >
               {t(`stateBadge.${journey.state.toLowerCase()}`)}
             </span>
           </div>
 
           {/* Sentence context */}
-          <BilingualText en={journey.sentence.textEn} mr={journey.sentence.textMr} size="md" as="p" className="mb-2" />
+          <BilingualText
+            en={journey.sentence.textEn}
+            mr={journey.sentence.textMr}
+            size="md"
+            as="p"
+            className="mb-2"
+          />
           <p className="mb-3 text-[13px] text-accent-2">
             {t('detail.cultivating', {
               subvirtue: pick(journey.sentence.subvirtue.nameEn, journey.sentence.subvirtue.nameMr),
-              virtue: pick(journey.sentence.subvirtue.virtue.nameEn, journey.sentence.subvirtue.virtue.nameMr),
+              virtue: pick(
+                journey.sentence.subvirtue.virtue.nameEn,
+                journey.sentence.subvirtue.virtue.nameMr,
+              ),
             })}
           </p>
 
@@ -289,8 +320,8 @@ export default function JourneyDetailPage() {
 
       {/* Tab content */}
       <div className="mx-auto max-w-4xl px-4 py-8">
-        {activeTab === 'overview' && (
-          isEmpty ? (
+        {activeTab === 'overview' &&
+          (isEmpty ? (
             <div className="rounded-xl border border-dashed border-border p-12 text-center">
               <p className="mb-4 text-[15px] text-muted">{t('detail.emptyState')}</p>
               <div className="flex justify-center gap-3">
@@ -313,7 +344,10 @@ export default function JourneyDetailPage() {
             <div className="space-y-6">
               <div className="grid gap-4 sm:grid-cols-3">
                 <ErcCard label={t('detail.tabExposures')} counts={journey.ercCounts.exposures} />
-                <ErcCard label={t('detail.tabResolutions')} counts={journey.ercCounts.resolutions} />
+                <ErcCard
+                  label={t('detail.tabResolutions')}
+                  counts={journey.ercCounts.resolutions}
+                />
                 <ErcCard label={t('detail.tabChallenges')} counts={journey.ercCounts.challenges} />
               </div>
               <JourneyActivityFeed journeyId={journey.id} />
@@ -326,40 +360,54 @@ export default function JourneyDetailPage() {
                 </Link>
               </div>
             </div>
-          )
-        )}
+          ))}
 
         {activeTab === 'exposures' && (
-          <ExposuresTab journeyId={journey.id} hasVm={!!journey.globalVmRelationship} viewerIsVm={viewerIsVm} />
+          <ExposuresTab
+            journeyId={journey.id}
+            hasVm={!!journey.globalVmRelationship}
+            viewerIsVm={viewerIsVm}
+          />
         )}
         {activeTab === 'resolutions' && (
-          <ResolutionsTab journeyId={journey.id} hasVm={!!journey.globalVmRelationship} viewerIsVm={viewerIsVm} />
+          <ResolutionsTab
+            journeyId={journey.id}
+            hasVm={!!journey.globalVmRelationship}
+            viewerIsVm={viewerIsVm}
+          />
         )}
         {activeTab === 'challenges' && (
-          <ChallengesTab journeyId={journey.id} hasVm={!!journey.globalVmRelationship} viewerIsVm={viewerIsVm} />
+          <ChallengesTab
+            journeyId={journey.id}
+            hasVm={!!journey.globalVmRelationship}
+            viewerIsVm={viewerIsVm}
+          />
         )}
-        {activeTab === 'chat' && (() => {
-          const vmId =
-            journey.globalVmRelationship?.vmId ??
-            journey.vmAssignments.find((a) => a.state === 'ACTIVE')?.vmId ??
-            null;
-          return vmId ? (
-            <div className="rounded-xl border border-border bg-surface p-8 text-center">
-              <p className="mb-4 text-[14px] text-muted">{t('detail.chatBanner', { title: journey.title })}</p>
-              <Button
-                nativeButton={false}
-                render={<Link href={`/my-vratmitras/${vmId}/chat`} />}
-                className="h-auto bg-accent px-5 py-2.5 text-[14px] font-medium text-bg hover:bg-accent-hover"
-              >
-                {t('detail.openChat')}
-              </Button>
-            </div>
-          ) : (
-            <div className="rounded-xl border border-dashed border-border p-12 text-center">
-              <p className="text-[14px] text-muted">{t('detail.chatNoVm')}</p>
-            </div>
-          );
-        })()}
+        {activeTab === 'chat' &&
+          (() => {
+            const vmId =
+              journey.globalVmRelationship?.vmId ??
+              journey.vmAssignments.find((a) => a.state === 'ACTIVE')?.vmId ??
+              null;
+            return vmId ? (
+              <div className="rounded-xl border border-border bg-surface p-8 text-center">
+                <p className="mb-4 text-[14px] text-muted">
+                  {t('detail.chatBanner', { title: journey.title })}
+                </p>
+                <Button
+                  nativeButton={false}
+                  render={<Link href={`/my-vratmitras/${vmId}/chat`} />}
+                  className="h-auto bg-accent px-5 py-2.5 text-[14px] font-medium text-bg hover:bg-accent-hover"
+                >
+                  {t('detail.openChat')}
+                </Button>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-dashed border-border p-12 text-center">
+                <p className="text-[14px] text-muted">{t('detail.chatNoVm')}</p>
+              </div>
+            );
+          })()}
       </div>
     </div>
   );

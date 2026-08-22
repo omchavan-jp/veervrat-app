@@ -1,12 +1,4 @@
-import {
-  IsOptional,
-  IsString,
-  MaxLength,
-  MinLength,
-  Matches,
-  IsIn,
-  IsDateString,
-} from 'class-validator';
+import { IsOptional, IsString, MaxLength, MinLength, Matches, IsIn } from 'class-validator';
 
 export class CompleteOnboardingDto {
   @IsOptional()
@@ -33,7 +25,8 @@ export class CompleteOnboardingDto {
   @MaxLength(50)
   gender?: string;
 
-  @IsOptional()
-  @IsDateString({ strict: true })
-  dob?: string;
+  // Date of birth is NOT collected here any more. It is required at account creation and
+  // validated against the minimum age before the account exists — see
+  // spec/decisions/21_age-and-personal-attributes.md. Collecting it again here would imply it
+  // is editable, and an age gate that can be edited afterwards is not a gate.
 }

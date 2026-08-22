@@ -27,13 +27,9 @@ export function AuthShell({ hero, children }: AuthShellProps) {
           <h1 className="mb-5 font-display text-[clamp(34px,3.6vw,48px)] leading-[1.1] tracking-tight">
             {hero.heading}
           </h1>
-          <p className="mb-2 font-deva text-xl leading-relaxed text-accent-2">
-            {hero.devanagari}
-          </p>
+          <p className="mb-2 font-deva text-xl leading-relaxed text-accent-2">{hero.devanagari}</p>
           {hero.gloss && (
-            <p className="max-w-[380px] text-[15px] italic text-muted">
-              {hero.gloss}
-            </p>
+            <p className="max-w-[380px] text-[15px] italic text-muted">{hero.gloss}</p>
           )}
         </div>
 

@@ -104,10 +104,14 @@ export function MyVratmitrasClient() {
                 <Badge
                   variant="secondary"
                   className={`shrink-0 border-transparent px-2.5 py-1 text-[11px] font-medium ${
-                    vm.scope === 'GLOBAL' ? 'bg-accent/12 text-accent' : 'bg-accent-2/15 text-accent-2'
+                    vm.scope === 'GLOBAL'
+                      ? 'bg-accent/12 text-accent'
+                      : 'bg-accent-2/15 text-accent-2'
                   }`}
                 >
-                  {vm.scope === 'GLOBAL' ? t('my_vratmitras.global_vm') : t('my_vratmitras.journey_vm')}
+                  {vm.scope === 'GLOBAL'
+                    ? t('my_vratmitras.global_vm')
+                    : t('my_vratmitras.journey_vm')}
                 </Badge>
               </div>
 

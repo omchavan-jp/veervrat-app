@@ -9,6 +9,12 @@ Note: merging to `main` ships to **UAT**, not to users. A line here is live for 
 testers only once a `prod-*` tag has been deployed.
 
 ## Unreleased
+- Veervrat is now for adults aged 18 and over. Signing up asks for your date of birth and asks
+  you to accept the terms; both are recorded. Signing up with Google now asks for these first,
+  before Google is involved.
+- Your date of birth is never shown on your profile, and is not sent to anyone viewing it.
+- Gender, if you choose to provide it, now appears on your profile. Leaving it blank means it is
+  not shown — there is nothing extra to configure.
 - Admins can now grant individual people access to specific features — the beta feedback widget,
   and the in-context content editor — from a user's admin page, instead of that requiring a code
   change and a deployment for each person.

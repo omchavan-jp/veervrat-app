@@ -44,17 +44,16 @@ export default function LoginPage() {
 
   // OAUTH_ACCOUNT_CONFLICT no longer lands here — it redirects to /link-account instead.
   // Only show a generic error for other OAuth failures (e.g. Google sign-in cancelled).
-  const oauthErrorMsg = oauthError && oauthError !== 'OAUTH_ACCOUNT_CONFLICT'
-    ? tErrors('authError')
-    : null;
+  const oauthErrorMsg =
+    oauthError && oauthError !== 'OAUTH_ACCOUNT_CONFLICT' ? tErrors('authError') : null;
 
-  const apiError =
-    login.error instanceof ApiError ? login.error.message : login.error?.message;
+  const apiError = login.error instanceof ApiError ? login.error.message : login.error?.message;
 
   // An unverified address is recoverable, but only if we say so. Left as a bare refusal it is a
   // dead end: nothing else in the product ever tells the user a remedy exists, and they cannot
   // guess one. See openspec/changes/account-verification-recovery.
-  const isUnverified = login.error instanceof ApiError && login.error.error === 'EMAIL_NOT_VERIFIED';
+  const isUnverified =
+    login.error instanceof ApiError && login.error.error === 'EMAIL_NOT_VERIFIED';
 
   const onResend = async () => {
     setResendState('sending');

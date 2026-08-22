@@ -21,12 +21,20 @@ export default function SentenceInfoPage({ params }: { params: Promise<{ id: str
     queryFn: () => virtuesApi.getSentence(id),
   });
 
-  if (isLoading) return <div className="flex min-h-[40vh] items-center justify-center"><Spinner size="lg" /></div>;
+  if (isLoading)
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <Spinner size="lg" />
+      </div>
+    );
   if (isError || !data) return <div className="text-muted">{t('notFound')}</div>;
 
   return (
     <div>
-      <Link href={`/subvirtues/${data.subvirtue.id}`} className="text-[13px] text-muted hover:text-accent">
+      <Link
+        href={`/subvirtues/${data.subvirtue.id}`}
+        className="text-[13px] text-muted hover:text-accent"
+      >
         ← <ContentText en={data.subvirtue.nameEn} mr={data.subvirtue.nameMr} />
       </Link>
 
@@ -55,10 +63,15 @@ export default function SentenceInfoPage({ params }: { params: Promise<{ id: str
       <div className="mt-5">
         <p className="mb-3 text-[13px] text-muted">{t('sentenceCtaHint')}</p>
         {isAuthenticated ? (
-          <Link href="/study"><Button size="sm">{t('takeTest')}</Button></Link>
+          <Link href="/study">
+            <Button size="sm">{t('takeTest')}</Button>
+          </Link>
         ) : (
           <div className="rounded-xl border border-dashed border-border-strong p-4 text-center text-[13px] text-muted">
-            {t('loginToTest')} <Link href="/login" className="text-accent">{t('login')}</Link>
+            {t('loginToTest')}{' '}
+            <Link href="/login" className="text-accent">
+              {t('login')}
+            </Link>
           </div>
         )}
       </div>

@@ -75,7 +75,9 @@ describe('LanguageToggle', () => {
     mockLocale.value = 'en';
     render(<LanguageToggle />);
     // aria-label/title still state the CURRENT locale for a11y clarity...
-    expect(screen.getByRole('button', { name: 'Switch language (currently EN)' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Switch language (currently EN)' }),
+    ).toBeInTheDocument();
     // ...while the visible label shows what you'd switch TO.
     expect(screen.getByText('मराठी')).toBeInTheDocument();
   });
@@ -83,7 +85,9 @@ describe('LanguageToggle', () => {
   it('shows the target language (EN) when current locale is MR', () => {
     mockLocale.value = 'mr';
     render(<LanguageToggle />);
-    expect(screen.getByRole('button', { name: 'Switch language (currently मराठी)' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Switch language (currently मराठी)' }),
+    ).toBeInTheDocument();
     expect(screen.getByText('EN')).toBeInTheDocument();
   });
 

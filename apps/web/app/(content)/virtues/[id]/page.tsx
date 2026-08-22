@@ -20,7 +20,12 @@ export default function VirtueDetailPage({ params }: { params: Promise<{ id: str
     queryFn: () => virtuesApi.getVirtue(id),
   });
 
-  if (isLoading) return <div className="flex min-h-[40vh] items-center justify-center"><Spinner size="lg" /></div>;
+  if (isLoading)
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <Spinner size="lg" />
+      </div>
+    );
   if (isError || !data) {
     return (
       <EmptyState
@@ -37,13 +42,18 @@ export default function VirtueDetailPage({ params }: { params: Promise<{ id: str
 
   return (
     <div>
-      <Link href="/virtues" className="inline-flex items-center gap-1 text-[13px] text-muted hover:text-accent">
+      <Link
+        href="/virtues"
+        className="inline-flex items-center gap-1 text-[13px] text-muted hover:text-accent"
+      >
         <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" /> {t('backToBrowser')}
       </Link>
       <div className="mt-3">
         <BilingualText en={data.nameEn} mr={data.nameMr} size="xl" />
       </div>
-      {data.description && <p className="mt-3 text-[15px] leading-relaxed text-muted">{data.description}</p>}
+      {data.description && (
+        <p className="mt-3 text-[15px] leading-relaxed text-muted">{data.description}</p>
+      )}
 
       <h2 className="mb-3 mt-8 text-[16px] font-medium">{t('subvirtues')}</h2>
       {data.subvirtues.length === 0 ? (
@@ -51,7 +61,11 @@ export default function VirtueDetailPage({ params }: { params: Promise<{ id: str
       ) : (
         <div className="space-y-2.5">
           {data.subvirtues.map((s) => (
-            <Link key={s.id} href={`/subvirtues/${s.id}`} className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-card transition-colors hover:border-accent/30">
+            <Link
+              key={s.id}
+              href={`/subvirtues/${s.id}`}
+              className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-card transition-colors hover:border-accent/30"
+            >
               <div className="min-w-0 flex-1">
                 <BilingualText en={s.nameEn} mr={s.nameMr} size="sm" />
                 {s.description && <p className="mt-1 text-[12px] text-muted">{s.description}</p>}

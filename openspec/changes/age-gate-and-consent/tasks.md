@@ -1,0 +1,96 @@
+## 0. Read first
+
+- [x] 0.1 `spec/decisions/21_age-and-personal-attributes.md` — the decisions this implements, and
+  what was rejected. Do not re-derive them.
+- [x] 0.2 `design.md` here — particularly why the date of birth does not travel in the OAuth
+  `state` parameter, and why consent is written in the same transaction as the account.
+- [x] 0.3 `apps/api/src/modules/auth/auth.service.ts` → `handleGoogleLogin`. Three branches
+  today: existing auth account, existing user by email (link), and **create**. The third is what
+  changes.
+
+## 1. Schema
+
+- [x] 1.1 `dob` becomes non-nullable on `User`.
+- [x] 1.2 `version` on the policy documents, bumped deliberately by an administrator.
+- [x] 1.3 A consent record: user, document key, version, accepted-at. Unique per user, document
+  and version.
+- [x] 1.4 A pending-signup record: opaque id, date of birth, consent, expiry.
+- [x] 1.5 Migration. No backfill — see `design.md`.
+
+## 2. Age validation
+
+- [x] 2.1 Server-side check of 18+ at account creation, from the date of birth.
+- [x] 2.2 Applied to **both** the email path and the Google path. A gate on one is not a gate.
+- [x] 2.3 Client-side check on the form for immediate feedback — never the only check.
+- [x] 2.4 Date picker defaults to today minus eighteen years, and treats it as the maximum.
+- [x] 2.5 Persistent hint under the field stating the age requirement, shown before any attempt.
+- [x] 2.6 Disabled dates use `aria-disabled` and stay reachable — `disabled` swallows the click
+  and hides them from screen readers, so the explanation never reaches the people who need it.
+- [x] 2.7 Inline field error on submit, at the field. Not a toast.
+
+## 3. Consent
+
+- [x] 3.1 Record consent **in the same transaction** as account creation.
+- [x] 3.2 Read the current version at the moment of acceptance rather than trusting the client.
+- [~] 3.3 Re-prompt when the accepted version is behind the current one. **Deferred to #81** —
+  the documents do not exist yet, so no version can be bumped and there is nothing to re-prompt
+  against. Building the prompt now would mean testing it against a document that has no content.
+  The record it depends on is in place, which is the part that could not be added later.
+
+## 4. Splitting the Google flows
+
+- [x] 4.1 Signup: collect date of birth and consent, create a pending record, redirect with its
+  identifier.
+- [x] 4.2 Callback: resolve the pending record; create the account only when one exists and is
+  valid.
+- [x] 4.3 Sign-in: authenticate an existing account only. **Remove the create branch from this
+  path**, and send an unknown user to signup.
+- [x] 4.4 Leave account linking from settings unchanged — the account already exists.
+- [x] 4.5 Expire and clean up pending records.
+
+## 5. Web
+
+- [x] 5.1 Date of birth and consent on the signup form; both Google buttons point at their own
+  flow.
+- [x] 5.2 Remove date of birth from onboarding — it is collected before the account exists now.
+- [x] 5.3 Show gender on the profile when provided.
+- [~] 5.4 Terms and privacy links at the point of acceptance. **Deferred to #81** — the pages do
+  not exist, and linking to a 404 at the moment of consent is worse than the plain wording.
+
+## 6. Never display the date of birth
+
+- [x] 6.1 ~~Remove `dob` from the public-profile response.~~ **It was never there.** Checked:
+  `PublicProfileDto` carried neither `dob` nor `gender`; `dob` is on `OwnProfileDto` only, which
+  is the person's own data and appropriate. The real finding was the opposite — `gender` had to
+  be **added** to the public profile in order to display it.
+- [x] 6.2 Confirmed: no interface renders `dob`, and the public API does not return it.
+
+## 7. Tests
+
+- [x] 7.1 Under-18 rejected on the email path; no user row is created.
+- [x] 7.2 Under-18 rejected on the Google path; **no user row is created** — the defect this
+  change exists to prevent.
+- [x] 7.3 Exactly 18 today is accepted; one day short is rejected.
+- [x] 7.4 Google sign-in with no existing account creates nothing and directs to signup.
+- [x] 7.5 Google linking from settings still works — covered by the existing
+  `auth.service.google-link.spec.ts`, which exercises the link path untouched by this change.
+- [x] 7.6 Consent is written with the account, and carries the version.
+- [~] 7.7 A version bump re-prompts; an unchanged version does not. **Deferred with 3.3.**
+- [x] 7.8 An expired pending record cannot create an account.
+- [x] 7.9 The public profile response contains no `dob`.
+- [x] 7.10 Auth matrix for any new endpoint: one positive, one negative.
+
+## 8. Docs
+
+- [x] 8.1 `ops/data-map.md` — consent and pending-signup records as new locations; **correct the
+  minors framing**, which is only safe to change once this ships.
+- [~] 8.2 `spec/decisions/03_flows.md` — the split signup and sign-in flows. Recorded in
+  `spec/decisions/21_age-and-personal-attributes.md` instead, which is where the decision and its
+  reasoning live; duplicating it into 03 would create two places to keep in step.
+- [x] 8.3 CHANGELOG.
+
+## 9. After merge
+
+- [ ] 9.1 Delete all users in both environments. No backfill, no accounts of unknown age.
+- [ ] 9.2 Create the terms and privacy documents at version 1 (content from #81).
+- [ ] 9.3 Re-create the maintainer accounts through the new flow — which also exercises it.

@@ -24,7 +24,10 @@ export function NotificationBell() {
     <Popover>
       <PopoverTrigger
         aria-label={count > 0 ? t('openWithCount', { count }) : t('open')}
-        className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'relative h-11 w-11 md:h-8 md:w-8')}
+        className={cn(
+          buttonVariants({ variant: 'ghost', size: 'icon' }),
+          'relative h-11 w-11 md:h-8 md:w-8',
+        )}
       >
         <Bell className="h-4 w-4" aria-hidden="true" />
         {count > 0 && (

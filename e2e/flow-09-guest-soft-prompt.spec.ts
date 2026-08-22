@@ -22,7 +22,9 @@ test.describe('Flow 9: guest browse → soft prompt → signup', () => {
     await expect(page.getByRole('heading').first()).toBeVisible({ timeout: 15_000 });
   });
 
-  test('a gated action sends the guest to login, from which they can reach signup', async ({ page }) => {
+  test('a gated action sends the guest to login, from which they can reach signup', async ({
+    page,
+  }) => {
     // Hitting an app-only route as a guest is redirected to login (the soft gate).
     await page.goto('/dashboard');
     await expect(page).toHaveURL(/\/login/, { timeout: 15_000 });

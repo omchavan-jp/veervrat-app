@@ -50,8 +50,13 @@ export default function ModerationDashboardPage() {
       <p className="mt-1 text-[14px] text-muted">{t('subtitle')}</p>
 
       <div className="mt-6 space-y-3">
-        <Link href="/moderation/custom-erc" className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-card transition-colors hover:border-accent/30">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/12 text-accent"><FileCheck className="h-5 w-5" /></span>
+        <Link
+          href="/moderation/custom-erc"
+          className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-card transition-colors hover:border-accent/30"
+        >
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/12 text-accent">
+            <FileCheck className="h-5 w-5" />
+          </span>
           <div className="min-w-0 flex-1">
             <div className="text-[15px] font-medium">{t('customErcTitle')}</div>
             <div className="text-[12px] text-muted">{t('customErcDesc')}</div>
@@ -80,10 +85,14 @@ export default function ModerationDashboardPage() {
           aria-disabled="true"
           aria-describedby="reported-coming-soon"
         >
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted/15 text-muted"><Flag className="h-5 w-5" /></span>
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted/15 text-muted">
+            <Flag className="h-5 w-5" />
+          </span>
           <div className="min-w-0 flex-1">
             <div className="text-[15px] font-medium">{t('reportedTitle')}</div>
-            <div id="reported-coming-soon" className="text-[12px] text-muted">{t('comingSoon')}</div>
+            <div id="reported-coming-soon" className="text-[12px] text-muted">
+              {t('comingSoon')}
+            </div>
           </div>
         </div>
       </div>

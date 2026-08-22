@@ -75,7 +75,14 @@ function useNavGroups() {
   // My Vratarthis page is deferred (see actions-guidance design Non-Goals); its nav
   // item lands when that page is built. Only VM Guidance is wired here.
   const vratmitra: NavItem[] = vm?.hasAssignments
-    ? [{ href: '/vratmitra/guidance', labelKey: 'vmGuidance', icon: Compass, badge: vm?.counts.total || undefined }]
+    ? [
+        {
+          href: '/vratmitra/guidance',
+          labelKey: 'vmGuidance',
+          icon: Compass,
+          badge: vm?.counts.total || undefined,
+        },
+      ]
     : [];
 
   // Moderation nav — moderators/admins only (spec/27).
@@ -84,7 +91,9 @@ function useNavGroups() {
 
   // Admin nav — admins only (spec/27).
   const isAdmin = (user?.roles ?? []).some((r) => r === 'ADMIN');
-  const admin: NavItem[] = isAdmin ? [{ href: '/admin', labelKey: 'admin', icon: SlidersHorizontal }] : [];
+  const admin: NavItem[] = isAdmin
+    ? [{ href: '/admin', labelKey: 'admin', icon: SlidersHorizontal }]
+    : [];
 
   return { guidance, vratmitra, admin, pill: [...PRACTICE, ...guidance, ...vratmitra, ...admin] };
 }
@@ -95,7 +104,12 @@ function isActive(pathname: string, href: string): boolean {
 
 function initialsOf(user: ShellUser): string {
   return user.displayName
-    ? user.displayName.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
+    ? user.displayName
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase()
     : user.email.slice(0, 2).toUpperCase();
 }
 
@@ -148,7 +162,10 @@ function LeftRail({
         {active && (
           <span className="absolute -left-3 top-1/2 h-[18px] w-[3px] -translate-y-1/2 rounded-r bg-accent" />
         )}
-        <Icon className={`h-[18px] w-[18px] shrink-0 ${active ? 'text-accent' : 'text-muted'}`} aria-hidden="true" />
+        <Icon
+          className={`h-[18px] w-[18px] shrink-0 ${active ? 'text-accent' : 'text-muted'}`}
+          aria-hidden="true"
+        />
         {!collapsed && <span className="flex-1 truncate">{t(labelKey)}</span>}
         {!collapsed && badge ? (
           <span
@@ -182,7 +199,11 @@ function LeftRail({
         aria-label={collapsed ? t('expandSidebar') : t('collapseSidebar')}
         className="absolute -right-3 top-[18px] z-30 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-surface text-muted shadow-card transition-colors hover:border-accent hover:text-fg"
       >
-        {collapsed ? <PanelLeftOpen className="h-3.5 w-3.5" /> : <PanelLeftClose className="h-3.5 w-3.5" />}
+        {collapsed ? (
+          <PanelLeftOpen className="h-3.5 w-3.5" />
+        ) : (
+          <PanelLeftClose className="h-3.5 w-3.5" />
+        )}
       </button>
 
       {/* Header / brand */}
@@ -255,7 +276,9 @@ function LeftRail({
       </nav>
 
       {/* Footer: controls + user + sign-out */}
-      <div className={`flex flex-col gap-2.5 border-t border-border px-3 py-3.5 ${collapsed ? 'items-center' : ''}`}>
+      <div
+        className={`flex flex-col gap-2.5 border-t border-border px-3 py-3.5 ${collapsed ? 'items-center' : ''}`}
+      >
         {/* Compact icon toggles — present in BOTH states (stacked when collapsed) */}
         <div className={`flex gap-2 ${collapsed ? 'flex-col items-center' : ''}`}>
           <ThemeToggle className={collapsed ? 'w-9' : 'flex-1'} />
@@ -288,12 +311,18 @@ function LeftRail({
               <span className="truncate">{t('settings')}</span>
             </Link>
             <button
-              onClick={() => logout.mutate(undefined, { onError: () => toast({ title: tA11y('logoutError'), variant: 'destructive' }) })}
+              onClick={() =>
+                logout.mutate(undefined, {
+                  onError: () => toast({ title: tA11y('logoutError'), variant: 'destructive' }),
+                })
+              }
               disabled={logout.isPending}
               className="flex items-center gap-2.5 rounded-lg border border-border bg-transparent px-3.5 py-2.5 text-left text-[13px] text-fg transition-colors hover:border-accent hover:bg-accent hover:text-bg disabled:opacity-50"
             >
               <LogOut className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-              <span className="truncate">{logout.isPending ? tA11y('loggingOut') : t('logout')}</span>
+              <span className="truncate">
+                {logout.isPending ? tA11y('loggingOut') : t('logout')}
+              </span>
             </button>
           </>
         ) : (
@@ -306,7 +335,11 @@ function LeftRail({
               {initials}
             </Link>
             <button
-              onClick={() => logout.mutate(undefined, { onError: () => toast({ title: tA11y('logoutError'), variant: 'destructive' }) })}
+              onClick={() =>
+                logout.mutate(undefined, {
+                  onError: () => toast({ title: tA11y('logoutError'), variant: 'destructive' }),
+                })
+              }
               disabled={logout.isPending}
               title={t('logout')}
               aria-label={t('logout')}
@@ -375,7 +408,13 @@ function PillNav() {
 // redirects are the caller's responsibility. Shared by the (app) and (content) route
 // groups so navigating into guest-browseable content (virtues/pothi/community/…) keeps
 // the full chrome for signed-in members instead of dropping to the guest bar.
-export function AppShell({ user, children }: { user: ShellUser & { roles?: string[] }; children: React.ReactNode }) {
+export function AppShell({
+  user,
+  children,
+}: {
+  user: ShellUser & { roles?: string[] };
+  children: React.ReactNode;
+}) {
   const t = useTranslations('common.nav');
   const [collapsed, setCollapsed] = useState(false);
 
@@ -418,7 +457,10 @@ export function AppShell({ user, children }: { user: ShellUser & { roles?: strin
             {/* Theme + language live in the rail footer on desktop; surfaced here on
                 mobile as icon-only buttons. Hit area is >=44px for touch (h-11/min-w-11)
                 while the glyph stays small. */}
-            <LanguageToggle display="reveal" className="!h-11 min-w-11 !border-transparent px-2 md:hidden" />
+            <LanguageToggle
+              display="reveal"
+              className="!h-11 min-w-11 !border-transparent px-2 md:hidden"
+            />
             <ThemeToggle className="!h-11 !w-11 !border-transparent md:hidden" />
             <NotificationBell />
             <Link

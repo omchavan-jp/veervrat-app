@@ -53,7 +53,9 @@ export default function StudyBrowserPage() {
         <div className="space-y-10">
           {clusters.map((cluster) => (
             <section key={cluster.key}>
-              <SectionLabel as="h2" className="mb-4">{cluster.label}</SectionLabel>
+              <SectionLabel as="h2" className="mb-4">
+                {cluster.label}
+              </SectionLabel>
               <div className="grid gap-3 sm:grid-cols-2">
                 {cluster.weaknesses.map((w, i) => (
                   <Link
@@ -62,7 +64,9 @@ export default function StudyBrowserPage() {
                     className="group rounded-xl border border-border bg-surface p-5 transition-colors hover:border-accent/40 hover:bg-bg"
                   >
                     <div className="mb-2 flex items-start justify-between gap-2">
-                      <span className="font-mono text-[11px] text-muted">{String(i + 1).padStart(2, '0')}</span>
+                      <span className="font-mono text-[11px] text-muted">
+                        {String(i + 1).padStart(2, '0')}
+                      </span>
                       <ArrowRight
                         className="h-3.5 w-3.5 text-muted group-hover:text-accent"
                         aria-hidden="true"
@@ -74,7 +78,9 @@ export default function StudyBrowserPage() {
                     )}
                     {w.stats && (
                       <div className="flex items-center gap-4 border-t border-border pt-3">
-                        <span className={`text-[12px] ${w.stats.testsTaken > 0 ? 'text-accent-2' : 'text-muted'}`}>
+                        <span
+                          className={`text-[12px] ${w.stats.testsTaken > 0 ? 'text-accent-2' : 'text-muted'}`}
+                        >
                           {w.stats.testsTaken > 0
                             ? t('testsTaken', { count: w.stats.testsTaken })
                             : t('notExplored')}

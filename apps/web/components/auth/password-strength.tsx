@@ -27,10 +27,7 @@ export function PasswordStrength({ password }: { password: string }) {
   return (
     <div className="mt-2.5 flex gap-1">
       {[0, 1, 2, 3].map((i) => (
-        <span
-          key={i}
-          className={cn('h-1 flex-1 rounded-sm', barClass(i, strength))}
-        />
+        <span key={i} className={cn('h-1 flex-1 rounded-sm', barClass(i, strength))} />
       ))}
     </div>
   );

@@ -4,7 +4,12 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ExternalLink, Pencil, RotateCcw } from 'lucide-react';
-import { usersApi, type OwnProfile, type ProfileField, type UpdateVisibilityInput } from '@/lib/api/users';
+import {
+  usersApi,
+  type OwnProfile,
+  type ProfileField,
+  type UpdateVisibilityInput,
+} from '@/lib/api/users';
 import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -30,7 +35,12 @@ export default function ProfilePage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const { data: profile, isLoading, isError, refetch } = useQuery({
+  const {
+    data: profile,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ['profile', 'me'],
     queryFn: usersApi.getMyProfile,
   });
@@ -102,7 +112,9 @@ export default function ProfilePage() {
 
       {/* Account */}
       <section className="mb-8">
-        <h2 className="mb-3 font-mono text-[10px] uppercase tracking-[0.14em] text-muted">{t('sectionAccount')}</h2>
+        <h2 className="mb-3 font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
+          {t('sectionAccount')}
+        </h2>
         <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-card">
           <Avatar className="h-12 w-12 border-0">
             <AvatarFallback className="bg-accent-2 text-[15px] font-semibold text-bg">
@@ -114,8 +126,14 @@ export default function ProfilePage() {
             <div className="truncate text-[13px] text-muted">@{p.username}</div>
             {(p.followerCount !== undefined || p.followingCount !== undefined) && (
               <div className="mt-1 flex gap-4 text-[12px]">
-                <span><span className="font-semibold">{p.followerCount ?? 0}</span> <span className="text-muted">{t('followers')}</span></span>
-                <span><span className="font-semibold">{p.followingCount ?? 0}</span> <span className="text-muted">{t('following')}</span></span>
+                <span>
+                  <span className="font-semibold">{p.followerCount ?? 0}</span>{' '}
+                  <span className="text-muted">{t('followers')}</span>
+                </span>
+                <span>
+                  <span className="font-semibold">{p.followingCount ?? 0}</span>{' '}
+                  <span className="text-muted">{t('following')}</span>
+                </span>
               </div>
             )}
           </div>
@@ -124,7 +142,9 @@ export default function ProfilePage() {
 
       {/* Presence + full privacy */}
       <section className="mb-8">
-        <h2 className="mb-3 font-mono text-[10px] uppercase tracking-[0.14em] text-muted">{t('sectionPresence')}</h2>
+        <h2 className="mb-3 font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
+          {t('sectionPresence')}
+        </h2>
         <div className="divide-y divide-border rounded-2xl border border-border bg-surface shadow-card">
           <div className="flex items-center justify-between gap-4 p-4">
             <div>
@@ -140,18 +160,30 @@ export default function ProfilePage() {
           </div>
           <div className="flex items-center justify-between gap-4 p-4">
             <div className="text-[14px]">{t('showLastActive')}</div>
-            <Switch aria-label={t('showLastActive')} checked={p.showLastActive} disabled={mutation.isPending} onCheckedChange={(v) => mutation.mutate({ showLastActive: v })} />
+            <Switch
+              aria-label={t('showLastActive')}
+              checked={p.showLastActive}
+              disabled={mutation.isPending}
+              onCheckedChange={(v) => mutation.mutate({ showLastActive: v })}
+            />
           </div>
           <div className="flex items-center justify-between gap-4 p-4">
             <div className="text-[14px]">{t('showOnline')}</div>
-            <Switch aria-label={t('showOnline')} checked={p.showOnlineIndicator} disabled={mutation.isPending} onCheckedChange={(v) => mutation.mutate({ showOnlineIndicator: v })} />
+            <Switch
+              aria-label={t('showOnline')}
+              checked={p.showOnlineIndicator}
+              disabled={mutation.isPending}
+              onCheckedChange={(v) => mutation.mutate({ showOnlineIndicator: v })}
+            />
           </div>
         </div>
       </section>
 
       {/* Per-field visibility */}
       <section>
-        <h2 className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-muted">{t('sectionVisibility')}</h2>
+        <h2 className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
+          {t('sectionVisibility')}
+        </h2>
         <p className="mb-3 text-[12px] text-muted">{t('visibilityHint')}</p>
         <div className="divide-y divide-border rounded-2xl border border-border bg-surface shadow-card">
           {FIELDS.map(({ key, labelKey }) => (

@@ -1,29 +1,29 @@
-"use client"
+'use client';
 
-import type { ReactNode } from "react"
+import type { ReactNode } from 'react';
 
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
-import { Button } from "@/components/ui/button"
-import { Spinner } from "@/components/ui/spinner"
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 
 // Forces the three async states to be handled distinctly so an error can never
 // collapse into the empty state (RC03) or hang on an infinite spinner. Pass the
 // flags straight from a TanStack useQuery result.
 interface QueryBoundaryProps {
-  isLoading: boolean
-  isError: boolean
-  isEmpty?: boolean
-  onRetry?: () => void
-  loadingLabel?: string
+  isLoading: boolean;
+  isError: boolean;
+  isEmpty?: boolean;
+  onRetry?: () => void;
+  loadingLabel?: string;
   // Optional shape-matching skeleton shown while loading instead of the centered
   // spinner — preferred on list/data screens (the layout no longer pops in).
-  skeleton?: ReactNode
-  errorTitle: string
-  errorDescription?: string
-  retryLabel?: string
-  empty?: ReactNode
-  children: ReactNode
-  className?: string
+  skeleton?: ReactNode;
+  errorTitle: string;
+  errorDescription?: string;
+  retryLabel?: string;
+  empty?: ReactNode;
+  children: ReactNode;
+  className?: string;
 }
 
 function QueryBoundary({
@@ -35,18 +35,18 @@ function QueryBoundary({
   skeleton,
   errorTitle,
   errorDescription,
-  retryLabel = "Retry",
+  retryLabel = 'Retry',
   empty,
   children,
   className,
 }: QueryBoundaryProps) {
   if (isLoading) {
-    if (skeleton) return <>{skeleton}</>
+    if (skeleton) return <>{skeleton}</>;
     return (
-      <div className={className ?? "flex justify-center py-12"}>
+      <div className={className ?? 'flex justify-center py-12'}>
         <Spinner label={loadingLabel} />
       </div>
-    )
+    );
   }
 
   if (isError) {
@@ -62,14 +62,14 @@ function QueryBoundary({
           </div>
         )}
       </Alert>
-    )
+    );
   }
 
   if (isEmpty && empty) {
-    return <>{empty}</>
+    return <>{empty}</>;
   }
 
-  return <>{children}</>
+  return <>{children}</>;
 }
 
-export { QueryBoundary }
+export { QueryBoundary };

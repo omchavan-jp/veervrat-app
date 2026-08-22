@@ -51,6 +51,26 @@ export class EmailNotVerifiedException extends ForbiddenException {
   }
 }
 
+export class UnderageException extends ForbiddenException {
+  constructor() {
+    super({
+      error: 'UNDERAGE',
+      // Deliberately final. The wording must not suggest the address can be registered later,
+      // or the natural response is to retry with a different date.
+      message: 'Veervrat is for adults aged 18 and over.',
+    });
+  }
+}
+
+export class SignupRequiredException extends ForbiddenException {
+  constructor() {
+    super({
+      error: 'SIGNUP_REQUIRED',
+      message: 'No account found for that Google account. Please sign up first.',
+    });
+  }
+}
+
 export class AccountSuspendedException extends ForbiddenException {
   constructor() {
     super({

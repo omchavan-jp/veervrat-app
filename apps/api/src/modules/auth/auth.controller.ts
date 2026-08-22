@@ -29,6 +29,7 @@ import { CurrentUser } from './decorators/current-user.decorator';
 import { SkipCsrf } from '../../common/guards/csrf.guard';
 import { authCookieOptions, clearLegacyHostOnlyCookie } from '../../common/http/cookie';
 import { Audited } from '../audit/audited.decorator';
+import { StartGoogleSignupDto } from './dto/start-google-signup.dto';
 import { LinkGoogleDto } from './dto/link-google.dto';
 import type { SessionUser, GoogleProfile } from './types/auth.types';
 
@@ -59,6 +60,8 @@ export class AuthController {
       dto.password,
       dto.displayName,
       dto.username,
+      dto.dob,
+      dto.consents,
       dto.language,
     );
     return {
@@ -176,10 +179,31 @@ export class AuthController {
     return { ...result.user, message: 'Your email address has been updated.' };
   }
 
+  /**
+   * Google SIGNUP. Collects the age gate and consent first, then hands the browser to Google.
+   *
+   * Deliberately separate from sign-in below. If one endpoint served both, an underage visitor
+   * would reach Google, come back, and only then be turned away — by which point an account row
+   * exists for someone the platform is not for.
+   */
+  @Post('google/signup')
+  @Throttle({ default: { ttl: 3600000, limit: 5 } })
+  async startGoogleSignup(@Body() dto: StartGoogleSignupDto) {
+    const { pendingId } = await this.authService.startGoogleSignup(
+      dto.dob,
+      dto.consents,
+      dto.language,
+    );
+    // Only the opaque id is returned — never the date of birth itself. The web builds the
+    // authorize URL from its own runtime config, so the API need not know its public origin.
+    return { pendingId };
+  }
+
   @Get('google')
   @UseGuards(GoogleOAuthGuard)
   googleAuth() {
-    // Guard handles redirect to Google
+    // Guard handles the redirect to Google, carrying `pending` through as OAuth state when the
+    // request came from the signup flow. Without it this is sign-in, which never creates.
   }
 
   @Get('google/callback')
@@ -188,10 +212,15 @@ export class AuthController {
     const profile = req.user as unknown as GoogleProfile;
 
     try {
+      // Google returns the `state` we sent. It holds only a pending-signup id, and its presence
+      // is what distinguishes signup from sign-in.
+      const pendingSignupId = typeof req.query.state === 'string' ? req.query.state : undefined;
+
       const result = await this.authService.handleGoogleLogin(
         profile,
         req.ip ?? null,
         req.headers['user-agent'] ?? null,
+        pendingSignupId,
       );
 
       if ('action' in result && result.action === 'link_pending') {
@@ -208,7 +237,11 @@ export class AuthController {
         error instanceof Error
           ? ((error as { response?: { error?: string } }).response?.error ?? 'AUTH_ERROR')
           : 'AUTH_ERROR';
-      res.redirect(`${this.frontendUrl}/login?error=${errorCode}`);
+      // SIGNUP_REQUIRED means someone used sign-in without an account; sending them to /login
+      // with an error would be a dead end, since the thing they need is the signup page.
+      const destination =
+        errorCode === 'SIGNUP_REQUIRED' || errorCode === 'UNDERAGE' ? 'signup' : 'login';
+      res.redirect(`${this.frontendUrl}/${destination}?error=${errorCode}`);
     }
   }
 
@@ -240,7 +273,6 @@ export class AuthController {
       dto.username,
       dto.language,
       dto.gender,
-      dto.dob,
     );
   }
 

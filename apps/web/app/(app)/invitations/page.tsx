@@ -50,8 +50,11 @@ export default function InvitationsPage() {
   });
 
   const send = useMutation({
-    mutationFn: (input: { type: InvitationType; inviteeEmail?: string; inviteeUsername?: string }) =>
-      invitationsApi.send(input),
+    mutationFn: (input: {
+      type: InvitationType;
+      inviteeEmail?: string;
+      inviteeUsername?: string;
+    }) => invitationsApi.send(input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.invitations.list });
       setSelected(null);
@@ -95,7 +98,11 @@ export default function InvitationsPage() {
                 <div className="truncate text-[15px] font-medium">{selected.displayName}</div>
                 <div className="truncate text-[13px] text-muted">@{selected.username}</div>
               </div>
-              <button onClick={() => setSelected(null)} aria-label={t('clear')} className="text-muted hover:text-fg">
+              <button
+                onClick={() => setSelected(null)}
+                aria-label={t('clear')}
+                className="text-muted hover:text-fg"
+              >
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -146,7 +153,9 @@ export default function InvitationsPage() {
                           {u.isOnline && <span className="ml-2 text-success">● {t('online')}</span>}
                         </div>
                       </div>
-                      {u.isFollowing && <span className="text-[11px] text-muted">{t('following')}</span>}
+                      {u.isFollowing && (
+                        <span className="text-[11px] text-muted">{t('following')}</span>
+                      )}
                     </button>
                   ))
                 ) : canEmailInvite ? (
@@ -155,7 +164,9 @@ export default function InvitationsPage() {
                     className="flex w-full items-center gap-3 rounded-xl border border-dashed border-border-strong p-3 text-left hover:border-accent"
                   >
                     <Mail className="h-4 w-4 text-muted" />
-                    <span className="text-[13px]">{t('inviteByEmail', { email: query.trim() })}</span>
+                    <span className="text-[13px]">
+                      {t('inviteByEmail', { email: query.trim() })}
+                    </span>
                   </button>
                 ) : (
                   <div className="py-4 text-center text-[13px] text-muted">{t('noResults')}</div>
@@ -170,9 +181,15 @@ export default function InvitationsPage() {
       <section className="mt-9">
         <h2 className="mb-3 text-[15px] font-medium">{t('yourInvitations')}</h2>
         {invitations.isLoading ? (
-          <div className="py-6 text-center"><div className="mx-auto h-5 w-5 animate-spin rounded-full border-2 border-accent border-t-transparent" /></div>
+          <div className="py-6 text-center">
+            <div className="mx-auto h-5 w-5 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+          </div>
         ) : (invitations.data?.length ?? 0) === 0 ? (
-          <EmptyState icon={<Mail className="h-5 w-5" />} title={t('noInvitations')} description={t('noInvitationsHint')} />
+          <EmptyState
+            icon={<Mail className="h-5 w-5" />}
+            title={t('noInvitations')}
+            description={t('noInvitationsHint')}
+          />
         ) : (
           <div className="space-y-2.5">
             {invitations.data!.map((inv) => (
@@ -219,7 +236,9 @@ function InvitationRow({
           <div className="truncate text-[14px]">{inv.inviteeEmail}</div>
           <div className="mt-0.5 text-[12px] text-muted">{t(`type.${inv.type}`)}</div>
         </div>
-        <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium ${STATUS_TINT[inv.status]}`}>
+        <span
+          className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium ${STATUS_TINT[inv.status]}`}
+        >
           {t(`status.${inv.status}`)}
         </span>
       </div>
@@ -230,7 +249,8 @@ function InvitationRow({
             disabled={remindPending || inv.reminderSentAt !== null}
             className="inline-flex items-center gap-1 rounded-full border border-border-strong px-3 py-1.5 text-[12px] text-muted hover:border-accent disabled:opacity-50"
           >
-            <Clock className="h-3 w-3" /> {inv.reminderSentAt ? t('reminderAlreadySent') : t('sendReminder')}
+            <Clock className="h-3 w-3" />{' '}
+            {inv.reminderSentAt ? t('reminderAlreadySent') : t('sendReminder')}
           </button>
           <button
             onClick={() => setShowShare((v) => !v)}
@@ -253,7 +273,10 @@ function InvitationRow({
             value={inv.shareMessage}
             className="h-20 w-full resize-none bg-transparent text-[13px] outline-none"
           />
-          <button onClick={copy} className="mt-1 inline-flex items-center gap-1 text-[12px] text-accent">
+          <button
+            onClick={copy}
+            className="mt-1 inline-flex items-center gap-1 text-[12px] text-accent"
+          >
             {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
             {copied ? t('copied') : t('copy')}
           </button>

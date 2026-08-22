@@ -93,7 +93,10 @@ export default function ForgotPasswordPage() {
 
       <p className="mt-8 text-center text-sm text-muted">
         {t('rememberedIt')}{' '}
-        <Link href="/login" className="text-accent underline decoration-accent/40 hover:no-underline">
+        <Link
+          href="/login"
+          className="text-accent underline decoration-accent/40 hover:no-underline"
+        >
           {t('backToLogin')}
         </Link>
       </p>

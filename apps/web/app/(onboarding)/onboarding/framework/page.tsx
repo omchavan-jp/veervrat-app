@@ -31,7 +31,12 @@ export default function FrameworkOnboardingPage() {
     }
   }, [isLoading, user, router]);
 
-  if (isLoading || !user || user.accountSetupCompletedAt === null || user.onboardingCompletedAt !== null) {
+  if (
+    isLoading ||
+    !user ||
+    user.accountSetupCompletedAt === null ||
+    user.onboardingCompletedAt !== null
+  ) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-bg">
         <Spinner size="lg" label={t('loading')} />
@@ -50,15 +55,19 @@ export default function FrameworkOnboardingPage() {
         {section === 'section2' && (
           <Section2 t={t} onBack={() => setSection('section1')} onNext={() => setSection('cta')} />
         )}
-        {section === 'cta' && (
-          <CtaScreen t={t} onBack={() => setSection('section2')} />
-        )}
+        {section === 'cta' && <CtaScreen t={t} onBack={() => setSection('section2')} />}
       </div>
     </div>
   );
 }
 
-function Section1({ t, onNext }: { t: ReturnType<typeof useTranslations<'onboarding.framework'>>; onNext: () => void }) {
+function Section1({
+  t,
+  onNext,
+}: {
+  t: ReturnType<typeof useTranslations<'onboarding.framework'>>;
+  onNext: () => void;
+}) {
   return (
     <div className="space-y-8">
       <div>
@@ -177,7 +186,7 @@ function CtaScreen({
   const completeError =
     completeFramework.error instanceof ApiError
       ? completeFramework.error.message
-      : completeFramework.error?.message ?? null;
+      : (completeFramework.error?.message ?? null);
 
   return (
     <div className="space-y-8 text-center">
@@ -189,10 +198,7 @@ function CtaScreen({
       </div>
 
       {completeError && (
-        <Alert
-          variant="destructive"
-          className="border-destructive/40 bg-destructive/10 text-left"
-        >
+        <Alert variant="destructive" className="border-destructive/40 bg-destructive/10 text-left">
           <AlertDescription className="text-destructive">{completeError}</AlertDescription>
         </Alert>
       )}

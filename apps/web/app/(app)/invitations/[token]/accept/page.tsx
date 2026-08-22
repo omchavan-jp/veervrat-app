@@ -61,7 +61,9 @@ export default function InvitationAcceptPage() {
           <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-success/12 text-success">
             <Check className="h-6 w-6" />
           </div>
-          <h1 className="font-display text-[26px] font-medium tracking-tight">{t('acceptedTitle')}</h1>
+          <h1 className="font-display text-[26px] font-medium tracking-tight">
+            {t('acceptedTitle')}
+          </h1>
           <p className="mt-2 text-[14px] text-muted">{t('acceptedBody')}</p>
           <Link
             href="/my-vratmitras"
@@ -77,7 +79,9 @@ export default function InvitationAcceptPage() {
           <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-muted/15 text-muted">
             <X className="h-6 w-6" />
           </div>
-          <h1 className="font-display text-[26px] font-medium tracking-tight">{t('declinedTitle')}</h1>
+          <h1 className="font-display text-[26px] font-medium tracking-tight">
+            {t('declinedTitle')}
+          </h1>
           <p className="mt-2 text-[14px] text-muted">{t('declinedBody')}</p>
           <Link
             href="/dashboard"

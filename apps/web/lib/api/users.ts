@@ -55,6 +55,13 @@ export type PublicProfile = {
   username: string;
   displayName: string;
   avatarUrl?: string | null;
+  /**
+   * Present only when the person has provided one — the field is optional, so leaving it blank
+   * is the opt-out and there is deliberately no separate visibility control.
+   *
+   * Date of birth is never here: it is an identity-verification token, not profile detail.
+   */
+  gender?: string | null;
   memberSince?: string;
   journeysCompleted?: number;
   journeysActive?: number;

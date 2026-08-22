@@ -50,7 +50,9 @@ export function DashboardPlatformStats() {
                 <div className="h-4 w-8 animate-pulse rounded bg-border/60" />
               ) : (
                 <span className="font-mono text-[15px] text-fg">
-                  {typeof s.value === 'number' && s.value > 0 ? s.value.toLocaleString(intlLocale) : '—'}
+                  {typeof s.value === 'number' && s.value > 0
+                    ? s.value.toLocaleString(intlLocale)
+                    : '—'}
                 </span>
               )}
               <span className="text-[12px] text-muted">{s.label}</span>

@@ -2,8 +2,6 @@ import { describe, it, expect, vi } from 'vitest';
 import { AuthService } from './auth.service';
 import { DuplicateEntityException } from '../../common/exceptions/app.exceptions';
 
-const dob = new Date('1995-06-15');
-
 const userFixture = {
   id: 'user-1',
   email: 'test@example.com',
@@ -49,29 +47,24 @@ function makeService(repo: ReturnType<typeof makeRepo>) {
 }
 
 describe('AuthService — completeOnboarding', () => {
-  it('persists displayName, username, language, gender, and dob', async () => {
+  // Date of birth is deliberately absent here: it is collected and validated at account
+  // creation, not during onboarding. Onboarding happens after the account exists, and an age
+  // gate that runs after account creation has already failed at its job.
+  it('persists displayName, username, language, and gender', async () => {
     const repo = makeRepo();
     const service = makeService(repo);
 
-    await service.completeOnboarding(
-      'user-1',
-      'New Name',
-      'new_username',
-      'MR',
-      'Male',
-      '1995-06-15',
-    );
+    await service.completeOnboarding('user-1', 'New Name', 'new_username', 'MR', 'Male');
 
     expect(repo.markAccountSetupComplete).toHaveBeenCalledWith('user-1', {
       displayName: 'New Name',
       username: 'new_username',
       language: 'MR',
       gender: 'Male',
-      dob,
     });
   });
 
-  it('works with only required fields — gender and dob remain undefined', async () => {
+  it('works with only required fields — gender remains undefined', async () => {
     const repo = makeRepo();
     const service = makeService(repo);
 

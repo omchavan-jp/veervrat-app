@@ -12,9 +12,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Fieldset, FieldsetLegend } from '@/components/ui/field';
 import { AuthShell } from '@/components/auth/auth-shell';
+import { DatePicker } from '@/components/ui/date-picker';
 import { GoogleIcon } from '@/components/auth/google-icon';
 import { PasswordStrength } from '@/components/auth/password-strength';
 import { useSignup } from '@/hooks/use-auth';
+import { CURRENT_CONSENTS } from '@/lib/consents';
+import { latestQualifyingDobInputValue } from '@/lib/age';
 import { signupSchema, type SignupInput } from '@/lib/validations/auth';
 import { authApi } from '@/lib/api/auth';
 import { ApiError } from '@/lib/api/client';
@@ -37,11 +40,15 @@ export default function SignupPage() {
     handleSubmit,
     watch,
     control,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<SignupInput>({
     resolver: zodResolver(signupSchema),
     defaultValues: { language: 'EN' },
   });
+
+  // Recomputed per render rather than module-scope: a long-lived tab must not keep yesterday's
+  // boundary once the date rolls over.
+  const maxDob = latestQualifyingDobInputValue();
 
   const usernameValue = watch('username', '');
   const passwordValue = watch('password', '');
@@ -71,11 +78,27 @@ export default function SignupPage() {
   }, [usernameValue, checkUsername]);
 
   const onSubmit = (data: SignupInput) => {
-    signup.mutate(data);
+    const { acceptedTerms: _accepted, ...rest } = data;
+    // The version is what makes the record meaningful: a boolean cannot answer "did they agree
+    // to THIS version" once a document changes.
+    signup.mutate({ ...rest, consents: CURRENT_CONSENTS });
   };
 
-  const apiError =
-    signup.error instanceof ApiError ? signup.error.message : signup.error?.message;
+  /**
+   * Google signup, not Google sign-in. The date of birth and consent are recorded first, so the
+   * account is only created on return and only for someone who qualifies. Sign-in, on the login
+   * page, authenticates existing accounts and never creates one.
+   */
+  const onGoogleSignup = handleSubmit(async (data) => {
+    const pendingId = await authApi.startGoogleSignup({
+      dob: data.dob,
+      consents: CURRENT_CONSENTS,
+      language: data.language,
+    });
+    window.location.href = `${getRuntimeConfig().apiBaseUrl}/auth/google?pending=${pendingId}`;
+  });
+
+  const apiError = signup.error instanceof ApiError ? signup.error.message : signup.error?.message;
 
   const hero = {
     eyebrow: t('heroEyebrow'),
@@ -159,12 +182,12 @@ export default function SignupPage() {
             {usernameStatus === 'error' && (
               <p className="text-xs text-danger">{t('usernameError')}</p>
             )}
-            {usernameStatus === 'idle' && (
-              <p className="text-xs text-muted">{t('usernameHint')}</p>
-            )}
+            {usernameStatus === 'idle' && <p className="text-xs text-muted">{t('usernameHint')}</p>}
           </div>
           {errors.username && (
-            <p role="alert" className="mt-1 text-xs text-danger">{errors.username.message}</p>
+            <p role="alert" className="mt-1 text-xs text-danger">
+              {errors.username.message}
+            </p>
           )}
         </div>
 
@@ -209,6 +232,54 @@ export default function SignupPage() {
           )}
         </div>
 
+        <div>
+          {/* DatePicker renders a Popover trigger rather than a labelable control, so the
+              caption stays a plain Label without htmlFor. */}
+          <Label className={FIELD_LABEL}>{t('dob')}</Label>
+          <Controller
+            name="dob"
+            control={control}
+            render={({ field }) => (
+              <DatePicker
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                placeholder={t('dobPlaceholder')}
+                // Opens on the most recent qualifying date and refuses anything later. The
+                // server checks independently — this makes the boundary visible, it does not
+                // enforce it.
+                max={maxDob}
+              />
+            )}
+          />
+          {/* Stated before anyone tries, rather than only as a consequence of trying. */}
+          <p id="signup-dob-hint" className="mt-1.5 text-xs text-muted">
+            {t('ageRequirement')}
+          </p>
+          {errors.dob && (
+            <p id="signup-dob-error" role="alert" className="mt-1.5 text-xs text-danger">
+              {errors.dob.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="flex cursor-pointer items-start gap-2.5 text-sm">
+            <input
+              type="checkbox"
+              className="mt-0.5 h-4 w-4 shrink-0 accent-accent"
+              aria-invalid={errors.acceptedTerms ? true : undefined}
+              aria-describedby={errors.acceptedTerms ? 'signup-terms-error' : undefined}
+              {...register('acceptedTerms')}
+            />
+            <span className="text-muted">{t('acceptTerms')}</span>
+          </label>
+          {errors.acceptedTerms && (
+            <p id="signup-terms-error" role="alert" className="mt-1.5 text-xs text-danger">
+              {errors.acceptedTerms.message}
+            </p>
+          )}
+        </div>
+
         <Fieldset>
           <FieldsetLegend className={FIELD_LABEL}>{t('languageLabel')}</FieldsetLegend>
           <Controller
@@ -233,7 +304,9 @@ export default function SignupPage() {
             )}
           />
           {errors.language && (
-            <p role="alert" className="mt-1.5 text-xs text-danger">{errors.language.message}</p>
+            <p role="alert" className="mt-1.5 text-xs text-danger">
+              {errors.language.message}
+            </p>
           )}
         </Fieldset>
 
@@ -255,16 +328,23 @@ export default function SignupPage() {
         <span className="h-px flex-1 bg-border" />
       </div>
 
+      {/*
+        Google SIGNUP — a button, not a link, because the date of birth and consent must be
+        collected and validated before the browser leaves for Google. Linking straight to the
+        provider is what allowed an account to be created for someone whose age was never
+        checked. The login page keeps the plain link, which signs in and never creates.
+      */}
       <Button
         variant="outline"
         size="lg"
         className="min-h-12 w-full text-[15px]"
-        nativeButton={false}
-        render={<a href={`${getRuntimeConfig().apiBaseUrl}/auth/google`} />}
+        onClick={onGoogleSignup}
+        disabled={isSubmitting}
       >
         <GoogleIcon className="h-[18px] w-[18px]" />
         {t('googleCta')}
       </Button>
+      <p className="mt-2 text-center text-xs text-muted">{t('googleSignupNeedsDetails')}</p>
 
       <p className="mt-6 text-center text-sm text-muted">
         {t('hasAccount')}{' '}

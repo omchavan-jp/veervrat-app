@@ -11,9 +11,13 @@ export default async function globalTeardown(): Promise<void> {
     sql(`DELETE FROM blog_comments WHERE author_id IN (${ephemeral})`);
     sql(`DELETE FROM blogs WHERE author_id IN (${ephemeral})`);
     sql(`DELETE FROM test_attempts WHERE user_id IN (${ephemeral})`);
-    sql(`DELETE FROM invitations WHERE inviter_id IN (${ephemeral}) OR invitee_id IN (${ephemeral})`);
+    sql(
+      `DELETE FROM invitations WHERE inviter_id IN (${ephemeral}) OR invitee_id IN (${ephemeral})`,
+    );
     sql(`DELETE FROM journey_vm_assignments WHERE vm_id IN (${ephemeral})`);
-    sql(`DELETE FROM vm_relationships WHERE vm_id IN (${ephemeral}) OR vratarthi_id IN (${ephemeral})`);
+    sql(
+      `DELETE FROM vm_relationships WHERE vm_id IN (${ephemeral}) OR vratarthi_id IN (${ephemeral})`,
+    );
     sql(`DELETE FROM journeys WHERE vratarthi_id IN (${ephemeral})`);
     sql(`DELETE FROM users WHERE email LIKE '%@e2e.local' AND email NOT IN ${KEEP}`);
   } catch {

@@ -46,14 +46,24 @@ export default function PublicExperiencesPage() {
             }
           />
         ) : items.length === 0 ? (
-          <EmptyState icon={<BookText className="h-5 w-5" />} title={t('poolEmpty')} description={t('poolEmptyHint')} />
+          <EmptyState
+            icon={<BookText className="h-5 w-5" />}
+            title={t('poolEmpty')}
+            description={t('poolEmptyHint')}
+          />
         ) : (
           <>
             <div className="space-y-3">
               {items.map((e) => (
-                <article key={e.id} className="rounded-2xl border border-border bg-surface p-4 shadow-card">
+                <article
+                  key={e.id}
+                  className="rounded-2xl border border-border bg-surface p-4 shadow-card"
+                >
                   <div className="mb-1.5 flex items-center gap-2 text-[12px] text-muted">
-                    <Link href={`/u/${e.author.username}`} className="font-medium text-fg hover:text-accent">
+                    <Link
+                      href={`/u/${e.author.username}`}
+                      className="font-medium text-fg hover:text-accent"
+                    >
                       {e.author.displayName}
                     </Link>
                     <span>·</span>
@@ -63,7 +73,10 @@ export default function PublicExperiencesPage() {
                   {e.tags.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {e.tags.map((tg) => (
-                        <span key={tg.id ?? `${tg.entityType}-${tg.entityId}`} className="rounded-full bg-accent/10 px-2 py-0.5 text-[11px] text-accent">
+                        <span
+                          key={tg.id ?? `${tg.entityType}-${tg.entityId}`}
+                          className="rounded-full bg-accent/10 px-2 py-0.5 text-[11px] text-accent"
+                        >
                           {t(`tagType.${tg.entityType}`)}
                         </span>
                       ))}
@@ -74,7 +87,12 @@ export default function PublicExperiencesPage() {
             </div>
             {hasNextPage && (
               <div className="mt-5 flex justify-center">
-                <Button variant="outline" size="sm" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fetchNextPage()}
+                  disabled={isFetchingNextPage}
+                >
                   {isFetchingNextPage ? t('loading') : t('loadMore')}
                 </Button>
               </div>
