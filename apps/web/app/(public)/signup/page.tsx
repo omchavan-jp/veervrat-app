@@ -40,6 +40,9 @@ export default function SignupPage() {
   const [emailOpen, setEmailOpen] = useState(false);
   const searchParams = useSearchParams();
   const oauthError = searchParams.get('error');
+  // Distinct from `error`: arriving here from Google sign-in without an account is the flow
+  // working, not a failure, and the address bar should not say otherwise.
+  const notice = searchParams.get('notice');
   const signup = useSignup();
   const [usernameStatus, setUsernameStatus] = useState<UsernameStatus>('idle');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -152,7 +155,7 @@ export default function SignupPage() {
         person's part — they simply have no account yet — so it reads as an instruction rather
         than a failure, and it says which fields the Google route actually needs.
       */}
-      {oauthError === 'SIGNUP_REQUIRED' && (
+      {notice === 'google_signup_required' && (
         <Alert className="mb-4">
           <AlertDescription>{t('googleNoAccount')}</AlertDescription>
         </Alert>
@@ -192,6 +195,9 @@ export default function SignupPage() {
                 // server checks independently — this makes the boundary visible, it does not
                 // enforce it.
                 max={maxDob}
+                // Opens on the boundary itself, so the rule is visible the moment the calendar
+                // appears rather than being discovered by scrolling into disabled dates.
+                defaultMonth={maxDob}
               />
             )}
           />

@@ -237,10 +237,16 @@ export class AuthController {
         error instanceof Error
           ? ((error as { response?: { error?: string } }).response?.error ?? 'AUTH_ERROR')
           : 'AUTH_ERROR';
-      // SIGNUP_REQUIRED means someone used sign-in without an account; sending them to /login
-      // with an error would be a dead end, since the thing they need is the signup page.
-      const destination =
-        errorCode === 'SIGNUP_REQUIRED' || errorCode === 'UNDERAGE' ? 'signup' : 'login';
+      // Someone using Google sign-in without an account has not made a mistake — they simply
+      // have no account yet. Sending them to /login would be a dead end, and labelling it
+      // `error=` in the address bar tells them they did something wrong when the flow is working
+      // exactly as designed. It gets a `notice`, not an error.
+      if (errorCode === 'SIGNUP_REQUIRED') {
+        res.redirect(`${this.frontendUrl}/signup?notice=google_signup_required`);
+        return;
+      }
+      // Being under the minimum age IS a refusal, so it keeps the error framing.
+      const destination = errorCode === 'UNDERAGE' ? 'signup' : 'login';
       res.redirect(`${this.frontendUrl}/${destination}?error=${errorCode}`);
     }
   }

@@ -13,6 +13,14 @@ type DatePickerProps = {
   placeholder?: string;
   className?: string;
   max?: string; // YYYY-MM-DD
+  /**
+   * Which month the calendar opens on when nothing is selected, as `YYYY-MM-DD`.
+   *
+   * Without it the picker guesses twenty-five years before `max` — a plausible adult birth year,
+   * and a guess buried in a shared component. Callers that know better should say so: an age gate
+   * wants the boundary itself, so the limit is visible rather than decades away.
+   */
+  defaultMonth?: string;
 };
 
 export function DatePicker({
@@ -21,6 +29,7 @@ export function DatePicker({
   placeholder = 'Pick a date',
   className,
   max,
+  defaultMonth,
 }: DatePickerProps) {
   const [open, setOpen] = React.useState(false);
 
@@ -28,6 +37,7 @@ export function DatePicker({
   const validSelected = selected && isValid(selected) ? selected : undefined;
 
   const maxDate = max ? parse(max, 'yyyy-MM-dd', new Date()) : undefined;
+  const openOn = defaultMonth ? parse(defaultMonth, 'yyyy-MM-dd', new Date()) : undefined;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -55,7 +65,11 @@ export function DatePicker({
           captionLayout="dropdown"
           defaultMonth={
             validSelected ??
-            (maxDate ? new Date(maxDate.getFullYear() - 25, maxDate.getMonth()) : undefined)
+            (openOn && isValid(openOn)
+              ? openOn
+              : maxDate
+                ? new Date(maxDate.getFullYear() - 25, maxDate.getMonth())
+                : undefined)
           }
           disabled={maxDate ? { after: maxDate } : undefined}
           startMonth={new Date(1920, 0)}
