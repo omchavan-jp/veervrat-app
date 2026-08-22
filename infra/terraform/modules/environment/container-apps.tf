@@ -138,6 +138,20 @@ resource "azurerm_container_app" "api" {
         name  = "PORT"
         value = "3001"
       }
+      # How many reverse-proxy hops sit between the internet and the app. Every rate limit
+      # keys on `req.ip`, and without this Express reports the ingress rather than the caller —
+      # which left every throttle inert in both environments (#161).
+      #
+      # Configurable because the right number is a property of the topology, not the code, and
+      # a wrong value fails quietly in both directions: too low pins every client to one shared
+      # bucket, too high lets a client pick its own key via X-Forwarded-For. Being a variable
+      # means correcting it against a measurement costs an apply, not a release.
+      #
+      # Verify after changing — DEPLOYMENT.md → "Verifying rate limiting actually works".
+      env {
+        name  = "TRUST_PROXY_HOPS"
+        value = tostring(var.trust_proxy_hops)
+      }
       env {
         name        = "DATABASE_URL"
         secret_name = "database-url"
