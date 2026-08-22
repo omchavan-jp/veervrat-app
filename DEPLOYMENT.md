@@ -533,10 +533,6 @@ they're only *implied* by the gotchas above — hence the explicit list.
 
 ---
 
-## Verifying a deploy
-
-```bash
-
 ---
 
 ## Bootstrapping the first admin
@@ -605,6 +601,94 @@ rather than living in someone's memory.
 per-person, so reaching zero admins is possible — this is the only way back in. Idle Container
 Apps jobs cost nothing.
 
+---
+
+## Wiping an environment's users
+
+⚠️ **The most destructive operation in this repository.** It removes every account and
+everything belonging to one. There is no undo short of a database restore (~10 minutes, and it
+restores to a *new* server — see the restore runbook below).
+
+**What it is for:** resetting a pre-launch environment — clearing test accounts before handing
+UAT to real testers, or clearing the accounts created while proving prod works. Nothing else.
+
+**What it is not for:** removing one person's data. That is the account-deletion flow, which
+*anonymises* rather than deletes, because most of the 23 relations pointing at a user are
+`Restrict` — deleting a single row is not something the schema permits. This job sidesteps that
+with `TRUNCATE ... CASCADE`, which is only defensible when the answer is "all of them".
+
+### What survives
+
+The truncation closure is `users` plus the 31 tables that reference it, directly or
+transitively. **`cms_pages` is not in it** — `updated_by_id` carries no foreign key — so the
+terms and privacy documents survive, as does every seeded reference row (virtues, and the rest
+of the catalogue). After a wipe the environment is a working, content-complete install with no
+accounts, not an empty database.
+
+### Three guards
+
+| Guard | What it stops |
+|---|---|
+| `wipe_users_confirm` defaults to `""` | the job exists but targets nothing; starting it unconfigured prints `nothing to do` |
+| the confirmation must **name the environment** | a value left set in one environment's config, or carried into another by a copied file, does nothing where it lands |
+| refuses above **50 accounts** | a real user base is not a disposable dataset; past that number the answer is no |
+
+The second guard is why the variable is a string and not a boolean. `true` means the same thing
+everywhere it appears; `uat` does not.
+
+### Running it
+
+```bash
+ENV=uat   # prove it here before prod
+
+cd infra/terraform/envs/$ENV
+terraform apply -var="image_tag=$SHA" -var="deploy_apps=true" \
+  -var="wipe_users_confirm=$ENV"
+
+az containerapp job start -n veervrat-$ENV-wipe-users -g veervrat-$ENV
+```
+
+Verify by its **output**, never its exit code (§21):
+
+```bash
+WS=$(az monitor log-analytics workspace show -g veervrat-$ENV -n veervrat-$ENV-logs --query customerId -o tsv)
+az monitor log-analytics query -w "$WS" --analytics-query \
+  "ContainerAppConsoleLogs_CL | where TimeGenerated > ago(30m) | where ContainerName_s == 'wipe-users' | project TimeGenerated, Log_s | order by TimeGenerated asc" -o table
+```
+
+Expected:
+
+```
+Removing 6 account(s) and all data belonging to them, in uat.
+Done. 0 accounts remain.
+```
+
+**Then reset the variable in the same sitting** — a standing armed confirmation is the whole
+risk this design exists to avoid:
+
+```bash
+terraform apply -var="image_tag=$SHA" -var="deploy_apps=true"
+```
+
+### Other outcomes
+
+| Output | Meaning |
+|---|---|
+| `WIPE_USERS_CONFIRM is not set — nothing to do.` | unconfigured; safe |
+| `Refusing: ... is "uat" but this environment is "prod"` | the confirmation names somewhere else — the guard working |
+| `Refusing: N accounts exist, which is more than 50` | past the disposable-data threshold |
+| `No users to remove.` | already empty; idempotent |
+| `accounts remain` (exit 1) | the truncation did not take — investigate before retrying |
+
+**Remove this job once the environment has real users.** Guard 3 will refuse on its own, but a
+loaded mechanism with no legitimate remaining use is not something to leave lying in the
+infrastructure.
+
+---
+
+## Verifying a deploy
+
+```bash
 curl https://<api-url>/health   # cheap liveness — process is up
 curl https://<api-url>/ready    # actually pings Postgres + Redis
 ```
