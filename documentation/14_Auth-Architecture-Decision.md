@@ -112,6 +112,21 @@ If last authentication was not recent, prompt for password or OAuth re-auth befo
 - **Library:** `@nestjs/throttler` — applied globally with per-route overrides
 - **Route-specific limits:** see `Platform-Engineering-Standard.md` numeric constants table for exact values per route
 - **Account lockout:** after 10 failed login attempts for the same email within 1 hour, the account is temporarily locked for 15 minutes. The user is informed ("Too many attempts, try again in 15 minutes"). Lockout state stored in Redis.
+- **Two units of measurement on `/login`, and the relationship between them matters.** A rate
+  limit keyed only on IP is the wrong unit for credential attacks in both directions: it treats
+  a shared NAT (a school, an office) as one attacker, and it cannot tell which *account* is
+  under attack. So login carries two limits:
+
+  | Throttler | Key | Limit | Purpose |
+  |---|---|---|---|
+  | `identity` | targeted email + IP | 20 / 15 min | per-account ceiling; **deliberately looser than the 10-failure lockout above**, so the lockout fires first |
+  | `default` | IP | 100 / 15 min | spray backstop — generous for a shared NAT, still caps walking a list of addresses from one place |
+
+  The ordering is the whole point. The guard runs *before* the service, so if the throttle
+  tripped at the same count as the lockout, the throttle would always answer first and the
+  lockout specified above would never run. That was true in production until #76: it survived
+  only in a test that reset the IP counter before the final request. The email is hashed in the
+  Redis key — see `AppThrottlerGuard.generateKey`.
 - **Password policy (v1):** minimum 8 characters, at least one letter and one digit. No dictionary check. Strength meter shown in UI (weak/ok/strong) but does not block submission.
 - **Abuse monitoring:** all auth failures (login, password reset, OAuth errors) are logged with IP, user-agent, and email. Spike detection (>50 auth failures/min globally) triggers a **Sentry** alert
 (GlitchTip was dropped — D8; implementation pending, issue #79). No automated IP banning in v1 — manual review.

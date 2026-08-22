@@ -72,7 +72,21 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @Throttle({ default: { ttl: 900000, limit: 10 } })
+  // Two limits, two units, and the relationship between them is the point (#76).
+  //
+  //   identity  20 per (email + IP) / 15 min — looser than the 10-failure account lockout, so
+  //             the lockout fires FIRST and returns ACCOUNT_LOCKED with a countdown. When both
+  //             tripped at 10 the guard always won and the documented lockout was dead code.
+  //   default  100 per IP / 15 min — the spray backstop. Generous enough that a school or
+  //             office behind one NAT never meets it in ordinary use, tight enough that
+  //             walking a password list across many addresses from one IP still stops.
+  //
+  // Raising `default` from 10 is safe precisely because `identity` now exists: the per-account
+  // protection moved to a key that names the account, instead of being approximated by IP.
+  @Throttle({
+    identity: { ttl: 900000, limit: 20 },
+    default: { ttl: 900000, limit: 100 },
+  })
   async login(
     @Body() dto: LoginDto,
     @Req() req: Request,

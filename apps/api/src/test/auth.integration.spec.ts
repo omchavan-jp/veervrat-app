@@ -6,7 +6,7 @@ import {
   getTestPrisma,
   cleanTestDb,
 } from './helpers/app.helper';
-import { resetRateLimits, throttlerKeyCount } from './setup';
+import { throttlerKeyCount } from './setup';
 
 describe('Auth — integration', () => {
   beforeAll(async () => {
@@ -220,13 +220,12 @@ describe('Auth — integration', () => {
           .send({ email, password: 'WrongPassword1' });
       }
 
-      // The `/login` route's own IP-based throttle (10 req/15min — see auth.controller.ts) uses
-      // the exact same count as this test's lockout threshold, so the 10 requests above trip
-      // both mechanisms simultaneously. The throttler guard runs ahead of the service-layer
-      // lockout check, so without this reset the 11th request below would be rejected by
-      // ThrottlerException, not the account-lockout logic this test exists to verify. This is a
-      // real product conflict (see backlog.md), not a workaround for a test artifact.
-      await resetRateLimits();
+      // No rate-limit reset here, deliberately. This test used to call resetRateLimits() before
+      // the final request, because login was throttled at 10 per IP — the same count as the
+      // lockout threshold — so the guard answered before the service and ACCOUNT_LOCKED never
+      // ran outside the test. The reset was a workaround for a production defect (#76), and
+      // removing it is how this test now proves the defect is gone: the login throttle is keyed
+      // on email+IP and set looser than the lockout, so the lockout genuinely fires first.
 
       // 11th should be ACCOUNT_LOCKED
       const res = await getRequest()
@@ -237,6 +236,53 @@ describe('Auth — integration', () => {
 
       expect(res.status).toBe(429);
       expect(res.body.error).toBe('ACCOUNT_LOCKED');
+    });
+
+    it("does not let one account's failures throttle another from the same IP", async () => {
+      // The other half of #76. Vratarthi behind one school or office NAT share an IP; when the
+      // login throttle was keyed on IP alone they consumed each other's allowance, so one
+      // person fumbling their password locked the building out. Every request here comes from
+      // the same address — that is the point.
+      const prisma = getTestPrisma();
+      const csrfToken = 'csrf-nat';
+      const attempt = (email: string) =>
+        getRequest()
+          .post('/api/v1/auth/login')
+          .set('Cookie', `csrf-token=${csrfToken}`)
+          .set('X-CSRF-Token', csrfToken)
+          .send({ email, password: 'WrongPassword1' });
+
+      for (const [email, username] of [
+        ['nat_noisy@test.com', 'nat_noisy_u'],
+        ['nat_quiet@test.com', 'nat_quiet_u'],
+      ]) {
+        await prisma.user.create({
+          data: {
+            dob: new Date('1990-01-01'),
+            email,
+            displayName: username,
+            username,
+            emailVerifiedAt: new Date(),
+            roles: { create: { role: 'VRATARTHI' } },
+            authAccounts: {
+              create: {
+                provider: 'EMAIL',
+                providerAccountId: email,
+                passwordHash: 'invalid-hash-not-bcrypt',
+              },
+            },
+          },
+        });
+      }
+
+      // Exhaust the identity throttle (20 / 15 min) for one address.
+      for (let i = 0; i < 21; i++) await attempt('nat_noisy@test.com');
+      expect((await attempt('nat_noisy@test.com')).body.error).toBe('RATE_LIMITED');
+
+      // The neighbour is untouched: refused for the right reason, not throttled.
+      const quiet = await attempt('nat_quiet@test.com');
+      expect(quiet.body.error).not.toBe('RATE_LIMITED');
+      expect(quiet.status).not.toBe(429);
     });
   });
 

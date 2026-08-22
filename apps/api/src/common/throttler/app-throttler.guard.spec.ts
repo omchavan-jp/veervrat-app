@@ -69,3 +69,74 @@ describe('AppThrottlerGuard', () => {
     });
   });
 });
+
+describe('AppThrottlerGuard.generateKey', () => {
+  class KeyGuard extends AppThrottlerGuard {
+    constructor() {
+      super({ throttlers: [] }, {} as never, {} as never);
+    }
+    public keyFor(body: unknown, name: string, ip = '1.2.3.4') {
+      const context = {
+        switchToHttp: () => ({ getRequest: () => ({ body }) }),
+        getHandler: () => function handler() {},
+        getClass: () => class Controller {},
+      };
+      return this['generateKey'](context as never, ip, name);
+    }
+  }
+
+  const guard = () => new KeyGuard();
+
+  it('separates two people behind one IP who are logging into different accounts', () => {
+    // The shared-NAT case from #76: a school or office where ten failed logins is five people
+    // having a bad morning, not an attack. Different accounts must not share a counter.
+    const g = guard();
+    expect(g.keyFor({ email: 'a@x.com' }, 'identity')).not.toBe(
+      g.keyFor({ email: 'b@x.com' }, 'identity'),
+    );
+  });
+
+  it('keeps the same person on one counter from one IP', () => {
+    const g = guard();
+    expect(g.keyFor({ email: 'a@x.com' }, 'identity')).toBe(
+      g.keyFor({ email: 'a@x.com' }, 'identity'),
+    );
+  });
+
+  it('still separates the same account attempted from different IPs', () => {
+    const g = guard();
+    expect(g.keyFor({ email: 'a@x.com' }, 'identity', '1.1.1.1')).not.toBe(
+      g.keyFor({ email: 'a@x.com' }, 'identity', '2.2.2.2'),
+    );
+  });
+
+  it('treats casing and surrounding space as the same account', () => {
+    // Otherwise ' A@X.com ' and 'a@x.com' get a counter each and the limit is trivially evaded.
+    const g = guard();
+    expect(g.keyFor({ email: '  A@X.com ' }, 'identity')).toBe(
+      g.keyFor({ email: 'a@x.com' }, 'identity'),
+    );
+  });
+
+  it('never puts the address itself in the key', () => {
+    // Redis keys surface in slow logs, KEYS output and memory dumps.
+    expect(guard().keyFor({ email: 'someone@example.com' }, 'identity')).not.toContain(
+      'someone@example.com',
+    );
+  });
+
+  it('falls back to per-IP counting when there is no email', () => {
+    // Not one shared key for all such requests — that would let unrelated callers exhaust
+    // each other.
+    const g = guard();
+    expect(g.keyFor({}, 'identity', '1.1.1.1')).not.toBe(g.keyFor({}, 'identity', '2.2.2.2'));
+    expect(g.keyFor(undefined, 'identity')).toBe(g.keyFor({ email: 42 }, 'identity'));
+  });
+
+  it('leaves every other throttler keyed on IP alone', () => {
+    const g = guard();
+    expect(g.keyFor({ email: 'a@x.com' }, 'default')).toBe(
+      g.keyFor({ email: 'b@x.com' }, 'default'),
+    );
+  });
+});
