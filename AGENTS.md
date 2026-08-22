@@ -93,6 +93,7 @@ veervrat-app/
 - `documentation/18_Observability-Standard.md` — structured logging schema, GlitchTip setup, alert thresholds
 - `documentation/19_Email-Strategy.md` — SMTP (JP IT relay) + React Email, transactional vs notification emails, template structure, bilingual strategy
 - `documentation/21_Infrastructure-Conventions.md` — **read before touching `infra/terraform/`.** Naming rules, the DNS-zone rule, plan-before-apply discipline, import procedure, secrets/access model
+- `documentation/22_Platform-Requirements.md` — what the app needs, provider-agnostic. **Read before any sizing, costing or migration question.** Sizing there is estimated, not measured — say so when quoting it
 
 ## Hard rules — follow exactly
 

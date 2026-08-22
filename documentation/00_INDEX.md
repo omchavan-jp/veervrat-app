@@ -40,6 +40,7 @@ numbered by purpose so the reading order is obvious:
 | 19 | [Email Strategy](19_Email-Strategy.md) | Transactional vs notification email, templates, bilingual strategy. ✅ Live on UAT via JP's SMTP relay. |
 | 20 | [Solo-Dev Operations](20_Solo-Dev-Operations.md) | Feedback capture → triage (GitHub Issues) → implement → changelog/doc loop. |
 | 21 | [Infrastructure Conventions](21_Infrastructure-Conventions.md) | Terraform, Azure, CD, deployment traps. **Read before touching `infra/`.** |
+| 22 | [Platform Requirements](22_Platform-Requirements.md) | What the app needs, stated **without reference to any provider**. Read before sizing, costing or migrating anywhere. |
 
 ## 90+ · Historical — frozen records
 
@@ -80,3 +81,36 @@ a correct new line was added without reconciling the old one.
 > drop version suffixes from the filename, use `Hyphenated-Title-Case.md`, and add a row here.
 > Numbers are stable references — don't renumber an existing file without updating inbound links
 > (`AGENTS.md`, `03_Implementation-Order.md`, and any `openspec/` specs that cite it).
+
+## Write for the reader who was not in the room
+
+The most common failure in this doc set is not inaccuracy — it is writing for whoever was present
+when the document was made. Symptoms, all found in a single review:
+
+- **Issue and thread numbers doing load-bearing work.** "Azure Blob planned (O15), requiring an
+  SDK swap" tells a reader nothing unless they can look up O15. State the fact; let the reference
+  be an aside that adds provenance, never the fact itself.
+- **Time-relative claims.** "None exist today", "not deployed today", "when testers arrive".
+  These decay silently — the sentence stays grammatical while becoming false. Prefer a condition
+  ("once object storage is provisioned") over a date-dependent one.
+- **Confusing *not provisioned* with *not required*.** A built feature has requirements whether
+  or not it is currently deployed. Someone sizing a new environment from "uploads: none exist"
+  will omit object storage and discover the gap after committing.
+- **Narrating incidents in place of stating rules.** "Production served healthy responses over an
+  empty database for five days" belongs in the conventions or status record. A requirements
+  document should say "health endpoints do not verify schema presence; do not treat them as proof
+  the application works."
+- **Arguing with our own configuration.** "'Optional' is misleading" reads as an internal
+  argument. Say what is true: "required when running more than one instance."
+- **Unexpanded jargon.** Expand an acronym at first use, or express the underlying requirement
+  instead — "restore to any chosen moment within the retention window" is clearer than "PITR",
+  and closer to what actually needs to be true.
+
+**Audience decides how much internal shorthand is acceptable.** `AGENTS.md`, `ops/` and
+`DEPLOYMENT.md` are read by people with the repository open — issue numbers there are fine.
+Anything a hosting provider, a lawyer, an auditor or a new maintainer might read must stand on
+its own.
+
+A useful test before committing a document: **would this still be correct, and still make sense,
+read a year from now by someone with no access to the conversation that produced it?**
+

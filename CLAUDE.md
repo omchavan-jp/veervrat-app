@@ -96,6 +96,19 @@ to test, so the grant path first ran for real in production, and a working featu
   migration anywhere; `ui-ux-remediation` task 1.15 was ticked and absent from the code; #40 sat
   open while shipped and deployed.
 
+## Write for the reader who was not in the room
+
+Documents outlive the conversation that produced them. No load-bearing issue numbers, no
+time-relative claims ("none exist today"), no incident narratives where a rule belongs, and never
+confuse *not currently provisioned* with *not required* — a built feature has requirements either
+way. Expand jargon at first use, or state the underlying requirement instead.
+
+Audience decides how much shorthand is acceptable: `ops/` and `AGENTS.md` are read with the repo
+open; anything a provider, lawyer or new maintainer might read must stand alone. Test: would this
+still be correct, and still make sense, a year from now to someone who was not here?
+
+Full version: `documentation/00_INDEX.md` → "Write for the reader who was not in the room".
+
 ## Before recording a fact — or filing work — search for what already covers it
 
 ```bash

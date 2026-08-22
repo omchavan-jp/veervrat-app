@@ -83,6 +83,11 @@ Still not true of prod, and tracked as issues rather than assumed:
 
 **Backlog lives in GitHub Issues** (`gh issue list`), not in this file — see below.
 
+**Platform requirements:** `documentation/22_Platform-Requirements.md` — what the app needs stated
+without reference to any provider, so the Azure guide, a future VPS guide, the migration doc and
+the budget all consume one source instead of restating it four times. ⚠️ Its sizing is estimated,
+not measured — there are no users to measure.
+
 **Data map:** `ops/data-map.md` — what personal data exists, where it lives, what anonymisation
 actually clears, and what has no retention policy. The shared input for the privacy policy (#81),
 DPDP work, the backup policy, and the migration plan. Written 2026-08-22 so those four do not
