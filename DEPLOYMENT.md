@@ -620,6 +620,13 @@ set and a dashboard loads.
 **Rehearsed on UAT 2026-08-21** (#89). Before that date "we have backups" was a configuration
 setting, not a demonstrated recovery. Never rehearse on prod.
 
+⚠️ **Scope: this covers provider-managed backups only.** Those live inside the same Azure
+subscription and the same region as the database they protect, and geo-redundant backup is
+disabled in both environments. They therefore protect against **deletion, corruption and
+operator error** — not against losing the region, and not against losing the subscription
+itself. There is currently **no copy of the data outside Azure**, so this procedure is not a
+complete answer to "what if we lose the account". Tracked separately.
+
 ### The number that matters
 
 **9 minutes 1 second** from command to a `Ready` server (19:03:00 → 19:12:01 UTC), B1ms / 32GB.
