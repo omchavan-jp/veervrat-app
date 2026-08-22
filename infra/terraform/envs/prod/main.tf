@@ -59,6 +59,12 @@ variable "migrate_command" {
   default     = "migrate deploy"
 }
 
+variable "wipe_users_confirm" {
+  description = "Must equal the environment name for the wipe-users job to act. Empty = inert."
+  type        = string
+  default     = ""
+}
+
 variable "bootstrap_admin_email" {
   description = "Email of the account to grant ADMIN via the grant-admin job. Empty = no target."
   type        = string
@@ -99,6 +105,7 @@ module "environment" {
   # The matching secret is a Key Vault reference, set out of band; see keyvault.tf.
   google_client_id = "294902498600-98q6nt66turinrh8s910g0aeeq03q457.apps.googleusercontent.com"
 
+  wipe_users_confirm               = var.wipe_users_confirm
   bootstrap_admin_email            = var.bootstrap_admin_email
   bootstrap_admin_allow_unverified = var.bootstrap_admin_allow_unverified
 

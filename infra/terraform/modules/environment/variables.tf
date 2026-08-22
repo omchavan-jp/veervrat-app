@@ -270,3 +270,17 @@ variable "content_edit_enabled" {
   default     = false
 }
 
+
+# Confirmation for the user-wipe job. MUST equal `environment` for the job to act; empty (the
+# default) means the job exists and targets nothing.
+#
+# Deliberately not a boolean. A flag left set in one environment's configuration, or carried into
+# another by a copied file, would wipe whatever it landed in. Naming the target means a stray
+# value does nothing.
+#
+# Set it, apply, run the job, then set it back to empty in the same sitting.
+variable "wipe_users_confirm" {
+  description = "Must equal the environment name for the wipe-users job to act. Empty = inert."
+  type        = string
+  default     = ""
+}
