@@ -13,6 +13,32 @@ import type Redis from 'ioredis';
  */
 export const GLOBAL_THROTTLER = { name: 'default', ttl: 60000, limit: 300 } as const;
 
+/**
+ * A second throttler keyed on **who is being targeted**, not just where the request came from.
+ *
+ * `default` counts per IP. That is the wrong unit for credential attacks in two directions at
+ * once:
+ *
+ *   - **It punishes the innocent.** Vratarthi behind one school or office NAT share an IP.
+ *     Ten failed logins from a building is five people having a bad morning, not an attack, and
+ *     a tight per-IP limit makes them throttle each other.
+ *   - **It made account lockout unreachable.** `14_Auth-Architecture-Decision.md` §16 specifies
+ *     a lockout after 10 failed logins for an email. Login was throttled at 10 per IP over the
+ *     same window, and the guard runs *before* the service, so the throttler always answered
+ *     first and `ACCOUNT_LOCKED` never ran in production. It survived only in a test that reset
+ *     the IP counter first — a workaround for a real defect, removed with this change.
+ *
+ * So this throttler keys on the email being attempted *and* the IP (see
+ * `AppThrottlerGuard.generateKey`), and auth routes set it **looser than the lockout
+ * threshold** so the lockout fires first and the throttler stays the outer backstop. The per-IP
+ * `default` limit stays on those routes too, generous enough not to catch a shared NAT but
+ * still capping someone spraying many addresses from one place.
+ *
+ * The global limit here is deliberately enormous: this throttler is meant to do nothing at all
+ * except where a route opts in with `@Throttle({ identity: ... })`.
+ */
+export const IDENTITY_THROTTLER = { name: 'identity', ttl: 900000, limit: 1_000_000 } as const;
+
 export interface ThrottlerFactoryLogger {
   warn(message: string): void;
 }
@@ -31,7 +57,7 @@ export function buildThrottlerOptions(
   logger: ThrottlerFactoryLogger,
   redisUrl = process.env.REDIS_URL,
 ): ThrottlerModuleOptions {
-  const throttlers = [{ ...GLOBAL_THROTTLER }];
+  const throttlers = [{ ...GLOBAL_THROTTLER }, { ...IDENTITY_THROTTLER }];
 
   if (!redisUrl) {
     logger.warn('REDIS_URL not set — rate limits are per-process only (single replica)');

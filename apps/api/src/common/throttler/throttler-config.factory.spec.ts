@@ -2,7 +2,11 @@ import { describe, it, expect, vi } from 'vitest';
 import type Redis from 'ioredis';
 import type { ThrottlerModuleOptions } from '@nestjs/throttler';
 import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
-import { GLOBAL_THROTTLER, buildThrottlerOptions } from './throttler-config.factory';
+import {
+  GLOBAL_THROTTLER,
+  IDENTITY_THROTTLER,
+  buildThrottlerOptions,
+} from './throttler-config.factory';
 
 const redis = {} as Redis;
 const makeLogger = () => ({ warn: vi.fn() });
@@ -54,8 +58,21 @@ describe('buildThrottlerOptions', () => {
         ttl: GLOBAL_THROTTLER.ttl,
         limit: GLOBAL_THROTTLER.limit,
       }),
+      expect.objectContaining({
+        name: 'identity',
+        ttl: IDENTITY_THROTTLER.ttl,
+        limit: IDENTITY_THROTTLER.limit,
+      }),
     ]);
     expect(GLOBAL_THROTTLER).toEqual({ name: 'default', ttl: 60000, limit: 300 });
+  });
+
+  it('leaves the identity throttler effectively off until a route opts in', () => {
+    // It applies to every route, so its global limit must be high enough to never fire on its
+    // own. Only routes that set `@Throttle({ identity: ... })` give it a real limit — a low
+    // value here would silently rate-limit the entire API on a key most routes cannot even
+    // populate.
+    expect(IDENTITY_THROTTLER.limit).toBeGreaterThanOrEqual(1_000_000);
   });
 
   it('names the throttler `default` so `@Throttle()` overrides bind to it', () => {
