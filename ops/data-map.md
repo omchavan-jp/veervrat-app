@@ -21,7 +21,7 @@ single most important sentence in this document.
 |---|---|
 | `email` | unique; also the login identifier |
 | `displayName`, `username` | `username` is public-facing and appears in profile URLs |
-| `avatarUrl` | points at object storage; **no files exist yet** (uploads unprovisioned) |
+| `avatarUrl` | reference to a file in object storage. Uploads are built but object storage is not yet provisioned, so no files exist |
 | `gender`, `dob` | optional. `dob` is a strong identifier and, for a minor, sensitive |
 | `language` | preference, not identifying |
 
@@ -32,9 +32,9 @@ identifier** for that person.
 
 ### Technical / behavioural
 
-| Where | Fields | Retention today |
+| Where | Fields | Retention |
 |---|---|---|
-| `sessions` | `ipAddress`, `userAgent`, `expiresAt` | ⚠️ **never deleted** — see #77 |
+| `sessions` | `ipAddress`, `userAgent`, `expiresAt` | ⚠️ **Rows are never deleted.** Nothing removes them once expired (tracked as issue #77) |
 | `audit_events` | `actorId`, `ipAddress`, `userAgent`, `metadata` | no policy defined |
 | `feedback_items` | reporter identity, route, viewport, user agent | no policy defined |
 
@@ -72,8 +72,8 @@ pseudonym — a deliberate decision (`spec/06`), not an oversight.
 | `dob`, `gender` | ⚠️ Not cleared. `dob` narrows identity sharply, especially combined with retained content |
 | `auth_accounts.providerAccountId` | ⚠️ The **Google identity survives**. The account is pseudonymous in our database and still linked to a real Google user |
 | `auth_accounts.passwordHash` | Not cleared |
-| `sessions` / `audit_events` IP + user agent | Persist indefinitely (#77) |
-| avatar **file** in object storage | `avatarUrl` is nulled; the underlying object is not deleted. Moot today (no files), a real gap once uploads exist |
+| `sessions` / `audit_events` IP address + user agent | Retained indefinitely; no process removes them (issue #77) |
+| avatar **file** in object storage | The reference is cleared; the stored file is not deleted. No effect while object storage is unprovisioned, and a genuine gap once it is |
 
 None of these is necessarily wrong — audit trails legitimately outlive accounts. But they are
 currently **unstated**, and "we anonymise your account" is a claim a privacy policy will make.
@@ -105,10 +105,10 @@ Decisions needed, none of them technical:
 | All application data | Azure Postgres Flexible Server, **Central India (Pune)** |
 | Sessions / cache | Azure Managed Redis, same region |
 | Secrets | Azure Key Vault, per environment |
-| Object storage | **none yet** — Azure Blob planned (O15); no files exist |
+| Object storage | Not yet provisioned. Required by the application — see `documentation/22_Platform-Requirements.md` |
 | Email in transit | JP IT's relay (`dhoomketu.in`), sending as `notifications.jnanaprabodhini.org` |
 | Logs incl. IP/user agent | Azure Log Analytics, 30-day retention |
-| **Terraform state** | ⚠️ Holds **every secret in plaintext** — see #90 |
+| **Infrastructure state file** | ⚠️ Holds **every secret in plaintext**. Read access to it is equivalent to secret-store administrator access (issue #90) |
 
 Data residency is India, which simplifies DPDP considerably. Worth stating explicitly in the
 policy rather than leaving implicit.
@@ -145,8 +145,9 @@ policy rather than leaving implicit.
 ## 7. What this document is not
 
 It is not a privacy policy, not legal advice, and not a compliance certification. It is the
-**factual basis** those require: what the system does today, verified against the code rather
-than remembered.
+**factual basis** those require: what the system does, verified against the source rather than
+remembered. Re-verify it before relying on it — code changes and this document does not follow
+automatically.
 
 Related: #81 (privacy policy + terms), #77 (session retention), #90 (state RBAC), #89 (backups
 never restored), `ops/azure-account-facts.md` §6 (access inventory).
