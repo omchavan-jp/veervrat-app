@@ -122,12 +122,7 @@
       "heroHeading": "Welcome back. Pick up where you left.",
       "heroDevanagari": "दिवसातून एक पाऊल — पुरेसे आहे.",
       "heroGloss": "One step a day is enough. The discipline is the destination.",
-      "orDivider": "or",
-      "dob": "Date of birth",
-      "dobPlaceholder": "Select your date of birth",
-      "ageRequirement": "Veervrat is for adults aged 18 and over.",
-      "acceptTerms": "I accept the Terms of Use and Privacy Policy.",
-      "googleSignupNeedsDetails": "Fill in your date of birth and accept the terms above before continuing with Google."
+      "orDivider": "or"
     },
     "signup": {
       "title": "Create your account",
@@ -164,7 +159,13 @@
       "heroDevanagari": "वीरव्रत — स्वतःशी प्रामाणिक राहण्याचा संकल्प.",
       "heroGloss": "Veervrat — the vow to be honest with oneself. Identify what holds you back. Work on it daily. Track the shift.",
       "orDivider": "or",
-      "usernameError": "Couldn't check availability. Try again."
+      "usernameError": "Couldn't check availability. Try again.",
+      "dob": "Date of birth",
+      "dobPlaceholder": "Select your date of birth",
+      "ageRequirement": "Veervrat is for adults aged 18 and over.",
+      "acceptTerms": "I accept the Terms of Use and Privacy Policy.",
+      "googleSignupNeedsDetails": "Fill in your date of birth and accept the terms above before continuing with Google.",
+      "googleNoAccount": "That Google account isn't registered yet. Add your date of birth and accept the terms below, then choose Continue with Google."
     },
     "forgotPassword": {
       "title": "Reset your password",
