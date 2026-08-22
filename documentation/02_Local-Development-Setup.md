@@ -218,6 +218,57 @@ so anything baked cannot differ between them.
 
 ---
 
+## Running the built image locally
+
+`pnpm dev` cannot show a build-time configuration fault, because it reads the environment at
+runtime. A built image can — and building one takes about three minutes against a deploy cycle of
+roughly fifteen. Worth doing before pushing anything that touches configuration, the Dockerfile,
+or how a per-environment value reaches the browser.
+
+```bash
+docker build -f apps/web/Dockerfile -t veervrat-web:local .        # ~3 min
+
+docker run -d --name veervrat-web-local -p 3100:3000 \
+  -e API_BASE_URL="http://host.docker.internal:3001/api/v1" \
+  -e SITE_URL="http://localhost:3100" \
+  -e ENVIRONMENT="local" \
+  -e FEEDBACK_MODE="granted" \
+  -e CONTENT_EDIT_ENABLED="true" \
+  -e PORT=3000 \
+  veervrat-web:local
+
+curl -s http://localhost:3100/signup | head -c 200
+docker rm -f veervrat-web-local        # it is a check, not a second environment
+```
+
+Three details that are easy to get wrong:
+
+- **Port 3100, not 3000.** The dev server holds 3000, and two things bound to one port fail in a
+  way that looks like the image being broken.
+- **`host.docker.internal`, not `localhost`.** Inside the container, `localhost` is the container.
+  The API runs on the host.
+- **Every per-environment value is passed at `docker run`, not at `docker build`.** That is the
+  point of the exercise, and the shape of the deployed system: one image, configured on start.
+
+### What this specifically catches
+
+**A value that was baked when it should not have been.** The check is that a runtime value
+actually reaches the browser. With the API base above, the served page should reference
+`host.docker.internal:3001` — a value supplied at `docker run`. If it instead shows whatever was
+present at build time, something is being inlined that must not be.
+
+```bash
+curl -s http://localhost:3100/signup | grep -c "host.docker.internal:3001"   # expect ≥ 1
+```
+
+That is the defect behind conventions §17, and it has occurred three times: an API origin baked
+into rewrite rules so production addressed the pre-production database; a site URL baked so link
+previews pointed at the wrong environment; and a feature flag baked so a feature was compiled out
+of every deployed build.
+
+⚠️ Still not covered here: cookies on a real domain, `Secure`/`SameSite` under HTTPS, and the
+deployment machinery itself. See below.
+
 ## What local testing proves, and what it does not
 
 Running locally is the fast loop and should be the default. It is not equivalent to a deployed
@@ -232,7 +283,7 @@ contracts, database queries and migrations.
 |---|---|
 | **Cookies and sessions** | `localhost` shares cookies across ports, so a missing cookie `Domain` cannot be seen. Login worked locally and did not survive a refresh once deployed |
 | **`Secure` / `SameSite`** | Both depend on HTTPS, which `pnpm dev` does not use |
-| **Build-time configuration** | `pnpm dev` reads the environment at runtime. Anything baked into an image is identical everywhere it runs, and that only becomes visible in a built image — the defect behind conventions §17 |
+| **Build-time configuration** | `pnpm dev` reads the environment at runtime, so a baked value looks correct. Only a built image shows it — see "Running the built image locally" above, which is the cheap way to check |
 | **Deployment machinery** | Migration and seed jobs, infrastructure changes, the promotion path |
 | **Cold start** | Local processes are always warm |
 
