@@ -74,6 +74,21 @@ Worked example, 2026-08-21: `feedback_mode = all` on UAT was set without asking.
 configuration and it was policy — it made UAT differ from prod on the exact mechanism UAT exists
 to test, so the grant path first ran for real in production, and a working feature looked broken.
 
+## Run it locally before pushing
+
+`pnpm dev` against the docker services. Real Google and SMTP credentials are available — see
+`documentation/02_Local-Development-Setup.md`. A round trip through CI and CD is roughly fifteen
+minutes; a local check is seconds. Anything a page load or an API call would reveal belongs in
+the fast loop.
+
+⚠️ **A green local run is not evidence about**: cookies and sessions (`localhost` shares cookies
+across ports, which hid a missing cookie `Domain` until it reached a deployed environment),
+`Secure`/`SameSite` (no HTTPS), build-time configuration (`pnpm dev` reads the environment at
+runtime), or deployment machinery. Deploy for those; say which was actually checked.
+
+Run the **integration** project too, not only unit tests — `--exclude "**/*.integration.spec.ts"`
+is not "the tests pass".
+
 ## Verification — how you may conclude something works
 
 - **An empty result is not a pass.** State the observable you expect *before* running a check,
