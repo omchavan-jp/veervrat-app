@@ -58,6 +58,13 @@ export default function SignupPage() {
   } = useForm<SignupInput>({
     resolver: zodResolver(signupSchema),
     defaultValues: { language: 'EN' },
+    // Validate on blur, then re-validate as the person types.
+    //
+    // ⚠️ The default (`onSubmit`) leaves an error on screen until the next submit — and the
+    // Google button calls `trigger()` without submitting, so an error raised there would persist
+    // while the person fixed the field in front of it. That produced "Username available" and
+    // "Username must be at least 3 characters" side by side on a valid thirteen-character name.
+    mode: 'onTouched',
   });
 
   // Recomputed per render rather than module-scope: a long-lived tab must not keep yesterday's
@@ -194,20 +201,25 @@ export default function SignupPage() {
             aria-describedby="signup-username-status"
             {...register('username')}
           />
+          {/* Availability is suppressed while the field itself is invalid: whether a name is
+              taken is not a useful thing to know about a name that is not allowed anyway, and
+              showing both at once contradicts itself. */}
           <div className="mt-1.5" id="signup-username-status" aria-live="polite">
-            {usernameStatus === 'checking' && (
+            {!errors.username && usernameStatus === 'checking' && (
               <p className="text-xs text-muted">{t('usernameChecking')}</p>
             )}
-            {usernameStatus === 'available' && (
+            {!errors.username && usernameStatus === 'available' && (
               <p className="text-xs text-success">{t('usernameAvailable')}</p>
             )}
-            {usernameStatus === 'taken' && (
+            {!errors.username && usernameStatus === 'taken' && (
               <p className="text-xs text-danger">{t('usernameTaken')}</p>
             )}
-            {usernameStatus === 'error' && (
+            {!errors.username && usernameStatus === 'error' && (
               <p className="text-xs text-danger">{t('usernameError')}</p>
             )}
-            {usernameStatus === 'idle' && <p className="text-xs text-muted">{t('usernameHint')}</p>}
+            {!errors.username && usernameStatus === 'idle' && (
+              <p className="text-xs text-muted">{t('usernameHint')}</p>
+            )}
           </div>
           {errors.username && (
             <p role="alert" className="mt-1 text-xs text-danger">

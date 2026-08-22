@@ -185,3 +185,54 @@ describe('SignupPage', () => {
     expect(mrRadio.checked).toBe(false);
   });
 });
+
+describe('SignupPage — stale validation', () => {
+  beforeEach(() => {
+    mockCheckUsername.mockReset();
+  });
+
+  it('clears a username error once the field is corrected', async () => {
+    // The Google button validates without submitting. Under the default `onSubmit` mode an error
+    // raised that way persists until the next submit — so it stayed on screen while the person
+    // fixed the field in front of it, alongside a green "available" from the separate check.
+    renderSignup();
+
+    const username = screen.getByPlaceholderText('auth.signup.usernamePlaceholder');
+    fireEvent.change(username, { target: { value: 'ab' } });
+    fireEvent.blur(username);
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+    });
+
+    fireEvent.change(username, { target: { value: 'a_valid_name' } });
+
+    await waitFor(() => {
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+  });
+
+  it('does not report availability for a name that is not allowed', async () => {
+    // "Username available" and "must be at least 3 characters" contradict each other.
+    // Uppercase fails the pattern but passes the length check, so the availability request
+    // fires while the field is invalid — the exact case that produced a green "available"
+    // beside a red validation error.
+    // Fake timers only here: `waitFor` polls on real ones and hangs under them, which is why
+    // this is scoped to the test that needs the debounce rather than the whole block.
+    vi.useFakeTimers();
+    mockCheckUsername.mockResolvedValue({ available: true });
+    renderSignup();
+
+    const username = screen.getByPlaceholderText('auth.signup.usernamePlaceholder');
+    fireEvent.change(username, { target: { value: 'Invalid_Name' } });
+    fireEvent.blur(username);
+
+    await act(async () => {
+      vi.advanceTimersByTime(450);
+      await Promise.resolve();
+    });
+
+    expect(screen.queryByText('auth.signup.usernameAvailable')).not.toBeInTheDocument();
+    vi.useRealTimers();
+  });
+});
