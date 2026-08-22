@@ -1319,3 +1319,45 @@ provider SDK outside object storage: PostgreSQL and Redis are reached by connect
 everything provider-specific lives in the infrastructure definitions rather than the product.
 A migration re-expresses infrastructure; it does not rewrite the application.
 
+---
+
+## 25. A migration that passes locally can still fail on data
+
+Adding a required column succeeds against an empty table and fails against a populated one with
+`23502`. The local database is frequently empty for exactly the table being changed, so the
+defect is invisible until it meets real rows — and by then it has failed inside a deployment,
+where a failed migration blocks every later one (`P3018`) until a human resolves it.
+
+Prisma generates a warning saying precisely this, at the top of the file:
+
+```
+- Added the required column `username` to the `pending_signups` table without a default value.
+  This is not possible if the table is not empty.
+```
+
+It is easy to read past, because it is phrased as a possibility and is usually true locally.
+
+**Before merging a migration that adds a required column, changes a column to NOT NULL, or adds
+a unique constraint, answer: what happens if the target table is not empty in a deployed
+environment?** The honest answer is often "I do not know" — the table can be checked, and the
+migration written to handle it.
+
+Three ways to handle it, in order of preference:
+
+1. **A default**, when a sensible one exists.
+2. **Backfill in the migration**, when the value can be derived.
+3. **Delete the rows**, when they are genuinely transient and inventing a value would be worse
+   than losing them. This must be argued in the migration, not assumed — and guarded when the
+   assumption only holds while data is disposable (see §21's example).
+
+The third applied to `pending_signups`: a signup handoff lives for minutes, so a row's loss means
+someone restarts a signup and sees it happen. A fabricated username in a record whose whole
+purpose is to carry a person's actual choice would have been worse.
+
+### Recovering a failed migration
+
+Documented in `DEPLOYMENT.md`. In short: `migrate resolve --rolled-back <name>` through the
+`migrate_command` variable, run the job, then restore the default command. Deliberately manual —
+whether a partially applied migration rolled back is a judgement, not something to retry
+automatically, which is also why `replica_retry_limit = 0`.
+
