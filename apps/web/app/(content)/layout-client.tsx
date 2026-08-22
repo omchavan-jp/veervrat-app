@@ -26,7 +26,10 @@ export function ContentLayoutClient({ children }: { children: React.ReactNode })
     <div className="min-h-dvh bg-bg">
       <header className="flex h-16 items-center justify-between border-b border-border px-5 md:px-10">
         <Link href="/" className="flex items-center gap-2">
-          <span aria-hidden="true" className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-fg font-deva text-sm text-bg">
+          <span
+            aria-hidden="true"
+            className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-fg font-deva text-sm text-bg"
+          >
             वी
           </span>
           <span className="font-display text-[17px]">

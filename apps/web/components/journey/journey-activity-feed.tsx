@@ -44,7 +44,9 @@ function ActivityRow({ event, now }: { event: JourneyActivityEvent; now: Date })
             ),
           })}
         </p>
-        <span className="font-mono text-[11px] text-muted">{format.relativeTime(new Date(event.at), now)}</span>
+        <span className="font-mono text-[11px] text-muted">
+          {format.relativeTime(new Date(event.at), now)}
+        </span>
       </div>
     </li>
   );
@@ -58,7 +60,9 @@ export function JourneyActivityFeed({ journeyId }: { journeyId: string }) {
 
   return (
     <section className="rounded-2xl border border-border bg-surface p-5">
-      <h3 className="mb-2 font-mono text-[11px] uppercase tracking-[0.12em] text-muted">{t('title')}</h3>
+      <h3 className="mb-2 font-mono text-[11px] uppercase tracking-[0.12em] text-muted">
+        {t('title')}
+      </h3>
       {isLoading ? (
         <div className="space-y-2 py-2">
           {[0, 1, 2].map((i) => (

@@ -29,7 +29,11 @@ export default function TaxonomyPanel() {
   const [error, setError] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<VirtueSummary | null>(null);
 
-  const virtues = useQuery({ queryKey: queryKeys.virtues.list, queryFn: () => virtuesApi.list(), enabled: isAdmin });
+  const virtues = useQuery({
+    queryKey: queryKeys.virtues.list,
+    queryFn: () => virtuesApi.list(),
+    enabled: isAdmin,
+  });
 
   const invalidate = () => qc.invalidateQueries({ queryKey: queryKeys.virtues.list });
 
@@ -52,7 +56,11 @@ export default function TaxonomyPanel() {
 
   const remove = useMutation({
     mutationFn: (id: string) => adminApi.deleteVirtue(id),
-    onSuccess: () => { setPendingDelete(null); setError(null); invalidate(); },
+    onSuccess: () => {
+      setPendingDelete(null);
+      setError(null);
+      invalidate();
+    },
     onError: (e: Error) => setError(e.message),
   });
 
@@ -68,10 +76,15 @@ export default function TaxonomyPanel() {
     <div className="mx-auto max-w-[680px]">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-[30px] font-medium tracking-tight">{t('taxonomyTitle')}</h1>
+          <h1 className="font-display text-[30px] font-medium tracking-tight">
+            {t('taxonomyTitle')}
+          </h1>
           <p className="mt-1 text-[14px] text-muted">{t('taxonomyManageHint')}</p>
         </div>
-        <Button className="shrink-0" onClick={() => setEditing({ id: null, nameEn: '', nameMr: '', description: '' })}>
+        <Button
+          className="shrink-0"
+          onClick={() => setEditing({ id: null, nameEn: '', nameMr: '', description: '' })}
+        >
           <Plus className="h-4 w-4" /> {t('newVirtue')}
         </Button>
       </div>
@@ -86,7 +99,9 @@ export default function TaxonomyPanel() {
         <div className="mt-5 rounded-2xl border border-border bg-surface p-4 shadow-card">
           <div className="grid gap-3">
             <div>
-              <Label htmlFor="virtue-nameEn" className={FIELD_LABEL}>{t('nameEn')}</Label>
+              <Label htmlFor="virtue-nameEn" className={FIELD_LABEL}>
+                {t('nameEn')}
+              </Label>
               <Input
                 id="virtue-nameEn"
                 autoFocus
@@ -97,7 +112,9 @@ export default function TaxonomyPanel() {
               />
             </div>
             <div>
-              <Label htmlFor="virtue-nameMr" className={FIELD_LABEL}>{t('nameMr')}</Label>
+              <Label htmlFor="virtue-nameMr" className={FIELD_LABEL}>
+                {t('nameMr')}
+              </Label>
               <Input
                 id="virtue-nameMr"
                 value={editing.nameMr}
@@ -107,7 +124,9 @@ export default function TaxonomyPanel() {
               />
             </div>
             <div>
-              <Label htmlFor="virtue-description" className={FIELD_LABEL}>{t('description')}</Label>
+              <Label htmlFor="virtue-description" className={FIELD_LABEL}>
+                {t('description')}
+              </Label>
               <Textarea
                 id="virtue-description"
                 value={editing.description}
@@ -118,7 +137,10 @@ export default function TaxonomyPanel() {
               />
             </div>
             <div className="flex gap-2">
-              <Button onClick={() => save.mutate(editing)} disabled={!editing.nameEn.trim() || save.isPending}>
+              <Button
+                onClick={() => save.mutate(editing)}
+                disabled={!editing.nameEn.trim() || save.isPending}
+              >
                 {save.isPending ? t('saving') : t('save')}
               </Button>
               <Button variant="ghost" onClick={() => setEditing(null)}>
@@ -143,14 +165,26 @@ export default function TaxonomyPanel() {
         ) : (
           <div className="space-y-2">
             {virtues.data!.map((v) => (
-              <div key={v.id} className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-card">
+              <div
+                key={v.id}
+                className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-card"
+              >
                 <div className="min-w-0 flex-1">
                   <div className="text-[15px] font-medium">{v.nameEn}</div>
                   {v.nameMr && <div className="font-deva text-[13px] text-muted">{v.nameMr}</div>}
-                  <div className="mt-0.5 text-[11px] text-muted">{t('subvirtueCount', { count: v.subvirtueCount })}</div>
+                  <div className="mt-0.5 text-[11px] text-muted">
+                    {t('subvirtueCount', { count: v.subvirtueCount })}
+                  </div>
                 </div>
                 <button
-                  onClick={() => setEditing({ id: v.id, nameEn: v.nameEn, nameMr: v.nameMr ?? '', description: v.description ?? '' })}
+                  onClick={() =>
+                    setEditing({
+                      id: v.id,
+                      nameEn: v.nameEn,
+                      nameMr: v.nameMr ?? '',
+                      description: v.description ?? '',
+                    })
+                  }
                   className="flex min-h-11 min-w-11 items-center justify-center rounded-lg text-muted transition-colors hover:bg-fg/[0.04] hover:text-fg"
                   aria-label={t('edit')}
                 >
@@ -172,13 +206,26 @@ export default function TaxonomyPanel() {
 
       <Dialog
         open={pendingDelete !== null}
-        onOpenChange={(open) => { if (!open) setPendingDelete(null); }}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null);
+        }}
         title={t('confirmDeleteTitle')}
         description={t('confirmDelete')}
         footer={
           <>
-            <Button variant="ghost" onClick={() => setPendingDelete(null)}>{t('cancel')}</Button>
-            <Button variant="destructive" loading={remove.isPending} disabled={remove.isPending} onClick={() => { if (pendingDelete) remove.mutate(pendingDelete.id); }}>{t('delete')}</Button>
+            <Button variant="ghost" onClick={() => setPendingDelete(null)}>
+              {t('cancel')}
+            </Button>
+            <Button
+              variant="destructive"
+              loading={remove.isPending}
+              disabled={remove.isPending}
+              onClick={() => {
+                if (pendingDelete) remove.mutate(pendingDelete.id);
+              }}
+            >
+              {t('delete')}
+            </Button>
           </>
         }
       />

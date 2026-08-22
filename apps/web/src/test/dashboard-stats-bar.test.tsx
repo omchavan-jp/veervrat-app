@@ -63,7 +63,11 @@ describe('DashboardStatsBar', () => {
 
   it('renders zero state without crashing', async () => {
     mockDashboardApi.getStats.mockResolvedValue(
-      makeStats({ virtues: { count: 0 }, subvirtues: { count: 0 }, journeys: { active: 0, completed: 0 } }),
+      makeStats({
+        virtues: { count: 0 },
+        subvirtues: { count: 0 },
+        journeys: { active: 0, completed: 0 },
+      }),
     );
     renderBar();
     await waitFor(() => {

@@ -31,7 +31,9 @@ function SectionShell({
   return (
     <section className="mb-7">
       <div className="mb-3 flex items-center gap-2.5">
-        <span className={`flex h-7 w-7 items-center justify-center rounded-lg ${tint}`}>{icon}</span>
+        <span className={`flex h-7 w-7 items-center justify-center rounded-lg ${tint}`}>
+          {icon}
+        </span>
         <h2 className="text-[15px] font-medium">{title}</h2>
         <span className="font-mono text-[11px] text-muted">{count}</span>
       </div>
@@ -135,14 +137,29 @@ export default function VmGuidancePage() {
   const onActionError = () => toast({ title: t('actionError'), variant: 'destructive' });
 
   const approveErc = useMutation({
-    mutationFn: ({ journeyId, type, itemId }: { journeyId: string; type: ErcType; itemId: string }) =>
-      ercApi.approve(journeyId, type, itemId),
+    mutationFn: ({
+      journeyId,
+      type,
+      itemId,
+    }: {
+      journeyId: string;
+      type: ErcType;
+      itemId: string;
+    }) => ercApi.approve(journeyId, type, itemId),
     onSuccess: invalidate,
     onError: onActionError,
   });
   const revisitErc = useMutation({
-    mutationFn: ({ journeyId, type, itemId }: { journeyId: string; type: ErcType; itemId: string; note?: string }) =>
-      ercApi.revisit(journeyId, type, itemId),
+    mutationFn: ({
+      journeyId,
+      type,
+      itemId,
+    }: {
+      journeyId: string;
+      type: ErcType;
+      itemId: string;
+      note?: string;
+    }) => ercApi.revisit(journeyId, type, itemId),
     onSuccess: invalidate,
     onError: onActionError,
   });
@@ -153,9 +170,12 @@ export default function VmGuidancePage() {
   });
 
   // Per-item pending helpers so acting on one row never greys out unrelated rows.
-  const isApprovingErc = (itemId: string) => approveErc.isPending && approveErc.variables?.itemId === itemId;
-  const isReturningErc = (itemId: string) => revisitErc.isPending && revisitErc.variables?.itemId === itemId;
-  const isApprovingJourney = (journeyId: string) => approveJourney.isPending && approveJourney.variables === journeyId;
+  const isApprovingErc = (itemId: string) =>
+    approveErc.isPending && approveErc.variables?.itemId === itemId;
+  const isReturningErc = (itemId: string) =>
+    revisitErc.isPending && revisitErc.variables?.itemId === itemId;
+  const isApprovingJourney = (journeyId: string) =>
+    approveJourney.isPending && approveJourney.variables === journeyId;
 
   if (isLoading) {
     return (
@@ -193,7 +213,11 @@ export default function VmGuidancePage() {
 
       <div className="mt-7">
         {d.counts.total === 0 ? (
-          <EmptyState icon={<CheckCircle2 className="h-5 w-5" />} title={t('empty')} description={t('emptyHint')} />
+          <EmptyState
+            icon={<CheckCircle2 className="h-5 w-5" />}
+            title={t('empty')}
+            description={t('emptyHint')}
+          />
         ) : (
           <>
             <SectionShell
@@ -210,8 +234,17 @@ export default function VmGuidancePage() {
                   meta={`${t(`ercType.${it.ercType}`)} · ${from(it.journeyTitle)}`}
                   approvePending={isApprovingErc(it.id)}
                   returnPending={isReturningErc(it.id)}
-                  onApprove={() => approveErc.mutate({ journeyId: it.journeyId, type: it.ercType, itemId: it.id })}
-                  onReturn={(note) => revisitErc.mutate({ journeyId: it.journeyId, type: it.ercType, itemId: it.id, note })}
+                  onApprove={() =>
+                    approveErc.mutate({ journeyId: it.journeyId, type: it.ercType, itemId: it.id })
+                  }
+                  onReturn={(note) =>
+                    revisitErc.mutate({
+                      journeyId: it.journeyId,
+                      type: it.ercType,
+                      itemId: it.id,
+                      note,
+                    })
+                  }
                 />
               ))}
             </SectionShell>
@@ -223,7 +256,10 @@ export default function VmGuidancePage() {
               count={d.journeyCompletionRequests.length}
             >
               {d.journeyCompletionRequests.map((j) => (
-                <div key={j.id} className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-card">
+                <div
+                  key={j.id}
+                  className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-card"
+                >
                   <div className="min-w-0 flex-1">
                     <BilingualText en={j.title} size="sm" />
                   </div>
@@ -247,12 +283,17 @@ export default function VmGuidancePage() {
               count={d.suggestionStatusUpdates.length}
             >
               {d.suggestionStatusUpdates.map((s) => (
-                <div key={s.id} className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-card">
+                <div
+                  key={s.id}
+                  className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-card"
+                >
                   <div className="min-w-0 flex-1">
                     <BilingualText en={s.itemTitleEn} mr={s.itemTitleMr} size="sm" />
                     <div className="mt-1 text-[12px] text-muted">{from(s.journeyTitle)}</div>
                   </div>
-                  <span className={`shrink-0 text-[12px] ${s.acknowledgedAt ? 'text-success' : 'text-muted'}`}>
+                  <span
+                    className={`shrink-0 text-[12px] ${s.acknowledgedAt ? 'text-success' : 'text-muted'}`}
+                  >
                     {s.acknowledgedAt ? t('acknowledged') : t('awaiting')}
                   </span>
                 </div>
@@ -266,12 +307,17 @@ export default function VmGuidancePage() {
               count={d.customErcReviewStatus.length}
             >
               {d.customErcReviewStatus.map((c) => (
-                <div key={c.id} className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-card">
+                <div
+                  key={c.id}
+                  className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-card"
+                >
                   <div className="min-w-0 flex-1">
                     <div className="text-[14px]">{t(`ercType.${c.ercType}`)}</div>
                     <div className="mt-1 text-[12px] text-muted">{from(c.journeyTitle)}</div>
                   </div>
-                  <span className="shrink-0 text-[12px] text-muted">{t(`reviewStatus.${c.status}`)}</span>
+                  <span className="shrink-0 text-[12px] text-muted">
+                    {t(`reviewStatus.${c.status}`)}
+                  </span>
                 </div>
               ))}
             </SectionShell>

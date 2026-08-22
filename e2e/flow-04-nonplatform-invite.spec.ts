@@ -1,5 +1,11 @@
 import { test, expect } from '@playwright/test';
-import { makeUser, registerAndOnboard, registerAndVerify, loginApi, apiHeaders } from './helpers/auth';
+import {
+  makeUser,
+  registerAndOnboard,
+  registerAndVerify,
+  loginApi,
+  apiHeaders,
+} from './helpers/auth';
 import { deleteUserByEmail, latestInvitationToken, scalar, lit } from './helpers/db';
 
 // Flow 4: VM invitation for a non-platform user → they sign up via the invite link → accept
@@ -43,7 +49,9 @@ test.describe('Flow 4: non-platform VM invite → signup → accept', () => {
 
   test('the invited person can sign up and verify their account', async () => {
     await registerAndVerify(newcomer);
-    const exists = scalar(`SELECT count(*) FROM users WHERE email = ${lit(newcomer.email)} AND email_verified_at IS NOT NULL`);
+    const exists = scalar(
+      `SELECT count(*) FROM users WHERE email = ${lit(newcomer.email)} AND email_verified_at IS NOT NULL`,
+    );
     expect(exists).toBe('1');
   });
 
@@ -52,7 +60,9 @@ test.describe('Flow 4: non-platform VM invite → signup → accept', () => {
   test.skip('the new user accepts the VM role via the invite link', async () => {
     const token = latestInvitationToken(newcomer.email)!;
     const nc = await loginApi(newcomer);
-    const accept = await nc.ctx.post(`/api/v1/invitations/${token}/accept`, { headers: apiHeaders(nc.csrf) });
+    const accept = await nc.ctx.post(`/api/v1/invitations/${token}/accept`, {
+      headers: apiHeaders(nc.csrf),
+    });
     expect(accept.ok()).toBeTruthy();
     await nc.ctx.dispose();
   });

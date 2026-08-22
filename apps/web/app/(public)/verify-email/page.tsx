@@ -86,9 +86,7 @@ export default async function VerifyEmailPage({
 
   // Localized failure copy — server-returned message only used as a last resort.
   const failureDescription =
-    result.reason === 'network'
-      ? t('networkError')
-      : result.message ?? t('genericError');
+    result.reason === 'network' ? t('networkError') : (result.message ?? t('genericError'));
 
   return (
     <AuthShell hero={hero}>

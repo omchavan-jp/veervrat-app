@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { meetsMinimumAge } from '@/lib/age';
 
 export const loginSchema = z.object({
   email: z.email(),
@@ -19,6 +20,16 @@ export const signupSchema = z.object({
     .regex(/[a-zA-Z]/, 'Password must contain at least one letter')
     .regex(/[0-9]/, 'Password must contain at least one number'),
   language: z.enum(['EN', 'MR']),
+  // Checked here so the person is told immediately, and again on the server, which is the actual
+  // gate. See lib/age.ts.
+  dob: z
+    .string()
+    .min(1, 'Date of birth is required')
+    .refine((v) => meetsMinimumAge(v), 'Veervrat is for adults aged 18 and over'),
+  // Acceptance is recorded per document version. The wording and the documents themselves come
+  // from the terms and privacy work; this is the mechanism, which cannot be added afterwards
+  // because who agreed to what is unreconstructable.
+  acceptedTerms: z.literal(true, { message: 'Please accept the terms to continue' }),
 });
 
 export const forgotPasswordSchema = z.object({

@@ -8,8 +8,14 @@ plan. Written once, referenced by all of them.
 anonymisation code — not from a lawyer. It records **what the system actually does**, which is the
 input a lawyer needs, not a substitute for their advice.
 
-⚠️ **The platform holds data about minors.** That raises the stakes on every row below, and is the
-single most important sentence in this document.
+⚠️ **The platform is restricted to adults aged 18 and over**
+(`spec/decisions/21_age-and-personal-attributes.md`). Age is self-declared at account creation and
+validated before the account exists. Self-declaration means the restriction is a stated rule with
+a recorded affirmation, not a guarantee — accounts found not to qualify are removed.
+
+This materially narrows the compliance position: the requirements around children's data do not
+apply. It does not remove the need for care about what is held, which the rest of this document
+describes.
 
 ---
 
@@ -22,8 +28,22 @@ single most important sentence in this document.
 | `email` | unique; also the login identifier |
 | `displayName`, `username` | `username` is public-facing and appears in profile URLs |
 | `avatarUrl` | reference to a file in object storage. Uploads are built but object storage is not yet provisioned, so no files exist |
-| `gender`, `dob` | optional. `dob` is a strong identifier and, for a minor, sensitive |
+| `gender` | Optional. Shown on the profile when provided; leaving it blank is the opt-out |
+| `dob` | **Required**, and validated as 18+ at account creation. Never displayed and never returned by the public profile API — it is an identity-verification token |
 | `language` | preference, not identifying |
+
+### Consent — `user_consents`
+
+Which policy document a person accepted, at which version, and when. Recorded in the same
+transaction as the account, so an account cannot exist without a corresponding record. Retained
+for as long as the account exists — it is the evidence that consent was given, so deleting it
+would defeat its purpose.
+
+### Signup handoff — `pending_signups`
+
+Holds a date of birth and consent for a few minutes while the browser completes a Google sign-in
+round trip, so those values never travel in a URL. Deleted when used, and a scheduled job removes
+any that expire unused.
 
 ### Credentials — `auth_accounts`
 

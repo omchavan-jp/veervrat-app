@@ -56,13 +56,21 @@ export function BlogEditor({ existing }: { existing?: Blog }) {
 
   const saveDraft = useMutation({
     mutationFn: () => persist(false),
-    onSuccess: () => { invalidate(); toast({ title: t('savedDraft') }); router.push('/blogs/mine'); },
+    onSuccess: () => {
+      invalidate();
+      toast({ title: t('savedDraft') });
+      router.push('/blogs/mine');
+    },
     onError: () => toast({ title: t('saveError'), variant: 'destructive' }),
   });
 
   const publish = useMutation({
     mutationFn: () => persist(true),
-    onSuccess: (id) => { invalidate(); toast({ title: t('published') }); router.push(`/community/blogs/${id}`); },
+    onSuccess: (id) => {
+      invalidate();
+      toast({ title: t('published') });
+      router.push(`/community/blogs/${id}`);
+    },
     onError: () => toast({ title: t('saveError'), variant: 'destructive' }),
   });
 
@@ -90,7 +98,9 @@ export function BlogEditor({ existing }: { existing?: Blog }) {
         {existing ? t('editTitle') : t('newTitle')}
       </h1>
 
-      <Label htmlFor="blog-title" className="sr-only">{t('titleLabel')}</Label>
+      <Label htmlFor="blog-title" className="sr-only">
+        {t('titleLabel')}
+      </Label>
       <Input
         id="blog-title"
         value={title}
@@ -111,15 +121,37 @@ export function BlogEditor({ existing }: { existing?: Blog }) {
       </div>
 
       <div className="mt-3 flex items-center gap-2">
-        <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/heic,image/heif,.heic,.heif" hidden onChange={onPickImage} />
-        <Button variant="outline" size="sm" type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} aria-busy={uploading}>
-          {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/gif,image/webp,image/heic,image/heif,.heic,.heif"
+          hidden
+          onChange={onPickImage}
+        />
+        <Button
+          variant="outline"
+          size="sm"
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          aria-busy={uploading}
+        >
+          {uploading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <ImageIcon className="h-4 w-4" />
+          )}
           <span className="ml-1.5">{uploading ? t('uploading') : t('addImage')}</span>
         </Button>
       </div>
 
       <div className="mt-7 flex justify-end gap-2 border-t border-border pt-5">
-        <Button variant="outline" type="button" onClick={() => saveDraft.mutate()} disabled={busy || !canSave}>
+        <Button
+          variant="outline"
+          type="button"
+          onClick={() => saveDraft.mutate()}
+          disabled={busy || !canSave}
+        >
           {saveDraft.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : t('saveDraft')}
         </Button>
         <Button type="button" onClick={() => publish.mutate()} disabled={busy || !canSave}>

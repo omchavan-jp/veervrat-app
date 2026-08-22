@@ -114,8 +114,7 @@ export function useForgotPassword() {
 
 export function useResetPassword() {
   return useMutation({
-    mutationFn: (data: { token: string; newPassword: string }) =>
-      authApi.resetPassword(data),
+    mutationFn: (data: { token: string; newPassword: string }) => authApi.resetPassword(data),
   });
 }
 

@@ -57,7 +57,10 @@ function renderWithQuery(ui: React.ReactElement) {
 
 describe('JourneysPage', () => {
   it('renders journey cards with title and state badge', () => {
-    mockUseJourneys.mockReturnValue({ data: { items: JOURNEYS, nextCursor: null }, isLoading: false });
+    mockUseJourneys.mockReturnValue({
+      data: { items: JOURNEYS, nextCursor: null },
+      isLoading: false,
+    });
     renderWithQuery(<JourneysPage />);
     expect(screen.getByText('Journey Alpha')).toBeInTheDocument();
     expect(screen.getByText('Journey Beta')).toBeInTheDocument();
@@ -66,7 +69,10 @@ describe('JourneysPage', () => {
   });
 
   it('renders weakness tags on journey card', () => {
-    mockUseJourneys.mockReturnValue({ data: { items: JOURNEYS, nextCursor: null }, isLoading: false });
+    mockUseJourneys.mockReturnValue({
+      data: { items: JOURNEYS, nextCursor: null },
+      isLoading: false,
+    });
     renderWithQuery(<JourneysPage />);
     expect(screen.getByText('Indecisiveness')).toBeInTheDocument();
   });

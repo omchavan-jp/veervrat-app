@@ -47,7 +47,11 @@ export default function ShlokasPanel() {
   const [error, setError] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Shloka | null>(null);
 
-  const list = useQuery({ queryKey: queryKeys.content.shlokas(), queryFn: () => contentApi.shlokas(), enabled: isAdmin });
+  const list = useQuery({
+    queryKey: queryKeys.content.shlokas(),
+    queryFn: () => contentApi.shlokas(),
+    enabled: isAdmin,
+  });
   const invalidate = () => qc.invalidateQueries({ queryKey: queryKeys.content.shlokas() });
 
   const save = useMutation({
@@ -58,7 +62,10 @@ export default function ShlokasPanel() {
         meaningEn: e.meaningEn.trim() || undefined,
         meaningMr: e.meaningMr.trim() || undefined,
         sourceCitation: e.sourceCitation.trim() || undefined,
-        looseTags: e.looseTags.split(',').map((s) => s.trim()).filter(Boolean),
+        looseTags: e.looseTags
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean),
       };
       return e.id ? adminApi.updateShloka(e.id, body) : adminApi.createShloka(body);
     },
@@ -72,7 +79,11 @@ export default function ShlokasPanel() {
 
   const remove = useMutation({
     mutationFn: (id: string) => adminApi.deleteShloka(id),
-    onSuccess: () => { setPendingDelete(null); setError(null); invalidate(); },
+    onSuccess: () => {
+      setPendingDelete(null);
+      setError(null);
+      invalidate();
+    },
     onError: (e: Error) => setError(e.message),
   });
 
@@ -99,7 +110,9 @@ export default function ShlokasPanel() {
     <div className="mx-auto max-w-[680px]">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-[30px] font-medium tracking-tight">{t('shlokasTitle')}</h1>
+          <h1 className="font-display text-[30px] font-medium tracking-tight">
+            {t('shlokasTitle')}
+          </h1>
           <p className="mt-1 text-[14px] text-muted">{t('shlokasManageHint')}</p>
         </div>
         <Button className="shrink-0" onClick={() => setEditing({ ...empty })}>
@@ -117,7 +130,9 @@ export default function ShlokasPanel() {
         <div className="mt-5 rounded-2xl border border-border bg-surface p-4 shadow-card">
           <div className="grid gap-3">
             <div>
-              <Label htmlFor="shloka-devanagariText" className={FIELD_LABEL}>{t('devanagariText')}</Label>
+              <Label htmlFor="shloka-devanagariText" className={FIELD_LABEL}>
+                {t('devanagariText')}
+              </Label>
               <Textarea
                 id="shloka-devanagariText"
                 autoFocus
@@ -129,30 +144,75 @@ export default function ShlokasPanel() {
               />
             </div>
             <div>
-              <Label htmlFor="shloka-transliteration" className={FIELD_LABEL}>{t('transliteration')}</Label>
-              <Input id="shloka-transliteration" value={editing.transliteration} onChange={(e) => setEditing({ ...editing, transliteration: e.target.value })} placeholder={t('transliteration')} className="rounded-xl border border-border bg-bg px-3 py-2 text-[14px] focus:border-accent" />
+              <Label htmlFor="shloka-transliteration" className={FIELD_LABEL}>
+                {t('transliteration')}
+              </Label>
+              <Input
+                id="shloka-transliteration"
+                value={editing.transliteration}
+                onChange={(e) => setEditing({ ...editing, transliteration: e.target.value })}
+                placeholder={t('transliteration')}
+                className="rounded-xl border border-border bg-bg px-3 py-2 text-[14px] focus:border-accent"
+              />
             </div>
             <div>
-              <Label htmlFor="shloka-meaningEn" className={FIELD_LABEL}>{t('meaningEn')}</Label>
-              <Input id="shloka-meaningEn" value={editing.meaningEn} onChange={(e) => setEditing({ ...editing, meaningEn: e.target.value })} placeholder={t('meaningEn')} className="rounded-xl border border-border bg-bg px-3 py-2 text-[14px] focus:border-accent" />
+              <Label htmlFor="shloka-meaningEn" className={FIELD_LABEL}>
+                {t('meaningEn')}
+              </Label>
+              <Input
+                id="shloka-meaningEn"
+                value={editing.meaningEn}
+                onChange={(e) => setEditing({ ...editing, meaningEn: e.target.value })}
+                placeholder={t('meaningEn')}
+                className="rounded-xl border border-border bg-bg px-3 py-2 text-[14px] focus:border-accent"
+              />
             </div>
             <div>
-              <Label htmlFor="shloka-meaningMr" className={FIELD_LABEL}>{t('meaningMr')}</Label>
-              <Input id="shloka-meaningMr" value={editing.meaningMr} onChange={(e) => setEditing({ ...editing, meaningMr: e.target.value })} placeholder={t('meaningMr')} className="rounded-xl border border-border bg-bg px-3 py-2 font-deva text-[14px] focus:border-accent" />
+              <Label htmlFor="shloka-meaningMr" className={FIELD_LABEL}>
+                {t('meaningMr')}
+              </Label>
+              <Input
+                id="shloka-meaningMr"
+                value={editing.meaningMr}
+                onChange={(e) => setEditing({ ...editing, meaningMr: e.target.value })}
+                placeholder={t('meaningMr')}
+                className="rounded-xl border border-border bg-bg px-3 py-2 font-deva text-[14px] focus:border-accent"
+              />
             </div>
             <div>
-              <Label htmlFor="shloka-sourceCitation" className={FIELD_LABEL}>{t('sourceCitation')}</Label>
-              <Input id="shloka-sourceCitation" value={editing.sourceCitation} onChange={(e) => setEditing({ ...editing, sourceCitation: e.target.value })} placeholder={t('sourceCitation')} className="rounded-xl border border-border bg-bg px-3 py-2 text-[14px] focus:border-accent" />
+              <Label htmlFor="shloka-sourceCitation" className={FIELD_LABEL}>
+                {t('sourceCitation')}
+              </Label>
+              <Input
+                id="shloka-sourceCitation"
+                value={editing.sourceCitation}
+                onChange={(e) => setEditing({ ...editing, sourceCitation: e.target.value })}
+                placeholder={t('sourceCitation')}
+                className="rounded-xl border border-border bg-bg px-3 py-2 text-[14px] focus:border-accent"
+              />
             </div>
             <div>
-              <Label htmlFor="shloka-looseTags" className={FIELD_LABEL}>{t('looseTagsHint')}</Label>
-              <Input id="shloka-looseTags" value={editing.looseTags} onChange={(e) => setEditing({ ...editing, looseTags: e.target.value })} placeholder={t('looseTagsHint')} className="rounded-xl border border-border bg-bg px-3 py-2 text-[14px] focus:border-accent" />
+              <Label htmlFor="shloka-looseTags" className={FIELD_LABEL}>
+                {t('looseTagsHint')}
+              </Label>
+              <Input
+                id="shloka-looseTags"
+                value={editing.looseTags}
+                onChange={(e) => setEditing({ ...editing, looseTags: e.target.value })}
+                placeholder={t('looseTagsHint')}
+                className="rounded-xl border border-border bg-bg px-3 py-2 text-[14px] focus:border-accent"
+              />
             </div>
             <div className="flex gap-2">
-              <Button onClick={() => save.mutate(editing)} disabled={!editing.devanagariText.trim() || save.isPending}>
+              <Button
+                onClick={() => save.mutate(editing)}
+                disabled={!editing.devanagariText.trim() || save.isPending}
+              >
                 {save.isPending ? t('saving') : t('save')}
               </Button>
-              <Button variant="ghost" onClick={() => setEditing(null)}>{t('cancel')}</Button>
+              <Button variant="ghost" onClick={() => setEditing(null)}>
+                {t('cancel')}
+              </Button>
             </div>
           </div>
         </div>
@@ -160,7 +220,9 @@ export default function ShlokasPanel() {
 
       <div className="mt-6">
         {list.isLoading ? (
-          <div className="flex min-h-[20vh] items-center justify-center"><Spinner size="lg" label={t('loading')} /></div>
+          <div className="flex min-h-[20vh] items-center justify-center">
+            <Spinner size="lg" label={t('loading')} />
+          </div>
         ) : list.isError ? (
           <Alert variant="destructive" className="border-destructive/40 bg-destructive/10">
             <AlertDescription className="text-destructive">{t('loadError')}</AlertDescription>
@@ -170,13 +232,33 @@ export default function ShlokasPanel() {
         ) : (
           <div className="space-y-2">
             {list.data!.items.map((s) => (
-              <div key={s.id} className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-card">
+              <div
+                key={s.id}
+                className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-card"
+              >
                 <div className="min-w-0 flex-1">
                   <div className="truncate font-deva text-[15px]">{s.devanagariText}</div>
-                  {s.sourceCitation && <div className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.1em] text-muted">{s.sourceCitation}</div>}
+                  {s.sourceCitation && (
+                    <div className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.1em] text-muted">
+                      {s.sourceCitation}
+                    </div>
+                  )}
                 </div>
-                <button onClick={() => startEdit(s)} className="flex min-h-11 min-w-11 items-center justify-center rounded-lg text-muted transition-colors hover:bg-fg/[0.04] hover:text-fg" aria-label={t('edit')}><Pencil className="h-4 w-4" /></button>
-                <button onClick={() => setPendingDelete(s)} disabled={remove.isPending && remove.variables === s.id} className="flex min-h-11 min-w-11 items-center justify-center rounded-lg text-muted transition-colors hover:bg-danger/10 hover:text-danger disabled:opacity-50" aria-label={t('delete')}><Trash2 className="h-4 w-4" /></button>
+                <button
+                  onClick={() => startEdit(s)}
+                  className="flex min-h-11 min-w-11 items-center justify-center rounded-lg text-muted transition-colors hover:bg-fg/[0.04] hover:text-fg"
+                  aria-label={t('edit')}
+                >
+                  <Pencil className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => setPendingDelete(s)}
+                  disabled={remove.isPending && remove.variables === s.id}
+                  className="flex min-h-11 min-w-11 items-center justify-center rounded-lg text-muted transition-colors hover:bg-danger/10 hover:text-danger disabled:opacity-50"
+                  aria-label={t('delete')}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
               </div>
             ))}
           </div>
@@ -185,13 +267,26 @@ export default function ShlokasPanel() {
 
       <Dialog
         open={pendingDelete !== null}
-        onOpenChange={(open) => { if (!open) setPendingDelete(null); }}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null);
+        }}
         title={t('confirmDeleteTitle')}
         description={t('confirmDelete')}
         footer={
           <>
-            <Button variant="ghost" onClick={() => setPendingDelete(null)}>{t('cancel')}</Button>
-            <Button variant="destructive" loading={remove.isPending} disabled={remove.isPending} onClick={() => { if (pendingDelete) remove.mutate(pendingDelete.id); }}>{t('delete')}</Button>
+            <Button variant="ghost" onClick={() => setPendingDelete(null)}>
+              {t('cancel')}
+            </Button>
+            <Button
+              variant="destructive"
+              loading={remove.isPending}
+              disabled={remove.isPending}
+              onClick={() => {
+                if (pendingDelete) remove.mutate(pendingDelete.id);
+              }}
+            >
+              {t('delete')}
+            </Button>
           </>
         }
       />

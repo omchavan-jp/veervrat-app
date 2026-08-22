@@ -66,7 +66,9 @@ export const MentionList = forwardRef<MentionListRef, SuggestionProps<EntitySear
         id={LISTBOX_ID}
         role="listbox"
         aria-activedescendant={
-          items[selected] ? optionId(items[selected].entityType, items[selected].entityId) : undefined
+          items[selected]
+            ? optionId(items[selected].entityType, items[selected].entityId)
+            : undefined
         }
         className="max-h-64 w-72 overflow-y-auto rounded-xl border border-border bg-surface p-1 shadow-raised"
       >

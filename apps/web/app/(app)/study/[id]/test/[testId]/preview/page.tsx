@@ -10,11 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { Alert, AlertTitle } from '@/components/ui/alert';
-import {
-  Collapsible,
-  CollapsibleTrigger,
-  CollapsiblePanel,
-} from '@/components/ui/collapsible';
+import { Collapsible, CollapsibleTrigger, CollapsiblePanel } from '@/components/ui/collapsible';
 import { BilingualText } from '@/components/shared/bilingual-text';
 import { useToast } from '@/hooks/use-toast';
 
@@ -34,11 +30,7 @@ export default function TestPreviewPage() {
   const t = useTranslations('study.preview');
   const tScore = useTranslations('study.report.score');
   const { toast } = useToast();
-  const {
-    data: weakness,
-    isError: weaknessError,
-    refetch: refetchWeakness,
-  } = useWeakness(id);
+  const { data: weakness, isError: weaknessError, refetch: refetchWeakness } = useWeakness(id);
   const { data: testData, isError: testError, refetch: refetchTest } = useTest(testId);
   const submitTest = useSubmitTest();
   const [unansweredExpanded, setUnansweredExpanded] = useState(false);
@@ -54,9 +46,7 @@ export default function TestPreviewPage() {
     }
   }, [testData, submitTest.isPending, id, testId, router]);
 
-  const sentences: Sentence[] = (weakness?.subvirtues ?? []).flatMap(
-    (sv) => sv.sentences,
-  );
+  const sentences: Sentence[] = (weakness?.subvirtues ?? []).flatMap((sv) => sv.sentences);
 
   // sentenceId -> global index, precomputed once so render-loop lookups are O(1)
   // and correct even if two sentence objects compare equal-by-reference.
@@ -153,10 +143,17 @@ export default function TestPreviewPage() {
                   const score = answerMap.get(s.sentenceId)!;
                   const globalIndex = indexById.get(s.sentenceId) ?? 0;
                   return (
-                    <div key={s.sentenceId} className="flex items-center gap-3 rounded-lg border border-border bg-surface px-4 py-3">
-                      <span className="shrink-0 font-mono text-[11px] text-muted">{globalIndex + 1}</span>
+                    <div
+                      key={s.sentenceId}
+                      className="flex items-center gap-3 rounded-lg border border-border bg-surface px-4 py-3"
+                    >
+                      <span className="shrink-0 font-mono text-[11px] text-muted">
+                        {globalIndex + 1}
+                      </span>
                       <BilingualText en={s.textEn} mr={s.textMr} size="sm" className="flex-1" />
-                      <span className={`shrink-0 rounded-full border px-3 py-0.5 text-[12px] font-medium ${SCORE_COLORS[score]}`}>
+                      <span
+                        className={`shrink-0 rounded-full border px-3 py-0.5 text-[12px] font-medium ${SCORE_COLORS[score]}`}
+                      >
                         {tScore(String(score))}
                       </span>
                     </div>
@@ -191,8 +188,13 @@ export default function TestPreviewPage() {
                   {unanswered.map((s) => {
                     const globalIndex = indexById.get(s.sentenceId) ?? 0;
                     return (
-                      <div key={s.sentenceId} className="flex items-center gap-3 rounded-lg border border-dashed border-border px-4 py-3 opacity-60">
-                        <span className="shrink-0 font-mono text-[11px] text-muted">{globalIndex + 1}</span>
+                      <div
+                        key={s.sentenceId}
+                        className="flex items-center gap-3 rounded-lg border border-dashed border-border px-4 py-3 opacity-60"
+                      >
+                        <span className="shrink-0 font-mono text-[11px] text-muted">
+                          {globalIndex + 1}
+                        </span>
                         <BilingualText en={s.textEn} mr={s.textMr} size="sm" className="flex-1" />
                         <span className="shrink-0 text-[13px] text-muted">{t('unanswered')}</span>
                       </div>

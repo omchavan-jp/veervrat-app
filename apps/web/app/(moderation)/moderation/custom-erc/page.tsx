@@ -51,12 +51,19 @@ export default function CustomErcReviewPage() {
 
   const approve = useMutation({
     mutationFn: (id: string) => moderationApi.approve(id),
-    onSuccess: () => { invalidate(); toast({ title: t('approved') }); },
+    onSuccess: () => {
+      invalidate();
+      toast({ title: t('approved') });
+    },
     onError: () => toast({ title: t('actionError'), variant: 'destructive' }),
   });
   const reject = useMutation({
-    mutationFn: ({ id, reason }: { id: string; reason: string }) => moderationApi.reject(id, reason),
-    onSuccess: () => { invalidate(); toast({ title: t('rejected') }); },
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      moderationApi.reject(id, reason),
+    onSuccess: () => {
+      invalidate();
+      toast({ title: t('rejected') });
+    },
     onError: () => toast({ title: t('actionError'), variant: 'destructive' }),
   });
 
@@ -82,12 +89,16 @@ export default function CustomErcReviewPage() {
         {/* Queue */}
         <div>
           {queue.isLoading ? (
-            <div className="flex min-h-[20vh] items-center justify-center"><Spinner size="lg" label={tCommon('loading')} /></div>
+            <div className="flex min-h-[20vh] items-center justify-center">
+              <Spinner size="lg" label={tCommon('loading')} />
+            </div>
           ) : queue.isError ? (
             <Alert variant="destructive" className="border-destructive/40 bg-destructive/10">
               <AlertDescription className="flex flex-col gap-2 text-destructive">
                 {t('queueError')}
-                <Button size="sm" variant="outline" onClick={() => queue.refetch()}>{tCommon('status.retry')}</Button>
+                <Button size="sm" variant="outline" onClick={() => queue.refetch()}>
+                  {tCommon('status.retry')}
+                </Button>
               </AlertDescription>
             </Alert>
           ) : items.length === 0 ? (
@@ -102,7 +113,9 @@ export default function CustomErcReviewPage() {
                   className={`block w-full rounded-xl border p-3 text-left transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50 ${selectedId === it.id ? 'border-accent bg-accent/5' : 'border-border bg-surface hover:border-accent/30'}`}
                 >
                   <div className="truncate text-[14px] font-medium">{it.title}</div>
-                  <div className="mt-0.5 text-[11px] text-muted">{t(`entityType.${it.entityType}`)} · {it.submitter?.displayName ?? '—'}</div>
+                  <div className="mt-0.5 text-[11px] text-muted">
+                    {t(`entityType.${it.entityType}`)} · {it.submitter?.displayName ?? '—'}
+                  </div>
                 </button>
               ))}
             </div>
@@ -112,16 +125,22 @@ export default function CustomErcReviewPage() {
         {/* Detail */}
         <div>
           {!selectedId ? (
-            <div className="rounded-2xl border border-dashed border-border-strong p-10 text-center text-[13px] text-muted">{t('selectSubmission')}</div>
+            <div className="rounded-2xl border border-dashed border-border-strong p-10 text-center text-[13px] text-muted">
+              {t('selectSubmission')}
+            </div>
           ) : detail.isError ? (
             <Alert variant="destructive" className="border-destructive/40 bg-destructive/10">
               <AlertDescription className="flex flex-col gap-2 text-destructive">
                 {t('detailError')}
-                <Button size="sm" variant="outline" onClick={() => detail.refetch()}>{tCommon('status.retry')}</Button>
+                <Button size="sm" variant="outline" onClick={() => detail.refetch()}>
+                  {tCommon('status.retry')}
+                </Button>
               </AlertDescription>
             </Alert>
           ) : detail.isLoading || !detail.data ? (
-            <div className="flex min-h-[30vh] items-center justify-center"><Spinner size="lg" label={tCommon('loading')} /></div>
+            <div className="flex min-h-[30vh] items-center justify-center">
+              <Spinner size="lg" label={tCommon('loading')} />
+            </div>
           ) : (
             <ReviewDetail
               data={detail.data}
@@ -136,7 +155,12 @@ export default function CustomErcReviewPage() {
   );
 }
 
-function ReviewDetail({ data, busy, onApprove, onReject }: {
+function ReviewDetail({
+  data,
+  busy,
+  onApprove,
+  onReject,
+}: {
   data: ModReviewDetail;
   busy: boolean;
   onApprove: () => void;
@@ -164,15 +188,33 @@ function ReviewDetail({ data, busy, onApprove, onReject }: {
       {/* Context (read-only) */}
       {data.journey && (
         <div className="mb-4 rounded-xl bg-bg p-3 text-[13px]">
-          <div className="mb-1 font-mono text-[10px] uppercase tracking-[0.1em] text-muted">{t('context')}</div>
-          <div className="text-muted">{t('submittedBy', { name: data.submitter?.displayName ?? '—' })}</div>
+          <div className="mb-1 font-mono text-[10px] uppercase tracking-[0.1em] text-muted">
+            {t('context')}
+          </div>
+          <div className="text-muted">
+            {t('submittedBy', { name: data.submitter?.displayName ?? '—' })}
+          </div>
           <div className="mt-1">{data.journey.title}</div>
-          <div className="mt-1 text-muted">{pick(data.journey.sentence.textEn, data.journey.sentence.textMr)}</div>
+          <div className="mt-1 text-muted">
+            {pick(data.journey.sentence.textEn, data.journey.sentence.textMr)}
+          </div>
           <div className="mt-1 flex flex-wrap gap-1.5">
-            <span className="rounded-full bg-accent/12 px-2 py-0.5 text-[11px] text-accent">{pick(data.journey.sentence.subvirtue.virtue.nameEn, data.journey.sentence.subvirtue.virtue.nameMr)}</span>
-            <span className="rounded-full bg-accent-2/15 px-2 py-0.5 text-[11px] text-accent-2">{pick(data.journey.sentence.subvirtue.nameEn, data.journey.sentence.subvirtue.nameMr)}</span>
+            <span className="rounded-full bg-accent/12 px-2 py-0.5 text-[11px] text-accent">
+              {pick(
+                data.journey.sentence.subvirtue.virtue.nameEn,
+                data.journey.sentence.subvirtue.virtue.nameMr,
+              )}
+            </span>
+            <span className="rounded-full bg-accent-2/15 px-2 py-0.5 text-[11px] text-accent-2">
+              {pick(data.journey.sentence.subvirtue.nameEn, data.journey.sentence.subvirtue.nameMr)}
+            </span>
             {data.journey.weaknesses.map((w) => (
-              <span key={w.id} className="rounded-full bg-muted/15 px-2 py-0.5 text-[11px] text-muted">{pick(w.nameEn, w.nameMr)}</span>
+              <span
+                key={w.id}
+                className="rounded-full bg-muted/15 px-2 py-0.5 text-[11px] text-muted"
+              >
+                {pick(w.nameEn, w.nameMr)}
+              </span>
             ))}
           </div>
         </div>
@@ -181,7 +223,11 @@ function ReviewDetail({ data, busy, onApprove, onReject }: {
       {/* ERC content */}
       <div className="mb-4">
         <BilingualText en={data.item.titleEn} mr={data.item.titleMr} size="md" />
-        {data.item.descriptionEn && <p className="mt-2 text-[14px] leading-relaxed text-muted">{pick(data.item.descriptionEn, data.item.descriptionMr)}</p>}
+        {data.item.descriptionEn && (
+          <p className="mt-2 text-[14px] leading-relaxed text-muted">
+            {pick(data.item.descriptionEn, data.item.descriptionMr)}
+          </p>
+        )}
         <div className="mt-2 font-mono text-[10px] uppercase tracking-[0.1em] text-muted">
           {t(`ercTypeLabel.${data.ercType}`)}
           {data.item.tier ? ` · ${t(`tier.${data.item.tier.toLowerCase()}`)}` : ''}
@@ -192,7 +238,9 @@ function ReviewDetail({ data, busy, onApprove, onReject }: {
       {/* Actions */}
       {rejecting ? (
         <div className="space-y-2">
-          <Label htmlFor="reject-reason" className="sr-only">{t('rejectReasonLabel')}</Label>
+          <Label htmlFor="reject-reason" className="sr-only">
+            {t('rejectReasonLabel')}
+          </Label>
           <Textarea
             id="reject-reason"
             value={reason}
@@ -201,14 +249,28 @@ function ReviewDetail({ data, busy, onApprove, onReject }: {
             className="h-20 resize-none rounded-xl text-[13px]"
           />
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={() => setRejecting(false)} disabled={busy}>{t('cancel')}</Button>
-            <Button size="sm" disabled={busy || !reason.trim()} onClick={() => onReject(reason.trim())}>{t('confirmReject')}</Button>
+            <Button size="sm" variant="outline" onClick={() => setRejecting(false)} disabled={busy}>
+              {t('cancel')}
+            </Button>
+            <Button
+              size="sm"
+              disabled={busy || !reason.trim()}
+              onClick={() => onReject(reason.trim())}
+            >
+              {t('confirmReject')}
+            </Button>
           </div>
         </div>
       ) : (
         <div className="flex gap-2">
-          <Button size="sm" disabled={busy} onClick={onApprove}><Check className="h-4 w-4" /><span className="ml-1.5">{t('approve')}</span></Button>
-          <Button size="sm" variant="outline" disabled={busy} onClick={() => setRejecting(true)}><X className="h-4 w-4" /><span className="ml-1.5">{t('reject')}</span></Button>
+          <Button size="sm" disabled={busy} onClick={onApprove}>
+            <Check className="h-4 w-4" />
+            <span className="ml-1.5">{t('approve')}</span>
+          </Button>
+          <Button size="sm" variant="outline" disabled={busy} onClick={() => setRejecting(true)}>
+            <X className="h-4 w-4" />
+            <span className="ml-1.5">{t('reject')}</span>
+          </Button>
         </div>
       )}
     </div>

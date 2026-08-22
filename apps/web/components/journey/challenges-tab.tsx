@@ -21,7 +21,9 @@ export function ChallengesTab({ journeyId, hasVm, viewerIsVm = false }: Props) {
 
   return (
     <div>
-      {!viewerIsVm && <ErcPoolSection journeyId={journeyId} ercType="challenge" defaultOpen={!hasItems} />}
+      {!viewerIsVm && (
+        <ErcPoolSection journeyId={journeyId} ercType="challenge" defaultOpen={!hasItems} />
+      )}
 
       {isLoading ? (
         <div className="flex justify-center py-8">
@@ -36,23 +38,30 @@ export function ChallengesTab({ journeyId, hasVm, viewerIsVm = false }: Props) {
       ) : (
         <div className="space-y-3">
           {items.map((item) => (
-            <ErcItemCard key={item.id} item={item} ercType="challenge" journeyId={journeyId} hasVm={hasVm} viewerIsVm={viewerIsVm} />
+            <ErcItemCard
+              key={item.id}
+              item={item}
+              ercType="challenge"
+              journeyId={journeyId}
+              hasVm={hasVm}
+              viewerIsVm={viewerIsVm}
+            />
           ))}
         </div>
       )}
 
       {!viewerIsVm && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setCustomOpen(true)}
-          className="mt-4"
-        >
+        <Button variant="outline" size="sm" onClick={() => setCustomOpen(true)} className="mt-4">
           <Plus className="h-4 w-4" />
           {t('addCustomChallenge')}
         </Button>
       )}
-      <CustomErcForm journeyId={journeyId} ercType="challenge" open={customOpen} onOpenChange={setCustomOpen} />
+      <CustomErcForm
+        journeyId={journeyId}
+        ercType="challenge"
+        open={customOpen}
+        onOpenChange={setCustomOpen}
+      />
     </div>
   );
 }

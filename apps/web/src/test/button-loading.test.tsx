@@ -33,7 +33,11 @@ describe('Button loading state', () => {
   });
 
   it('is disabled when loading=true even if disabled={false} is explicitly passed', () => {
-    render(<Button loading={true} disabled={false}>Save</Button>);
+    render(
+      <Button loading={true} disabled={false}>
+        Save
+      </Button>,
+    );
     expect(screen.getByRole('button')).toBeDisabled();
   });
 });

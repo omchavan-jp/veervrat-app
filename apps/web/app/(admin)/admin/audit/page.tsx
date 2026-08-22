@@ -41,13 +41,27 @@ export default function AuditDashboardPage() {
       <p className="mt-1 text-[14px] text-muted">{t('subtitle')}</p>
 
       <div className="mt-5 grid gap-2 sm:grid-cols-2">
-        <Input value={action} onChange={(e) => setAction(e.target.value)} placeholder={t('filterAction')} aria-label={t('filterAction')} className="rounded-xl border border-border bg-surface px-3 py-2 text-[14px] focus:border-accent" />
-        <Input value={actor} onChange={(e) => setActor(e.target.value)} placeholder={t('filterActor')} aria-label={t('filterActor')} className="rounded-xl border border-border bg-surface px-3 py-2 font-mono text-[13px] focus:border-accent" />
+        <Input
+          value={action}
+          onChange={(e) => setAction(e.target.value)}
+          placeholder={t('filterAction')}
+          aria-label={t('filterAction')}
+          className="rounded-xl border border-border bg-surface px-3 py-2 text-[14px] focus:border-accent"
+        />
+        <Input
+          value={actor}
+          onChange={(e) => setActor(e.target.value)}
+          placeholder={t('filterActor')}
+          aria-label={t('filterActor')}
+          className="rounded-xl border border-border bg-surface px-3 py-2 font-mono text-[13px] focus:border-accent"
+        />
       </div>
 
       <div className="mt-6">
         {list.isLoading ? (
-          <div className="flex min-h-[20vh] items-center justify-center"><Spinner size="lg" label={t('loading')} /></div>
+          <div className="flex min-h-[20vh] items-center justify-center">
+            <Spinner size="lg" label={t('loading')} />
+          </div>
         ) : list.isError ? (
           <Alert variant="destructive" className="border-destructive/40 bg-destructive/10">
             <AlertDescription className="text-destructive">{t('loadError')}</AlertDescription>
@@ -57,16 +71,27 @@ export default function AuditDashboardPage() {
         ) : (
           <div className="space-y-1.5">
             {list.data!.items.map((e) => (
-              <div key={e.id} className="rounded-xl border border-border bg-surface p-3 text-[13px]">
+              <div
+                key={e.id}
+                className="rounded-xl border border-border bg-surface p-3 text-[13px]"
+              >
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-mono text-[12px] text-accent">{e.action}</span>
-                  <span className="font-mono text-[10px] text-muted">{new Date(e.createdAt).toLocaleString()}</span>
+                  <span className="font-mono text-[10px] text-muted">
+                    {new Date(e.createdAt).toLocaleString()}
+                  </span>
                 </div>
                 <div className="mt-1 text-[11px] text-muted">
-                  {t('actor')}: {e.actorId ?? '—'}{e.resourceType ? ` · ${e.resourceType}${e.resourceId ? `:${e.resourceId.slice(0, 8)}` : ''}` : ''}{e.ipAddress ? ` · ${e.ipAddress}` : ''}
+                  {t('actor')}: {e.actorId ?? '—'}
+                  {e.resourceType
+                    ? ` · ${e.resourceType}${e.resourceId ? `:${e.resourceId.slice(0, 8)}` : ''}`
+                    : ''}
+                  {e.ipAddress ? ` · ${e.ipAddress}` : ''}
                 </div>
                 {e.metadata && Object.keys(e.metadata).length > 0 && (
-                  <pre className="mt-1 overflow-x-auto whitespace-pre-wrap break-words rounded bg-bg px-2 py-1 font-mono text-[11px] text-muted">{JSON.stringify(e.metadata, null, 2)}</pre>
+                  <pre className="mt-1 overflow-x-auto whitespace-pre-wrap break-words rounded bg-bg px-2 py-1 font-mono text-[11px] text-muted">
+                    {JSON.stringify(e.metadata, null, 2)}
+                  </pre>
                 )}
               </div>
             ))}

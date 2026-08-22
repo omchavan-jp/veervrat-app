@@ -61,11 +61,7 @@ function ExpiredState() {
 
   return (
     <>
-      <StatusBanner
-        variant="error"
-        title={t('expiredTitle')}
-        description={t('expiredBody')}
-      />
+      <StatusBanner variant="error" title={t('expiredTitle')} description={t('expiredBody')} />
 
       <h2 className="mb-2 font-display text-[32px] tracking-tight">{t('requestNewTitle')}</h2>
       <p className="mb-8 text-[15px] text-muted">{t('requestNewSubtitle')}</p>
@@ -212,7 +208,11 @@ export default function ResetPasswordPage() {
               />
               <PasswordStrength password={newPassword} />
               {errors.newPassword && (
-                <p id="reset-new-password-error" role="alert" className="mt-1.5 text-xs text-danger">
+                <p
+                  id="reset-new-password-error"
+                  role="alert"
+                  className="mt-1.5 text-xs text-danger"
+                >
                   {errors.newPassword.message}
                 </p>
               )}
@@ -228,11 +228,17 @@ export default function ResetPasswordPage() {
                 variant="underline"
                 placeholder={t('confirmPasswordPlaceholder')}
                 aria-invalid={errors.confirmPassword ? true : undefined}
-                aria-describedby={errors.confirmPassword ? 'reset-confirm-password-error' : undefined}
+                aria-describedby={
+                  errors.confirmPassword ? 'reset-confirm-password-error' : undefined
+                }
                 {...register('confirmPassword')}
               />
               {errors.confirmPassword && (
-                <p id="reset-confirm-password-error" role="alert" className="mt-1.5 text-xs text-danger">
+                <p
+                  id="reset-confirm-password-error"
+                  role="alert"
+                  className="mt-1.5 text-xs text-danger"
+                >
                   {errors.confirmPassword.message}
                 </p>
               )}
@@ -250,7 +256,10 @@ export default function ResetPasswordPage() {
 
           <p className="mt-6 text-center text-sm text-muted">
             {t('wrongAccount')}{' '}
-            <Link href="/login" className="text-accent underline decoration-accent/40 hover:no-underline">
+            <Link
+              href="/login"
+              className="text-accent underline decoration-accent/40 hover:no-underline"
+            >
               {t('loginLink')}
             </Link>
           </p>

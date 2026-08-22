@@ -25,7 +25,15 @@ const SCORE_COLORS: Record<number, string> = {
 const STAGGER_CAP = 6;
 const STAGGER_STEP = 0.06;
 
-function SentenceCard({ sentence, index, weaknessId }: { sentence: ReportSentence; index: number; weaknessId: string }) {
+function SentenceCard({
+  sentence,
+  index,
+  weaknessId,
+}: {
+  sentence: ReportSentence;
+  index: number;
+  weaknessId: string;
+}) {
   const t = useTranslations('study.report');
   const tScore = useTranslations('study.report.score');
   const reduceMotion = useReducedMotion();
@@ -42,7 +50,9 @@ function SentenceCard({ sentence, index, weaknessId }: { sentence: ReportSentenc
           <BilingualText en={sentence.textEn} mr={sentence.textMr} size="sm" />
         </div>
         {sentence.score !== null && (
-          <span className={`shrink-0 rounded-full border px-3 py-1 text-[12px] font-medium ${SCORE_COLORS[sentence.score] ?? ''}`}>
+          <span
+            className={`shrink-0 rounded-full border px-3 py-1 text-[12px] font-medium ${SCORE_COLORS[sentence.score] ?? ''}`}
+          >
             {tScore(String(sentence.score))}
           </span>
         )}
@@ -72,7 +82,10 @@ export default function TestReportPage() {
   const [otherExpanded, setOtherExpanded] = useState(false);
 
   const backLink = (
-    <Link href={`/study/${id}`} className="mb-6 inline-flex items-center gap-1 text-[13px] text-muted hover:text-fg">
+    <Link
+      href={`/study/${id}`}
+      className="mb-6 inline-flex items-center gap-1 text-[13px] text-muted hover:text-fg"
+    >
       <ArrowLeft className="h-4 w-4" aria-hidden="true" />
       {t('backToWeakness')}
     </Link>
@@ -107,7 +120,11 @@ export default function TestReportPage() {
   return (
     <div className="py-8">
       <div className="mx-auto max-w-2xl">
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4 }}
+        >
           {backLink}
 
           <BilingualText
@@ -133,7 +150,9 @@ export default function TestReportPage() {
               transition={{ delay: 0.1 }}
               className="mb-8"
             >
-              <h2 className="mb-3 font-mono text-[11px] uppercase tracking-[0.12em] text-muted">{t('virtuesTitle')}</h2>
+              <h2 className="mb-3 font-mono text-[11px] uppercase tracking-[0.12em] text-muted">
+                {t('virtuesTitle')}
+              </h2>
               <div className="flex flex-wrap gap-2">
                 {report.virtuesToExplore.map((v) => (
                   <ContentText
@@ -148,7 +167,12 @@ export default function TestReportPage() {
           )}
 
           {/* Flagged sentences */}
-          <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mb-8">
+          <motion.section
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mb-8"
+          >
             <h2 className="mb-1 font-display text-[20px] tracking-tight">{t('flaggedTitle')}</h2>
             <p className="mb-4 text-[14px] text-muted">{t('flaggedSubtitle')}</p>
             {report.flaggedSentences.length === 0 ? (
@@ -156,7 +180,12 @@ export default function TestReportPage() {
             ) : (
               <div className="space-y-3">
                 {report.flaggedSentences.map((s, i) => (
-                  <SentenceCard key={s.sentenceId} sentence={s} index={i} weaknessId={report.weaknessId} />
+                  <SentenceCard
+                    key={s.sentenceId}
+                    sentence={s}
+                    index={i}
+                    weaknessId={report.weaknessId}
+                  />
                 ))}
               </div>
             )}
@@ -172,7 +201,9 @@ export default function TestReportPage() {
                 aria-controls="report-other-sentences"
                 onClick={() => setOtherExpanded((v) => !v)}
               >
-                <span className="text-muted">{t('otherToggle', { count: report.otherSentences.length })}</span>
+                <span className="text-muted">
+                  {t('otherToggle', { count: report.otherSentences.length })}
+                </span>
                 {otherExpanded ? (
                   <ChevronUp className="h-4 w-4 text-muted" aria-hidden="true" />
                 ) : (
@@ -189,7 +220,12 @@ export default function TestReportPage() {
                     className="space-y-3 overflow-hidden"
                   >
                     {report.otherSentences.map((s, i) => (
-                      <SentenceCard key={s.sentenceId} sentence={s} index={i} weaknessId={report.weaknessId} />
+                      <SentenceCard
+                        key={s.sentenceId}
+                        sentence={s}
+                        index={i}
+                        weaknessId={report.weaknessId}
+                      />
                     ))}
                   </motion.div>
                 )}

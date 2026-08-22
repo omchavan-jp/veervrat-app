@@ -76,7 +76,11 @@ export function ChatThreadClient({ vmId }: { vmId: string }) {
   const roomId = user && vmId ? `chat:${[user.id, vmId].sort().join(':')}` : '';
 
   // Resolve the VM's identity (name, handle, profile link) from the cached VM list.
-  const { data: vms, isLoading: vmsLoading, isError: vmsError } = useQuery({
+  const {
+    data: vms,
+    isLoading: vmsLoading,
+    isError: vmsError,
+  } = useQuery({
     queryKey: ['my-vms'],
     queryFn: async () => {
       const response = await api.get<{ data: VmSummary[] }>('/vm-relationships/my-vms');
@@ -133,7 +137,9 @@ export function ChatThreadClient({ vmId }: { vmId: string }) {
     newSocket.on('ack', (data: { tempId: string; id: string; seqNo: number }) => {
       setMessages((prev) =>
         prev.map((msg) =>
-          msg.tempId === data.tempId ? { ...msg, id: data.id, seqNo: data.seqNo, tempId: undefined } : msg,
+          msg.tempId === data.tempId
+            ? { ...msg, id: data.id, seqNo: data.seqNo, tempId: undefined }
+            : msg,
         ),
       );
     });
@@ -216,18 +222,27 @@ export function ChatThreadClient({ vmId }: { vmId: string }) {
         <Avatar className="h-9 w-9 shrink-0">
           {vm?.avatarUrl && <AvatarImage src={vm.avatarUrl} />}
           <AvatarFallback className="text-xs">
-            {vm ? initialsOf(vm.displayName) : <UserRound className="h-4 w-4 text-muted" aria-hidden="true" />}
+            {vm ? (
+              initialsOf(vm.displayName)
+            ) : (
+              <UserRound className="h-4 w-4 text-muted" aria-hidden="true" />
+            )}
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
           {vm ? (
-            <Link href={`/u/${vm.username}`} className="block truncate font-medium leading-tight hover:text-accent">
+            <Link
+              href={`/u/${vm.username}`}
+              className="block truncate font-medium leading-tight hover:text-accent"
+            >
               {vm.displayName}
             </Link>
           ) : vmsLoading ? (
             <span className="block h-4 w-32 animate-pulse rounded bg-fg/[0.08] motion-reduce:animate-none" />
           ) : vmsError ? (
-            <span className="block truncate font-medium leading-tight text-danger">{t('chat.identity_error')}</span>
+            <span className="block truncate font-medium leading-tight text-danger">
+              {t('chat.identity_error')}
+            </span>
           ) : (
             <span className="block truncate font-medium leading-tight">{t('chat.title')}</span>
           )}
@@ -282,7 +297,9 @@ export function ChatThreadClient({ vmId }: { vmId: string }) {
                     {initialsOf(msg.sender.displayName)}
                   </AvatarFallback>
                 </Avatar>
-                <div className={`flex max-w-[78%] flex-col gap-1 ${mine ? 'items-end' : 'items-start'}`}>
+                <div
+                  className={`flex max-w-[78%] flex-col gap-1 ${mine ? 'items-end' : 'items-start'}`}
+                >
                   <div
                     className={`break-words rounded-2xl px-3.5 py-2 text-sm ${
                       mine
@@ -293,7 +310,10 @@ export function ChatThreadClient({ vmId }: { vmId: string }) {
                     <MessageContent content={msg.content} />
                   </div>
                   <span className="px-1 font-mono text-[10px] text-muted">
-                    {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {new Date(msg.createdAt).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
                   </span>
                 </div>
               </div>

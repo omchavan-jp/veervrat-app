@@ -91,7 +91,9 @@ export function CheckinForm({ journeyId, resolutionId }: Props) {
       </div>
       {selected && (
         <div className="mt-2">
-          <Label htmlFor={noteId} className="sr-only">{t('noteLabel')}</Label>
+          <Label htmlFor={noteId} className="sr-only">
+            {t('noteLabel')}
+          </Label>
           <Textarea
             id={noteId}
             value={note}

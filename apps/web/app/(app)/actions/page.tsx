@@ -32,7 +32,9 @@ function SectionShell({
   return (
     <section className="mb-7">
       <div className="mb-3 flex items-center gap-2.5">
-        <span className={`flex h-7 w-7 items-center justify-center rounded-lg ${tint}`}>{icon}</span>
+        <span className={`flex h-7 w-7 items-center justify-center rounded-lg ${tint}`}>
+          {icon}
+        </span>
         <h2 className="text-[15px] font-medium">{title}</h2>
         <span className="font-mono text-[11px] text-muted">{count}</span>
       </div>
@@ -87,8 +89,15 @@ export default function ActionsPage() {
   });
 
   const acknowledge = useMutation({
-    mutationFn: ({ journeyId, type, itemId }: { journeyId: string; type: ErcType; itemId: string }) =>
-      ercApi.acknowledgeSidenote(journeyId, type, itemId),
+    mutationFn: ({
+      journeyId,
+      type,
+      itemId,
+    }: {
+      journeyId: string;
+      type: ErcType;
+      itemId: string;
+    }) => ercApi.acknowledgeSidenote(journeyId, type, itemId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.actions.va });
     },
@@ -128,8 +137,7 @@ export default function ActionsPage() {
   }
 
   const d: VaActions = data;
-  const meta = (ercType: string, journey: string) =>
-    t('metaLine', { ercType, journey });
+  const meta = (ercType: string, journey: string) => t('metaLine', { ercType, journey });
 
   return (
     <div className="mx-auto max-w-[680px]">
@@ -138,7 +146,11 @@ export default function ActionsPage() {
 
       <div className="mt-7">
         {d.counts.total === 0 ? (
-          <EmptyState icon={<CheckCircle2 className="h-5 w-5" />} title={t('empty')} description={t('emptyHint')} />
+          <EmptyState
+            icon={<CheckCircle2 className="h-5 w-5" />}
+            title={t('empty')}
+            description={t('emptyHint')}
+          />
         ) : (
           <>
             <SectionShell
@@ -174,17 +186,28 @@ export default function ActionsPage() {
                     <div className="flex shrink-0 gap-2">
                       <Link
                         href={`/journeys/${s.journeyId}`}
-                        className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'rounded-full')}
+                        className={cn(
+                          buttonVariants({ variant: 'outline', size: 'sm' }),
+                          'rounded-full',
+                        )}
                       >
                         {t('view')}
                       </Link>
                       <Button
                         size="sm"
                         className="rounded-full"
-                        loading={acknowledge.isPending && acknowledge.variables?.itemId === s.itemId}
-                        disabled={acknowledge.isPending && acknowledge.variables?.itemId === s.itemId}
+                        loading={
+                          acknowledge.isPending && acknowledge.variables?.itemId === s.itemId
+                        }
+                        disabled={
+                          acknowledge.isPending && acknowledge.variables?.itemId === s.itemId
+                        }
                         onClick={() =>
-                          acknowledge.mutate({ journeyId: s.journeyId, type: s.ercType, itemId: s.itemId })
+                          acknowledge.mutate({
+                            journeyId: s.journeyId,
+                            type: s.ercType,
+                            itemId: s.itemId,
+                          })
                         }
                       >
                         {t('accept')}

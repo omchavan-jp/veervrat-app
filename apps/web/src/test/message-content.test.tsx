@@ -6,7 +6,9 @@ import { MessageContent, type TiptapDoc } from '@/components/chat/message-conten
 // next/image and next/link render fine in jsdom, but stub next/link to a plain anchor
 // to assert hrefs simply.
 vi.mock('next/link', () => ({
-  default: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a>,
+  default: ({ href, children }: { href: string; children: React.ReactNode }) => (
+    <a href={href}>{children}</a>
+  ),
 }));
 vi.mock('next/image', () => ({
   default: ({ src, alt }: { src: string; alt: string }) => <img src={src} alt={alt} />,
@@ -17,7 +19,9 @@ const doc = (...content: unknown[]): TiptapDoc => ({ type: 'doc', content: conte
 describe('MessageContent', () => {
   it('renders plain paragraph text', () => {
     renderWithProviders(
-      <MessageContent content={doc({ type: 'paragraph', content: [{ type: 'text', text: 'hello world' }] })} />,
+      <MessageContent
+        content={doc({ type: 'paragraph', content: [{ type: 'text', text: 'hello world' }] })}
+      />,
     );
     expect(screen.getByText('hello world')).toBeInTheDocument();
   });
@@ -28,7 +32,10 @@ describe('MessageContent', () => {
         content={doc({
           type: 'paragraph',
           content: [
-            { type: 'entityHash', attrs: { entityType: 'journey', entityId: 'j1', label: 'My Journey' } },
+            {
+              type: 'entityHash',
+              attrs: { entityType: 'journey', entityId: 'j1', label: 'My Journey' },
+            },
           ],
         })}
       />,
@@ -42,7 +49,9 @@ describe('MessageContent', () => {
       <MessageContent
         content={doc({
           type: 'paragraph',
-          content: [{ type: 'entityHash', attrs: { entityType: 'virtue', entityId: 'v1', label: 'धैर्य' } }],
+          content: [
+            { type: 'entityHash', attrs: { entityType: 'virtue', entityId: 'v1', label: 'धैर्य' } },
+          ],
         })}
       />,
     );
@@ -52,7 +61,9 @@ describe('MessageContent', () => {
 
   it('renders an image node', () => {
     const { container } = renderWithProviders(
-      <MessageContent content={doc({ type: 'image', attrs: { src: 'https://cdn.example.com/a.png' } })} />,
+      <MessageContent
+        content={doc({ type: 'image', attrs: { src: 'https://cdn.example.com/a.png' } })}
+      />,
     );
     const img = container.querySelector('img');
     expect(img).toHaveAttribute('src', 'https://cdn.example.com/a.png');
@@ -61,7 +72,10 @@ describe('MessageContent', () => {
   it('applies bold marks', () => {
     renderWithProviders(
       <MessageContent
-        content={doc({ type: 'paragraph', content: [{ type: 'text', text: 'strong', marks: [{ type: 'bold' }] }] })}
+        content={doc({
+          type: 'paragraph',
+          content: [{ type: 'text', text: 'strong', marks: [{ type: 'bold' }] }],
+        })}
       />,
     );
     expect(screen.getByText('strong').closest('strong')).not.toBeNull();

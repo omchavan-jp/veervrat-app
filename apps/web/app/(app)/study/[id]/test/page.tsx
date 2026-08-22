@@ -32,12 +32,7 @@ export default function TestEntryPage() {
         <Alert variant="destructive" className="max-w-sm">
           <AlertTitle>{t('createError')}</AlertTitle>
           <div className="mt-3">
-            <Button
-              size="sm"
-              variant="outline"
-              loading={createTest.isPending}
-              onClick={start}
-            >
+            <Button size="sm" variant="outline" loading={createTest.isPending} onClick={start}>
               {t('retry')}
             </Button>
           </div>

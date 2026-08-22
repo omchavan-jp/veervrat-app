@@ -18,7 +18,10 @@ export default function WeaknessDetailPage() {
   const { data: weakness, isLoading, isError, refetch } = useWeakness(id);
 
   const backLink = (
-    <Link href="/study" className="mb-6 inline-flex items-center gap-1 text-sm text-muted hover:text-fg">
+    <Link
+      href="/study"
+      className="mb-6 inline-flex items-center gap-1 text-sm text-muted hover:text-fg"
+    >
       <ArrowLeft className="h-4 w-4" aria-hidden="true" />
       {t('backToWeaknesses')}
     </Link>
@@ -64,7 +67,13 @@ export default function WeaknessDetailPage() {
       {backLink}
 
       <div className="mb-8">
-        <BilingualText en={weakness.nameEn} mr={weakness.nameMr} size="xl" as="h1" className="mb-3" />
+        <BilingualText
+          en={weakness.nameEn}
+          mr={weakness.nameMr}
+          size="xl"
+          as="h1"
+          className="mb-3"
+        />
         {weakness.description && (
           <p className="text-[15px] leading-relaxed text-muted">{weakness.description}</p>
         )}
@@ -125,7 +134,9 @@ export default function WeaknessDetailPage() {
         className="h-auto rounded-xl px-8 py-3.5 text-[15px]"
         nativeButton={false}
         render={
-          <Link href={hasDraft ? `/study/${id}/test/${weakness.draftTestId}` : `/study/${id}/test`} />
+          <Link
+            href={hasDraft ? `/study/${id}/test/${weakness.draftTestId}` : `/study/${id}/test`}
+          />
         }
       >
         {hasDraft ? t('resumeDraft') : t('takeTest')}

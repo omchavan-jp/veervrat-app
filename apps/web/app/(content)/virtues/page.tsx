@@ -21,7 +21,10 @@ export default function VirtuesBrowserPage() {
   const t = useTranslations('virtues');
 
   const virtues = useQuery({ queryKey: queryKeys.virtues.list, queryFn: () => virtuesApi.list() });
-  const weaknesses = useQuery({ queryKey: queryKeys.weaknesses.all, queryFn: () => weaknessesApi.list() });
+  const weaknesses = useQuery({
+    queryKey: queryKeys.weaknesses.all,
+    queryFn: () => weaknessesApi.list(),
+  });
 
   const allWeaknesses = useMemo(
     () => (weaknesses.data?.clusters ?? []).flatMap((c) => c.weaknesses),
@@ -40,7 +43,9 @@ export default function VirtuesBrowserPage() {
           <h2 className="text-[16px] font-medium">{t('virtuesSection')}</h2>
         </div>
         {virtues.isLoading ? (
-          <div className="flex min-h-[20vh] items-center justify-center"><Spinner size="lg" /></div>
+          <div className="flex min-h-[20vh] items-center justify-center">
+            <Spinner size="lg" />
+          </div>
         ) : virtues.isError ? (
           <p className="text-[13px] text-danger">{t('loadError')}</p>
         ) : (virtues.data ?? []).length === 0 ? (
@@ -48,10 +53,18 @@ export default function VirtuesBrowserPage() {
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
             {(virtues.data ?? []).map((v) => (
-              <Link key={v.id} href={`/virtues/${v.id}`} className="rounded-2xl border border-border bg-surface p-4 shadow-card transition-colors hover:border-accent/30">
+              <Link
+                key={v.id}
+                href={`/virtues/${v.id}`}
+                className="rounded-2xl border border-border bg-surface p-4 shadow-card transition-colors hover:border-accent/30"
+              >
                 <BilingualText en={v.nameEn} mr={v.nameMr} size="md" />
-                {v.description && <p className="mt-2 text-[13px] text-muted">{excerpt(v.description)}</p>}
-                <div className="mt-2 font-mono text-[10px] uppercase tracking-[0.1em] text-muted">{t('subvirtueCount', { count: v.subvirtueCount })}</div>
+                {v.description && (
+                  <p className="mt-2 text-[13px] text-muted">{excerpt(v.description)}</p>
+                )}
+                <div className="mt-2 font-mono text-[10px] uppercase tracking-[0.1em] text-muted">
+                  {t('subvirtueCount', { count: v.subvirtueCount })}
+                </div>
               </Link>
             ))}
           </div>
@@ -65,7 +78,9 @@ export default function VirtuesBrowserPage() {
           <h2 className="text-[16px] font-medium">{t('weaknessesSection')}</h2>
         </div>
         {weaknesses.isLoading ? (
-          <div className="flex min-h-[20vh] items-center justify-center"><Spinner size="lg" /></div>
+          <div className="flex min-h-[20vh] items-center justify-center">
+            <Spinner size="lg" />
+          </div>
         ) : weaknesses.isError ? (
           <p className="text-[13px] text-danger">{t('loadError')}</p>
         ) : allWeaknesses.length === 0 ? (
@@ -73,9 +88,15 @@ export default function VirtuesBrowserPage() {
         ) : (
           <div className="grid gap-2.5 sm:grid-cols-2">
             {allWeaknesses.map((w) => (
-              <Link key={w.id} href={`/weaknesses/${w.id}`} className="rounded-xl border border-border bg-surface p-3 transition-colors hover:border-accent/30">
+              <Link
+                key={w.id}
+                href={`/weaknesses/${w.id}`}
+                className="rounded-xl border border-border bg-surface p-3 transition-colors hover:border-accent/30"
+              >
                 <BilingualText en={w.nameEn} mr={w.nameMr} size="sm" />
-                {w.description && <p className="mt-1 text-[12px] text-muted">{excerpt(w.description, 90)}</p>}
+                {w.description && (
+                  <p className="mt-1 text-[12px] text-muted">{excerpt(w.description, 90)}</p>
+                )}
               </Link>
             ))}
           </div>

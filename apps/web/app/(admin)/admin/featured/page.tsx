@@ -16,7 +16,17 @@ import { Spinner } from '@/components/ui/spinner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { EmptyState } from '@/components/ui/empty-state';
 
-function StarToggle({ on, onClick, busy, label }: { on: boolean; onClick: () => void; busy: boolean; label: string }) {
+function StarToggle({
+  on,
+  onClick,
+  busy,
+  label,
+}: {
+  on: boolean;
+  onClick: () => void;
+  busy: boolean;
+  label: string;
+}) {
   return (
     <button
       onClick={onClick}
@@ -39,16 +49,26 @@ export default function FeaturedPanel() {
   const { toast } = useToast();
   const [tab, setTab] = useState<FeaturedTab>('blogs');
 
-  const blogs = useQuery({ queryKey: queryKeys.blogs.list, queryFn: () => blogsApi.list(), enabled: isAdmin });
-  const experiences = useQuery({ queryKey: queryKeys.experiences.public, queryFn: () => experienceLogsApi.getPublic(), enabled: isAdmin });
+  const blogs = useQuery({
+    queryKey: queryKeys.blogs.list,
+    queryFn: () => blogsApi.list(),
+    enabled: isAdmin,
+  });
+  const experiences = useQuery({
+    queryKey: queryKeys.experiences.public,
+    queryFn: () => experienceLogsApi.getPublic(),
+    enabled: isAdmin,
+  });
 
   const toggleBlog = useMutation({
-    mutationFn: ({ id, featured }: { id: string; featured: boolean }) => adminApi.featureBlog(id, featured),
+    mutationFn: ({ id, featured }: { id: string; featured: boolean }) =>
+      adminApi.featureBlog(id, featured),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.blogs.list }),
     onError: () => toast({ title: t('toggleFeaturedError'), variant: 'destructive' }),
   });
   const toggleExp = useMutation({
-    mutationFn: ({ id, featured }: { id: string; featured: boolean }) => adminApi.featureExperience(id, featured),
+    mutationFn: ({ id, featured }: { id: string; featured: boolean }) =>
+      adminApi.featureExperience(id, featured),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.experiences.public }),
     onError: () => toast({ title: t('toggleFeaturedError'), variant: 'destructive' }),
   });
@@ -81,34 +101,60 @@ export default function FeaturedPanel() {
 
       <div className="mt-6 space-y-2">
         {active.isLoading ? (
-          <div className="flex min-h-[20vh] items-center justify-center"><Spinner size="lg" label={t('loading')} /></div>
+          <div className="flex min-h-[20vh] items-center justify-center">
+            <Spinner size="lg" label={t('loading')} />
+          </div>
         ) : active.isError ? (
           <Alert variant="destructive" className="border-destructive/40 bg-destructive/10">
             <AlertDescription className="text-destructive">{t('loadError')}</AlertDescription>
           </Alert>
         ) : items.length === 0 ? (
           <EmptyState
-            icon={tab === 'blogs' ? <Newspaper className="h-5 w-5" /> : <PenLine className="h-5 w-5" />}
+            icon={
+              tab === 'blogs' ? <Newspaper className="h-5 w-5" /> : <PenLine className="h-5 w-5" />
+            }
             title={tab === 'blogs' ? t('noBlogs') : t('noExperiences')}
           />
         ) : tab === 'blogs' ? (
           (blogs.data?.items ?? []).map((b) => (
-            <div key={b.id} className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-card">
+            <div
+              key={b.id}
+              className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-card"
+            >
               <div className="min-w-0 flex-1">
                 <div className="truncate text-[15px] font-medium">{b.title}</div>
-                <div className="truncate text-[12px] text-muted">{b.author.displayName ?? b.author.username}</div>
+                <div className="truncate text-[12px] text-muted">
+                  {b.author.displayName ?? b.author.username}
+                </div>
               </div>
-              <StarToggle on={b.featured} busy={toggleBlog.isPending} onClick={() => toggleBlog.mutate({ id: b.id, featured: !b.featured })} label={t('toggleFeatured')} />
+              <StarToggle
+                on={b.featured}
+                busy={toggleBlog.isPending}
+                onClick={() => toggleBlog.mutate({ id: b.id, featured: !b.featured })}
+                label={t('toggleFeatured')}
+              />
             </div>
           ))
         ) : (
           (experiences.data?.items ?? []).map((e) => (
-            <div key={e.id} className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-card">
+            <div
+              key={e.id}
+              className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-card"
+            >
               <div className="min-w-0 flex-1">
-                <div className="line-clamp-2 text-[14px]">{tiptapDocToText(e.body) || t('untitled')}</div>
-                <div className="truncate text-[12px] text-muted">{e.author.displayName ?? e.author.username}</div>
+                <div className="line-clamp-2 text-[14px]">
+                  {tiptapDocToText(e.body) || t('untitled')}
+                </div>
+                <div className="truncate text-[12px] text-muted">
+                  {e.author.displayName ?? e.author.username}
+                </div>
               </div>
-              <StarToggle on={e.featured} busy={toggleExp.isPending} onClick={() => toggleExp.mutate({ id: e.id, featured: !e.featured })} label={t('toggleFeatured')} />
+              <StarToggle
+                on={e.featured}
+                busy={toggleExp.isPending}
+                onClick={() => toggleExp.mutate({ id: e.id, featured: !e.featured })}
+                label={t('toggleFeatured')}
+              />
             </div>
           ))
         )}

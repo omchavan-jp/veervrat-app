@@ -21,8 +21,8 @@ export default function NotFound() {
       </div>
 
       <div className="mb-2 max-w-[520px] text-[15px] leading-relaxed">
-        This path has not yet been walked. The page you were looking for does not
-        exist — or it has moved on.
+        This path has not yet been walked. The page you were looking for does not exist — or it has
+        moved on.
       </div>
 
       <div className="mb-12 font-mono text-[10px] uppercase tracking-[0.12em] text-muted">

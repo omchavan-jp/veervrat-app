@@ -78,7 +78,10 @@ export async function proxy(request: NextRequest) {
   // Passed by header rather than re-read downstream, so the lookup happens exactly once per
   // request. Base64 because header values must be latin-1 and display names are not.
   if (user) {
-    requestHeaders.set('X-Session-User', Buffer.from(JSON.stringify(user), 'utf8').toString('base64'));
+    requestHeaders.set(
+      'X-Session-User',
+      Buffer.from(JSON.stringify(user), 'utf8').toString('base64'),
+    );
   }
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });

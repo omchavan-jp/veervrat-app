@@ -25,15 +25,22 @@ test.describe('Flow 1: signup → onboarding → app access', () => {
     await page.locator('input[type="email"]').fill(user.email);
     await page.locator('input[type="password"]').first().fill(user.password);
     await page.waitForTimeout(700); // username availability debounce
-    await page.getByRole('button', { name: /sign ?up|create account|register/i }).first().click();
+    await page
+      .getByRole('button', { name: /sign ?up|create account|register/i })
+      .first()
+      .click();
 
     // The account now exists with a verification token.
-    await expect.poll(() => latestVerificationToken(user.email, 'email_verification'), { timeout: 15_000 }).toBeTruthy();
+    await expect
+      .poll(() => latestVerificationToken(user.email, 'email_verification'), { timeout: 15_000 })
+      .toBeTruthy();
     const token = latestVerificationToken(user.email, 'email_verification')!;
 
     // Verify via the real verify-email URL.
     await page.goto(`/verify-email?token=${token}`);
-    await expect(page.getByText(/verified|success|log ?in/i).first()).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText(/verified|success|log ?in/i).first()).toBeVisible({
+      timeout: 15_000,
+    });
   });
 
   test('verified-but-unonboarded user is gated into onboarding on login', async ({ page }) => {
@@ -45,7 +52,10 @@ test.describe('Flow 1: signup → onboarding → app access', () => {
       await page.goto('/login');
       await page.getByRole('textbox').first().fill(u.email);
       await page.locator('input[type="password"]').fill(u.password);
-      await page.getByRole('button', { name: /log ?in|sign ?in/i }).first().click();
+      await page
+        .getByRole('button', { name: /log ?in|sign ?in/i })
+        .first()
+        .click();
       // The onboarding gate sends an unonboarded user to /onboarding (account-setup).
       await page.waitForURL(/\/onboarding/, { timeout: 20_000 });
       await expect(page).toHaveURL(/\/onboarding/);
@@ -60,7 +70,10 @@ test.describe('Flow 1: signup → onboarding → app access', () => {
       // user may already be registered+verified from the first test — finish onboarding only.
       const { loginApi, apiHeaders } = await import('./helpers/auth');
       const { ctx, csrf } = await loginApi(user);
-      await ctx.post('/api/v1/auth/complete-onboarding', { headers: apiHeaders(csrf), data: { displayName: user.displayName, username: user.username, language: 'EN' } });
+      await ctx.post('/api/v1/auth/complete-onboarding', {
+        headers: apiHeaders(csrf),
+        data: { displayName: user.displayName, username: user.username, language: 'EN' },
+      });
       await ctx.post('/api/v1/auth/complete-framework', { headers: apiHeaders(csrf) });
       await ctx.dispose();
     });
@@ -68,7 +81,10 @@ test.describe('Flow 1: signup → onboarding → app access', () => {
     await page.goto('/login');
     await page.getByRole('textbox').first().fill(user.email);
     await page.locator('input[type="password"]').fill(user.password);
-    await page.getByRole('button', { name: /log ?in|sign ?in/i }).first().click();
+    await page
+      .getByRole('button', { name: /log ?in|sign ?in/i })
+      .first()
+      .click();
     await page.waitForURL(/\/dashboard/, { timeout: 20_000 });
     await expect(page.getByRole('heading', { level: 1 })).toContainText(/namaskar/i);
   });

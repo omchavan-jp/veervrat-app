@@ -10,13 +10,55 @@ const mockRemoveMutate = vi.hoisted(() => vi.fn());
 
 const POOL_ITEMS = vi.hoisted(() => [
   { id: 'p1', titleEn: 'Pool Exposure A', descriptionEn: null, tier: 'LOCAL', weaknessTags: [] },
-  { id: 'p2', titleEn: 'Pool Exposure B', descriptionEn: 'Do this daily', tier: 'NATIONAL', weaknessTags: [] },
+  {
+    id: 'p2',
+    titleEn: 'Pool Exposure B',
+    descriptionEn: 'Do this daily',
+    tier: 'NATIONAL',
+    weaknessTags: [],
+  },
 ]);
 
 const ACTIVE_ITEMS = vi.hoisted(() => [
-  { id: 'e1', journeyId: 'j-1', status: 'NOT_STARTED', isDeactivated: false, isCustom: false, titleEn: 'Selected Exposure', descriptionEn: null, tier: 'LOCAL', startedAt: null, submittedAt: null, approvedAt: null },
-  { id: 'e2', journeyId: 'j-1', status: 'IN_PROGRESS', isDeactivated: false, isCustom: false, titleEn: 'Active Exposure', descriptionEn: null, tier: 'LOCAL', startedAt: new Date().toISOString(), submittedAt: null, approvedAt: null },
-  { id: 'e3', journeyId: 'j-1', status: 'APPROVED', isDeactivated: true, isCustom: false, titleEn: 'Deactivated Exposure', descriptionEn: null, tier: 'LOCAL', startedAt: null, submittedAt: null, approvedAt: null },
+  {
+    id: 'e1',
+    journeyId: 'j-1',
+    status: 'NOT_STARTED',
+    isDeactivated: false,
+    isCustom: false,
+    titleEn: 'Selected Exposure',
+    descriptionEn: null,
+    tier: 'LOCAL',
+    startedAt: null,
+    submittedAt: null,
+    approvedAt: null,
+  },
+  {
+    id: 'e2',
+    journeyId: 'j-1',
+    status: 'IN_PROGRESS',
+    isDeactivated: false,
+    isCustom: false,
+    titleEn: 'Active Exposure',
+    descriptionEn: null,
+    tier: 'LOCAL',
+    startedAt: new Date().toISOString(),
+    submittedAt: null,
+    approvedAt: null,
+  },
+  {
+    id: 'e3',
+    journeyId: 'j-1',
+    status: 'APPROVED',
+    isDeactivated: true,
+    isCustom: false,
+    titleEn: 'Deactivated Exposure',
+    descriptionEn: null,
+    tier: 'LOCAL',
+    startedAt: null,
+    submittedAt: null,
+    approvedAt: null,
+  },
 ]);
 
 // useErcItems returns empty by default so pool opens (defaultOpen = !hasItems = true)

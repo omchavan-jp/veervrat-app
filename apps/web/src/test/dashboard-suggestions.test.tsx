@@ -21,8 +21,18 @@ vi.mock('next-intl', () => ({
 }));
 
 vi.mock('next/link', () => ({
-  default: ({ href, children, ...props }: { href: string; children: React.ReactNode; [key: string]: unknown }) => (
-    <a href={href} {...props}>{children}</a>
+  default: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string;
+    children: React.ReactNode;
+    [key: string]: unknown;
+  }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
 
@@ -74,7 +84,9 @@ describe('DashboardSuggestions', () => {
   });
 
   it('renders "Start journey" link with correct sentenceId', async () => {
-    mockDashboardApi.getSuggestions.mockResolvedValue({ suggestions: [makeSuggestion({ sentenceId: 'sent-abc' })] });
+    mockDashboardApi.getSuggestions.mockResolvedValue({
+      suggestions: [makeSuggestion({ sentenceId: 'sent-abc' })],
+    });
     renderSuggestions();
     await waitFor(() => {
       const link = screen.getByText('suggestionsStartJourney').closest('a');

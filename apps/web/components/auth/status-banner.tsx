@@ -25,9 +25,7 @@ export function StatusBanner({ variant, title, description }: StatusBannerProps)
     >
       <Icon aria-hidden="true" />
       <AlertTitle>{title}</AlertTitle>
-      <AlertDescription
-        className={variant === 'success' ? 'text-success/90' : undefined}
-      >
+      <AlertDescription className={variant === 'success' ? 'text-success/90' : undefined}>
         {description}
       </AlertDescription>
     </Alert>

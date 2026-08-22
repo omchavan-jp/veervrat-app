@@ -13,13 +13,8 @@ export const accountSetupSchema = z.object({
   language: z.enum(['EN', 'MR'], { error: 'Please select a language.' }),
   gender: z.enum(['Male', 'Female', 'other']).optional(),
   genderCustom: z.string().max(50).optional(),
-  // type="date" returns "" when cleared — treat empty string same as undefined
-  dob: z
-    .string()
-    .optional()
-    .refine((val) => !val || val === '' || /^\d{4}-\d{2}-\d{2}$/.test(val), {
-      message: 'Please enter a valid date in YYYY-MM-DD format.',
-    }),
+  // Date of birth is deliberately absent. It is collected and validated at account creation, and
+  // collecting it again here would imply it is optional — which an age gate cannot be.
 });
 
 export type AccountSetupInput = z.infer<typeof accountSetupSchema>;

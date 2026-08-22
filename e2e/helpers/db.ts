@@ -119,12 +119,15 @@ export function sampleSentenceWeakness(): { sentenceId: string; weaknessId: stri
      JOIN resolution_weaknesses rw ON rw.weakness_id = ws.weakness_id
      LIMIT 1`,
   );
-  if (rows.length === 0) throw new Error('no sentence/weakness pair with pooled resolutions available');
+  if (rows.length === 0)
+    throw new Error('no sentence/weakness pair with pooled resolutions available');
   return { sentenceId: rows[0][0], weaknessId: rows[0][1] };
 }
 
 // Latest audit event of an action (for the admin-override flow assertion).
-export function latestAuditEvent(action: string): { resourceId: string | null; metadata: string | null } | null {
+export function latestAuditEvent(
+  action: string,
+): { resourceId: string | null; metadata: string | null } | null {
   const rows = sql(
     `SELECT coalesce(resource_id::text,''), coalesce(metadata::text,'') FROM audit_events
      WHERE action = ${lit(action)} ORDER BY created_at DESC LIMIT 1`,

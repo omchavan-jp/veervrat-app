@@ -42,21 +42,29 @@ test.describe('Flow 2: journey start → ERC select → check-in', () => {
     const resolutionId = (await sel.json()).data.id;
 
     // Start it (NOT_STARTED → IN_PROGRESS). Status DTO uses lowercase enum values.
-    const start = await ctx.patch(`/api/v1/journeys/${journeyId}/resolutions/${resolutionId}/status`, {
-      headers: apiHeaders(csrf),
-      data: { status: 'in_progress' },
-    });
+    const start = await ctx.patch(
+      `/api/v1/journeys/${journeyId}/resolutions/${resolutionId}/status`,
+      {
+        headers: apiHeaders(csrf),
+        data: { status: 'in_progress' },
+      },
+    );
     expect(start.ok(), `start resolution: ${start.status()} ${await start.text()}`).toBeTruthy();
 
     // Log a check-in.
-    const checkin = await ctx.post(`/api/v1/journeys/${journeyId}/resolutions/${resolutionId}/checkins`, {
-      headers: apiHeaders(csrf),
-      data: { status: 'DONE', note: 'E2E check-in' },
-    });
+    const checkin = await ctx.post(
+      `/api/v1/journeys/${journeyId}/resolutions/${resolutionId}/checkins`,
+      {
+        headers: apiHeaders(csrf),
+        data: { status: 'DONE', note: 'E2E check-in' },
+      },
+    );
     expect(checkin.ok(), `checkin: ${checkin.status()} ${await checkin.text()}`).toBeTruthy();
 
     // The check-in is listed (response shape: { checkins: [...], streak }).
-    const list = await ctx.get(`/api/v1/journeys/${journeyId}/resolutions/${resolutionId}/checkins`);
+    const list = await ctx.get(
+      `/api/v1/journeys/${journeyId}/resolutions/${resolutionId}/checkins`,
+    );
     const checkins = (await list.json()).data.checkins as unknown[];
     expect(checkins.length).toBeGreaterThan(0);
     await ctx.dispose();

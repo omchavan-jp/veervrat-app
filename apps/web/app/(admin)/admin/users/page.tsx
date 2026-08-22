@@ -18,8 +18,18 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 function StatusBadge({ u }: { u: AdminUserRow }) {
   const t = useTranslations('adminUsers');
-  if (u.anonymisedAt) return <Badge variant="secondary" className="text-[11px] font-normal">{t('anonymised')}</Badge>;
-  if (u.suspendedAt) return <Badge variant="destructive" className="text-[11px] font-normal">{t('suspended')}</Badge>;
+  if (u.anonymisedAt)
+    return (
+      <Badge variant="secondary" className="text-[11px] font-normal">
+        {t('anonymised')}
+      </Badge>
+    );
+  if (u.suspendedAt)
+    return (
+      <Badge variant="destructive" className="text-[11px] font-normal">
+        {t('suspended')}
+      </Badge>
+    );
   return null;
 }
 
@@ -55,7 +65,10 @@ export default function AdminUsersPage() {
       <p className="mt-1 text-[14px] text-muted">{t('subtitle')}</p>
 
       <div className="relative mt-5">
-        <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted" />
+        <Search
+          aria-hidden="true"
+          className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted"
+        />
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -67,7 +80,9 @@ export default function AdminUsersPage() {
 
       <div className="mt-6">
         {list.isLoading ? (
-          <div className="flex min-h-[20vh] items-center justify-center"><Spinner size="lg" label={t('loading')} /></div>
+          <div className="flex min-h-[20vh] items-center justify-center">
+            <Spinner size="lg" label={t('loading')} />
+          </div>
         ) : list.isError ? (
           <Alert variant="destructive" className="border-destructive/40 bg-destructive/10">
             <AlertDescription className="text-destructive">{t('loadError')}</AlertDescription>
@@ -77,7 +92,11 @@ export default function AdminUsersPage() {
         ) : (
           <div className="space-y-2">
             {list.data!.items.map((u) => (
-              <Link key={u.id} href={`/admin/users/${u.id}`} className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-card transition-colors hover:border-accent/30">
+              <Link
+                key={u.id}
+                href={`/admin/users/${u.id}`}
+                className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-card transition-colors hover:border-accent/30"
+              >
                 <Avatar className="h-9 w-9 border-0">
                   <AvatarFallback className="bg-accent-2/15 text-[12px] text-accent-2">
                     {userInitials(u.displayName)}
@@ -88,11 +107,18 @@ export default function AdminUsersPage() {
                     <span className="truncate text-[15px] font-medium">{u.displayName}</span>
                     <StatusBadge u={u} />
                   </div>
-                  <div className="truncate text-[12px] text-muted">@{u.username} · {u.email}</div>
+                  <div className="truncate text-[12px] text-muted">
+                    @{u.username} · {u.email}
+                  </div>
                 </div>
                 <div className="hidden shrink-0 gap-1 sm:flex">
                   {u.roles.map((r) => (
-                    <span key={r.role} className="rounded-full bg-fg/[0.06] px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] text-muted">{r.role}</span>
+                    <span
+                      key={r.role}
+                      className="rounded-full bg-fg/[0.06] px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] text-muted"
+                    >
+                      {r.role}
+                    </span>
                   ))}
                 </div>
                 <ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0 text-muted" />

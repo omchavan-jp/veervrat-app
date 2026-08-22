@@ -53,7 +53,14 @@ vi.mock('@/hooks/use-tests', () => ({
   useSubmitTest: () => ({ mutate: vi.fn(), isPending: false }),
   useTestReport: () => ({ data: null, isLoading: true }),
   useTest: () => ({
-    data: { id: 'tid-1', userId: 'u1', weaknessId: 'w1', isDraft: true, submittedAt: null, answers: [] },
+    data: {
+      id: 'tid-1',
+      userId: 'u1',
+      weaknessId: 'w1',
+      isDraft: true,
+      submittedAt: null,
+      answers: [],
+    },
     isLoading: false,
   }),
 }));

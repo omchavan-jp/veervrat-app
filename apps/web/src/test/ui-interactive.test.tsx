@@ -4,17 +4,8 @@ import { render, screen } from '@testing-library/react';
 import { Switch } from '../../components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '../../components/ui/radio-group';
 import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group';
-import {
-  Collapsible,
-  CollapsibleTrigger,
-  CollapsiblePanel,
-} from '../../components/ui/collapsible';
-import {
-  Field,
-  FieldLabel,
-  FieldControl,
-  FieldError,
-} from '../../components/ui/field';
+import { Collapsible, CollapsibleTrigger, CollapsiblePanel } from '../../components/ui/collapsible';
+import { Field, FieldLabel, FieldControl, FieldError } from '../../components/ui/field';
 import { Input } from '../../components/ui/input';
 
 describe('Switch', () => {

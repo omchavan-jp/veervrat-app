@@ -1,6 +1,10 @@
 import { test, expect } from '@playwright/test';
 import { makeUser, registerAndOnboard, loginApi, apiHeaders } from './helpers/auth';
-import { deleteUserByEmail, sampleWeaknessWithSentences, sentenceIdsForWeakness } from './helpers/db';
+import {
+  deleteUserByEmail,
+  sampleWeaknessWithSentences,
+  sentenceIdsForWeakness,
+} from './helpers/db';
 
 // Flow 10: draft test → exit → resume from draft → complete → submit → report.
 // Drives the test lifecycle through the real API: createOrResume returns the same draft on
@@ -22,7 +26,10 @@ test.describe('Flow 10: draft test → resume → complete', () => {
     const { ctx, csrf } = await loginApi(va);
 
     // Start a draft test.
-    const create = await ctx.post('/api/v1/tests', { headers: apiHeaders(csrf), data: { weaknessId } });
+    const create = await ctx.post('/api/v1/tests', {
+      headers: apiHeaders(csrf),
+      data: { weaknessId },
+    });
     expect(create.ok(), `create test: ${create.status()}`).toBeTruthy();
     const draft = await create.json();
     const testId = draft.data.id;
@@ -31,11 +38,17 @@ test.describe('Flow 10: draft test → resume → complete', () => {
     // Answer the first half (partial save).
     const half = Math.max(1, Math.floor(sentenceIds.length / 2));
     const firstHalf = sentenceIds.slice(0, half).map((sid) => ({ sentenceId: sid, score: 3 }));
-    const save1 = await ctx.patch(`/api/v1/tests/${testId}/answers`, { headers: apiHeaders(csrf), data: { answers: firstHalf } });
+    const save1 = await ctx.patch(`/api/v1/tests/${testId}/answers`, {
+      headers: apiHeaders(csrf),
+      data: { answers: firstHalf },
+    });
     expect(save1.ok(), `save half: ${save1.status()}`).toBeTruthy();
 
     // --- "Exit" then resume: createOrResume returns the SAME draft with answers preserved ---
-    const resume = await ctx.post('/api/v1/tests', { headers: apiHeaders(csrf), data: { weaknessId } });
+    const resume = await ctx.post('/api/v1/tests', {
+      headers: apiHeaders(csrf),
+      data: { weaknessId },
+    });
     const resumed = await resume.json();
     expect(resumed.data.id, 'resume returns the same draft').toBe(testId);
     expect(resumed.data.existed).toBe(true);
@@ -44,7 +57,10 @@ test.describe('Flow 10: draft test → resume → complete', () => {
     // Answer the rest.
     const rest = sentenceIds.slice(half).map((sid) => ({ sentenceId: sid, score: 2 }));
     if (rest.length > 0) {
-      const save2 = await ctx.patch(`/api/v1/tests/${testId}/answers`, { headers: apiHeaders(csrf), data: { answers: rest } });
+      const save2 = await ctx.patch(`/api/v1/tests/${testId}/answers`, {
+        headers: apiHeaders(csrf),
+        data: { answers: rest },
+      });
       expect(save2.ok(), `save rest: ${save2.status()}`).toBeTruthy();
     }
 

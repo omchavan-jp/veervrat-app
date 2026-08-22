@@ -67,7 +67,9 @@ export function CmsInfoModal({
             <MessageContent content={body} />
           </div>
         ) : (
-          <p className="whitespace-pre-line text-[15px] leading-relaxed text-muted">{fallbackBody}</p>
+          <p className="whitespace-pre-line text-[15px] leading-relaxed text-muted">
+            {fallbackBody}
+          </p>
         )}
       </Dialog>
     </>

@@ -16,11 +16,16 @@ type TypeFilter = '' | 'FILE' | 'LINK';
 
 function DetailModal({ id, onClose }: { id: string; onClose: () => void }) {
   const t = useTranslations('content');
-  const { data, isLoading, isError, refetch } = useQuery({ queryKey: queryKeys.content.resource(id), queryFn: () => contentApi.resource(id) });
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: queryKeys.content.resource(id),
+    queryFn: () => contentApi.resource(id),
+  });
   return (
     <Dialog
       open
-      onOpenChange={(o) => { if (!o) onClose(); }}
+      onOpenChange={(o) => {
+        if (!o) onClose();
+      }}
       className="md:w-[min(600px,calc(100vw-40px))]"
     >
       <DialogPrimitive.Close
@@ -30,7 +35,9 @@ function DetailModal({ id, onClose }: { id: string; onClose: () => void }) {
         <X className="h-5 w-5" />
       </DialogPrimitive.Close>
       {isLoading ? (
-        <div className="flex min-h-[20vh] items-center justify-center"><Spinner size="lg" /></div>
+        <div className="flex min-h-[20vh] items-center justify-center">
+          <Spinner size="lg" />
+        </div>
       ) : isError || !data ? (
         <EmptyState
           icon={<Library className="h-5 w-5" />}
@@ -54,12 +61,41 @@ function ResourceDetailBody({ data }: { data: ResourceDetail }) {
     <div>
       <h2 className="font-display text-[22px] font-medium leading-tight">{data.title}</h2>
       {data.oneLiner && <p className="mt-1 text-[14px] text-muted">{data.oneLiner}</p>}
-      {data.url && <a href={data.url} target="_blank" rel="noopener noreferrer nofollow" className="mt-2 inline-block text-[13px] text-accent hover:underline">{t('openLink')}</a>}
-      {data.description && <div className="prose mt-4 max-w-none text-[15px]"><MessageContent content={data.description} /></div>}
+      {data.url && (
+        <a
+          href={data.url}
+          target="_blank"
+          rel="noopener noreferrer nofollow"
+          className="mt-2 inline-block text-[13px] text-accent hover:underline"
+        >
+          {t('openLink')}
+        </a>
+      )}
+      {data.description && (
+        <div className="prose mt-4 max-w-none text-[15px]">
+          <MessageContent content={data.description} />
+        </div>
+      )}
       {(data.formalTags.length > 0 || data.looseTags.length > 0) && (
         <div className="mt-4 flex flex-wrap gap-1.5">
-          {data.formalTags.filter((tg) => tg.name).map((tg) => <span key={tg.entityId} className="rounded-full bg-accent/12 px-2.5 py-0.5 text-[12px] text-accent">{tg.name}</span>)}
-          {data.looseTags.map((lt) => <span key={lt} className="rounded-full bg-muted/15 px-2.5 py-0.5 text-[12px] text-muted">{lt}</span>)}
+          {data.formalTags
+            .filter((tg) => tg.name)
+            .map((tg) => (
+              <span
+                key={tg.entityId}
+                className="rounded-full bg-accent/12 px-2.5 py-0.5 text-[12px] text-accent"
+              >
+                {tg.name}
+              </span>
+            ))}
+          {data.looseTags.map((lt) => (
+            <span
+              key={lt}
+              className="rounded-full bg-muted/15 px-2.5 py-0.5 text-[12px] text-muted"
+            >
+              {lt}
+            </span>
+          ))}
         </div>
       )}
     </div>
@@ -77,7 +113,9 @@ export default function ResourcesPage() {
 
   const items: ResourceSummary[] = data?.items ?? [];
   const filters: { key: TypeFilter; label: string }[] = [
-    { key: '', label: t('all') }, { key: 'LINK', label: t('links') }, { key: 'FILE', label: t('files') },
+    { key: '', label: t('all') },
+    { key: 'LINK', label: t('links') },
+    { key: 'FILE', label: t('files') },
   ];
 
   return (
@@ -102,17 +140,31 @@ export default function ResourcesPage() {
 
       <div className="mt-6">
         {isLoading ? (
-          <div className="flex min-h-[30vh] items-center justify-center"><Spinner size="lg" /></div>
+          <div className="flex min-h-[30vh] items-center justify-center">
+            <Spinner size="lg" />
+          </div>
         ) : isError ? (
           <p className="text-[13px] text-danger">{t('loadError')}</p>
         ) : items.length === 0 ? (
-          <EmptyState icon={<Library className="h-5 w-5" />} title={t('resourcesEmpty')} description={t('resourcesEmptyHint')} />
+          <EmptyState
+            icon={<Library className="h-5 w-5" />}
+            title={t('resourcesEmpty')}
+            description={t('resourcesEmptyHint')}
+          />
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
             {items.map((r) => (
-              <button key={r.id} onClick={() => setOpenId(r.id)} className="flex items-start gap-3 rounded-2xl border border-border bg-surface p-4 text-left shadow-card transition-colors hover:border-accent/30">
+              <button
+                key={r.id}
+                onClick={() => setOpenId(r.id)}
+                className="flex items-start gap-3 rounded-2xl border border-border bg-surface p-4 text-left shadow-card transition-colors hover:border-accent/30"
+              >
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent/12 text-accent">
-                  {r.type === 'LINK' ? <LinkIcon className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+                  {r.type === 'LINK' ? (
+                    <LinkIcon className="h-4 w-4" />
+                  ) : (
+                    <FileText className="h-4 w-4" />
+                  )}
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-[15px] font-medium">{r.title}</div>

@@ -3,13 +3,20 @@ import type { MentionOptions } from '@tiptap/extension-mention';
 import { ReactRenderer } from '@tiptap/react';
 import type { SuggestionOptions } from '@tiptap/suggestion';
 import tippy, { type Instance as TippyInstance } from 'tippy.js';
-import { entitySearchApi, type EntitySearchHit, type EntitySearchScope } from '@/lib/api/entity-search';
+import {
+  entitySearchApi,
+  type EntitySearchHit,
+  type EntitySearchScope,
+} from '@/lib/api/entity-search';
 import { MentionList, type MentionListRef } from './mention-list';
 
 // One generic mention node carries entityType + entityId + label. The trigger char
 // selects the search scope: '#' → shared taxonomy concepts, '@' → the caller's own
 // items. Both render identically as a chip; the backend allowlists the entity types.
-function suggestionConfig(char: string, scope: EntitySearchScope): Omit<SuggestionOptions, 'editor'> {
+function suggestionConfig(
+  char: string,
+  scope: EntitySearchScope,
+): Omit<SuggestionOptions, 'editor'> {
   return {
     char,
     items: async ({ query }: { query: string }): Promise<EntitySearchHit[]> => {

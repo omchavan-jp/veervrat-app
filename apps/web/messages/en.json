@@ -122,7 +122,12 @@
       "heroHeading": "Welcome back. Pick up where you left.",
       "heroDevanagari": "दिवसातून एक पाऊल — पुरेसे आहे.",
       "heroGloss": "One step a day is enough. The discipline is the destination.",
-      "orDivider": "or"
+      "orDivider": "or",
+      "dob": "Date of birth",
+      "dobPlaceholder": "Select your date of birth",
+      "ageRequirement": "Veervrat is for adults aged 18 and over.",
+      "acceptTerms": "I accept the Terms of Use and Privacy Policy.",
+      "googleSignupNeedsDetails": "Fill in your date of birth and accept the terms above before continuing with Google."
     },
     "signup": {
       "title": "Create your account",
@@ -826,7 +831,9 @@
     "loadError": "Couldn't load this profile",
     "loadErrorHint": "Something went wrong. Please try again.",
     "retry": "Try again",
-    "experiencesError": "Couldn't load experiences."
+    "experiencesError": "Couldn't load experiences.",
+    "genderMale": "Male",
+    "genderFemale": "Female"
   },
   "actions": {
     "title": "Actions",

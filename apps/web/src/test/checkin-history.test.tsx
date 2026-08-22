@@ -10,7 +10,11 @@ vi.mock('@/hooks/use-journeys', () => ({
 
 import { CheckinHistory } from '../../components/journey/checkin-history';
 
-function makeCheckin(id: string, status: 'DONE' | 'PARTIAL' | 'MISSED', note: string | null = null) {
+function makeCheckin(
+  id: string,
+  status: 'DONE' | 'PARTIAL' | 'MISSED',
+  note: string | null = null,
+) {
   return {
     id,
     journeyResolutionId: 'r-1',

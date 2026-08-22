@@ -101,7 +101,11 @@ export function ChatComposer({
         aria-label={t('chat.add_image')}
         title={t('chat.add_image')}
       >
-        {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
+        {uploading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <ImageIcon className="h-4 w-4" />
+        )}
       </Button>
 
       <div className="flex-1 rounded-2xl border border-border bg-bg focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/30">

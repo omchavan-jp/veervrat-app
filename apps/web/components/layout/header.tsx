@@ -35,13 +35,15 @@ export function Header({ user }: { user: User }) {
           <ThemeToggle />
           <LanguageToggle />
           <NotificationBell />
-          <span className="text-sm text-muted">
-            {user.displayName ?? user.email}
-          </span>
+          <span className="text-sm text-muted">{user.displayName ?? user.email}</span>
           <Button
             variant="outline"
             className="h-auto rounded-lg border-border-strong px-3 py-1.5 text-xs"
-            onClick={() => logout.mutate(undefined, { onError: () => toast({ title: tCommon('logoutError'), variant: 'destructive' }) })}
+            onClick={() =>
+              logout.mutate(undefined, {
+                onError: () => toast({ title: tCommon('logoutError'), variant: 'destructive' }),
+              })
+            }
             loading={logout.isPending}
             disabled={logout.isPending}
           >

@@ -45,10 +45,7 @@ export function SectionLabel({
 }: React.ComponentProps<'div'> & { as?: 'div' | 'h2' | 'h3' }) {
   return (
     <Tag
-      className={cn(
-        'font-mono text-[11px] uppercase tracking-[0.12em] text-muted',
-        className,
-      )}
+      className={cn('font-mono text-[11px] uppercase tracking-[0.12em] text-muted', className)}
       {...props}
     />
   );

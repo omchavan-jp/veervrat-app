@@ -103,9 +103,7 @@ export default function TestQuestionPage() {
     }
   };
 
-  const sentences: Sentence[] = (weakness?.subvirtues ?? []).flatMap(
-    (sv) => sv.sentences,
-  );
+  const sentences: Sentence[] = (weakness?.subvirtues ?? []).flatMap((sv) => sv.sentences);
 
   // Redirect if already submitted
   useEffect(() => {
@@ -194,18 +192,24 @@ export default function TestQuestionPage() {
     return () => window.removeEventListener('popstate', onPop);
   }, [testData?.isDraft, hydrated, id]);
 
-  const persistAnswers = useCallback((currentAnswers: Map<string, Score>) => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      const payload = Array.from(currentAnswers.entries()).map(([sentenceId, score]) => ({ sentenceId, score }));
-      if (payload.length > 0) {
-        saveAnswers.mutate(payload, {
-          onSuccess: () => setDirty(false),
-          onError: () => toast({ title: t('saveError'), variant: 'destructive' }),
-        });
-      }
-    }, 600);
-  }, [saveAnswers, setDirty, toast, t]);
+  const persistAnswers = useCallback(
+    (currentAnswers: Map<string, Score>) => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        const payload = Array.from(currentAnswers.entries()).map(([sentenceId, score]) => ({
+          sentenceId,
+          score,
+        }));
+        if (payload.length > 0) {
+          saveAnswers.mutate(payload, {
+            onSuccess: () => setDirty(false),
+            onError: () => toast({ title: t('saveError'), variant: 'destructive' }),
+          });
+        }
+      }, 600);
+    },
+    [saveAnswers, setDirty, toast, t],
+  );
 
   // base-ui ToggleGroup is single-select: `group` is [] when the pressed score is
   // toggled off, or [scoreString] when a score is chosen — so it already encodes the
@@ -233,7 +237,10 @@ export default function TestQuestionPage() {
 
   const flushAndNavigate = (path: string) => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    const payload = Array.from(answersRef.current.entries()).map(([sentenceId, score]) => ({ sentenceId, score }));
+    const payload = Array.from(answersRef.current.entries()).map(([sentenceId, score]) => ({
+      sentenceId,
+      score,
+    }));
     const afterSave = () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.tests.detail(testId) });
       router.push(path);
@@ -310,7 +317,12 @@ export default function TestQuestionPage() {
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
               <div
                 className="h-full rounded-full bg-accent transition-all duration-300"
-                style={{ width: sentences.length > 0 ? `${(respondedSentences / sentences.length) * 100}%` : '0%' }}
+                style={{
+                  width:
+                    sentences.length > 0
+                      ? `${(respondedSentences / sentences.length) * 100}%`
+                      : '0%',
+                }}
               />
             </div>
           </div>
@@ -326,7 +338,10 @@ export default function TestQuestionPage() {
             variant="ghost"
             size="sm"
             className="shrink-0 px-2 text-[12px] text-muted hover:text-fg"
-            onClick={() => { setPendingNavHref(`/study/${id}`); setShowExitConfirm(true); }}
+            onClick={() => {
+              setPendingNavHref(`/study/${id}`);
+              setShowExitConfirm(true);
+            }}
           >
             {t('saveExit')}
           </Button>
@@ -338,7 +353,9 @@ export default function TestQuestionPage() {
         <div className="mx-auto max-w-2xl">
           {viewMode === 'one-at-a-time' && current ? (
             <div>
-              <div className="mb-2 font-mono text-[11px] text-muted">{currentIndex + 1} / {sentences.length}</div>
+              <div className="mb-2 font-mono text-[11px] text-muted">
+                {currentIndex + 1} / {sentences.length}
+              </div>
               <BilingualText en={current.textEn} mr={current.textMr} size="lg" as="p" />
             </div>
           ) : (
@@ -351,7 +368,10 @@ export default function TestQuestionPage() {
                       size="xs"
                       className="mt-0.5 shrink-0 bg-accent/10 font-mono text-[11px] text-accent hover:bg-accent/20"
                       aria-label={t('focusSentence', { n: i + 1 })}
-                      onClick={() => { setCurrentIndex(i); setViewMode('one-at-a-time'); }}
+                      onClick={() => {
+                        setCurrentIndex(i);
+                        setViewMode('one-at-a-time');
+                      }}
                     >
                       #{i + 1}
                     </Button>
@@ -359,7 +379,9 @@ export default function TestQuestionPage() {
                       <BilingualText en={s.textEn} mr={s.textMr} size="sm" />
                     </div>
                     {answers.has(s.sentenceId) && (
-                      <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium ${SCORE_COLORS[answers.get(s.sentenceId)!]}`}>
+                      <span
+                        className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium ${SCORE_COLORS[answers.get(s.sentenceId)!]}`}
+                      >
                         {scoreLabel(answers.get(s.sentenceId)!)}
                       </span>
                     )}
@@ -398,12 +420,18 @@ export default function TestQuestionPage() {
                 <p className="text-[11px] text-muted">{t('tapToClear')}</p>
                 <label className="flex items-center gap-2 text-[11px] text-muted">
                   {t('autoNext')}
-                  <Switch aria-label={t('autoNext')} checked={autoNext} onCheckedChange={toggleAutoNext} />
+                  <Switch
+                    aria-label={t('autoNext')}
+                    checked={autoNext}
+                    onCheckedChange={toggleAutoNext}
+                  />
                 </label>
               </div>
               <ToggleGroup
                 className="grid grid-cols-2 gap-2 sm:grid-cols-4"
-                value={answers.has(current.sentenceId) ? [String(answers.get(current.sentenceId))] : []}
+                value={
+                  answers.has(current.sentenceId) ? [String(answers.get(current.sentenceId))] : []
+                }
                 onValueChange={(group) => handleScoreSelect(current.sentenceId, group, true)}
                 aria-label={t('scoreGroupLabel')}
               >
@@ -450,7 +478,10 @@ export default function TestQuestionPage() {
           >
             {respondedSentences === sentences.length
               ? t('reviewResponses')
-              : t('reviewResponsesProgress', { answered: respondedSentences, total: sentences.length })}
+              : t('reviewResponsesProgress', {
+                  answered: respondedSentences,
+                  total: sentences.length,
+                })}
           </Button>
         </div>
       </div>
@@ -478,7 +509,10 @@ export default function TestQuestionPage() {
           <Button
             variant="outline"
             className="h-auto min-h-11 w-full rounded-xl border-border-strong py-3 text-[14px]"
-            onClick={() => { setShowExitConfirm(false); setPendingNavHref(null); }}
+            onClick={() => {
+              setShowExitConfirm(false);
+              setPendingNavHref(null);
+            }}
           >
             {t('continueReflecting')}
           </Button>

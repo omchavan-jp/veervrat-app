@@ -2,7 +2,17 @@
 
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { Sparkles, ScrollText, BookOpen, Library, FileText, Star, Users, ClipboardList, ChevronRight } from 'lucide-react';
+import {
+  Sparkles,
+  ScrollText,
+  BookOpen,
+  Library,
+  FileText,
+  Star,
+  Users,
+  ClipboardList,
+  ChevronRight,
+} from 'lucide-react';
 import { useAdminGuard } from '@/hooks/use-admin-guard';
 import { Spinner } from '@/components/ui/spinner';
 

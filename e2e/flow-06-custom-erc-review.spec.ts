@@ -20,7 +20,14 @@ test.describe('Flow 6: custom ERC → review → moderator approve', () => {
     const { sentenceId, weaknessId } = sampleSentenceWeakness();
     const { ctx, csrf } = await loginApi(va);
 
-    journeyId = (await (await ctx.post('/api/v1/journeys', { headers: apiHeaders(csrf), data: { sentenceId, weaknessId, title: 'E2E Flow 6 Journey' } })).json()).data.id;
+    journeyId = (
+      await (
+        await ctx.post('/api/v1/journeys', {
+          headers: apiHeaders(csrf),
+          data: { sentenceId, weaknessId, title: 'E2E Flow 6 Journey' },
+        })
+      ).json()
+    ).data.id;
 
     // Create a custom resolution on the journey.
     const create = await ctx.post(`/api/v1/journeys/${journeyId}/resolutions/custom`, {
@@ -31,12 +38,20 @@ test.describe('Flow 6: custom ERC → review → moderator approve', () => {
     itemId = (await create.json()).data.id;
 
     // Submit it for global moderator review.
-    const submit = await ctx.post(`/api/v1/journeys/${journeyId}/resolutions/${itemId}/submit-for-review`, { headers: apiHeaders(csrf) });
-    expect(submit.ok(), `submit-for-review: ${submit.status()} ${await submit.text()}`).toBeTruthy();
+    const submit = await ctx.post(
+      `/api/v1/journeys/${journeyId}/resolutions/${itemId}/submit-for-review`,
+      { headers: apiHeaders(csrf) },
+    );
+    expect(
+      submit.ok(),
+      `submit-for-review: ${submit.status()} ${await submit.text()}`,
+    ).toBeTruthy();
     await ctx.dispose();
 
     // A pending CustomErcReview now exists for this item.
-    const reviewExists = scalar(`SELECT count(*) FROM custom_erc_reviews WHERE journey_resolution_id = ${lit(itemId)}`);
+    const reviewExists = scalar(
+      `SELECT count(*) FROM custom_erc_reviews WHERE journey_resolution_id = ${lit(itemId)}`,
+    );
     expect(Number(reviewExists)).toBeGreaterThan(0);
   });
 
@@ -46,19 +61,27 @@ test.describe('Flow 6: custom ERC → review → moderator approve', () => {
     // The review appears in the moderator queue.
     const queue = await mod.ctx.get('/api/v1/moderation/custom-erc');
     expect(queue.ok(), `queue: ${queue.status()}`).toBeTruthy();
-    const items = (await queue.json()).data.items ?? (await (await mod.ctx.get('/api/v1/moderation/custom-erc')).json()).data;
-    const review = (items as { id: string; journeyResolutionId?: string }[]).find(
-      (r) => r.journeyResolutionId === itemId,
-    ) ?? (items as { id: string }[])[0];
+    const items =
+      (await queue.json()).data.items ??
+      (await (await mod.ctx.get('/api/v1/moderation/custom-erc')).json()).data;
+    const review =
+      (items as { id: string; journeyResolutionId?: string }[]).find(
+        (r) => r.journeyResolutionId === itemId,
+      ) ?? (items as { id: string }[])[0];
     expect(review, 'the submitted review is in the queue').toBeTruthy();
 
     // Approve it.
-    const approve = await mod.ctx.post(`/api/v1/moderation/custom-erc/${review.id}/approve`, { headers: apiHeaders(mod.csrf), data: {} });
+    const approve = await mod.ctx.post(`/api/v1/moderation/custom-erc/${review.id}/approve`, {
+      headers: apiHeaders(mod.csrf),
+      data: {},
+    });
     expect(approve.ok(), `approve: ${approve.status()} ${await approve.text()}`).toBeTruthy();
     await mod.ctx.dispose();
 
     // The review is now marked approved.
-    const status = scalar(`SELECT status FROM custom_erc_reviews WHERE journey_resolution_id = ${lit(itemId)} ORDER BY created_at DESC LIMIT 1`);
+    const status = scalar(
+      `SELECT status FROM custom_erc_reviews WHERE journey_resolution_id = ${lit(itemId)} ORDER BY created_at DESC LIMIT 1`,
+    );
     expect(status).toBe('approved');
   });
 });

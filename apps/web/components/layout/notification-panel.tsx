@@ -139,9 +139,7 @@ export function NotificationPanel() {
         </button>
       </div>
 
-      {isLoading && (
-        <div className="px-4 py-8 text-center text-sm text-muted">{t('loading')}</div>
-      )}
+      {isLoading && <div className="px-4 py-8 text-center text-sm text-muted">{t('loading')}</div>}
 
       {!isLoading && isError && (
         <div className="px-4 py-8 text-center text-sm text-muted">

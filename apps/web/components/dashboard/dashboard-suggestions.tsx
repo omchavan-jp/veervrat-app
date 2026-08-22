@@ -66,7 +66,10 @@ export function DashboardSuggestions() {
           icon={<Sparkles className="h-5 w-5" />}
           title={t('suggestionsEmpty')}
           action={
-            <Link href="/study" className={cn(buttonVariants({ variant: 'default' }), 'h-auto px-6 py-3 text-[14px]')}>
+            <Link
+              href="/study"
+              className={cn(buttonVariants({ variant: 'default' }), 'h-auto px-6 py-3 text-[14px]')}
+            >
               {t('suggestionsEmptyCta')}
             </Link>
           }
@@ -81,14 +84,23 @@ export function DashboardSuggestions() {
               <div className="min-w-0 flex-1">
                 <BilingualText en={s.sentenceTextEn} mr={s.sentenceTextMr} size="sm" />
                 <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted">
-                  <ContentText en={s.subvirtueNameEn} mr={s.subvirtueNameMr} className="text-accent" />
-                  <span className="text-border-strong" aria-hidden="true">·</span>
+                  <ContentText
+                    en={s.subvirtueNameEn}
+                    mr={s.subvirtueNameMr}
+                    className="text-accent"
+                  />
+                  <span className="text-border-strong" aria-hidden="true">
+                    ·
+                  </span>
                   <ContentText en={s.weaknessNameEn} mr={s.weaknessNameMr} />
                 </div>
               </div>
               <Link
                 href={`/study?sentenceId=${s.sentenceId}`}
-                className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'shrink-0 gap-1 text-accent hover:bg-accent/10')}
+                className={cn(
+                  buttonVariants({ variant: 'ghost', size: 'sm' }),
+                  'shrink-0 gap-1 text-accent hover:bg-accent/10',
+                )}
               >
                 {t('suggestionsStartJourney')}
               </Link>

@@ -29,15 +29,25 @@ export default function ConfirmEmailChangePage() {
   return (
     <div className="flex min-h-dvh items-center justify-center px-4">
       <div className="w-full max-w-[420px] rounded-2xl border border-border bg-surface p-8 text-center shadow-card">
-        <div className="mb-6 flex justify-center"><Logo /></div>
+        <div className="mb-6 flex justify-center">
+          <Logo />
+        </div>
         <h1 className="font-display text-[22px] font-medium tracking-tight">{t('title')}</h1>
         <p className="mt-2 text-[14px] text-muted">
           {status === 'pending' ? t('verifying') : status === 'success' ? t('success') : t('error')}
         </p>
         <div className="mt-6 flex flex-col items-center gap-4">
-          {status === 'pending' && <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" />}
-          {status === 'success' && <Button onClick={() => router.push('/dashboard')}>{t('goToDashboard')}</Button>}
-          {status === 'error' && <Link href="/settings" className="text-[14px] text-accent hover:underline">{t('backToSettings')}</Link>}
+          {status === 'pending' && (
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+          )}
+          {status === 'success' && (
+            <Button onClick={() => router.push('/dashboard')}>{t('goToDashboard')}</Button>
+          )}
+          {status === 'error' && (
+            <Link href="/settings" className="text-[14px] text-accent hover:underline">
+              {t('backToSettings')}
+            </Link>
+          )}
         </div>
       </div>
     </div>

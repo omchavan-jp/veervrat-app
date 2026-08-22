@@ -86,12 +86,20 @@ export function ErcPoolSection({ journeyId, ercType, defaultOpen = true }: Props
                 <div className="flex-1">
                   <div className="mb-0.5 flex items-center gap-2">
                     {item.tier && (
-                      <span className={`rounded-full border px-2 py-0.5 text-[10px] ${TIER_BADGE[item.tier] ?? ''}`}>
+                      <span
+                        className={`rounded-full border px-2 py-0.5 text-[10px] ${TIER_BADGE[item.tier] ?? ''}`}
+                      >
                         {TIER_LABEL_KEY[item.tier] ? t(TIER_LABEL_KEY[item.tier]) : item.tier}
                       </span>
                     )}
                   </div>
-                  <BilingualText en={item.titleEn} mr={item.titleMr} size="sm" as="p" className="font-medium" />
+                  <BilingualText
+                    en={item.titleEn}
+                    mr={item.titleMr}
+                    size="sm"
+                    as="p"
+                    className="font-medium"
+                  />
                   {(item.descriptionMr || item.descriptionEn) && (
                     <BilingualText
                       en={item.descriptionEn ?? ''}
@@ -108,7 +116,11 @@ export function ErcPoolSection({ journeyId, ercType, defaultOpen = true }: Props
                       {item.frequencyLabel}
                     </p>
                   )}
-                  {item.durationDays && <p className="mt-0.5 text-[11px] text-muted">{t('days', { count: item.durationDays })}</p>}
+                  {item.durationDays && (
+                    <p className="mt-0.5 text-[11px] text-muted">
+                      {t('days', { count: item.durationDays })}
+                    </p>
+                  )}
                 </div>
                 <Button
                   size="sm"

@@ -21,14 +21,25 @@ export default function WeaknessBrowseDetailPage({ params }: { params: Promise<{
     queryFn: () => weaknessesApi.detail(id),
   });
 
-  if (isLoading) return <div className="flex min-h-[40vh] items-center justify-center"><Spinner size="lg" /></div>;
+  if (isLoading)
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <Spinner size="lg" />
+      </div>
+    );
   if (isError || !data) return <div className="text-muted">{t('notFound')}</div>;
 
   return (
     <div>
-      <Link href="/virtues" className="text-[13px] text-muted hover:text-accent">← {t('backToBrowser')}</Link>
-      <div className="mt-3"><BilingualText en={data.nameEn} mr={data.nameMr} size="xl" /></div>
-      {data.description && <p className="mt-3 text-[15px] leading-relaxed text-muted">{data.description}</p>}
+      <Link href="/virtues" className="text-[13px] text-muted hover:text-accent">
+        ← {t('backToBrowser')}
+      </Link>
+      <div className="mt-3">
+        <BilingualText en={data.nameEn} mr={data.nameMr} size="xl" />
+      </div>
+      {data.description && (
+        <p className="mt-3 text-[15px] leading-relaxed text-muted">{data.description}</p>
+      )}
 
       {data.subvirtues.length > 0 && (
         <section className="mt-8">
@@ -36,7 +47,11 @@ export default function WeaknessBrowseDetailPage({ params }: { params: Promise<{
           <p className="mb-3 text-[13px] text-muted">{t('cultivateHint')}</p>
           <div className="flex flex-wrap gap-2">
             {data.subvirtues.map((s) => (
-              <Link key={s.id} href={`/subvirtues/${s.id}`} className="rounded-full border border-border-strong px-3.5 py-1.5 transition-colors hover:border-accent">
+              <Link
+                key={s.id}
+                href={`/subvirtues/${s.id}`}
+                className="rounded-full border border-border-strong px-3.5 py-1.5 transition-colors hover:border-accent"
+              >
                 <BilingualText en={s.nameEn} mr={s.nameMr} size="sm" />
               </Link>
             ))}
@@ -46,10 +61,15 @@ export default function WeaknessBrowseDetailPage({ params }: { params: Promise<{
 
       <div className="mt-8">
         {isAuthenticated ? (
-          <Link href={`/study/${data.id}`}><Button size="sm">{t('takeTestForWeakness')}</Button></Link>
+          <Link href={`/study/${data.id}`}>
+            <Button size="sm">{t('takeTestForWeakness')}</Button>
+          </Link>
         ) : (
           <div className="rounded-xl border border-dashed border-border-strong p-4 text-center text-[13px] text-muted">
-            {t('loginToTest')} <Link href="/login" className="text-accent">{t('login')}</Link>
+            {t('loginToTest')}{' '}
+            <Link href="/login" className="text-accent">
+              {t('login')}
+            </Link>
           </div>
         )}
       </div>

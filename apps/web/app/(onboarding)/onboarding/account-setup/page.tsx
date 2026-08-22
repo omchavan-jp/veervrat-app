@@ -108,9 +108,7 @@ export default function AccountSetupPage() {
 
   const onSubmit = (data: AccountSetupInput) => {
     const resolvedGender =
-      data.gender === 'other'
-        ? (data.genderCustom?.trim() || undefined)
-        : data.gender;
+      data.gender === 'other' ? data.genderCustom?.trim() || undefined : data.gender;
 
     completeOnboarding.mutate(
       {
@@ -118,7 +116,6 @@ export default function AccountSetupPage() {
         username: data.username,
         language: data.language,
         gender: resolvedGender,
-        dob: data.dob || undefined,
       },
       {
         onError: (error) => {
@@ -139,9 +136,7 @@ export default function AccountSetupPage() {
   // Block submit on a username state known to fail server-side (or still resolving),
   // not just on the in-flight mutation.
   const usernameBlocksSubmit =
-    usernameStatus === 'taken' ||
-    usernameStatus === 'invalid' ||
-    usernameStatus === 'checking';
+    usernameStatus === 'taken' || usernameStatus === 'invalid' || usernameStatus === 'checking';
 
   // Gate on isLoading so the form does not flash with empty defaults (and any
   // redirect flicker) before the authenticated user resolves.
@@ -227,7 +222,9 @@ export default function AccountSetupPage() {
               )}
             </div>
             {errors.username && (
-              <p role="alert" className="mt-1 text-xs text-danger">{errors.username.message}</p>
+              <p role="alert" className="mt-1 text-xs text-danger">
+                {errors.username.message}
+              </p>
             )}
           </div>
 
@@ -257,14 +254,18 @@ export default function AccountSetupPage() {
               )}
             />
             {errors.language && (
-              <p role="alert" className="mt-1.5 text-xs text-danger">{errors.language.message}</p>
+              <p role="alert" className="mt-1.5 text-xs text-danger">
+                {errors.language.message}
+              </p>
             )}
           </Fieldset>
 
           <Fieldset>
             <FieldsetLegend className="mb-3 font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
               {t('gender')}
-              <span className="ml-1 normal-case tracking-normal text-muted/60">{t('optional')}</span>
+              <span className="ml-1 normal-case tracking-normal text-muted/60">
+                {t('optional')}
+              </span>
             </FieldsetLegend>
             <Controller
               control={control}
@@ -303,32 +304,6 @@ export default function AccountSetupPage() {
               />
             )}
           </Fieldset>
-
-          <div>
-            {/* DatePicker renders a Popover trigger (not a labelable control), so the
-                caption stays a plain Label without htmlFor. */}
-            <Label className={FIELD_LABEL}>
-              {t('dob')}
-              <span className="ml-1 normal-case tracking-normal text-muted/60">{t('optional')}</span>
-            </Label>
-            <Controller
-              name="dob"
-              control={control}
-              render={({ field }) => (
-                <DatePicker
-                  value={field.value ?? ''}
-                  onChange={field.onChange}
-                  placeholder={t('dobPlaceholder')}
-                  max={new Date().toISOString().split('T')[0]}
-                />
-              )}
-            />
-            {errors.dob && (
-              <p role="alert" className="mt-1.5 text-xs text-danger">
-                {errors.dob.message}
-              </p>
-            )}
-          </div>
 
           <Button
             type="submit"

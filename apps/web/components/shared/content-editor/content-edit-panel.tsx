@@ -111,7 +111,12 @@ export function ContentEditPanel({
           // Save only locales actually changed for this key, so untouched ones keep their
           // existing author.
           if (value.length === 0 || value === effectiveFor(key, locale)) continue;
-          await contentOverridesApi.upsert({ key, locale, value, baseValue: bakedFor(key, locale) });
+          await contentOverridesApi.upsert({
+            key,
+            locale,
+            value,
+            baseValue: bakedFor(key, locale),
+          });
         }
       }
     },
@@ -198,11 +203,15 @@ export function ContentEditPanel({
               {LOCALES.map((locale) => {
                 const mismatch =
                   values[locale].length > 0 &&
-                  checkedKeys.some((key) => !placeholdersEqual(bakedFor(key, locale), values[locale]));
+                  checkedKeys.some(
+                    (key) => !placeholdersEqual(bakedFor(key, locale), values[locale]),
+                  );
                 const entry = singleEntry?.[locale];
                 return (
                   <div key={locale}>
-                    <Label className={FIELD_LABEL}>{t(locale === 'en' ? 'english' : 'marathi')}</Label>
+                    <Label className={FIELD_LABEL}>
+                      {t(locale === 'en' ? 'english' : 'marathi')}
+                    </Label>
                     <Textarea
                       rows={2}
                       value={values[locale]}
@@ -230,7 +239,9 @@ export function ContentEditPanel({
                   </div>
                 );
               })}
-              {invalidLocale && <p className="text-[12px] text-danger">{t('placeholderMismatch')}</p>}
+              {invalidLocale && (
+                <p className="text-[12px] text-danger">{t('placeholderMismatch')}</p>
+              )}
               <div className="flex justify-end gap-2">
                 {hasStaged && (
                   <button

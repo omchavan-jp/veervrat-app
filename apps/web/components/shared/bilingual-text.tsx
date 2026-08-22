@@ -16,7 +16,13 @@ type Size = 'sm' | 'md' | 'lg' | 'xl';
 // secondary). Devanagari uses font-deva; Latin uses the display/sans stack.
 const SIZES: Record<
   Size,
-  { devaPrimary: string; enPrimary: string; devaSecondary: string; enSecondary: string; gap: string }
+  {
+    devaPrimary: string;
+    enPrimary: string;
+    devaSecondary: string;
+    enSecondary: string;
+    gap: string;
+  }
 > = {
   sm: {
     devaPrimary: 'font-deva text-[15px] leading-snug',

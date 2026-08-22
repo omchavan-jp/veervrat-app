@@ -5,7 +5,11 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PenLine, Pencil, Trash2, Globe, Users, Lock, BookText } from 'lucide-react';
-import { experienceLogsApi, type ExperienceLog, type ExperienceVisibility } from '@/lib/api/experience-logs';
+import {
+  experienceLogsApi,
+  type ExperienceLog,
+  type ExperienceVisibility,
+} from '@/lib/api/experience-logs';
 import { queryKeys } from '@/lib/api/query-keys';
 import { excerptFromDoc } from '@/components/experience/experience-excerpt';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -45,7 +49,12 @@ export default function MyExperiencesPage() {
       <div key={e.id} className="rounded-2xl border border-border bg-surface p-4 shadow-card">
         <div className="mb-1.5 flex items-center gap-2 text-[11px] text-muted">
           {e.isDraft && (
-            <Badge variant="secondary" className="bg-warning/16 px-2 py-0.5 text-[11px] font-medium text-warning">{t('draft')}</Badge>
+            <Badge
+              variant="secondary"
+              className="bg-warning/16 px-2 py-0.5 text-[11px] font-medium text-warning"
+            >
+              {t('draft')}
+            </Badge>
           )}
           <span className="inline-flex items-center gap-1">
             <Vis className="h-3 w-3" />
@@ -58,7 +67,10 @@ export default function MyExperiencesPage() {
         {e.tags.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-1.5">
             {e.tags.map((tg) => (
-              <span key={`${tg.entityType}-${tg.entityId}`} className="rounded-full bg-accent/10 px-2 py-0.5 text-[11px] text-accent">
+              <span
+                key={`${tg.entityType}-${tg.entityId}`}
+                className="rounded-full bg-accent/10 px-2 py-0.5 text-[11px] text-accent"
+              >
                 {t(`entityType.${tg.entityType}`)}
               </span>
             ))}
@@ -142,7 +154,12 @@ export default function MyExperiencesPage() {
         description={t('deleteConfirmBody')}
         footer={
           <>
-            <Button variant="outline" type="button" onClick={() => setPendingDeleteId(null)} disabled={del.isPending}>
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => setPendingDeleteId(null)}
+              disabled={del.isPending}
+            >
               {t('deleteCancel')}
             </Button>
             <Button

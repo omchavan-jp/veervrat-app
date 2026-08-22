@@ -8,7 +8,8 @@ export type TestUser = { email: string; password: string; displayName: string; u
 
 // A unique, valid (lowercase/underscore) username + email for an ephemeral account.
 export function makeUser(prefix: string): TestUser {
-  const suffix = `${Date.now().toString(36)}${Math.floor(Math.random() * 1e4).toString(36)}`.toLowerCase();
+  const suffix =
+    `${Date.now().toString(36)}${Math.floor(Math.random() * 1e4).toString(36)}`.toLowerCase();
   const slug = `${prefix}_${suffix}`.replace(/[^a-z0-9_]/g, '');
   return {
     email: `${slug}@e2e.local`,
@@ -39,14 +40,30 @@ export async function registerAndVerify(user: TestUser): Promise<void> {
   const { ctx, csrf } = await apiContext();
   const reg = await ctx.post('/api/v1/auth/register', {
     headers: headers(csrf),
-    data: { email: user.email, password: user.password, displayName: user.displayName, username: user.username },
+    // Date of birth and consent are required at account creation since the 18+ gate landed.
+    // Fixtures go through the real endpoint deliberately — a fixture that bypasses the gate
+    // would let the suite keep passing while the gate was broken.
+    data: {
+      email: user.email,
+      password: user.password,
+      displayName: user.displayName,
+      username: user.username,
+      dob: '1990-01-01',
+      consents: [
+        { documentKey: 'terms', version: 1 },
+        { documentKey: 'privacy', version: 1 },
+      ],
+    },
   });
   expect(reg.ok(), `register ${user.email}: ${reg.status()}`).toBeTruthy();
 
   // DB stores the @map value (lowercase) for the verification_type enum.
   const token = latestVerificationToken(user.email, 'email_verification');
   expect(token, `no verification token for ${user.email}`).toBeTruthy();
-  const verify = await ctx.post('/api/v1/auth/verify-email', { headers: headers(csrf), data: { token } });
+  const verify = await ctx.post('/api/v1/auth/verify-email', {
+    headers: headers(csrf),
+    data: { token },
+  });
   expect(verify.ok(), `verify ${user.email}: ${verify.status()}`).toBeTruthy();
   await ctx.dispose();
 }
@@ -62,7 +79,8 @@ export async function registerAndOnboard(user: TestUser): Promise<void> {
   });
   expect(login.ok(), `login ${user.email}: ${login.status()}`).toBeTruthy();
   // login may rotate csrf — re-read.
-  const csrf2 = (await ctx.storageState()).cookies.find((c) => c.name === 'csrf-token')?.value ?? csrf;
+  const csrf2 =
+    (await ctx.storageState()).cookies.find((c) => c.name === 'csrf-token')?.value ?? csrf;
   const onb = await ctx.post('/api/v1/auth/complete-onboarding', {
     headers: headers(csrf2),
     data: { displayName: user.displayName, username: user.username, language: 'EN' },
@@ -74,20 +92,33 @@ export async function registerAndOnboard(user: TestUser): Promise<void> {
 }
 
 // Log in through the UI and land on the dashboard. Resilient selectors.
-export async function loginUI(page: Page, user: { email: string; password: string }): Promise<void> {
+export async function loginUI(
+  page: Page,
+  user: { email: string; password: string },
+): Promise<void> {
   await page.goto('/login');
   await page.getByRole('textbox').first().fill(user.email);
   await page.locator('input[type="password"]').fill(user.password);
-  await page.getByRole('button', { name: /log ?in|sign ?in/i }).first().click();
+  await page
+    .getByRole('button', { name: /log ?in|sign ?in/i })
+    .first()
+    .click();
   await page.waitForURL(/\/dashboard/, { timeout: 20_000 });
 }
 
 // Authenticated API context for a user (for flows that drive setup via API then assert in UI).
-export async function loginApi(user: { email: string; password: string }): Promise<{ ctx: APIRequestContext; csrf: string }> {
+export async function loginApi(user: {
+  email: string;
+  password: string;
+}): Promise<{ ctx: APIRequestContext; csrf: string }> {
   const { ctx, csrf } = await apiContext();
-  const login = await ctx.post('/api/v1/auth/login', { headers: headers(csrf), data: { email: user.email, password: user.password } });
+  const login = await ctx.post('/api/v1/auth/login', {
+    headers: headers(csrf),
+    data: { email: user.email, password: user.password },
+  });
   expect(login.ok(), `loginApi ${user.email}: ${login.status()}`).toBeTruthy();
-  const csrf2 = (await ctx.storageState()).cookies.find((c) => c.name === 'csrf-token')?.value ?? csrf;
+  const csrf2 =
+    (await ctx.storageState()).cookies.find((c) => c.name === 'csrf-token')?.value ?? csrf;
   return { ctx, csrf: csrf2 };
 }
 

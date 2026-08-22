@@ -12,7 +12,10 @@ vi.mock('next/server', () => {
     cookies: { get: (name: string) => { value: string } | undefined };
     headers: Headers;
 
-    constructor(url: string, init?: { headers?: Record<string, string>; cookies?: Record<string, string> }) {
+    constructor(
+      url: string,
+      init?: { headers?: Record<string, string>; cookies?: Record<string, string> },
+    ) {
       this.url = url;
       const cookieMap = init?.cookies ?? {};
       const headerMap: Record<string, string> = {};
@@ -20,7 +23,8 @@ vi.mock('next/server', () => {
         headerMap[k.toLowerCase()] = v;
       }
       this.cookies = {
-        get: (name: string) => (cookieMap[name] !== undefined ? { value: cookieMap[name] } : undefined),
+        get: (name: string) =>
+          cookieMap[name] !== undefined ? { value: cookieMap[name] } : undefined,
       };
       this.headers = new Headers(headerMap);
     }
@@ -57,32 +61,38 @@ describe('middleware locale resolution', () => {
   });
 
   it('sets X-Next-Locale: mr for authenticated user with language mr', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ data: { language: 'mr' } }),
-    }));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ data: { language: 'mr' } }),
+      }),
+    );
 
     const { NextRequest } = await import('next/server');
-    const req = new (NextRequest as unknown as new (url: string, init?: { cookies?: Record<string, string> }) => unknown)(
-      'http://localhost/dashboard',
-      { cookies: { veervrat_session: 'valid-token' } },
-    );
+    const req = new (NextRequest as unknown as new (
+      url: string,
+      init?: { cookies?: Record<string, string> },
+    ) => unknown)('http://localhost/dashboard', { cookies: { veervrat_session: 'valid-token' } });
 
     await middleware(req as Parameters<typeof middleware>[0]);
     expect(capturedRequestHeaders?.get('X-Next-Locale')).toBe('mr');
   });
 
   it('sets X-Next-Locale: en for authenticated user with language en', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ data: { language: 'en' } }),
-    }));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ data: { language: 'en' } }),
+      }),
+    );
 
     const { NextRequest } = await import('next/server');
-    const req = new (NextRequest as unknown as new (url: string, init?: { cookies?: Record<string, string> }) => unknown)(
-      'http://localhost/dashboard',
-      { cookies: { veervrat_session: 'valid-token' } },
-    );
+    const req = new (NextRequest as unknown as new (
+      url: string,
+      init?: { cookies?: Record<string, string> },
+    ) => unknown)('http://localhost/dashboard', { cookies: { veervrat_session: 'valid-token' } });
 
     await middleware(req as Parameters<typeof middleware>[0]);
     expect(capturedRequestHeaders?.get('X-Next-Locale')).toBe('en');
@@ -93,7 +103,9 @@ describe('middleware locale resolution', () => {
     vi.stubGlobal('fetch', fetchSpy);
 
     const { NextRequest } = await import('next/server');
-    const req = new (NextRequest as unknown as new (url: string) => unknown)('http://localhost/login');
+    const req = new (NextRequest as unknown as new (url: string) => unknown)(
+      'http://localhost/login',
+    );
 
     await middleware(req as Parameters<typeof middleware>[0]);
     expect(fetchSpy).not.toHaveBeenCalled();
@@ -104,10 +116,12 @@ describe('middleware locale resolution', () => {
     vi.stubGlobal('fetch', vi.fn());
 
     const { NextRequest } = await import('next/server');
-    const req = new (NextRequest as unknown as new (url: string, init?: { headers?: Record<string, string> }) => unknown)(
-      'http://localhost/login',
-      { headers: { 'accept-language': 'mr-IN,mr;q=0.9,en;q=0.8' } },
-    );
+    const req = new (NextRequest as unknown as new (
+      url: string,
+      init?: { headers?: Record<string, string> },
+    ) => unknown)('http://localhost/login', {
+      headers: { 'accept-language': 'mr-IN,mr;q=0.9,en;q=0.8' },
+    });
 
     await middleware(req as Parameters<typeof middleware>[0]);
     expect(capturedRequestHeaders?.get('X-Next-Locale')).toBe('mr');
@@ -117,10 +131,10 @@ describe('middleware locale resolution', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 401 }));
 
     const { NextRequest } = await import('next/server');
-    const req = new (NextRequest as unknown as new (url: string, init?: { cookies?: Record<string, string> }) => unknown)(
-      'http://localhost/dashboard',
-      { cookies: { veervrat_session: 'expired-token' } },
-    );
+    const req = new (NextRequest as unknown as new (
+      url: string,
+      init?: { cookies?: Record<string, string> },
+    ) => unknown)('http://localhost/dashboard', { cookies: { veervrat_session: 'expired-token' } });
 
     await middleware(req as Parameters<typeof middleware>[0]);
     expect(capturedRequestHeaders?.get('X-Next-Locale')).toBe('en');
@@ -130,10 +144,10 @@ describe('middleware locale resolution', () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network error')));
 
     const { NextRequest } = await import('next/server');
-    const req = new (NextRequest as unknown as new (url: string, init?: { cookies?: Record<string, string> }) => unknown)(
-      'http://localhost/dashboard',
-      { cookies: { veervrat_session: 'valid-token' } },
-    );
+    const req = new (NextRequest as unknown as new (
+      url: string,
+      init?: { cookies?: Record<string, string> },
+    ) => unknown)('http://localhost/dashboard', { cookies: { veervrat_session: 'valid-token' } });
 
     await middleware(req as Parameters<typeof middleware>[0]);
     expect(capturedRequestHeaders?.get('X-Next-Locale')).toBe('en');
@@ -151,10 +165,12 @@ describe('middleware locale resolution', () => {
     vi.stubGlobal('fetch', fetchSpy);
 
     const { NextRequest } = await import('next/server');
-    const req = new (NextRequest as unknown as new (url: string, init?: { cookies?: Record<string, string> }) => unknown)(
-      'http://localhost/dashboard',
-      { cookies: { veervrat_session: 'valid-token', NEXT_LOCALE: 'en' } },
-    );
+    const req = new (NextRequest as unknown as new (
+      url: string,
+      init?: { cookies?: Record<string, string> },
+    ) => unknown)('http://localhost/dashboard', {
+      cookies: { veervrat_session: 'valid-token', NEXT_LOCALE: 'en' },
+    });
 
     await middleware(req as Parameters<typeof middleware>[0]);
 
@@ -173,10 +189,10 @@ describe('middleware locale resolution', () => {
     vi.stubGlobal('fetch', fetchSpy);
 
     const { NextRequest } = await import('next/server');
-    const req = new (NextRequest as unknown as new (url: string, init?: { cookies?: Record<string, string> }) => unknown)(
-      'http://localhost/login',
-      { cookies: { NEXT_LOCALE: 'mr' } },
-    );
+    const req = new (NextRequest as unknown as new (
+      url: string,
+      init?: { cookies?: Record<string, string> },
+    ) => unknown)('http://localhost/login', { cookies: { NEXT_LOCALE: 'mr' } });
 
     await middleware(req as Parameters<typeof middleware>[0]);
 
@@ -190,10 +206,10 @@ describe('middleware locale resolution', () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('api unreachable')));
 
     const { NextRequest } = await import('next/server');
-    const req = new (NextRequest as unknown as new (url: string, init?: { cookies?: Record<string, string> }) => unknown)(
-      'http://localhost/dashboard',
-      { cookies: { veervrat_session: 'valid-token' } },
-    );
+    const req = new (NextRequest as unknown as new (
+      url: string,
+      init?: { cookies?: Record<string, string> },
+    ) => unknown)('http://localhost/dashboard', { cookies: { veervrat_session: 'valid-token' } });
 
     // The site should look logged out, not break, if the api is down.
     await middleware(req as Parameters<typeof middleware>[0]);
@@ -201,5 +217,4 @@ describe('middleware locale resolution', () => {
     expect(capturedRequestHeaders?.get('X-Session-User')).toBeNull();
     expect(capturedRequestHeaders?.get('X-Next-Locale')).toBeTruthy();
   });
-
 });

@@ -112,21 +112,30 @@ function SecondaryActions() {
     <div className="flex flex-wrap items-center gap-1">
       <Link
         href="/journeys"
-        className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'gap-1.5 text-[13px] text-muted hover:text-fg')}
+        className={cn(
+          buttonVariants({ variant: 'ghost', size: 'sm' }),
+          'gap-1.5 text-[13px] text-muted hover:text-fg',
+        )}
       >
         <Compass className="h-3.5 w-3.5" aria-hidden="true" />
         {t('allJourneys')}
       </Link>
       <Link
         href="/study"
-        className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'gap-1.5 text-[13px] text-muted hover:text-fg')}
+        className={cn(
+          buttonVariants({ variant: 'ghost', size: 'sm' }),
+          'gap-1.5 text-[13px] text-muted hover:text-fg',
+        )}
       >
         <Search className="h-3.5 w-3.5" aria-hidden="true" />
         {t('study')}
       </Link>
       <Link
         href="/experiences/new"
-        className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'gap-1.5 text-[13px] text-muted hover:text-fg')}
+        className={cn(
+          buttonVariants({ variant: 'ghost', size: 'sm' }),
+          'gap-1.5 text-[13px] text-muted hover:text-fg',
+        )}
       >
         <PenLine className="h-3.5 w-3.5" aria-hidden="true" />
         {t('logExperience')}
