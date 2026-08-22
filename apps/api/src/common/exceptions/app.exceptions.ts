@@ -136,6 +136,31 @@ export class AccountLockedException extends HttpException {
   }
 }
 
+/**
+ * A request refused by the rate limiter.
+ *
+ * Deliberately shaped like `AccountLockedException` — same status, same `retryAfter` detail —
+ * because to the person on the other end they are the same event: "you have done this too many
+ * times, wait." The client should not need to know which layer refused.
+ *
+ * Before this existed, throttled requests reached the client as
+ * `{"error":"INTERNAL_ERROR","message":"ThrottlerException: Too Many Requests"}` — the framework
+ * exception carries a *string* body, so the global filter never assigned an error code and the
+ * default stood. Users saw an internal error for something entirely expected.
+ */
+export class RateLimitedException extends HttpException {
+  constructor(retryAfterSeconds: number) {
+    super(
+      {
+        error: 'RATE_LIMITED',
+        message: `Too many requests. Try again in ${retryAfterSeconds} seconds.`,
+        details: { retryAfterSeconds },
+      },
+      HttpStatus.TOO_MANY_REQUESTS,
+    );
+  }
+}
+
 export class ErcAlreadySelectedException extends ConflictException {
   constructor() {
     super({

@@ -247,7 +247,9 @@
       "emailNotVerified": "Your email address hasn't been verified yet. Check your inbox for the verification link — including your spam folder.",
       "resendVerification": "Send a new verification email",
       "resendVerificationSent": "If that address needs verifying, a new link is on its way. Please check your inbox.",
-      "resendVerificationSending": "Sending…"
+      "resendVerificationSending": "Sending…",
+      "rateLimitExceededIn": "Too many attempts. Please try again in {seconds} seconds.",
+      "rateLimitExceededInMinutes": "Too many attempts. Please try again in about {minutes} minutes."
     },
     "linkAccount": {
       "title": "Link your Google account",

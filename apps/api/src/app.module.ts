@@ -1,8 +1,9 @@
 import { Logger, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 import type Redis from 'ioredis';
 import { buildThrottlerOptions } from './common/throttler/throttler-config.factory';
+import { AppThrottlerGuard } from './common/throttler/app-throttler.guard';
 import { ScheduleModule } from '@nestjs/schedule';
 import { LoggerModule } from 'nestjs-pino';
 import { PrismaModule } from './prisma/prisma.module';
@@ -104,7 +105,7 @@ import { CsrfGuard } from './common/guards/csrf.guard';
   ],
   controllers: [AppController],
   providers: [
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: AppThrottlerGuard },
     {
       provide: APP_GUARD,
       useFactory: (reflector: Reflector) => new CsrfGuard(reflector),
