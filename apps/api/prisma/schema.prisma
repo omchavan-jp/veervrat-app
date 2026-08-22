@@ -220,7 +220,11 @@ model User {
   username              String    @unique
   avatarUrl             String?   @map("avatar_url")
   gender                String?
-  dob                   DateTime? @db.Date
+  // Required, and validated as 18+ at account creation. Stored as a date rather than a computed
+  // age: age changes and dates do not, and a derived value that silently goes stale is worse
+  // than storing nothing. NEVER returned by the public profile API — a date of birth is an
+  // identity-verification token used by banks and government services.
+  dob                   DateTime  @db.Date
   language              Language  @default(EN)
   emailVerifiedAt       DateTime? @map("email_verified_at")
   accountSetupCompletedAt DateTime? @map("account_setup_completed_at")
@@ -249,6 +253,7 @@ model User {
   // Relations
   roles              UserRole[]
   capabilities       UserCapability[]
+  consents           UserConsent[]
   authAccounts       AuthAccount[]
   sessions           Session[]
   verificationTokens VerificationToken[]
@@ -301,6 +306,47 @@ model UserCapability {
 
   @@id([userId, capability])
   @@map("user_capabilities")
+}
+
+// Which version of which policy document a person accepted, and when.
+//
+// Deliberately not a boolean on User: a boolean cannot answer "did they agree to THIS version",
+// which is the only question that matters when a document changes. Written in the same
+// transaction as the account — a crash between the two leaves an account whose agreement has no
+// record, and that is the one state here that cannot be repaired, because there is nothing to
+// reconstruct it from.
+model UserConsent {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  documentKey String   @map("document_key")
+  version     Int
+  acceptedAt  DateTime @default(now()) @map("accepted_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, documentKey, version])
+  @@index([userId])
+  @@map("user_consents")
+}
+
+// Holds a date of birth and consent across the Google OAuth round trip.
+//
+// The alternative was carrying them in the OAuth `state` parameter, which travels in URLs and
+// therefore lands in access logs, browser history and referrer headers. Only the opaque id of
+// this row travels; the data stays server-side and the row is deleted once used.
+//
+// It also gives the SIGN-IN path a concrete test: no pending record and no existing account means
+// somebody reached sign-in without signing up, which must not create anything.
+model PendingSignup {
+  id         String   @id @default(uuid()) @db.Uuid
+  dob        DateTime @db.Date
+  consents   Json
+  language   Language @default(EN)
+  createdAt  DateTime @default(now()) @map("created_at")
+  expiresAt  DateTime @map("expires_at")
+
+  @@index([expiresAt])
+  @@map("pending_signups")
 }
 
 model UserFollow {
@@ -1084,6 +1130,11 @@ model ResourceTag {
 model CmsPage {
   id          String   @id @default(uuid()) @db.Uuid
   key         String   @unique
+  // Bumped deliberately by an administrator when a change is material, not automatically on
+  // every edit — otherwise correcting a typo re-prompts every user for consent. Judging
+  // materiality is a human decision and should stay one. Only the policy documents use it
+  // meaningfully; other pages leave it at 1.
+  version     Int      @default(1)
   titleEn     String   @map("title_en")
   titleMr     String?  @map("title_mr")
   bodyEn      Json     @map("body_en")

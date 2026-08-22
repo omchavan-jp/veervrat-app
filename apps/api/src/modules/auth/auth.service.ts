@@ -6,6 +6,8 @@ import { AuthProvider, Role, VerificationType } from '@prisma/client';
 import type Redis from 'ioredis';
 import { AuthRepository } from './auth.repository';
 import {
+  UnderageException,
+  SignupRequiredException,
   DuplicateEntityException,
   InvalidCredentialsException,
   EmailNotVerifiedException,
@@ -16,6 +18,7 @@ import {
   EntityInUseException,
   AccountLockedException,
 } from '../../common/exceptions/app.exceptions';
+import { meetsMinimumAge } from '../../common/age/age';
 import { REDIS_CLIENT } from '../../common/redis/redis.provider';
 import {
   SessionUser,
@@ -37,6 +40,9 @@ import {
 } from '../email/templates/PasswordResetEmail';
 import { EmailChangeEmail, getEmailChangeSubject } from '../email/templates/EmailChangeEmail';
 import { createElement } from 'react';
+
+// Long enough for a Google round trip, short enough that abandoned signups do not accumulate.
+const PENDING_SIGNUP_TTL_MINUTES = 15;
 
 const BCRYPT_ROUNDS = 12;
 const TOKEN_BYTES = 32;
@@ -69,8 +75,17 @@ export class AuthService {
     password: string,
     displayName: string,
     username: string,
+    dob: string,
+    consents: { documentKey: string; version: number }[],
     language?: string,
   ): Promise<{ user: SessionUser }> {
+    // The age check runs before anything else, and before the duplicate-email check: someone
+    // under the minimum age should not learn whether an address is registered.
+    const dateOfBirth = new Date(dob);
+    if (Number.isNaN(dateOfBirth.getTime()) || !meetsMinimumAge(dateOfBirth)) {
+      throw new UnderageException();
+    }
+
     const existingUser = await this.authRepository.findUserByEmail(email);
     if (existingUser) {
       throw new DuplicateEntityException('User', 'email');
@@ -83,6 +98,8 @@ export class AuthService {
       displayName,
       username,
       passwordHash,
+      dob: dateOfBirth,
+      consents,
       language: language as 'EN' | 'MR' | undefined,
     });
 
@@ -174,10 +191,39 @@ export class AuthService {
     return { user: this.toSessionUser(user), sessionToken };
   }
 
+  /**
+   * Creates a pending signup and returns its id, which travels in the OAuth `state` parameter.
+   *
+   * The date of birth is validated HERE, before the redirect — so an underage visitor is turned
+   * away without a Google round trip and, more importantly, without an account ever existing.
+   * A blocking check after the callback would still leave a row behind for someone the platform
+   * is not for.
+   */
+  async startGoogleSignup(
+    dob: string,
+    consents: { documentKey: string; version: number }[],
+    language?: string,
+  ): Promise<{ pendingId: string }> {
+    const dateOfBirth = new Date(dob);
+    if (Number.isNaN(dateOfBirth.getTime()) || !meetsMinimumAge(dateOfBirth)) {
+      throw new UnderageException();
+    }
+
+    const pending = await this.authRepository.createPendingSignup({
+      dob: dateOfBirth,
+      consents,
+      language: language as 'EN' | 'MR' | undefined,
+      expiresAt: new Date(Date.now() + PENDING_SIGNUP_TTL_MINUTES * 60 * 1000),
+    });
+
+    return { pendingId: pending.id };
+  }
+
   async handleGoogleLogin(
     profile: GoogleProfile,
     ipAddress: string | null,
     userAgent: string | null,
+    pendingSignupId?: string,
   ): Promise<AuthResult | LinkPendingResult> {
     const existingAccount = await this.authRepository.findAuthAccount(
       AuthProvider.GOOGLE,
@@ -223,6 +269,28 @@ export class AuthService {
       return { action: 'link_pending', token: linkToken };
     }
 
+    // No existing account, and no existing user to link to. This is the ONLY branch that creates
+    // a user — and it now requires a pending signup, which is what separates Google *signup*
+    // from Google *sign-in*.
+    //
+    // Reaching here without one means somebody used sign-in without signing up. Previously that
+    // created an account silently, which under an 18+ policy means holding a record for someone
+    // whose age was never checked.
+    const pending = pendingSignupId
+      ? await this.authRepository.consumePendingSignup(pendingSignupId)
+      : null;
+
+    if (!pending) {
+      throw new SignupRequiredException();
+    }
+
+    // Re-checked after the round trip. The record could have been created before a date change,
+    // and the check is cheap — trusting a value because it was validated earlier is how gates
+    // get bypassed.
+    if (!meetsMinimumAge(pending.dob)) {
+      throw new UnderageException();
+    }
+
     // Derive a clean username from the email local part:
     // dots/hyphens → underscores, strip everything else, clamp to 28 chars.
     // Try the clean name first; if taken, append an incrementing number.
@@ -235,6 +303,9 @@ export class AuthService {
       provider: AuthProvider.GOOGLE,
       providerAccountId: profile.googleId,
       emailVerifiedAt: new Date(),
+      dob: pending.dob,
+      consents: pending.consents as { documentKey: string; version: number }[],
+      language: pending.language,
     });
 
     const sessionToken = await this.createSession({
@@ -645,7 +716,6 @@ export class AuthService {
     username?: string,
     language?: string,
     gender?: string,
-    dob?: string,
   ): Promise<SessionUser> {
     if (username) {
       const existing = await this.authRepository.findUserByUsername(username);
@@ -658,7 +728,6 @@ export class AuthService {
       username,
       language: language as 'EN' | 'MR' | undefined,
       gender,
-      dob: dob ? new Date(dob) : undefined,
     });
     // Username/displayName are first set here — index the user for search. A freshly
     // set-up account is public by default; a later privacy toggle re-syncs via UsersService.

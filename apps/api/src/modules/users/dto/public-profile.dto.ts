@@ -7,6 +7,14 @@ export interface PublicProfileDto {
   username: string;
   displayName: string;
   avatarUrl?: string | null;
+  /**
+   * Present only when the user has provided one. The field is optional, so leaving it blank IS
+   * the opt-out — there is deliberately no separate visibility control.
+   *
+   * Date of birth is NOT here and must never be: it is an identity-verification token used by
+   * banks and government services, so publishing it hands out a credential.
+   */
+  gender?: string | null;
   memberSince?: string;
   journeysCompleted?: number;
   journeysActive?: number;

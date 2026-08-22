@@ -56,6 +56,9 @@ describe('Auth — integration', () => {
       const prisma = getTestPrisma();
       await prisma.user.create({
         data: {
+          // Fixtures create users directly, bypassing the signup flow — so they must supply the
+          // date of birth the flow would have validated. Required since the 18+ gate landed.
+          dob: new Date('1990-01-01'),
           email: 'taken@test.com',
           displayName: 'Taken User',
           username: 'taken_username',
@@ -82,6 +85,9 @@ describe('Auth — integration', () => {
       const prisma = getTestPrisma();
       const user = await prisma.user.create({
         data: {
+          // Fixtures create users directly, bypassing the signup flow — so they must supply the
+          // date of birth the flow would have validated. Required since the 18+ gate landed.
+          dob: new Date('1990-01-01'),
           email,
           displayName: 'Onboarding Test',
           username: `onboard_${email.replace(/[@.]/g, '_')}`,
@@ -149,6 +155,9 @@ describe('Auth — integration', () => {
       const prisma = getTestPrisma();
       await prisma.user.create({
         data: {
+          // Fixtures create users directly, bypassing the signup flow — so they must supply the
+          // date of birth the flow would have validated. Required since the 18+ gate landed.
+          dob: new Date('1990-01-01'),
           email: 'already_taken_user@test.com',
           displayName: 'Already Taken',
           username: 'already_taken_uname',
@@ -181,6 +190,9 @@ describe('Auth — integration', () => {
       const prisma = getTestPrisma();
       await prisma.user.create({
         data: {
+          // Fixtures create users directly, bypassing the signup flow — so they must supply the
+          // date of birth the flow would have validated. Required since the 18+ gate landed.
+          dob: new Date('1990-01-01'),
           email,
           displayName: 'Lockout Test',
           username: 'lockout_test_u',

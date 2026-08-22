@@ -17,6 +17,9 @@ describe('Entity search — integration', () => {
 
     const user = await prisma.user.create({
       data: {
+        // Fixtures create users directly, bypassing the signup flow — so they must supply the
+        // date of birth the flow would have validated. Required since the 18+ gate landed.
+        dob: new Date('1990-01-01'),
         email: 'searcher@test.com',
         displayName: 'Searcher',
         username: 'searcher',

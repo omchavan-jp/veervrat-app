@@ -27,6 +27,9 @@ const publicProfileSelect = {
   username: true,
   displayName: true,
   avatarUrl: true,
+  // Shown on the profile when provided. ⚠️ `dob` is deliberately absent and must stay absent —
+  // a date of birth is an identity-verification token, not profile decoration.
+  gender: true,
   showLastActive: true,
   showOnlineIndicator: true,
   profilePrivate: true,
@@ -214,7 +217,7 @@ export class UsersRepository {
       displayName?: string;
       username?: string;
       gender?: string | null;
-      dob?: Date | null;
+      dob?: Date;
       language?: string;
     },
   ) {

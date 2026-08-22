@@ -1,4 +1,5 @@
 import { Injectable, Inject, forwardRef, Logger, type OnModuleInit } from '@nestjs/common';
+import { meetsMinimumAge } from '../../common/age/age';
 import { UsersRepository } from './users.repository';
 import { UsersIndexService } from '../search/users-index.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
@@ -16,6 +17,7 @@ import { FollowsService } from '../follows/follows.service';
 import { ExperienceLogsService } from '../experience-logs/experience-logs.service';
 import { AuthService } from '../auth/auth.service';
 import {
+  UnderageException,
   EntityNotFoundException,
   UserUsernameTakenException,
   InvalidCredentialsException,
@@ -85,12 +87,22 @@ export class UsersService implements OnModuleInit {
       if (taken) throw new UserUsernameTakenException();
     }
 
+    // Re-validated on every change. A correction is allowed — a mistyped date of birth is easy
+    // to make and would otherwise be unfixable — but a corrected value still has to qualify, or
+    // the gate becomes something you can walk back through after signing up.
+    let dob: Date | undefined;
+    if (dto.dob !== undefined) {
+      dob = new Date(dto.dob);
+      if (Number.isNaN(dob.getTime()) || !meetsMinimumAge(dob)) {
+        throw new UnderageException();
+      }
+    }
+
     const user = await this.usersRepository.updateProfile(userId, {
       displayName: dto.displayName,
       username: dto.username,
       gender: dto.gender,
-      // null = clear, undefined = no-change, string = set
-      dob: dto.dob === undefined ? undefined : dto.dob === null ? null : new Date(dto.dob),
+      dob,
       language: dto.language,
     });
 
@@ -113,6 +125,7 @@ export class UsersService implements OnModuleInit {
     // displayName + username are always public (handle/identity). All other fields
     // are omitted entirely when toggled off (spec/10: hidden, not "—").
     const profile: PublicProfileDto = {
+      gender: user.gender ?? null,
       username: user.username,
       displayName: user.displayName,
       followerCount: counts.followers,
