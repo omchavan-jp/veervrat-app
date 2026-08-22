@@ -215,7 +215,31 @@ export default function SignupPage() {
               aria-describedby={errors.acceptedTerms ? 'signup-terms-error' : undefined}
               {...register('acceptedTerms')}
             />
-            <span className="text-muted">{t('acceptTerms')}</span>
+            {/* Linked now that the documents exist. Consent to a document nobody can read is
+                not consent — this was deliberately left plain until there was something to
+                link to, since a 404 at the moment of agreement is worse than plain wording. */}
+            <span className="text-muted">
+              {t.rich('acceptTermsLinked', {
+                terms: (chunks) => (
+                  <Link
+                    href="/terms"
+                    target="_blank"
+                    className="text-accent underline decoration-accent/40 hover:no-underline"
+                  >
+                    {chunks}
+                  </Link>
+                ),
+                privacy: (chunks) => (
+                  <Link
+                    href="/privacy"
+                    target="_blank"
+                    className="text-accent underline decoration-accent/40 hover:no-underline"
+                  >
+                    {chunks}
+                  </Link>
+                ),
+              })}
+            </span>
           </label>
           {errors.acceptedTerms && (
             <p id="signup-terms-error" role="alert" className="mt-1.5 text-xs text-danger">

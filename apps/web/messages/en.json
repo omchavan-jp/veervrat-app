@@ -167,7 +167,8 @@
       "googleSignupNeedsDetails": "Fill in your date of birth and accept the terms above before continuing with Google.",
       "googleNoAccount": "That Google account isn't registered yet. Add your date of birth and accept the terms below, then choose Continue with Google.",
       "emailCta": "Sign up with email instead",
-      "or": "or"
+      "or": "or",
+      "acceptTermsLinked": "I accept the <terms>Terms of Use</terms> and <privacy>Privacy Policy</privacy>."
     },
     "forgotPassword": {
       "title": "Reset your password",

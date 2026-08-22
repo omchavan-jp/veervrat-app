@@ -3,6 +3,7 @@ import * as dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { parseCsv, parseWeaknessNames, TIER_MAP } from './seed-utils';
+import { POLICY_DOCUMENTS } from './policy-content';
 
 // Load .env from apps/api/ — works from any cwd
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
@@ -304,7 +305,35 @@ async function seed() {
       'challenges',
       'challenge_weaknesses',
     ];
+    // ── Policy documents ──────────────────────────────────────────────────────
+    // Terms and privacy live as CMS pages so wording can be corrected without a deploy, and so
+    // `version` can be bumped deliberately — that is what re-prompts users for consent.
+    //
+    // Upserted rather than created: re-running the seed must not reset a version an
+    // administrator has deliberately raised, nor overwrite an edit made through the admin panel.
+    // Only a page that does not exist yet is written.
+    let policyPagesCreated = 0;
+    for (const page of POLICY_DOCUMENTS) {
+      const existing = await prisma.cmsPage.findUnique({
+        where: { key: page.key },
+        select: { key: true },
+      });
+      if (existing) continue;
+      await prisma.cmsPage.create({
+        data: {
+          key: page.key,
+          version: page.version,
+          titleEn: page.titleEn,
+          titleMr: page.titleMr,
+          bodyEn: page.bodyEn as never,
+          bodyMr: page.bodyMr as never,
+        },
+      });
+      policyPagesCreated += 1;
+    }
+
     console.log('\nSeed complete:');
+    console.log(`  policy_pages: ${policyPagesCreated} created (existing pages left untouched)`);
     labels.forEach((label, i) => console.log(`  ${label}: ${counts[i]}`));
   } finally {
     await prisma.$disconnect();

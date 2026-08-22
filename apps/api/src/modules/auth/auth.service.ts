@@ -6,6 +6,7 @@ import { AuthProvider, Role, VerificationType } from '@prisma/client';
 import type Redis from 'ioredis';
 import { AuthRepository } from './auth.repository';
 import {
+  ValidationException,
   UnderageException,
   SignupRequiredException,
   DuplicateEntityException,
@@ -70,6 +71,32 @@ export class AuthService {
     this.sessionTtlDays = this.configService.get<number>('SESSION_TTL_DAYS', 30);
   }
 
+  /**
+   * Turns the documents the client says it showed into consent rows carrying the version that is
+   * actually published right now.
+   *
+   * ⚠️ The client's version, if it sends one, is ignored. A page loaded before an administrator
+   * bumped a document would otherwise record agreement to text the person never read — a record
+   * that looks authoritative and is false, which is worse than no record.
+   *
+   * A document the client names but which does not exist is rejected: consent to nothing is not
+   * consent.
+   */
+  private async resolveConsents(
+    claimed: { documentKey: string; version: number }[],
+  ): Promise<{ documentKey: string; version: number }[]> {
+    const keys = [...new Set(claimed.map((c) => c.documentKey))];
+    const live = await this.authRepository.currentPolicyVersions(keys);
+
+    return keys.map((documentKey) => {
+      const version = live.get(documentKey);
+      if (version === undefined) {
+        throw new ValidationException(`Unknown policy document: ${documentKey}`);
+      }
+      return { documentKey, version };
+    });
+  }
+
   async register(
     email: string,
     password: string,
@@ -99,7 +126,7 @@ export class AuthService {
       username,
       passwordHash,
       dob: dateOfBirth,
-      consents,
+      consents: await this.resolveConsents(consents),
       language: language as 'EN' | 'MR' | undefined,
     });
 
@@ -211,7 +238,9 @@ export class AuthService {
 
     const pending = await this.authRepository.createPendingSignup({
       dob: dateOfBirth,
-      consents,
+      // Resolved before the redirect so the record matches what was published when the person
+      // actually agreed, not when they come back from Google.
+      consents: await this.resolveConsents(consents),
       language: language as 'EN' | 'MR' | undefined,
       expiresAt: new Date(Date.now() + PENDING_SIGNUP_TTL_MINUTES * 60 * 1000),
     });

@@ -5,7 +5,14 @@ const mockCheckUsername = vi.hoisted(() => vi.fn());
 const mockMutate = vi.hoisted(() => vi.fn());
 
 vi.mock('next-intl', () => ({
-  useTranslations: (namespace: string) => (key: string) => `${namespace}.${key}`,
+  useTranslations: (namespace: string) => {
+    // `t.rich` renders a message containing markup — the terms line embeds links to the policy
+    // documents. A plain function mock omits it, and the page then throws rather than failing an
+    // assertion, which is a confusing way to learn the mock is incomplete.
+    const t = (key: string) => `${namespace}.${key}`;
+    t.rich = (key: string) => `${namespace}.${key}`;
+    return t;
+  },
 }));
 
 vi.mock('next/navigation', () => ({

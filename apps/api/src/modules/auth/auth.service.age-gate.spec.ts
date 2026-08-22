@@ -20,6 +20,12 @@ function makeRepo(overrides: Record<string, unknown> = {}) {
     createUserWithOAuthAccount: vi.fn().mockResolvedValue({ id: 'u2', roles: [] }),
     createVerificationToken: vi.fn().mockResolvedValue({}),
     createPendingSignup: vi.fn().mockResolvedValue({ id: 'pending-1' }),
+    currentPolicyVersions: vi.fn().mockResolvedValue(
+      new Map([
+        ['terms', 1],
+        ['privacy', 1],
+      ]),
+    ),
     consumePendingSignup: vi.fn().mockResolvedValue(null),
     createSession: vi.fn().mockResolvedValue({}),
     ...overrides,
@@ -191,5 +197,51 @@ describe('handleGoogleLogin — signup and sign-in are different things', () => 
     await service.handleGoogleLogin(profile, null, null);
 
     expect(repo.createUserWithOAuthAccount).not.toHaveBeenCalled();
+  });
+});
+
+describe('consent versions are resolved by the server, not claimed by the client', () => {
+  const live = new Map([
+    ['terms', 3],
+    ['privacy', 2],
+  ]);
+
+  it('records the published version, ignoring what the client sent', async () => {
+    // A page loaded before an administrator bumped a document would otherwise record agreement
+    // to text the person never read — a record that looks authoritative and is false.
+    const repo = makeRepo({ currentPolicyVersions: vi.fn().mockResolvedValue(live) });
+    const service = makeService(repo);
+
+    await service.register('a@b.c', 'Password!1', 'A', 'a_user', OVER_18, [
+      { documentKey: 'terms', version: 1 },
+      { documentKey: 'privacy', version: 1 },
+    ]);
+
+    expect(repo.createUserWithEmailAccount.mock.calls[0][0].consents).toEqual([
+      { documentKey: 'terms', version: 3 },
+      { documentKey: 'privacy', version: 2 },
+    ]);
+  });
+
+  it('refuses a document that does not exist — consent to nothing is not consent', async () => {
+    const repo = makeRepo({ currentPolicyVersions: vi.fn().mockResolvedValue(new Map()) });
+    const service = makeService(repo);
+
+    await expect(
+      service.register('a@b.c', 'Password!1', 'A', 'a_user', OVER_18, CONSENTS),
+    ).rejects.toThrow();
+
+    expect(repo.createUserWithEmailAccount).not.toHaveBeenCalled();
+  });
+
+  it('resolves before the Google redirect, not after the round trip', async () => {
+    const repo = makeRepo({ currentPolicyVersions: vi.fn().mockResolvedValue(live) });
+    const service = makeService(repo);
+
+    await service.startGoogleSignup(OVER_18, [{ documentKey: 'terms', version: 1 }]);
+
+    expect(repo.createPendingSignup.mock.calls[0][0].consents).toEqual([
+      { documentKey: 'terms', version: 3 },
+    ]);
   });
 });
