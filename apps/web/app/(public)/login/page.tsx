@@ -15,6 +15,7 @@ import { GoogleIcon } from '@/components/auth/google-icon';
 import { useLogin } from '@/hooks/use-auth';
 import { loginSchema, type LoginInput } from '@/lib/validations/auth';
 import { ApiError } from '@/lib/api/client';
+import { rateLimitRetryAfter } from '@/lib/api/rate-limit';
 import { authApi } from '@/lib/api/auth';
 import { getRuntimeConfig } from '@/lib/runtime-config';
 
@@ -47,7 +48,22 @@ export default function LoginPage() {
   const oauthErrorMsg =
     oauthError && oauthError !== 'OAUTH_ACCOUNT_CONFLICT' ? tErrors('authError') : null;
 
-  const apiError = login.error instanceof ApiError ? login.error.message : login.error?.message;
+  // Rate limiting is the one API failure with copy of its own. Everything else falls back to
+  // the server's message, which is English-only — acceptable for the unexpected, not for a
+  // refusal every tester will meet. See lib/api/rate-limit.ts for why lockout is folded in here.
+  const retryAfter = rateLimitRetryAfter(login.error);
+  const rateLimitMsg =
+    retryAfter === null
+      ? null
+      : retryAfter === 0
+        ? tErrors('rateLimitExceeded')
+        : retryAfter >= 120
+          ? tErrors('rateLimitExceededInMinutes', { minutes: Math.ceil(retryAfter / 60) })
+          : tErrors('rateLimitExceededIn', { seconds: retryAfter });
+
+  const apiError =
+    rateLimitMsg ??
+    (login.error instanceof ApiError ? login.error.message : login.error?.message);
 
   // An unverified address is recoverable, but only if we say so. Left as a bare refusal it is a
   // dead end: nothing else in the product ever tells the user a remedy exists, and they cannot

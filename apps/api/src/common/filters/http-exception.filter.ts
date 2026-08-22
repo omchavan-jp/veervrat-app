@@ -9,6 +9,32 @@ import {
 import { Request, Response } from 'express';
 import * as Sentry from '@sentry/node';
 
+/**
+ * A fallback error code for exceptions that carry no structured body.
+ *
+ * Domain exceptions in `app.exceptions.ts` set their own specific code; this exists so that an
+ * exception thrown *without* one still reports its class of failure honestly. `HTTP_429` would
+ * be truthful but useless to a client; `INTERNAL_ERROR` for a 429 is an outright lie.
+ */
+// 500 as a bare number: `statusCode` is a plain number off `getStatus()`, and comparing it to
+// an enum member trips no-unsafe-enum-comparison.
+const SERVER_ERROR_FLOOR = 500;
+
+const ERROR_CODE_BY_STATUS: Readonly<Record<number, string>> = {
+  [HttpStatus.TOO_MANY_REQUESTS]: 'RATE_LIMITED',
+  [HttpStatus.UNAUTHORIZED]: 'UNAUTHORIZED',
+  [HttpStatus.FORBIDDEN]: 'FORBIDDEN',
+  [HttpStatus.NOT_FOUND]: 'NOT_FOUND',
+  [HttpStatus.BAD_REQUEST]: 'BAD_REQUEST',
+};
+
+function statusCodeToErrorCode(statusCode: number): string {
+  const known = ERROR_CODE_BY_STATUS[statusCode];
+  if (known) return known;
+
+  return statusCode >= SERVER_ERROR_FLOOR ? 'INTERNAL_ERROR' : `HTTP_${statusCode}`;
+}
+
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(GlobalExceptionFilter.name);
@@ -33,7 +59,13 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         message = (bodyObj.message as string) || exception.message;
         details = bodyObj.details;
       } else {
+        // A string body — what framework exceptions like `ThrottlerException` carry. This branch
+        // previously set only `message`, leaving `error` at its `INTERNAL_ERROR` default, so a
+        // 429 reached the client claiming to be a server fault. Derive a code from the status
+        // instead: any exception thrown with a string body gets an honest one, not just the
+        // handful anyone remembers to special-case.
         message = String(body);
+        error = statusCodeToErrorCode(statusCode);
       }
     }
 

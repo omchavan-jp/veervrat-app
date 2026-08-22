@@ -247,7 +247,9 @@
       "emailNotVerified": "तुमचा ईमेल पत्ता अद्याप सत्यापित झालेला नाही. सत्यापन दुव्यासाठी तुमचा इनबॉक्स तपासा — स्पॅम फोल्डरसह.",
       "resendVerification": "नवीन सत्यापन ईमेल पाठवा",
       "resendVerificationSent": "त्या पत्त्याचे सत्यापन आवश्यक असल्यास, नवीन दुवा पाठवला आहे. कृपया तुमचा इनबॉक्स तपासा.",
-      "resendVerificationSending": "पाठवत आहे…"
+      "resendVerificationSending": "पाठवत आहे…",
+      "rateLimitExceededIn": "खूप जास्त प्रयत्न. कृपया {seconds} सेकंदांनी पुन्हा प्रयत्न करा.",
+      "rateLimitExceededInMinutes": "खूप जास्त प्रयत्न. कृपया सुमारे {minutes} मिनिटांनी पुन्हा प्रयत्न करा."
     },
     "linkAccount": {
       "title": "तुमचे Google खाते जोडा",
