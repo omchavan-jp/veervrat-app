@@ -686,6 +686,46 @@ infrastructure.
 
 ---
 
+## The scheduled cleanup job
+
+`veervrat-<env>-cleanup-expired` runs nightly at **20:30 UTC (02:00 IST)** and deletes rows that
+have expired and serve no further purpose: sessions, verification tokens and pending signups.
+
+It is the only job here on a schedule rather than a manual trigger, and the only one with no
+confirmation guard — every row it touches is already unusable, so running it twice or during live
+traffic changes nothing anyone could have used. `invitations` is deliberately excluded despite
+having `expires_at`: an expired invitation is a record a user can still see explained.
+
+**Nothing alerts if it stops running.** Until #79 lands, the check is manual — read its last
+execution:
+
+```bash
+ENV=uat
+az containerapp job execution list -n veervrat-$ENV-cleanup-expired -g veervrat-$ENV \
+  --query "[0].{name:name,status:properties.status,started:properties.startTime}" -o table
+```
+
+Then its output, which reports what it removed:
+
+```bash
+WS=$(az monitor log-analytics workspace show -g veervrat-$ENV -n veervrat-$ENV-logs --query customerId -o tsv)
+az monitor log-analytics query -w "$WS" --analytics-query \
+  "ContainerAppConsoleLogs_CL | where TimeGenerated > ago(2d) | where ContainerName_s == 'cleanup-expired' | project TimeGenerated, Log_s | order by TimeGenerated asc" -o table
+```
+
+```
+Cleanup complete:
+  sessions: 128
+  verification_tokens: 14
+  pending_signups: 3
+```
+
+Zeros across several consecutive nights on an environment in real use is the signal worth
+noticing — it means the job is running but matching nothing, which is more likely a broken query
+than a genuinely clean database.
+
+---
+
 ## Verifying rate limiting actually works
 
 **Do this after any change to `trust_proxy_hops`, and once per environment after a platform
