@@ -113,12 +113,19 @@ module "environment" {
   # already; not repeating it here). UAT's 7 days is fine for disposable content.
   postgres_backup_retention_days = 35
 
-  # min_replicas stays 0 (scale-to-zero, free while idle) even for prod, DELIBERATELY, for
-  # now: D11 (beta testers live on prod) is under active reconsideration in O7 now that the
-  # Neon migration is cancelled, and there are no real users routed here yet. Revisit to 1
-  # (no cold start) once O7 lands and real traffic is expected.
-  api_min_replicas = 0
-  web_min_replicas = 0
+  # Always-on, from 2026-08-22 (#92). Scale-to-zero costs nothing while idle, but the first
+  # request after ~5 minutes idle pays TWO cold starts in series — web boots to serve the shell,
+  # then the browser calls /auth/me and the api boots too. Measured 5–20s, against ~40ms warm.
+  #
+  # BOTH tiers, not just api: setting only one leaves the other's cold start in the path, so the
+  # user still waits.
+  #
+  # ⚠️ This costs roughly $14–20/month for zero benefit until testers actually arrive — it buys
+  # a first impression, and there is nobody to impress yet. Deliberate: the alternative is
+  # remembering to flip it at exactly the right moment, and the cost of forgetting is that the
+  # first tester ever to open the app waits twenty seconds and concludes it is broken.
+  api_min_replicas = 1
+  web_min_replicas = 1
 
   # Same Burstable Postgres ceiling as UAT: DATABASE_POOL_MAX × api_max_replicas + headroom
   # must stay under the server's max_connections.
