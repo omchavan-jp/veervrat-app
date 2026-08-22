@@ -89,6 +89,11 @@ runtime), or deployment machinery. Deploy for those; say which was actually chec
 Run the **integration** project too, not only unit tests — `--exclude "**/*.integration.spec.ts"`
 is not "the tests pass".
 
+For anything touching configuration, the Dockerfile, or how a per-environment value reaches the
+browser, **build and run the image locally** (~3 min) before pushing. `pnpm dev` reads the
+environment at runtime, so a value that was wrongly baked still looks correct there. Steps in
+`documentation/02_Local-Development-Setup.md` → "Running the built image locally".
+
 ## Verification — how you may conclude something works
 
 - **An empty result is not a pass.** State the observable you expect *before* running a check,
