@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,12 +10,12 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AuthShell } from '@/components/auth/auth-shell';
+import { ResendVerification } from '@/components/auth/resend-verification';
 import { GoogleIcon } from '@/components/auth/google-icon';
 import { useLogin } from '@/hooks/use-auth';
 import { loginSchema, type LoginInput } from '@/lib/validations/auth';
 import { ApiError } from '@/lib/api/client';
 import { rateLimitRetryAfter } from '@/lib/api/rate-limit';
-import { authApi } from '@/lib/api/auth';
 import { getRuntimeConfig } from '@/lib/runtime-config';
 
 const FIELD_LABEL = 'mb-2 block font-mono text-[11px] uppercase tracking-[0.1em] text-muted';
@@ -27,8 +26,6 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
   const oauthError = searchParams.get('error');
   const login = useLogin();
-
-  const [resendState, setResendState] = useState<'idle' | 'sending' | 'sent'>('idle');
 
   const {
     register,
@@ -71,18 +68,6 @@ export default function LoginPage() {
   const isUnverified =
     login.error instanceof ApiError && login.error.error === 'EMAIL_NOT_VERIFIED';
 
-  const onResend = async () => {
-    setResendState('sending');
-    try {
-      await authApi.resendVerification(getValues('email'));
-    } catch {
-      // Deliberately ignored. The endpoint answers identically for every address to avoid
-      // disclosing whether an account exists; surfacing a failure here would leak exactly what
-      // that design protects. The user is told to check their inbox either way.
-    }
-    setResendState('sent');
-  };
-
   return (
     <AuthShell
       hero={{
@@ -111,20 +96,7 @@ export default function LoginPage() {
         <Alert variant="destructive" className="mb-4 border-destructive/40 bg-destructive/10">
           <AlertDescription className="text-destructive">
             <span className="block">{tErrors('emailNotVerified')}</span>
-            {resendState === 'sent' ? (
-              <span className="mt-2 block font-medium">{tErrors('resendVerificationSent')}</span>
-            ) : (
-              <button
-                type="button"
-                onClick={onResend}
-                disabled={resendState === 'sending'}
-                className="mt-2 block underline underline-offset-2 disabled:opacity-60"
-              >
-                {resendState === 'sending'
-                  ? tErrors('resendVerificationSending')
-                  : tErrors('resendVerification')}
-              </button>
-            )}
+            <ResendVerification email={() => getValues('email')} />
           </AlertDescription>
         </Alert>
       )}

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { AuthShell } from '@/components/auth/auth-shell';
 import { StatusBanner } from '@/components/auth/status-banner';
+import { ResendVerificationForm } from '@/components/auth/resend-verification-form';
 import { Button } from '@/components/ui/button';
 import { getRuntimeConfig } from '@/lib/runtime-config';
 
@@ -65,6 +66,7 @@ export default async function VerifyEmailPage({
       <AuthShell hero={hero}>
         <StatusBanner variant="error" title={t('failedTitle')} description={t('invalidLink')} />
         <BackButton label={t('backToLogin')} />
+        <ResendVerificationForm />
       </AuthShell>
     );
   }
@@ -92,6 +94,10 @@ export default async function VerifyEmailPage({
     <AuthShell hero={hero}>
       <StatusBanner variant="error" title={t('failedTitle')} description={failureDescription} />
       <BackButton label={t('backToLogin')} />
+      {/* An expired link is the commonest way to reach this branch, and "back to login" alone
+          is the dead end #96 describes: the only route to a resend was to attempt a login
+          first. */}
+      <ResendVerificationForm />
     </AuthShell>
   );
 }
