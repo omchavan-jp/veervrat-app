@@ -22,7 +22,11 @@
 - [ ] 2.1 Server-side check of 18+ at account creation, from the date of birth.
 - [ ] 2.2 Applied to **both** the email path and the Google path. A gate on one is not a gate.
 - [ ] 2.3 Client-side check on the form for immediate feedback — never the only check.
-- [ ] 2.4 Rejection message that does not imply the address is registrable later.
+- [ ] 2.4 Date picker defaults to today minus eighteen years, and treats it as the maximum.
+- [ ] 2.5 Persistent hint under the field stating the age requirement, shown before any attempt.
+- [ ] 2.6 Disabled dates use `aria-disabled` and stay reachable — `disabled` swallows the click
+  and hides them from screen readers, so the explanation never reaches the people who need it.
+- [ ] 2.7 Inline field error on submit, at the field. Not a toast.
 
 ## 3. Consent
 

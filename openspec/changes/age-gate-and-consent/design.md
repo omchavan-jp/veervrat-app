@@ -73,3 +73,36 @@ Making `dob` required is a schema change against a table with existing rows whos
 null. Because every user is disposable, the order is: **ship, then delete all users** — no
 backfill, no default value standing in for a real answer, and no accounts whose age is unknown
 being treated as though it were known.
+
+## The date-of-birth field
+
+**Default position: today minus eighteen years.** The picker opens on the most recent date that
+qualifies, so the common case — someone comfortably over eighteen — starts near where they need
+to be, and the boundary is visible without being announced.
+
+**That same date is the maximum.** Later dates are disabled.
+
+**How the constraint is communicated**, in three layers, because relying on one is fragile:
+
+1. **A persistent hint under the field**, before anyone tries: *"Veervrat is for adults aged 18
+   and over."* Stating a rule up front is better than only enforcing it after a failed attempt.
+2. **Disabled dates stay reachable.** `aria-disabled` rather than `disabled`, because disabled
+   controls frequently do not emit click events and are skipped by screen readers — a tooltip
+   attached to one is unreliable in exactly the cases that need it most.
+3. **An inline field error on submit**, at the field, not a toast. A toast is transient and
+   detached from the thing that caused it; this is a field constraint and belongs with the field.
+
+The server validates independently. The client-side rules exist so the person is told
+immediately, never so the check can be skipped.
+
+## Where the acceptance wording comes from
+
+The **mechanism** ships here — the checkbox, reading the current version, and writing the consent
+record. It cannot wait, because consent must exist from the first account onward and cannot be
+reconstructed later.
+
+The **content** — the terms and privacy text, and the refined wording around acceptance — comes
+from #81. The sequence in §9 keeps these consistent: ship the mechanism, write the content,
+publish both documents at version 1, and only then create real accounts. Because every existing
+user is being deleted as part of this change, nobody ever accepts a placeholder.
+
