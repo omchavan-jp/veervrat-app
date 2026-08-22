@@ -83,6 +83,14 @@ Still not true of prod, and tracked as issues rather than assumed:
 
 **Backlog lives in GitHub Issues** (`gh issue list`), not in this file — see below.
 
+**Age and personal attributes:** `spec/decisions/21_age-and-personal-attributes.md` — the platform
+is **strictly 18+**, date of birth is required at account creation and never displayed, gender is
+optional and shown when provided. Decided 2026-08-22; the mechanism is #133.
+
+**Portability constraint:** `documentation/21_Infrastructure-Conventions.md` §24 — no
+provider-specific service without a named replacement. The only reason the current provider was
+chosen is the nonprofit grant.
+
 **Platform requirements:** `documentation/22_Platform-Requirements.md` — what the app needs stated
 without reference to any provider, so the Azure guide, a future VPS guide, the migration doc and
 the budget all consume one source instead of restating it four times. ⚠️ Its sizing is estimated,
