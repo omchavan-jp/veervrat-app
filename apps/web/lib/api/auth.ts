@@ -40,6 +40,7 @@ export const authApi = {
    * itself never travels in a URL.
    */
   startGoogleSignup: (data: {
+    username: string;
     dob: string;
     consents: { documentKey: string; version: number }[];
     language?: string;

@@ -15,6 +15,7 @@ const CONSENTS = [{ documentKey: 'terms', version: 1 }];
 function makeRepo(overrides: Record<string, unknown> = {}) {
   return {
     findUserByEmail: vi.fn().mockResolvedValue(null),
+    findUserByUsername: vi.fn().mockResolvedValue(null),
     findAuthAccount: vi.fn().mockResolvedValue(null),
     createUserWithEmailAccount: vi.fn().mockResolvedValue({ id: 'u1', roles: [] }),
     createUserWithOAuthAccount: vi.fn().mockResolvedValue({ id: 'u2', roles: [] }),
@@ -104,7 +105,7 @@ describe('startGoogleSignup', () => {
     const repo = makeRepo();
     const service = makeService(repo);
 
-    await expect(service.startGoogleSignup(UNDER_18, CONSENTS)).rejects.toThrow();
+    await expect(service.startGoogleSignup('chosen_name', UNDER_18, CONSENTS)).rejects.toThrow();
     expect(repo.createPendingSignup).not.toHaveBeenCalled();
   });
 
@@ -112,7 +113,7 @@ describe('startGoogleSignup', () => {
     const repo = makeRepo();
     const service = makeService(repo);
 
-    const result = await service.startGoogleSignup(OVER_18, CONSENTS);
+    const result = await service.startGoogleSignup('chosen_name', OVER_18, CONSENTS);
 
     expect(result).toEqual({ pendingId: 'pending-1' });
     // The date of birth must not be part of what travels onward.
@@ -146,6 +147,7 @@ describe('handleGoogleLogin — signup and sign-in are different things', () => 
   it('re-checks age after the round trip rather than trusting the earlier check', async () => {
     const repo = makeRepo({
       consumePendingSignup: vi.fn().mockResolvedValue({
+        username: 'chosen_name',
         dob: new Date('2015-06-01'),
         consents: CONSENTS,
         language: 'EN',
@@ -161,6 +163,7 @@ describe('handleGoogleLogin — signup and sign-in are different things', () => 
   it('creates the account when a valid pending signup is presented', async () => {
     const repo = makeRepo({
       consumePendingSignup: vi.fn().mockResolvedValue({
+        username: 'chosen_name',
         dob: new Date('1995-06-15'),
         consents: CONSENTS,
         language: 'MR',
@@ -238,10 +241,66 @@ describe('consent versions are resolved by the server, not claimed by the client
     const repo = makeRepo({ currentPolicyVersions: vi.fn().mockResolvedValue(live) });
     const service = makeService(repo);
 
-    await service.startGoogleSignup(OVER_18, [{ documentKey: 'terms', version: 1 }]);
+    await service.startGoogleSignup('chosen_name', OVER_18, [{ documentKey: 'terms', version: 1 }]);
 
     expect(repo.createPendingSignup.mock.calls[0][0].consents).toEqual([
       { documentKey: 'terms', version: 3 },
     ]);
+  });
+});
+
+describe('the username is the person’s choice, not derived from their email', () => {
+  const profile = { email: 'new@example.com', googleId: 'g-1', name: 'New', emailVerified: true };
+
+  it('refuses a taken username before the redirect, so they learn immediately', async () => {
+    const repo = makeRepo({ findUserByUsername: vi.fn().mockResolvedValue({ id: 'someone' }) });
+    const service = makeService(repo);
+
+    await expect(service.startGoogleSignup('taken', OVER_18, CONSENTS)).rejects.toThrow();
+    expect(repo.createPendingSignup).not.toHaveBeenCalled();
+  });
+
+  it('uses the chosen username when the account is created', async () => {
+    const repo = makeRepo({
+      consumePendingSignup: vi.fn().mockResolvedValue({
+        username: 'my_choice',
+        dob: new Date('1995-06-15'),
+        consents: CONSENTS,
+        language: 'EN',
+      }),
+    });
+    const service = makeService(repo);
+    (service as unknown as Record<string, unknown>)['createSession'] = vi
+      .fn()
+      .mockResolvedValue('token');
+    (service as unknown as Record<string, unknown>)['toSessionUser'] = vi.fn((u: unknown) => u);
+
+    await service.handleGoogleLogin(profile, null, null, 'pending-1');
+
+    expect(repo.createUserWithOAuthAccount.mock.calls[0][0].username).toBe('my_choice');
+  });
+
+  it('varies THEIR choice if it was taken during the round trip, rather than failing', async () => {
+    // Refusing here would discard a completed Google sign-in over a name collision, and
+    // deriving a fresh name from their email address would discard the choice they made.
+    const taken = new Set(['my_choice']);
+    const repo = makeRepo({
+      findUserByUsername: vi.fn((u: string) => Promise.resolve(taken.has(u) ? { id: 'x' } : null)),
+      consumePendingSignup: vi.fn().mockResolvedValue({
+        username: 'my_choice',
+        dob: new Date('1995-06-15'),
+        consents: CONSENTS,
+        language: 'EN',
+      }),
+    });
+    const service = makeService(repo);
+    (service as unknown as Record<string, unknown>)['createSession'] = vi
+      .fn()
+      .mockResolvedValue('token');
+    (service as unknown as Record<string, unknown>)['toSessionUser'] = vi.fn((u: unknown) => u);
+
+    await service.handleGoogleLogin(profile, null, null, 'pending-1');
+
+    expect(repo.createUserWithOAuthAccount.mock.calls[0][0].username).toBe('my_choice_2');
   });
 });

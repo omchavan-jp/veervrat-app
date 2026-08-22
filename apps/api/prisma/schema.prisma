@@ -339,6 +339,9 @@ model UserConsent {
 // somebody reached sign-in without signing up, which must not create anything.
 model PendingSignup {
   id         String   @id @default(uuid()) @db.Uuid
+  // Chosen by the person before they leave for Google, so their public identifier is theirs
+  // rather than one derived from their email address without asking.
+  username   String
   dob        DateTime @db.Date
   consents   Json
   language   Language @default(EN)

@@ -45,13 +45,14 @@ function doc(blocks: Block[]) {
 }
 
 const ORG = 'Jnana Prabodhini, 510 Sadashiv Peth, Pune, Maharashtra 411030, India';
+const CONTACT_EMAIL = 'veervrat@jnanaprabodhini.org';
 
 // ─── Terms of Use ─────────────────────────────────────────────────────────────
 
 const termsEn = doc([
   { text: 'Who runs Veervrat', bold: true },
   {
-    text: `Veervrat is operated by ${ORG}, a registered public trust and society. Contact us at the address above or by telephone on 02024207000.`,
+    text: `Veervrat is operated by ${ORG}, a registered public trust and society. Contact us at ${CONTACT_EMAIL}, at the address above, or by telephone on 02024207000.`,
   },
 
   { text: 'You must be 18 or over', bold: true },
@@ -116,7 +117,7 @@ const termsEn = doc([
 const termsMr = doc([
   { text: 'वीरव्रत कोण चालवते', bold: true },
   {
-    text: 'वीरव्रत ज्ञान प्रबोधिनी, ५१० सदाशिव पेठ, पुणे, महाराष्ट्र ४११०३० येथून चालवले जाते. ही नोंदणीकृत सार्वजनिक न्यास व संस्था आहे. संपर्क: वरील पत्ता किंवा दूरध्वनी ०२०२४२०७०००.',
+    text: `वीरव्रत ज्ञान प्रबोधिनी, ५१० सदाशिव पेठ, पुणे, महाराष्ट्र ४११०३० येथून चालवले जाते. ही नोंदणीकृत सार्वजनिक न्यास व संस्था आहे. संपर्क: ${CONTACT_EMAIL}, वरील पत्ता, किंवा दूरध्वनी ०२०२४२०७०००.`,
   },
 
   { text: 'तुमचे वय १८ किंवा अधिक असावे', bold: true },
@@ -183,7 +184,7 @@ const termsMr = doc([
 const privacyEn = doc([
   { text: 'Who is responsible for your data', bold: true },
   {
-    text: `${ORG} decides how and why your personal data is used. You can reach us at the address above or on 02024207000 with any question about your data, including a request to see or correct it.`,
+    text: `${ORG} decides how and why your personal data is used. Write to ${CONTACT_EMAIL} with any question about your data — including a request to see it, correct it, or delete your account. You can also reach us at the address above or on 02024207000.`,
   },
 
   { text: 'What we collect', bold: true },
@@ -243,12 +244,12 @@ const privacyEn = doc([
     text: 'What you wrote stays, under an anonymous label. Journeys, assessments, experience logs and messages remain so that a vratmitra’s record of their guidance is not left with holes. Records of administrative actions are also kept.',
   },
   {
-    text: 'If you want something removed beyond this, contact us and we will tell you what is possible.',
+    text: `If you want something removed beyond this, write to ${CONTACT_EMAIL} and we will tell you what is possible.`,
   },
 
   { text: 'Your rights', bold: true },
   {
-    text: 'You can ask what data we hold about you, ask us to correct it, or ask us to delete your account. Write to us at the address above.',
+    text: `You can ask what data we hold about you, ask us to correct it, or ask us to delete your account. Write to ${CONTACT_EMAIL}.`,
   },
 
   { text: 'Keeping data safe', bold: true },
@@ -265,7 +266,7 @@ const privacyEn = doc([
 const privacyMr = doc([
   { text: 'तुमच्या माहितीसाठी कोण जबाबदार आहे', bold: true },
   {
-    text: 'ज्ञान प्रबोधिनी, ५१० सदाशिव पेठ, पुणे, महाराष्ट्र ४११०३० ही तुमची वैयक्तिक माहिती कशी व का वापरली जाते हे ठरवते. तुमच्या माहितीबाबत कोणताही प्रश्न — ती पाहण्याची किंवा दुरुस्त करण्याची विनंती धरून — वरील पत्त्यावर किंवा ०२०२४२०७००० वर विचारता येईल.',
+    text: `ज्ञान प्रबोधिनी, ५१० सदाशिव पेठ, पुणे, महाराष्ट्र ४११०३० ही तुमची वैयक्तिक माहिती कशी व का वापरली जाते हे ठरवते. तुमच्या माहितीबाबत कोणताही प्रश्न — ती पाहणे, दुरुस्त करणे किंवा खाते हटवण्याची विनंती धरून — ${CONTACT_EMAIL} वर लिहा. वरील पत्त्यावर किंवा ०२०२४२०७००० वरही संपर्क साधता येईल.`,
   },
 
   { text: 'आम्ही काय गोळा करतो', bold: true },
@@ -323,12 +324,12 @@ const privacyMr = doc([
     text: 'तुम्ही लिहिलेला मजकूर निनावी नावाखाली राहतो. प्रवास, चाचण्या, अनुभव नोंदी व संदेश राहतात, जेणेकरून वीरमित्राच्या मार्गदर्शनाच्या नोंदीत खंड पडू नये. प्रशासकीय कृतींच्या नोंदीही ठेवल्या जातात.',
   },
   {
-    text: 'याहून अधिक काही काढून टाकायचे असल्यास आमच्याशी संपर्क साधा; काय शक्य आहे ते आम्ही सांगू.',
+    text: `याहून अधिक काही काढून टाकायचे असल्यास ${CONTACT_EMAIL} वर लिहा; काय शक्य आहे ते आम्ही सांगू.`,
   },
 
   { text: 'तुमचे हक्क', bold: true },
   {
-    text: 'आमच्याकडे तुमची कोणती माहिती आहे हे विचारू शकता, ती दुरुस्त करण्यास सांगू शकता, किंवा खाते हटवण्यास सांगू शकता. वरील पत्त्यावर लिहा.',
+    text: `आमच्याकडे तुमची कोणती माहिती आहे हे विचारू शकता, ती दुरुस्त करण्यास सांगू शकता, किंवा खाते हटवण्यास सांगू शकता. ${CONTACT_EMAIL} वर लिहा.`,
   },
 
   { text: 'माहिती सुरक्षित ठेवणे', bold: true },

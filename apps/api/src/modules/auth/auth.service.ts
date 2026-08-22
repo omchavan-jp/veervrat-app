@@ -227,6 +227,7 @@ export class AuthService {
    * is not for.
    */
   async startGoogleSignup(
+    username: string,
     dob: string,
     consents: { documentKey: string; version: number }[],
     language?: string,
@@ -236,7 +237,14 @@ export class AuthService {
       throw new UnderageException();
     }
 
+    // Checked now so the person is told immediately rather than after a Google round trip.
+    // Re-checked on the way back, because minutes pass and someone else may take it.
+    if (await this.authRepository.findUserByUsername(username)) {
+      throw new DuplicateEntityException('User', 'username');
+    }
+
     const pending = await this.authRepository.createPendingSignup({
+      username,
       dob: dateOfBirth,
       // Resolved before the redirect so the record matches what was published when the person
       // actually agreed, not when they come back from Google.
@@ -320,10 +328,10 @@ export class AuthService {
       throw new UnderageException();
     }
 
-    // Derive a clean username from the email local part:
-    // dots/hyphens → underscores, strip everything else, clamp to 28 chars.
-    // Try the clean name first; if taken, append an incrementing number.
-    const username = await this.generateUsername(profile.email);
+    // The username the person chose before leaving for Google. If it was taken in the interval,
+    // a variant of THEIR choice is used rather than one derived from their email address —
+    // failing here would mean losing a completed Google round trip over a name collision.
+    const username = await this.claimUsername(pending.username);
 
     const user = await this.authRepository.createUserWithOAuthAccount({
       email: profile.email,
@@ -865,6 +873,27 @@ export class AuthService {
   }
 
   // ─── Private helpers ────────────────────────────────────────────────────────
+
+  /**
+   * Takes the username the person chose, and returns it — or the nearest available variant of it.
+   *
+   * Only reached when someone claimed the same name during the Google round trip, which is a few
+   * minutes wide. Refusing at that point would discard a completed sign-in over a name clash,
+   * and deriving a fresh name from their email address would discard their choice. A numbered
+   * variant of what they picked keeps the intent.
+   */
+  private async claimUsername(chosen: string): Promise<string> {
+    if (!(await this.authRepository.findUserByUsername(chosen))) {
+      return chosen;
+    }
+    for (let n = 2; n <= 99; n++) {
+      const candidate = `${chosen.slice(0, 25)}_${n}`;
+      if (!(await this.authRepository.findUserByUsername(candidate))) {
+        return candidate;
+      }
+    }
+    return `${chosen.slice(0, 22)}_${randomBytes(3).toString('hex')}`;
+  }
 
   private async generateUsername(email: string): Promise<string> {
     // Replace dots and hyphens with underscores, strip anything else invalid, clamp to 28 chars

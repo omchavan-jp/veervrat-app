@@ -105,11 +105,12 @@ describe('SignupPage', () => {
   });
 
   it('shows only the shared fields until the email route is chosen', () => {
-    // Both routes need a date of birth, consent and a language. Google supplies the name,
-    // username, email and credential, so showing those to everyone means displaying four fields
-    // that one route never uses.
+    // Both routes need a username, a date of birth, consent and a language. Google supplies the
+    // display name, email address and the credential — but NOT the username, which is a public
+    // identifier and should be the person's own choice rather than derived from their email.
     renderSignup();
 
+    expect(screen.getByPlaceholderText('auth.signup.usernamePlaceholder')).toBeInTheDocument();
     expect(screen.getByText('auth.signup.dobPlaceholder')).toBeInTheDocument();
     expect(screen.getByDisplayValue('EN')).toBeInTheDocument();
     expect(screen.getByText('auth.signup.googleCta')).toBeInTheDocument();
@@ -126,7 +127,6 @@ describe('SignupPage', () => {
     openEmailSection();
 
     expect(screen.getByPlaceholderText('auth.signup.displayNamePlaceholder')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('auth.signup.usernamePlaceholder')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('auth.signup.emailPlaceholder')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('auth.signup.passwordPlaceholder')).toBeInTheDocument();
   });
@@ -134,7 +134,6 @@ describe('SignupPage', () => {
   it('calls checkUsername API after 400ms debounce', async () => {
     mockCheckUsername.mockResolvedValue(true);
     renderSignup();
-    openEmailSection();
 
     const usernameInput = screen.getByPlaceholderText('auth.signup.usernamePlaceholder');
     fireEvent.change(usernameInput, { target: { value: 'new_user' } });
@@ -151,7 +150,6 @@ describe('SignupPage', () => {
   it('shows username available text when check returns true', async () => {
     mockCheckUsername.mockResolvedValue({ available: true });
     renderSignup();
-    openEmailSection();
 
     const usernameInput = screen.getByPlaceholderText('auth.signup.usernamePlaceholder');
     fireEvent.change(usernameInput, { target: { value: 'available_name' } });
@@ -167,7 +165,6 @@ describe('SignupPage', () => {
   it('shows username taken text when check returns false', async () => {
     mockCheckUsername.mockResolvedValue({ available: false, reason: 'taken' });
     renderSignup();
-    openEmailSection();
 
     const usernameInput = screen.getByPlaceholderText('auth.signup.usernamePlaceholder');
     fireEvent.change(usernameInput, { target: { value: 'taken_name' } });
