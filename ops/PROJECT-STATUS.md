@@ -85,7 +85,11 @@ Still not true of prod, and tracked as issues rather than assumed:
 
 **Age and personal attributes:** `spec/decisions/21_age-and-personal-attributes.md` — the platform
 is **strictly 18+**, date of birth is required at account creation and never displayed, gender is
-optional and shown when provided. Decided 2026-08-22; the mechanism is #133.
+optional and shown when provided. Decided and **enforced** 2026-08-22 (#133).
+
+⚠️ Google signup and sign-in are now **separate flows**. Sign-in authenticates existing accounts
+and never creates one — previously it did, which meant an account could exist for someone whose
+age had never been checked. Account linking from settings is unaffected.
 
 **Portability constraint:** `documentation/21_Infrastructure-Conventions.md` §24 — no
 provider-specific service without a named replacement. The only reason the current provider was
