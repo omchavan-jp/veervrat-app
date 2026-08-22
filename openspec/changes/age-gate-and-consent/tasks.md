@@ -32,6 +32,11 @@
 
 - [x] 3.1 Record consent **in the same transaction** as account creation.
 - [x] 3.2 Read the current version at the moment of acceptance rather than trusting the client.
+  ⚠️ **Was ticked before it was true.** The server took whatever version the client sent, which
+  came from a hardcoded list in the web app. Found while verifying the policy documents: the
+  public CMS response does not expose `version`, so the client could not have known it. Now
+  resolved server-side from the published document, and a document the client names but which
+  does not exist is rejected — consent to nothing is not consent.
 - [~] 3.3 Re-prompt when the accepted version is behind the current one. **Deferred to #81** —
   the documents do not exist yet, so no version can be bumped and there is nothing to re-prompt
   against. Building the prompt now would mean testing it against a document that has no content.
@@ -54,8 +59,7 @@
   flow.
 - [x] 5.2 Remove date of birth from onboarding — it is collected before the account exists now.
 - [x] 5.3 Show gender on the profile when provided.
-- [~] 5.4 Terms and privacy links at the point of acceptance. **Deferred to #81** — the pages do
-  not exist, and linking to a 404 at the moment of consent is worse than the plain wording.
+- [x] 5.4 Terms and privacy links at the point of acceptance — done once the documents existed.
 
 ## 6. Never display the date of birth
 

@@ -115,6 +115,21 @@ export class AuthRepository {
     return result.count;
   }
 
+  /**
+   * The versions currently published for the required policy documents.
+   *
+   * Resolved server-side at the moment of acceptance. The client tells us which documents it
+   * showed, but not which version — if it did, a stale page could record consent to a version
+   * the person never saw, and the record would be confidently wrong.
+   */
+  async currentPolicyVersions(keys: string[]) {
+    const pages = await this.prisma.cmsPage.findMany({
+      where: { key: { in: keys } },
+      select: { key: true, version: true },
+    });
+    return new Map(pages.map((p) => [p.key, p.version]));
+  }
+
   async findConsents(userId: string) {
     return this.prisma.userConsent.findMany({
       where: { userId },
