@@ -112,7 +112,15 @@ Two lanes, chosen at triage:
 2. Implement. Verification is **tiered by risk**: infra/auth/build/migration
    changes get empirical verification (docker build, boot, curl live endpoints);
    assets/copy/minor UI get typecheck + commit.
-3. Squash-merge to `main` → **UAT auto-deploys** → spot-check on UAT.
+2b. **Run it locally before pushing.** `pnpm dev` against the docker services, with real
+   Google and SMTP credentials available (`02_Local-Development-Setup.md`). Anything a page
+   load or an API call would reveal should be caught here, not two deploy cycles later — a
+   round trip through CI and CD is roughly fifteen minutes, and a local check is seconds.
+   ⚠️ A green local run says nothing about cookies, `Secure`/`SameSite`, build-time
+   configuration, or deployment machinery. See "What local testing proves, and what it does
+   not". State which was actually checked.
+3. Squash-merge to `main` → **UAT auto-deploys** → spot-check on UAT **for the things local
+   cannot show**.
 4. Close the issue (`gh issue close NN --comment "..."`), add CHANGELOG line.
 5. Ship to beta testers by cutting a `prod-*` tag (below) — a merge alone no longer
    reaches real users, which is the point of having UAT.

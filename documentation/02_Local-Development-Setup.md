@@ -175,3 +175,68 @@ cd apps/api && DATABASE_URL="postgresql://veervrat:veervrat_local@localhost:5434
 - `.env.test` also uses **Redis DB 1** (`redis://localhost:6380/1`) so test rate-limit counters,
   lockouts and cache never touch your dev instance. The integration suite flushes only
   throttler-namespaced keys before each test.
+
+---
+
+## Testing against real services locally
+
+Most of what needs checking can be checked here, in seconds, instead of through a deploy that
+takes roughly a quarter of an hour. Two credentials make the full signup path work locally.
+
+### Google sign-in
+
+Already provisioned. The OAuth client shared with pre-production lists
+`http://localhost:3001/api/v1/auth/google/callback` among its redirect URIs, and
+`apps/api/.env` carries the client id, secret and callback URL. Google sign-in works on `pnpm dev`
+with no further setup.
+
+### Outbound email
+
+Optional, and consider whether you want it. **Without SMTP configured the email service prints to
+the console** — the verification link appears directly in the API output, which is usually faster
+than opening an inbox.
+
+To send real mail, copy the `SMTP_*` and `EMAIL_FROM` values from `~/.secrets/veervrat/smtp-jp.env`
+into `apps/api/.env`.
+
+⚠️ `SMTP_SECURE` stays `false`. Port 587 upgrades through STARTTLS; `true` means implicit TLS on
+port 465 and fails with an error that does not name the cause.
+
+### Runtime feature configuration
+
+Deployed environments get these from infrastructure definitions; locally they belong in
+`apps/api/.env` and `apps/web/.env.local`:
+
+```
+ENVIRONMENT="local"          # content editing is refused outright when this is "prod"
+FEEDBACK_MODE="granted"      # off | granted — matches both deployed environments
+CONTENT_EDIT_ENABLED="true"  # whether the feature exists here; who may use it is a per-user grant
+```
+
+⚠️ Not `NEXT_PUBLIC_*`. Those are inlined at build time and one image serves every environment,
+so anything baked cannot differ between them.
+
+---
+
+## What local testing proves, and what it does not
+
+Running locally is the fast loop and should be the default. It is not equivalent to a deployed
+environment, and the differences are not academic — each has produced a real defect.
+
+**Reliable locally:** interface behaviour, form validation, translation keys, business logic, API
+contracts, database queries and migrations.
+
+**NOT reliable locally:**
+
+| | Why |
+|---|---|
+| **Cookies and sessions** | `localhost` shares cookies across ports, so a missing cookie `Domain` cannot be seen. Login worked locally and did not survive a refresh once deployed |
+| **`Secure` / `SameSite`** | Both depend on HTTPS, which `pnpm dev` does not use |
+| **Build-time configuration** | `pnpm dev` reads the environment at runtime. Anything baked into an image is identical everywhere it runs, and that only becomes visible in a built image — the defect behind conventions §17 |
+| **Deployment machinery** | Migration and seed jobs, infrastructure changes, the promotion path |
+| **Cold start** | Local processes are always warm |
+
+**The rule that follows:** verify locally first, and reserve a deploy for what only a deployed
+artifact can prove. A green local run is not evidence about the four rows above — say which was
+actually checked rather than "it works".
+
