@@ -62,6 +62,16 @@ import { RuntimeConfigProvider } from '@/lib/runtime-config-provider';
 // The page resolves the api base URL from runtime config, which the root layout supplies in
 // the real app. Without the provider getRuntimeConfig() throws deliberately, rather than
 // silently defaulting to localhost and hiding a misconfigured environment.
+/**
+ * The email-only fields live behind a disclosure — open it before reaching for them.
+ *
+ * `fireEvent` rather than `userEvent`: this file runs on fake timers for the debounce tests, and
+ * userEvent waits on real ones, so it simply hangs.
+ */
+function openEmailSection() {
+  fireEvent.click(screen.getByText('auth.signup.emailCta'));
+}
+
 const renderSignup = () =>
   render(
     <RuntimeConfigProvider
@@ -87,18 +97,37 @@ describe('SignupPage', () => {
     vi.useRealTimers();
   });
 
-  it('renders all required fields', () => {
+  it('shows only the shared fields until the email route is chosen', () => {
+    // Both routes need a date of birth, consent and a language. Google supplies the name,
+    // username, email and credential, so showing those to everyone means displaying four fields
+    // that one route never uses.
     renderSignup();
+
+    expect(screen.getByText('auth.signup.dobPlaceholder')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('EN')).toBeInTheDocument();
+    expect(screen.getByText('auth.signup.googleCta')).toBeInTheDocument();
+
+    expect(
+      screen.queryByPlaceholderText('auth.signup.displayNamePlaceholder'),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText('auth.signup.emailPlaceholder')).not.toBeInTheDocument();
+  });
+
+  it('reveals the email-only fields once that route is expanded', () => {
+    renderSignup();
+
+    openEmailSection();
+
     expect(screen.getByPlaceholderText('auth.signup.displayNamePlaceholder')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('auth.signup.usernamePlaceholder')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('auth.signup.emailPlaceholder')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('auth.signup.passwordPlaceholder')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('EN')).toBeInTheDocument();
   });
 
   it('calls checkUsername API after 400ms debounce', async () => {
     mockCheckUsername.mockResolvedValue(true);
     renderSignup();
+    openEmailSection();
 
     const usernameInput = screen.getByPlaceholderText('auth.signup.usernamePlaceholder');
     fireEvent.change(usernameInput, { target: { value: 'new_user' } });
@@ -115,6 +144,7 @@ describe('SignupPage', () => {
   it('shows username available text when check returns true', async () => {
     mockCheckUsername.mockResolvedValue({ available: true });
     renderSignup();
+    openEmailSection();
 
     const usernameInput = screen.getByPlaceholderText('auth.signup.usernamePlaceholder');
     fireEvent.change(usernameInput, { target: { value: 'available_name' } });
@@ -130,6 +160,7 @@ describe('SignupPage', () => {
   it('shows username taken text when check returns false', async () => {
     mockCheckUsername.mockResolvedValue({ available: false, reason: 'taken' });
     renderSignup();
+    openEmailSection();
 
     const usernameInput = screen.getByPlaceholderText('auth.signup.usernamePlaceholder');
     fireEvent.change(usernameInput, { target: { value: 'taken_name' } });
