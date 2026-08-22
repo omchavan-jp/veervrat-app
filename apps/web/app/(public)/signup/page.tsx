@@ -5,6 +5,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -31,6 +32,8 @@ type UsernameStatus = 'idle' | 'checking' | 'available' | 'taken' | 'error';
 
 export default function SignupPage() {
   const t = useTranslations('auth.signup');
+  const searchParams = useSearchParams();
+  const oauthError = searchParams.get('error');
   const signup = useSignup();
   const [usernameStatus, setUsernameStatus] = useState<UsernameStatus>('idle');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -41,6 +44,8 @@ export default function SignupPage() {
     watch,
     control,
     formState: { errors, isSubmitting },
+    trigger,
+    getValues,
   } = useForm<SignupInput>({
     resolver: zodResolver(signupSchema),
     defaultValues: { language: 'EN' },
@@ -89,14 +94,21 @@ export default function SignupPage() {
    * account is only created on return and only for someone who qualifies. Sign-in, on the login
    * page, authenticates existing accounts and never creates one.
    */
-  const onGoogleSignup = handleSubmit(async (data) => {
+  const onGoogleSignup = async () => {
+    // ⚠️ Validates ONLY the fields this path needs. `handleSubmit` would validate the whole form
+    // and refuse, because Google supplies the name, username, email and credential — asking for
+    // them here and then discarding them is exactly the confusion this button should avoid.
+    const ok = await trigger(['dob', 'acceptedTerms']);
+    if (!ok) return;
+
+    const { dob, language } = getValues();
     const pendingId = await authApi.startGoogleSignup({
-      dob: data.dob,
+      dob,
       consents: CURRENT_CONSENTS,
-      language: data.language,
+      language,
     });
     window.location.href = `${getRuntimeConfig().apiBaseUrl}/auth/google?pending=${pendingId}`;
-  });
+  };
 
   const apiError = signup.error instanceof ApiError ? signup.error.message : signup.error?.message;
 
@@ -128,6 +140,23 @@ export default function SignupPage() {
     <AuthShell hero={hero}>
       <h2 className="mb-2 font-display text-[32px] tracking-tight">{t('title')}</h2>
       <p className="mb-8 text-[15px] text-muted">{t('subtitle')}</p>
+
+      {/*
+        Arriving from Google sign-in with an account we do not recognise. Not an error on the
+        person's part — they simply have no account yet — so it reads as an instruction rather
+        than a failure, and it says which fields the Google route actually needs.
+      */}
+      {oauthError === 'SIGNUP_REQUIRED' && (
+        <Alert className="mb-4">
+          <AlertDescription>{t('googleNoAccount')}</AlertDescription>
+        </Alert>
+      )}
+
+      {oauthError === 'UNDERAGE' && (
+        <Alert variant="destructive" className="mb-4 border-destructive/40 bg-destructive/10">
+          <AlertDescription className="text-destructive">{t('ageRequirement')}</AlertDescription>
+        </Alert>
+      )}
 
       {apiError && (
         <Alert variant="destructive" className="mb-4 border-destructive/40 bg-destructive/10">
