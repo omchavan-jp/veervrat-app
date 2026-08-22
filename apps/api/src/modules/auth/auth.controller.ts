@@ -190,6 +190,7 @@ export class AuthController {
   @Throttle({ default: { ttl: 3600000, limit: 5 } })
   async startGoogleSignup(@Body() dto: StartGoogleSignupDto) {
     const { pendingId } = await this.authService.startGoogleSignup(
+      dto.username,
       dto.dob,
       dto.consents,
       dto.language,

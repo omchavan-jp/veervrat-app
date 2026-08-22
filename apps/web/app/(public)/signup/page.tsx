@@ -105,13 +105,15 @@ export default function SignupPage() {
    */
   const onGoogleSignup = async () => {
     // ⚠️ Validates ONLY the fields this path needs. `handleSubmit` would validate the whole form
-    // and refuse, because Google supplies the name, username, email and credential — asking for
-    // them here and then discarding them is exactly the confusion this button should avoid.
-    const ok = await trigger(['dob', 'acceptedTerms']);
+    // and refuse, because Google supplies the display name, email address and the credential.
+    // The username is NOT among them: it is a public identifier, and deriving one from someone's
+    // email address without asking gives them a name they never chose.
+    const ok = await trigger(['username', 'dob', 'acceptedTerms']);
     if (!ok) return;
 
-    const { dob, language } = getValues();
+    const { username, dob, language } = getValues();
     const pendingId = await authApi.startGoogleSignup({
+      username,
       dob,
       consents: CURRENT_CONSENTS,
       language,
@@ -179,6 +181,41 @@ export default function SignupPage() {
         so those live in a disclosure rather than being shown to everyone and then discarded.
       */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <div>
+          <Label htmlFor="signup-username" className={FIELD_LABEL}>
+            {t('username')}
+          </Label>
+          <Input
+            id="signup-username"
+            type="text"
+            variant="underline"
+            placeholder={t('usernamePlaceholder')}
+            aria-invalid={errors.username || usernameStatus === 'taken' ? true : undefined}
+            aria-describedby="signup-username-status"
+            {...register('username')}
+          />
+          <div className="mt-1.5" id="signup-username-status" aria-live="polite">
+            {usernameStatus === 'checking' && (
+              <p className="text-xs text-muted">{t('usernameChecking')}</p>
+            )}
+            {usernameStatus === 'available' && (
+              <p className="text-xs text-success">{t('usernameAvailable')}</p>
+            )}
+            {usernameStatus === 'taken' && (
+              <p className="text-xs text-danger">{t('usernameTaken')}</p>
+            )}
+            {usernameStatus === 'error' && (
+              <p className="text-xs text-danger">{t('usernameError')}</p>
+            )}
+            {usernameStatus === 'idle' && <p className="text-xs text-muted">{t('usernameHint')}</p>}
+          </div>
+          {errors.username && (
+            <p role="alert" className="mt-1 text-xs text-danger">
+              {errors.username.message}
+            </p>
+          )}
+        </div>
+
         <div>
           {/* DatePicker renders a Popover trigger rather than a labelable control, so the
               caption stays a plain Label without htmlFor. */}
@@ -339,43 +376,6 @@ export default function SignupPage() {
                     className="mt-1.5 text-xs text-danger"
                   >
                     {errors.displayName.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="signup-username" className={FIELD_LABEL}>
-                  {t('username')}
-                </Label>
-                <Input
-                  id="signup-username"
-                  type="text"
-                  variant="underline"
-                  placeholder={t('usernamePlaceholder')}
-                  aria-invalid={errors.username || usernameStatus === 'taken' ? true : undefined}
-                  aria-describedby="signup-username-status"
-                  {...register('username')}
-                />
-                <div className="mt-1.5" id="signup-username-status" aria-live="polite">
-                  {usernameStatus === 'checking' && (
-                    <p className="text-xs text-muted">{t('usernameChecking')}</p>
-                  )}
-                  {usernameStatus === 'available' && (
-                    <p className="text-xs text-success">{t('usernameAvailable')}</p>
-                  )}
-                  {usernameStatus === 'taken' && (
-                    <p className="text-xs text-danger">{t('usernameTaken')}</p>
-                  )}
-                  {usernameStatus === 'error' && (
-                    <p className="text-xs text-danger">{t('usernameError')}</p>
-                  )}
-                  {usernameStatus === 'idle' && (
-                    <p className="text-xs text-muted">{t('usernameHint')}</p>
-                  )}
-                </div>
-                {errors.username && (
-                  <p role="alert" className="mt-1 text-xs text-danger">
-                    {errors.username.message}
                   </p>
                 )}
               </div>

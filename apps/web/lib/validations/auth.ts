@@ -32,6 +32,18 @@ export const signupSchema = z.object({
   acceptedTerms: z.literal(true, { message: 'Please accept the terms to continue' }),
 });
 
+/**
+ * What the Google route needs. Google supplies the display name, email address and the
+ * credential; everything here is the person's own choice — including the username, so their
+ * public identifier is not silently derived from their email address.
+ */
+export const googleSignupSchema = signupSchema.pick({
+  username: true,
+  dob: true,
+  acceptedTerms: true,
+  language: true,
+});
+
 export const forgotPasswordSchema = z.object({
   email: z.email(),
 });

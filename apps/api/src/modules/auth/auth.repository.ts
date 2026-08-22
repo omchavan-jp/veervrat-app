@@ -83,6 +83,7 @@ export class AuthRepository {
   // Holds date of birth and consent across the OAuth round trip so they never travel in a URL.
 
   async createPendingSignup(params: {
+    username: string;
     dob: Date;
     consents: { documentKey: string; version: number }[];
     language?: 'EN' | 'MR';
@@ -90,6 +91,7 @@ export class AuthRepository {
   }) {
     return this.prisma.pendingSignup.create({
       data: {
+        username: params.username,
         dob: params.dob,
         consents: params.consents,
         language: params.language ?? 'EN',
