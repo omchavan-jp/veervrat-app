@@ -236,7 +236,10 @@
       "heroDevanagari": "प्रमाणं हि प्रथमं पदम्।",
       "heroGloss": "Proof is the first step.",
       "genericError": "Verification failed.",
-      "networkError": "Could not reach the server. Please try again."
+      "networkError": "Could not reach the server. Please try again.",
+      "resendPrompt": "If your link has expired, we can send you a new one.",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@example.com"
     },
     "errors": {
       "invalidCredentials": "Invalid email or password.",
@@ -249,7 +252,9 @@
       "resendVerificationSent": "If that address needs verifying, a new link is on its way. Please check your inbox.",
       "resendVerificationSending": "Sending…",
       "rateLimitExceededIn": "Too many attempts. Please try again in {seconds} seconds.",
-      "rateLimitExceededInMinutes": "Too many attempts. Please try again in about {minutes} minutes."
+      "rateLimitExceededInMinutes": "Too many attempts. Please try again in about {minutes} minutes.",
+      "resendVerificationWait": "You can request another in {seconds}s.",
+      "resendVerificationLimited": "Too many requests from this network. Please try again in about {minutes} minutes."
     },
     "linkAccount": {
       "title": "Link your Google account",

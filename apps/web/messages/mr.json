@@ -236,7 +236,10 @@
       "heroDevanagari": "प्रमाणं हि प्रथमं पदम्।",
       "heroGloss": "प्रमाण हीच पहिली पायरी.",
       "genericError": "पडताळणी अयशस्वी झाली.",
-      "networkError": "सर्व्हरशी संपर्क होऊ शकला नाही. पुन्हा प्रयत्न करा."
+      "networkError": "सर्व्हरशी संपर्क होऊ शकला नाही. पुन्हा प्रयत्न करा.",
+      "resendPrompt": "तुमची लिंक कालबाह्य झाली असल्यास, आम्ही नवीन पाठवू शकतो.",
+      "emailLabel": "ईमेल",
+      "emailPlaceholder": "you@example.com"
     },
     "errors": {
       "invalidCredentials": "अवैध ईमेल किंवा पासवर्ड.",
@@ -249,7 +252,9 @@
       "resendVerificationSent": "त्या पत्त्याचे सत्यापन आवश्यक असल्यास, नवीन दुवा पाठवला आहे. कृपया तुमचा इनबॉक्स तपासा.",
       "resendVerificationSending": "पाठवत आहे…",
       "rateLimitExceededIn": "खूप जास्त प्रयत्न. कृपया {seconds} सेकंदांनी पुन्हा प्रयत्न करा.",
-      "rateLimitExceededInMinutes": "खूप जास्त प्रयत्न. कृपया सुमारे {minutes} मिनिटांनी पुन्हा प्रयत्न करा."
+      "rateLimitExceededInMinutes": "खूप जास्त प्रयत्न. कृपया सुमारे {minutes} मिनिटांनी पुन्हा प्रयत्न करा.",
+      "resendVerificationWait": "आणखी एक विनंती {seconds} सेकंदांनी करता येईल.",
+      "resendVerificationLimited": "या नेटवर्कवरून खूप जास्त विनंत्या. कृपया सुमारे {minutes} मिनिटांनी पुन्हा प्रयत्न करा."
     },
     "linkAccount": {
       "title": "तुमचे Google खाते जोडा",
