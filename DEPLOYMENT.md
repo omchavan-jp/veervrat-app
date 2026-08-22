@@ -686,6 +686,58 @@ infrastructure.
 
 ---
 
+## Verifying rate limiting actually works
+
+**Do this after any change to `trust_proxy_hops`, and once per environment after a platform
+move.** Rate limiting is the one control in this system that fails completely silently: every
+unit test passes, CI is green, the config looks right, and nothing is enforced. That is not
+hypothetical — it was the state of both UAT and prod until #161, where seven requests against a
+five-per-hour limit were all accepted.
+
+**A passing test suite is not evidence here.** The defect was that the setting was never applied
+to the running app, which no unit test can see. Only a measurement against a deployed
+environment counts.
+
+```bash
+B=https://api.uat.veervrat.jnanaprabodhini.org/api/v1
+C=probe-$RANDOM
+
+# forgot-password is limited to 5/hour per client. The 6th must be refused.
+for i in $(seq 1 6); do
+  curl -s -X POST "$B/auth/forgot-password" -H 'Content-Type: application/json' \
+    -H "Cookie: csrf-token=$C" -H "X-CSRF-Token: $C" \
+    -d '{"email":"nobody-probe@example.com"}' | head -c 80; echo
+done
+```
+
+Expected — the first five accepted, the sixth refused:
+
+```
+{"data":{"status":"sent"}}          ×5
+{"statusCode":429,"error":"RATE_LIMITED","message":"Too many requests. Try again in ... seconds."}
+```
+
+`"status":"sent"` six times means **throttling is off**, whatever the configuration says. The
+address is deliberately one that does not exist: the endpoint answers identically either way, so
+no mail is sent.
+
+### Confirming it keys on the client and not the proxy
+
+The check above proves counting works. It does **not** prove the counter is per-client — if
+`req.ip` were the ingress address, every caller on the internet would share one bucket and the
+sixth request would still be refused. Distinguish them one of two ways:
+
+- **From a second network** (a phone off wifi): one request must be accepted while the first
+  client is still blocked.
+- **From the audit log**: sign in as an admin and open a recent `auth.login_failure` row. Its
+  `ipAddress` should be your real public address (`curl https://api.ipify.org`), not a `10.x`
+  or `100.x` internal one. An internal address means `trust_proxy_hops` is too low.
+
+If a client's own `X-Forwarded-For` changes which bucket it lands in, the value is too **high** —
+the client is choosing its own key, which is worse than no limiting at all. Lower it.
+
+---
+
 ## Verifying a deploy
 
 ```bash

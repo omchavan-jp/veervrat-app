@@ -286,6 +286,58 @@ describe('Auth — integration', () => {
     });
   });
 
+  // ─── Client identification behind a proxy ──────────────────────────────────
+
+  describe('Rate limiting keys on the real client, not the proxy (#161)', () => {
+    // Every rate limit keys on `req.ip`. Behind Container Apps' ingress that is the proxy unless
+    // Express is told how many hops to see through — and it was not, so seven requests against a
+    // five-per-hour limit were all accepted in both deployed environments. Unit-testing
+    // `resolveTrustProxyHops` would not have caught that: the value was never applied. These go
+    // through the real app, built by the real `configureApp`, and assert the observable
+    // consequence.
+    const forgot = (xff: string) => {
+      const csrfToken = 'csrf-xff';
+      return getRequest()
+        .post('/api/v1/auth/forgot-password')
+        .set('Cookie', `csrf-token=${csrfToken}`)
+        .set('X-CSRF-Token', csrfToken)
+        .set('X-Forwarded-For', xff)
+        .send({ email: 'nobody-xff@test.com' });
+    };
+
+    // Note on which of these actually discriminate, verified by removing the fix and re-running:
+    // only 'does not let one client exhaust the limit for everyone else' fails without it. The
+    // other two pass either way, because with no trust-proxy setting every caller shares one
+    // bucket and still gets a 429. They are kept because they pin down the *wrong* fixes: the
+    // spoofing test is what fails if someone changes this to `trust proxy: true`, which would
+    // make the client's own header the key.
+    it('counts one client against its own limit', async () => {
+      for (let i = 0; i < 5; i++) expect((await forgot('203.0.113.9')).status).toBe(200);
+
+      const blocked = await forgot('203.0.113.9');
+      expect(blocked.status).toBe(429);
+      expect(blocked.body.error).toBe('RATE_LIMITED');
+    });
+
+    it('does not let one client exhaust the limit for everyone else', async () => {
+      for (let i = 0; i < 6; i++) await forgot('203.0.113.9');
+
+      // A different caller, unaffected. If `req.ip` were the proxy address, every client on the
+      // internet would share one bucket and this would already be 429.
+      expect((await forgot('198.51.100.7')).status).toBe(200);
+    });
+
+    it('ignores an X-Forwarded-For entry the client wrote itself', async () => {
+      // The ingress appends the address it observed, so anything the caller puts in the header
+      // sits to its left and must never become the key. Otherwise the limiter is trivially
+      // evaded by sending a fresh value each request.
+      for (let i = 0; i < 6; i++) await forgot('203.0.113.9');
+
+      const spoofed = await forgot('9.9.9.9, 203.0.113.9');
+      expect(spoofed.status).toBe(429);
+    });
+  });
+
   // ─── Rate limiting ─────────────────────────────────────────────────────────
 
   describe('Rate limiting', () => {

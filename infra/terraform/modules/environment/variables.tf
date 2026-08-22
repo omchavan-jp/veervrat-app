@@ -284,3 +284,18 @@ variable "wipe_users_confirm" {
   type        = string
   default     = ""
 }
+
+# Reverse-proxy hops between the internet and the API. See the TRUST_PROXY_HOPS env block in
+# container-apps.tf. 1 = trust the Container Apps ingress only, which makes `req.ip` the address
+# the ingress observed. Never express this as a boolean: `trust proxy: true` would let a client
+# choose its own rate-limit key by sending X-Forwarded-For.
+variable "trust_proxy_hops" {
+  description = "Reverse-proxy hops in front of the API; drives req.ip and every rate limit."
+  type        = number
+  default     = 1
+
+  validation {
+    condition     = var.trust_proxy_hops >= 1 && floor(var.trust_proxy_hops) == var.trust_proxy_hops
+    error_message = "trust_proxy_hops must be a positive integer."
+  }
+}
