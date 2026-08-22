@@ -9,6 +9,9 @@ import { useSearchParams } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Collapsible, CollapsibleTrigger, CollapsiblePanel } from '@/components/ui/collapsible';
+import { Separator } from '@/components/ui/separator';
+import { ChevronDown } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Fieldset, FieldsetLegend } from '@/components/ui/field';
@@ -32,6 +35,9 @@ type UsernameStatus = 'idle' | 'checking' | 'available' | 'taken' | 'error';
 
 export default function SignupPage() {
   const t = useTranslations('auth.signup');
+  // Collapsed by default on both entry paths — consistency beats a special case, and the
+  // Google route needs nothing from inside it.
+  const [emailOpen, setEmailOpen] = useState(false);
   const searchParams = useSearchParams();
   const oauthError = searchParams.get('error');
   const signup = useSignup();
@@ -164,103 +170,12 @@ export default function SignupPage() {
         </Alert>
       )}
 
+      {/*
+        Restructured so the page is honest about the two paths. The fields below are shared —
+        both routes need them. Google supplies name, username, email and the credential itself,
+        so those live in a disclosure rather than being shown to everyone and then discarded.
+      */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <div>
-          <Label htmlFor="signup-displayName" className={FIELD_LABEL}>
-            {t('displayName')}
-          </Label>
-          <Input
-            id="signup-displayName"
-            type="text"
-            variant="underline"
-            placeholder={t('displayNamePlaceholder')}
-            aria-invalid={errors.displayName ? true : undefined}
-            aria-describedby={errors.displayName ? 'signup-displayName-error' : undefined}
-            {...register('displayName')}
-          />
-          {errors.displayName && (
-            <p id="signup-displayName-error" role="alert" className="mt-1.5 text-xs text-danger">
-              {errors.displayName.message}
-            </p>
-          )}
-        </div>
-
-        <div>
-          <Label htmlFor="signup-username" className={FIELD_LABEL}>
-            {t('username')}
-          </Label>
-          <Input
-            id="signup-username"
-            type="text"
-            variant="underline"
-            placeholder={t('usernamePlaceholder')}
-            aria-invalid={errors.username || usernameStatus === 'taken' ? true : undefined}
-            aria-describedby="signup-username-status"
-            {...register('username')}
-          />
-          <div className="mt-1.5" id="signup-username-status" aria-live="polite">
-            {usernameStatus === 'checking' && (
-              <p className="text-xs text-muted">{t('usernameChecking')}</p>
-            )}
-            {usernameStatus === 'available' && (
-              <p className="text-xs text-success">{t('usernameAvailable')}</p>
-            )}
-            {usernameStatus === 'taken' && (
-              <p className="text-xs text-danger">{t('usernameTaken')}</p>
-            )}
-            {usernameStatus === 'error' && (
-              <p className="text-xs text-danger">{t('usernameError')}</p>
-            )}
-            {usernameStatus === 'idle' && <p className="text-xs text-muted">{t('usernameHint')}</p>}
-          </div>
-          {errors.username && (
-            <p role="alert" className="mt-1 text-xs text-danger">
-              {errors.username.message}
-            </p>
-          )}
-        </div>
-
-        <div>
-          <Label htmlFor="signup-email" className={FIELD_LABEL}>
-            {t('email')}
-          </Label>
-          <Input
-            id="signup-email"
-            type="email"
-            variant="underline"
-            placeholder={t('emailPlaceholder')}
-            aria-invalid={errors.email ? true : undefined}
-            aria-describedby={errors.email ? 'signup-email-error' : undefined}
-            {...register('email')}
-          />
-          {errors.email && (
-            <p id="signup-email-error" role="alert" className="mt-1.5 text-xs text-danger">
-              {errors.email.message}
-            </p>
-          )}
-        </div>
-
-        <div>
-          <Label htmlFor="signup-password" className={FIELD_LABEL}>
-            {t('password')}
-          </Label>
-          <Input
-            id="signup-password"
-            type="password"
-            variant="underline"
-            placeholder={t('passwordPlaceholder')}
-            aria-invalid={errors.password ? true : undefined}
-            aria-describedby={errors.password ? 'signup-password-error' : undefined}
-            {...register('password')}
-          />
-          <PasswordStrength password={passwordValue} />
-          {errors.password && (
-            <p id="signup-password-error" role="alert" className="mt-1 text-xs text-danger">
-              {errors.password.message}
-            </p>
-          )}
-        </div>
-
         <div>
           {/* DatePicker renders a Popover trigger rather than a labelable control, so the
               caption stays a plain Label without htmlFor. */}
@@ -338,42 +253,156 @@ export default function SignupPage() {
             </p>
           )}
         </Fieldset>
-
-        <Button
-          type="submit"
-          size="lg"
-          loading={signup.isPending}
-          className="min-h-12 w-full text-[15px]"
-        >
-          {signup.isPending ? t('submitting') : t('submit')}
-        </Button>
       </form>
 
-      <div className="my-5 flex items-center gap-3">
-        <span className="h-px flex-1 bg-border" />
-        <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">
-          {t('orDivider')}
-        </span>
-        <span className="h-px flex-1 bg-border" />
-      </div>
+      <div className="mt-6 space-y-3">
+        <Button
+          variant="outline"
+          size="lg"
+          className="min-h-12 w-full text-[15px]"
+          onClick={onGoogleSignup}
+          disabled={isSubmitting}
+        >
+          <GoogleIcon className="h-[18px] w-[18px]" />
+          {t('googleCta')}
+        </Button>
+        <p className="text-center text-xs text-muted">{t('googleSignupNeedsDetails')}</p>
 
-      {/*
-        Google SIGNUP — a button, not a link, because the date of birth and consent must be
-        collected and validated before the browser leaves for Google. Linking straight to the
-        provider is what allowed an account to be created for someone whose age was never
-        checked. The login page keeps the plain link, which signs in and never creates.
-      */}
-      <Button
-        variant="outline"
-        size="lg"
-        className="min-h-12 w-full text-[15px]"
-        onClick={onGoogleSignup}
-        disabled={isSubmitting}
-      >
-        <GoogleIcon className="h-[18px] w-[18px]" />
-        {t('googleCta')}
-      </Button>
-      <p className="mt-2 text-center text-xs text-muted">{t('googleSignupNeedsDetails')}</p>
+        <div className="flex items-center gap-3">
+          <Separator className="flex-1" />
+          <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
+            {t('or')}
+          </span>
+          <Separator className="flex-1" />
+        </div>
+
+        {/* Collapsed by default, and consistently so. Someone arriving from Google sign-in wants
+            the Google route; someone who wants email is one click away and sees only then the
+            fields that route actually needs. */}
+        <Collapsible open={emailOpen} onOpenChange={setEmailOpen}>
+          <CollapsibleTrigger className="min-h-11 rounded-lg border border-border px-4 text-[15px] hover:border-fg/30">
+            {t('emailCta')}
+            <ChevronDown
+              aria-hidden="true"
+              className={`h-4 w-4 transition-transform ${emailOpen ? 'rotate-180' : ''}`}
+            />
+          </CollapsibleTrigger>
+          <CollapsiblePanel>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 pt-6">
+              <div>
+                <Label htmlFor="signup-displayName" className={FIELD_LABEL}>
+                  {t('displayName')}
+                </Label>
+                <Input
+                  id="signup-displayName"
+                  type="text"
+                  variant="underline"
+                  placeholder={t('displayNamePlaceholder')}
+                  aria-invalid={errors.displayName ? true : undefined}
+                  aria-describedby={errors.displayName ? 'signup-displayName-error' : undefined}
+                  {...register('displayName')}
+                />
+                {errors.displayName && (
+                  <p
+                    id="signup-displayName-error"
+                    role="alert"
+                    className="mt-1.5 text-xs text-danger"
+                  >
+                    {errors.displayName.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="signup-username" className={FIELD_LABEL}>
+                  {t('username')}
+                </Label>
+                <Input
+                  id="signup-username"
+                  type="text"
+                  variant="underline"
+                  placeholder={t('usernamePlaceholder')}
+                  aria-invalid={errors.username || usernameStatus === 'taken' ? true : undefined}
+                  aria-describedby="signup-username-status"
+                  {...register('username')}
+                />
+                <div className="mt-1.5" id="signup-username-status" aria-live="polite">
+                  {usernameStatus === 'checking' && (
+                    <p className="text-xs text-muted">{t('usernameChecking')}</p>
+                  )}
+                  {usernameStatus === 'available' && (
+                    <p className="text-xs text-success">{t('usernameAvailable')}</p>
+                  )}
+                  {usernameStatus === 'taken' && (
+                    <p className="text-xs text-danger">{t('usernameTaken')}</p>
+                  )}
+                  {usernameStatus === 'error' && (
+                    <p className="text-xs text-danger">{t('usernameError')}</p>
+                  )}
+                  {usernameStatus === 'idle' && (
+                    <p className="text-xs text-muted">{t('usernameHint')}</p>
+                  )}
+                </div>
+                {errors.username && (
+                  <p role="alert" className="mt-1 text-xs text-danger">
+                    {errors.username.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="signup-email" className={FIELD_LABEL}>
+                  {t('email')}
+                </Label>
+                <Input
+                  id="signup-email"
+                  type="email"
+                  variant="underline"
+                  placeholder={t('emailPlaceholder')}
+                  aria-invalid={errors.email ? true : undefined}
+                  aria-describedby={errors.email ? 'signup-email-error' : undefined}
+                  {...register('email')}
+                />
+                {errors.email && (
+                  <p id="signup-email-error" role="alert" className="mt-1.5 text-xs text-danger">
+                    {errors.email.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="signup-password" className={FIELD_LABEL}>
+                  {t('password')}
+                </Label>
+                <Input
+                  id="signup-password"
+                  type="password"
+                  variant="underline"
+                  placeholder={t('passwordPlaceholder')}
+                  aria-invalid={errors.password ? true : undefined}
+                  aria-describedby={errors.password ? 'signup-password-error' : undefined}
+                  {...register('password')}
+                />
+                <PasswordStrength password={passwordValue} />
+                {errors.password && (
+                  <p id="signup-password-error" role="alert" className="mt-1 text-xs text-danger">
+                    {errors.password.message}
+                  </p>
+                )}
+              </div>
+
+              <Button
+                type="submit"
+                size="lg"
+                loading={signup.isPending}
+                className="min-h-12 w-full text-[15px]"
+              >
+                {signup.isPending ? t('submitting') : t('submit')}
+              </Button>
+            </form>
+          </CollapsiblePanel>
+        </Collapsible>
+      </div>
 
       <p className="mt-6 text-center text-sm text-muted">
         {t('hasAccount')}{' '}

@@ -165,7 +165,9 @@
       "ageRequirement": "Veervrat is for adults aged 18 and over.",
       "acceptTerms": "I accept the Terms of Use and Privacy Policy.",
       "googleSignupNeedsDetails": "Fill in your date of birth and accept the terms above before continuing with Google.",
-      "googleNoAccount": "That Google account isn't registered yet. Add your date of birth and accept the terms below, then choose Continue with Google."
+      "googleNoAccount": "That Google account isn't registered yet. Add your date of birth and accept the terms below, then choose Continue with Google.",
+      "emailCta": "Sign up with email instead",
+      "or": "or"
     },
     "forgotPassword": {
       "title": "Reset your password",
