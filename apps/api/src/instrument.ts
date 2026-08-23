@@ -10,9 +10,12 @@ if (config.enabled) {
     dsn: config.dsn,
     environment: config.environment,
     release: config.release,
-    // Every error, a tenth of the traces. Errors are the point; traces are a sampling problem.
+    // Every error.
     sampleRate: 1.0,
-    tracesSampleRate: 0.1,
+    // No traces. The Sentry projects have Tracing switched off, so transactions would be sent
+    // and discarded — spending a 5k/month free-tier quota on data nobody can read. Turn this up
+    // only together with the product toggle, or it silently buys nothing.
+    tracesSampleRate: 0,
     // Never ship PII to the error tracker. `sendDefaultPii` covers what the SDK attaches;
     // `beforeSend` covers what an error message carries in its own text, which is the part
     // that actually leaves the country.
