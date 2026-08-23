@@ -482,6 +482,42 @@ under JP's identity at all (vs a standalone `veervrat.com`) is **institutional �
 | **Google Cloud** | OAuth client (Google sign-in) | live — project `veervrat`, owned by the **jnanaprabodhini.org org**, see §9 |
 | ~~**Resend**~~ | transactional email | **not used** — D9 (2026-08-17) moved email to JP IT's SMTP relay; no account was ever created |
 | **Railway** | previous host | **removed** (trial expired) — app currently **down** |
+| **Sentry** | error tracking (app 5xx) | live from 2026-08-23 — org account `veervrat@jnanaprabodhini.org`, team `#jnana-prabodhini`, **Developer (free) tier**. Two projects: `veervrat-uat`, `veervrat-prod`. ⚠️ **Data stored in the EU** — see below |
+
+### Sentry — the one place data leaves India
+
+Hosted Sentry offers **EU or US only; there is no India region**. EU chosen (2026-08-23): GDPR
+protections apply by default, and US providers are reachable under the CLOUD Act. DSNs end
+`ingest.de.sentry.io`, which is how you confirm the region at a glance.
+
+**This makes a published sentence untrue until the policy is amended.** The live privacy policy
+says *"Your data is stored in India, on Microsoft Azure's Central India region."* Diagnostics no
+longer are. Tracked as part of the outstanding policy version bump (retained Google sign-in link,
+stored Google profile photo, cross-border diagnostics, consent re-prompt — one bump, four items).
+
+Lawful regardless: DPDP 2023 permits cross-border transfer except to countries the government
+notifies as restricted, and none have been notified.
+
+**What crosses the border:** 5xx exceptions only, with `sendDefaultPii: false` (no cookies,
+headers, IP addresses or user records) and a `beforeSend` scrubber that redacts email addresses
+and long opaque tokens from message text.
+
+**Only Error monitoring is enabled.** Logging, Tracing, Profiling and Application Metrics are all
+switched off in both projects — the free tier is 5,000 events a month, and logs already go to
+stdout. `tracesSampleRate` is 0 to match; raising it without also enabling the product would
+send transactions that are received and discarded.
+
+**Exit, if localisation ever becomes a hard requirement:** self-hosted GlitchTip in Central India
+speaks the same protocol, so it is a change to `SENTRY_DSN` and nothing else. Not chosen now —
+it needs a web container, a worker, Postgres and Redis, which is real cost and real maintenance.
+
+**Where the DSN lives:** `sentry-dsn` in each environment's Key Vault, set out of band (never in
+Terraform state, never in git). Local copies at `~/.secrets/veervrat/sentry-dsn-{uat,prod}`
+(mode 600).
+
+**Alerts** go to `veervrat@jnanaprabodhini.org` by email. ⚠️ A shared mailbox nobody reads is an
+alert channel that does not exist — confirm someone watches it, or add a personal address as a
+team member.
 
 Backup on disk: `backups/veervrat-neon-20260809T184831Z.dump` (2026-08-09, 50 tables).
 
