@@ -20,10 +20,11 @@
     "lint:fix": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "vitest run",
     "test:unit": "vitest run --project unit",
-    "test:integration": "vitest run --project integration",
+    "test:integration": "node scripts/migrate-test-db.mjs && vitest run --project integration",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "seed": "ts-node --transpile-only src/database/seed.ts"
+    "seed": "ts-node --transpile-only src/database/seed.ts",
+    "db:test:migrate": "node scripts/migrate-test-db.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1065.0",
