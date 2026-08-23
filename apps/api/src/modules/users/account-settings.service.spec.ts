@@ -32,6 +32,7 @@ function makeService(parts: {
     }),
     anonymise: vi.fn().mockResolvedValue({ id: 'u1', anonymisedAt: new Date() }),
     cancelPendingInvitations: vi.fn().mockResolvedValue({ count: 0 }),
+    clearStoredPasswords: vi.fn().mockResolvedValue({ count: 1 }),
     setTourReset: vi.fn().mockResolvedValue({
       id: 'u1',
       email: 'u@x.com',
@@ -91,6 +92,8 @@ describe('UsersService — anonymiseAccount', () => {
       (s['authService'] as Record<string, ReturnType<typeof vi.fn>>)['forceLogout'],
     ).toHaveBeenCalled();
     expect(repo['cancelPendingInvitations']).toHaveBeenCalled();
+    // Credential material has no purpose once the account is gone (#140).
+    expect(repo['clearStoredPasswords']).toHaveBeenCalled();
     expect(
       (s['usersIndex'] as Record<string, ReturnType<typeof vi.fn>>)['remove'],
     ).toHaveBeenCalled();

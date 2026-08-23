@@ -29,7 +29,7 @@ describes.
 | `displayName`, `username` | `username` is public-facing and appears in profile URLs |
 | `avatarUrl` | reference to a file in object storage. Uploads are built but object storage is not yet provisioned, so no files exist |
 | `gender` | Optional. Shown on the profile when provided; leaving it blank is the opt-out |
-| `dob` | **Required**, and validated as 18+ at account creation. Never displayed and never returned by the public profile API — it is an identity-verification token |
+| `dob` | **Required at creation** and validated as 18+. Never displayed and never returned by the public profile API — it is an identity-verification token. Nullable in the database only so anonymisation can clear it (#140); the creation path still always supplies one |
 | `language` | preference, not identifying |
 
 ### Consent — `user_consents`
@@ -83,21 +83,32 @@ identity with a deterministic pseudonym, soft-deletes, suspends, kills sessions,
 invitations, and drops the user from the search index. Content is **retained** under the
 pseudonym — a deliberate decision (`spec/06`), not an oversight.
 
-**Cleared:** `displayName`, `email`, `username`, `avatarUrl`.
+**Cleared:** `displayName`, `email`, `username`, `avatarUrl`, `dob`, `gender`, `pendingEmail`,
+`auth_accounts.passwordHash`.
 
-**Retained, and worth a decision:**
+`dob`, `gender`, `pendingEmail` and the password hash were added in #140. The decision rule
+applied was that a field is cleared unless a purpose survives the account. `dob` existed to run
+the 18+ check at creation; `gender` is displayed and nothing else; `pendingEmail` held a real
+deliverable address mid-change, which made the published sentence "we remove your email address"
+untrue for anyone deleting during an email change; a password hash is credential material with
+nothing left to authenticate.
 
-| Retained | Why it matters |
+**Retained deliberately, each with a reason:**
+
+| Retained | Reason |
 |---|---|
-| `dob`, `gender` | ⚠️ Not cleared. `dob` narrows identity sharply, especially combined with retained content |
-| `auth_accounts.providerAccountId` | ⚠️ The **Google identity survives**. The account is pseudonymous in our database and still linked to a real Google user |
-| `auth_accounts.passwordHash` | Not cleared |
-| `sessions` / `audit_events` IP address + user agent | Retained indefinitely; no process removes them (issue #77) |
-| avatar **file** in object storage | The reference is cleared; the stored file is not deleted. No effect while object storage is unprovisioned, and a genuine gap once it is |
+| `auth_accounts.providerAccountId` | The **Google identity link survives**, by choice: it is what stops an account someone deleted being silently recreated and reattached. Must be disclosed in the privacy policy — see below |
+| Content under the pseudonym | `spec/06`. A vratmitra's record of their guidance should not develop holes |
+| `audit_events` | A security record legitimately outlives the account it describes |
+| `sessions` IP address + user agent | Now swept nightly once expired (#77). Live sessions end at anonymisation |
+| avatar **file** in object storage | The reference is cleared; no stored file is ever deleted. Currently moot in a stronger sense than it looks — **nothing sets `avatarUrl` at all**, so no avatar files exist. Deletion must land together with avatar upload, and is a blocking criterion on #139 |
 
-None of these is necessarily wrong — audit trails legitimately outlive accounts. But they are
-currently **unstated**, and "we anonymise your account" is a claim a privacy policy will make.
-It should be true in the specific sense the policy words it.
+### Still outstanding
+
+The published privacy policy's retention line — *"Your account and its content: until you delete
+your account"* — does not yet mention the retained Google link. The words must be corrected to
+match, which needs a document version bump, and a version bump is what re-prompts every user for
+consent (deferred item 3.3, not yet built). Tracked as the remaining half of #140.
 
 ---
 

@@ -128,26 +128,6 @@ export class AdminUsersRepository {
     });
   }
 
-  anonymise(
-    userId: string,
-    pseudonym: { displayName: string; email: string; username: string },
-    at: Date,
-  ) {
-    return this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        displayName: pseudonym.displayName,
-        email: pseudonym.email,
-        username: pseudonym.username,
-        avatarUrl: null,
-        anonymisedAt: at,
-        deletedAt: at,
-        suspendedAt: at,
-      },
-      select: { id: true, anonymisedAt: true, deletedAt: true },
-    });
-  }
-
   cancelPendingInvitations(inviterId: string) {
     return this.prisma.invitation.updateMany({
       where: { inviterId, status: InvitationStatus.PENDING },

@@ -196,11 +196,38 @@ export class UsersRepository {
         email: pseudonym.email,
         username: pseudonym.username,
         avatarUrl: null,
+        // Cleared because no purpose for them survives the account (#140).
+        //
+        // `dob` existed to run the 18+ check at creation; a date of birth narrows identity
+        // sharply, and keeping one next to content deliberately retained under a pseudonym is
+        // the opposite of anonymising. `gender` is displayed and nothing else.
+        //
+        // `pendingEmail` matters most: it holds a real, deliverable address mid-change, so
+        // leaving it made "we remove your email address" — words already published in the
+        // privacy policy — untrue for anyone who deleted during an email change.
+        dob: null,
+        gender: null,
+        pendingEmail: null,
         anonymisedAt: at,
         deletedAt: at,
         suspendedAt: at,
       },
       select: { id: true, anonymisedAt: true },
+    });
+  }
+
+  /**
+   * Clears the stored password of an anonymised account.
+   *
+   * No purpose survives the account, and it is credential material — scrubbing a date of birth
+   * while leaving a password hash behind would be incoherent. The row itself stays: the
+   * provider link is retained deliberately (#140), so that an account someone deleted cannot be
+   * silently recreated and reattached, and dropping the row would lose that.
+   */
+  clearStoredPasswords(userId: string) {
+    return this.prisma.authAccount.updateMany({
+      where: { userId },
+      data: { passwordHash: null },
     });
   }
 
