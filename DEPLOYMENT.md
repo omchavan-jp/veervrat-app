@@ -726,6 +726,60 @@ than a genuinely clean database.
 
 ---
 
+## Setting a secret out of band — a restart is not enough
+
+Several secrets are created by Terraform with a placeholder and their real value set afterwards:
+`smtp-password`, `google-client-secret`, `sentry-dsn`. Setting the value in Key Vault is only
+half the job.
+
+**Container Apps caches Key Vault secret references.** Restarting a revision reuses the cached
+value; only a **new revision** re-resolves it. (It also refreshes on its own roughly every 30
+minutes, which is worse than it sounds — it means a change appears to have failed, and then
+silently starts working later, so whoever tested it concluded the wrong thing.)
+
+Observed on 2026-08-23: the DSN was set, the revision restarted, `/ready` returned 200, and the
+app still logged `Error tracking DISABLED … placeholder-set-out-of-b`. Nothing was broken; the
+container simply never saw the new value.
+
+```bash
+ENV=uat
+NAME=veervrat-$ENV-api
+
+# 1. Set the value from a file, so it never appears in shell history or the process list.
+az keyvault secret set --vault-name veervrat-$ENV-kv --name sentry-dsn \
+  --file ~/.secrets/veervrat/sentry-dsn-$ENV --encoding utf-8 -o none
+
+# 2. Force a NEW revision. `revision restart` does not do this, and `revision copy` with no
+#    changes is a no-op in Single revision mode.
+az containerapp update -n $NAME -g veervrat-$ENV --revision-suffix sec$(date +%H%M) -o none
+```
+
+**Then verify by the app's own output, never by the configuration looking right:**
+
+```bash
+WS=$(az monitor log-analytics workspace show -g veervrat-$ENV -n veervrat-$ENV-logs --query customerId -o tsv)
+az monitor log-analytics query -w "$WS" --analytics-query \
+  "ContainerAppConsoleLogs_CL | where TimeGenerated > ago(15m) | where ContainerName_s == 'api' | where Log_s contains 'Error tracking' | project TimeGenerated, Log_s | order by TimeGenerated desc | take 2" -o table
+```
+
+`Error tracking enabled for "uat" at release <sha>` means it took. `DISABLED` means the revision
+is still on the old value — repeat step 2.
+
+⚠️ **Check nothing was dropped.** `az containerapp update` patches rather than replaces for
+*apps*, unlike jobs (§21), but confirm rather than assume — compare the env-var count, image and
+secret count before and after:
+
+```bash
+az containerapp show -n $NAME -g veervrat-$ENV \
+  --query "{envs:length(properties.template.containers[0].env),image:properties.template.containers[0].image,secrets:length(properties.configuration.secrets)}" -o table
+```
+
+**The suffix is not tracked by Terraform** (`revision_mode = "Single"`, no `revision_suffix`), so
+this creates no drift — the next CD deploy makes its own revision and re-resolves secrets anyway.
+Which is the other way to do this: push any commit and let CD do it.
+
+---
+
 ## Verifying rate limiting actually works
 
 **Do this after any change to `trust_proxy_hops`, and once per environment after a platform
