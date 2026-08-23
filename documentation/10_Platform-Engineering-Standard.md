@@ -25,7 +25,7 @@ This document is the canonical reference for all library, tooling, and architect
 | Background jobs (v2 path) | BullMQ | `bullmq` | Upgrade path when horizontal scaling is needed. Redis-backed. |
 | Email transport | **SMTP (JP IT relay)** | `nodemailer` ✅ | Replaced Resend per D9, shipped 2026-08-17; `resend` removed. Port 587 STARTTLS: `secure: false, requireTLS: true`. Console logging in local dev. |
 | Email templates | React Email | `@react-email/components`, `react`, `react-dom` | JSX-based, type-safe, renders HTML + plain text, bilingual support. |
-| Error tracking | **Sentry** (free tier) | `@sentry/nextjs`, `@sentry/node` | D8 — GlitchTip dropped 2026-08. SDK already installed; still reads `GLITCHTIP_DSN`, rename pending (issue #79) |
+| Error tracking | **Sentry** (free tier) | `@sentry/node` (api). `@sentry/nextjs` **not installed** — the frontend is not wired yet | D8 — GlitchTip dropped 2026-08. Reads `SENTRY_DSN` from Key Vault; a DSN value must still be set per environment (issue #79) |
 | Platform telemetry | **Azure Application Insights** | *not yet installed* | D8 — answers "is the system healthy", which Sentry does not. No SDK and no Terraform resource yet (issue #79) |
 | Object storage client | AWS SDK S3 compatible | `@aws-sdk/client-s3` | Works with MinIO (S3-compatible API). Provider-agnostic. |
 | HEIC→JPEG conversion | heic-convert | `heic-convert` | Converts iPhone HEIC/HEIF uploads to JPEG server-side (Chrome/Firefox can't render HEIC). Pure-JS (libheif/wasm) — no native/libvips build. |

@@ -38,7 +38,7 @@ import * as Joi from 'joi';
         MEILI_HOST: Joi.string().optional(),
         MEILI_MASTER_KEY: Joi.string().optional(),
         // Error tracking (GlitchTip / Sentry-compatible) — optional; disabled when unset.
-        GLITCHTIP_DSN: Joi.string().optional(),
+        SENTRY_DSN: Joi.string().optional(),
         // Outbound email over JP IT's SMTP relay (D9). All optional: without SMTP_HOST the
         // EmailService logs to the console instead of sending, which is what local dev wants.
         //

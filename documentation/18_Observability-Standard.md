@@ -14,7 +14,7 @@ the other, and both are free at this scale.
 
 | Concern | Tool | Status |
 |---|---|---|
-| Error tracking (app) | **Sentry** free tier | SDK installed (`instrument.ts`) but **reads `GLITCHTIP_DSN`** — rename pending, issue #79 |
+| Error tracking (app) | **Sentry** free tier | Reads `SENTRY_DSN` from Key Vault. Plumbing done; **a DSN value must still be set per environment** — until then the app logs `Error tracking DISABLED` on startup |
 | Platform telemetry | **Azure Application Insights** | ❌ Not wired — no SDK, and **no Terraform resource** either. Only Log Analytics exists, and that is for Container Apps logs |
 | Structured logging | Pino (NestJS) + browser console (Next.js) | ✅ Working — Pino → stdout in prod, collected by Container Apps |
 | Alerting (infra) | Azure Monitor metric alerts | ✅ Partially — Postgres `storage_percent > 80%` is live (see `21_Infrastructure-Conventions.md` §13) |
@@ -88,13 +88,41 @@ Every log line is JSON with these fields:
 
 ---
 
+## Azure App Insights — dropped (2026-08-23)
+
+Earlier documents name "Sentry + Azure App Insights" as the observability plan. **App Insights
+is not being built**, and nothing was ever started — there is no code, no Terraform, no
+resource. Recorded here because three documents promised it.
+
+Two reasons, and the first is the one that decides it:
+
+- **It is the only Azure-coupled piece of the plan.** Everything else here survives a move to
+  another provider untouched: pino writes JSON to stdout, which every platform collects, and the
+  Sentry SDK speaks a protocol rather than to a vendor. Adopting App Insights would mean
+  instrumentation code that has to be rewritten on the day the platform changes — the coupling
+  the portability workstream exists to avoid.
+- Its value is traces and platform metrics, which is what any replacement provides anyway.
+
+**What replaces it:** nothing, deliberately. Errors go to Sentry; logs go to stdout and are
+collected by whatever the platform provides — Log Analytics today, something else after a move.
+Log Analytics is a *sink*, not the strategy, and no code depends on it.
+
+**If platform-level metrics are wanted later**, the portable answer is an OpenTelemetry exporter,
+which can point at any backend — not a provider-specific SDK.
+
+---
+
 ## Sentry configuration (app errors)
 
 ### Backend (`@sentry/node`)
 - DSN from **`SENTRY_DSN`**, sourced from the environment's Key Vault — never an inline value.
-  ⚠️ *Today the code reads `GLITCHTIP_DSN` (`apps/api/src/instrument.ts`); GlitchTip is
-  Sentry-protocol-compatible, which is why the SDK was pointed at it. Renaming is part of issue #79
-  and touches the Joi schema, `.env.example`, and the Container App env in Terraform.*
+- **The app announces its own state on startup**, enabled or not. An unset DSN previously meant
+  silence, and silence read as health: error tracking sat recorded as DONE in the readiness
+  audit while `Sentry.init` had never run in any environment. A control that cannot be seen to
+  be off will eventually be off.
+- Terraform creates the `sentry-dsn` secret but never its value. Until it is set out of band the
+  app receives a placeholder, recognises it is not a DSN URL, and reports itself disabled rather
+  than enabling and failing to send.
 - Capture: unhandled exceptions, unhandled promise rejections
 - **Release = the git SHA already used as the image tag.** CD builds every image tagged with
   it, so a Sentry release maps 1:1 to a deployed image with no extra bookkeeping

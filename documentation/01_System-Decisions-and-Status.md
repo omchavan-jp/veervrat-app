@@ -19,7 +19,7 @@ This is the master reference for all technology and architecture decisions. Read
 | File storage | MinIO locally · **Azure Blob** in cloud | ⚠️ Decided but **not implemented** — code still speaks S3 (`@aws-sdk/client-s3`), which Azure Blob does not. Uploads degrade gracefully (chat images disabled). O15 / B-items |
 | Hosting | **Azure** (Container Apps, Central India) | ✅ **UAT live and serving**; prod deployed 2026-08-16 but 🔴 **not usable** — prod web talks to UAT's api (O22) and no login path works (O23). See `../DEPLOYMENT.md` |
 | CI / CD | GitHub Actions | ✅ Both — CI gates PRs; CD builds → migrates → deploys UAT on merge, prod by `prod-*` tag |
-| Observability | Sentry (app errors) + Azure App Insights (platform) | ⚠️ Decided 2026-08 (**replaces GlitchTip**) but **not implemented** — Sentry SDK still reads `GLITCHTIP_DSN`, App Insights not wired at all. Issue #79 |
+| Observability | Sentry (app errors) + stdout logs | Sentry plumbing done 2026-08-23 (reads `SENTRY_DSN` from Key Vault); **a DSN value must still be set per environment**. **Azure App Insights dropped** — it was the only Azure-coupled piece and was never started; see `18_Observability-Standard.md`. Issue #79 |
 | Rich text editor | Tiptap + JSON AST storage | ✅ Built |
 | i18n | next-intl | ✅ Built — no URL routing, user preference, en + mr |
 | WebSocket | NestJS Gateway + Socket.IO | ⚠️ Built with Redis adapter, but **has never run successfully in production** — the rewrite proxy blocks upgrades. Custom domains are now live (2026-08-17), so the remaining blocker is removing the proxy — `runtime-environment-config`, then O8 |
