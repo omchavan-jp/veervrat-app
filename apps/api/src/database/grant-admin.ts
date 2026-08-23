@@ -15,8 +15,9 @@
 
 import * as path from 'node:path';
 import * as dotenv from 'dotenv';
-import { PrismaClient, Role } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
+import { Role } from '@prisma/client';
+import type { PrismaClient } from '@prisma/client';
+import { createCliPrisma } from './cli-prisma';
 
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
@@ -122,8 +123,7 @@ export async function grantAdmin(
 }
 
 async function main(): Promise<void> {
-  const adapter = new PrismaPg(process.env.DATABASE_URL!);
-  const prisma = new PrismaClient({ adapter });
+  const prisma = createCliPrisma();
   await prisma.$connect();
   try {
     process.exitCode = await grantAdmin(prisma, readConfig());

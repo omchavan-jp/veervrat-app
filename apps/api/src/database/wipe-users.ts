@@ -19,8 +19,8 @@
 
 import * as path from 'node:path';
 import * as dotenv from 'dotenv';
-import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
+import type { PrismaClient } from '@prisma/client';
+import { createCliPrisma } from './cli-prisma';
 
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
@@ -94,8 +94,7 @@ export async function wipeUsers(
 }
 
 async function main(): Promise<void> {
-  const adapter = new PrismaPg(process.env.DATABASE_URL!);
-  const prisma = new PrismaClient({ adapter });
+  const prisma = createCliPrisma();
   await prisma.$connect();
   try {
     process.exitCode = await wipeUsers(prisma, readConfig());
