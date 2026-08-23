@@ -282,6 +282,10 @@ cleanup, and Resend domain verification.
 | 2026-08-09 | Skip CDN / Front Door for now | Own audit calls advanced edge logic premature |
 | 2026-08-09 | Neon backup taken | `backups/veervrat-neon-20260809T184831Z.dump` (pg_dump -Fc, 243K, 50 tables) |
 | 2026-08-09 | Stopgap: Render free tier, no IaC | Throwaway; Terraform written once against the final provider |
+| 2026-08-23 | **Drop Azure App Insights** | It was the only Azure-coupled piece of the observability plan and was never started — no code, no Terraform, no resource. Its value (traces, platform metrics) is what any replacement provides anyway, so adopting it would only buy instrumentation that has to be rewritten on the day the platform changes. Logs already go to stdout, which every platform collects |
+| 2026-08-23 | **Sentry free tier for error tracking, EU region** | Cost ₹0 (Developer tier: 5,000 events/month, 1 user). Chosen for the *protocol*, not the vendor: GlitchTip speaks it, so self-hosting later is a change to `SENTRY_DSN` and nothing else. EU over US because GDPR protections apply by default and US providers are reachable under the CLOUD Act. ⚠️ **First and only data that leaves India** — the published privacy policy must be amended |
+| 2026-08-23 | **Error monitoring only; Logging/Tracing/Profiling/Metrics off** | The free tier is 5,000 events a month. Spending it on traces nobody reads would exhaust the quota for the one thing that matters. `tracesSampleRate` set to 0 to match the product toggle |
+| 2026-08-23 | **Self-hosted GlitchTip deferred, not rejected** | Would keep everything in India and add no third party, but needs a web container, a worker, Postgres and Redis — real monthly cost and real maintenance on a grant budget, for a service whose job is to be boring. Revisit if data localisation becomes a hard requirement |
 
 ---
 
@@ -294,6 +298,8 @@ cleanup, and Resend domain verification.
 - [ ] Existing mail setup (M365 / Workspace) — will SPF/DKIM for Resend conflict?
 - [ ] Subdomain vs `veervrat.com` as the primary identity
 - [ ] Rotate the GitHub PAT + session secret at cutover
+- [ ] Does anyone actually read `veervrat@jnanaprabodhini.org`? Sentry alerts go there, and an alert channel nobody watches is not an alert channel
+- [ ] Sentry free tier is 5,000 events/month and **drops events past it** — a single looping error can exhaust it. Watch the first month's volume before assuming the tier fits
 
 ---
 

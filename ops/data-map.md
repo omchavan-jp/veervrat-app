@@ -140,9 +140,33 @@ Decisions needed, none of them technical:
 | Email in transit | JP IT's relay (`dhoomketu.in`), sending as `notifications.jnanaprabodhini.org` |
 | Logs incl. IP/user agent | Azure Log Analytics, 30-day retention |
 | **Infrastructure state file** | ⚠️ Holds **every secret in plaintext**. Read access to it is equivalent to secret-store administrator access (issue #90) |
+| **Error diagnostics** | ⚠️ **Sentry, EU (Frankfurt)** — the only data that leaves India. See below |
 
-Data residency is India, which simplifies DPDP considerably. Worth stating explicitly in the
-policy rather than leaving implicit.
+Data residency was India for everything until 2026-08-23.
+
+### The one exception — error diagnostics (Sentry, EU)
+
+Hosted Sentry offers EU or US only; there is no India region. EU chosen — GDPR protections apply
+by default and US providers are reachable under the CLOUD Act.
+
+**What is sent:** 5xx exceptions only — message, stack trace, request method and path, plus the
+release SHA and environment name. `sendDefaultPii: false` stops the SDK attaching cookies,
+headers, IP addresses or user records, and a `beforeSend` scrubber redacts email addresses and
+long opaque tokens from message text before it leaves the process.
+
+**What is therefore still possible:** a stack trace can name a route containing an identifier,
+and a redactor is a filter, not a proof. Treat Sentry as holding a small amount of incidental
+personal data, not none.
+
+**Retention:** 30 days on the free tier (Sentry's default for the Developer plan).
+
+⚠️ **The published privacy policy is currently wrong about this.** It says *"Your data is stored
+in India, on Microsoft Azure's Central India region."* That sentence predates this change and
+must be amended — one of four items in the outstanding policy version bump (retained Google
+sign-in link, stored Google profile photo, cross-border diagnostics, consent re-prompt).
+
+Lawful regardless: DPDP 2023 permits cross-border transfer except to countries the government
+notifies as restricted, and none have been notified. The defect is accuracy, not legality.
 
 ---
 
