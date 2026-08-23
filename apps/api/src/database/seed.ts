@@ -1,7 +1,6 @@
 import * as path from 'node:path';
 import * as dotenv from 'dotenv';
-import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
+import { createCliPrisma } from './cli-prisma';
 import { parseCsv, parseWeaknessNames, TIER_MAP } from './seed-utils';
 import { POLICY_DOCUMENTS } from './policy-content';
 
@@ -12,11 +11,7 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 const DATA_DIR = path.resolve(__dirname, '../../../../data/seed');
 
 async function seed() {
-  const adapter = new PrismaPg(process.env.DATABASE_URL!);
-  // PrismaClient with driver adapter — cast required because generated client
-  // does not expose adapter in its constructor overload in Prisma 7
-
-  const prisma = new PrismaClient({ adapter });
+  const prisma = createCliPrisma();
   await prisma.$connect();
 
   try {

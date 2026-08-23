@@ -1,4 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import type { PrismaClient } from '@prisma/client';
+import { createCliPrisma } from './cli-prisma';
 
 /**
  * Deletes rows that have expired and serve no further purpose.
@@ -46,7 +47,8 @@ export async function cleanupExpired(
 }
 
 async function main(): Promise<void> {
-  const prisma = new PrismaClient();
+  const prisma = createCliPrisma();
+  await prisma.$connect();
   try {
     const counts = await cleanupExpired(prisma);
     console.log('Cleanup complete:');
