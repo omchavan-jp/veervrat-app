@@ -290,6 +290,7 @@ export class UsersService implements OnModuleInit {
       },
       now,
     );
+    await this.usersRepository.clearStoredPasswords(userId);
     await this.authService.forceLogout(userId);
     await this.usersRepository.cancelPendingInvitations(userId);
     // Drop from the search index — an anonymised account is no longer discoverable.

@@ -224,7 +224,12 @@ model User {
   // age: age changes and dates do not, and a derived value that silently goes stale is worse
   // than storing nothing. NEVER returned by the public profile API — a date of birth is an
   // identity-verification token used by banks and government services.
-  dob                   DateTime  @db.Date
+  // Nullable ONLY so anonymisation can clear it — an account that no longer belongs to anyone
+  // has no date of birth, and keeping one after deletion is retention with no purpose behind it
+  // (#140). Creation still always supplies it: `AuthRepository.createUser` takes a non-optional
+  // `dob`, and the 18+ gate runs before any create. The database no longer enforces presence;
+  // the single creation path does.
+  dob                   DateTime? @db.Date
   language              Language  @default(EN)
   emailVerifiedAt       DateTime? @map("email_verified_at")
   accountSetupCompletedAt DateTime? @map("account_setup_completed_at")

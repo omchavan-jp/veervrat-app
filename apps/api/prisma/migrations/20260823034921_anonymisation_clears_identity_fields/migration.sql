@@ -1,0 +1,15 @@
+-- Lets anonymisation clear the date of birth (#140).
+--
+-- An account that no longer belongs to anyone has no date of birth, and keeping one after
+-- deletion is retention with no purpose behind it — the value existed only to run the 18+ check
+-- at account creation. A date of birth narrows identity sharply, especially next to content that
+-- is deliberately retained under a pseudonym.
+--
+-- DROP NOT NULL is metadata-only: no table rewrite, no lock beyond a brief ACCESS EXCLUSIVE, and
+-- no effect on existing rows. Safe against a populated table, unlike a migration that adds a
+-- NOT NULL column.
+--
+-- The database no longer enforces that a date of birth is present; the single creation path
+-- does. `AuthRepository.createUser` takes a non-optional `dob`, and `meetsMinimumAge` runs
+-- before any create.
+ALTER TABLE "users" ALTER COLUMN "dob" DROP NOT NULL;
