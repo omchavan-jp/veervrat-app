@@ -726,6 +726,62 @@ than a genuinely clean database.
 
 ---
 
+## Publishing a new version of the policy documents
+
+Raising a document's version is what **re-prompts every user for consent**. It is a deliberate
+act, not part of a deploy — which is why this is a manually-triggered job and why CD never runs
+it.
+
+⚠️ **Never publish a version bump before the consent re-prompt is deployed.** Both documents
+promise, in English and Marathi, that a material change means being asked to accept the new
+version. Publishing without a working prompt breaks that promise inside the document being
+published.
+
+**The rule the job applies**, per document:
+
+| Database vs image | What happens |
+|---|---|
+| image version **higher** | published, text and title in both languages replaced |
+| **equal** | left alone — this preserves an edit an administrator made through the admin panel without raising the version |
+| database **higher** | **refused**, exit 1 — an older image is deployed, and publishing would roll the live policy backwards |
+
+```bash
+ENV=uat   # prove it here first
+
+az containerapp job start -n veervrat-$ENV-publish-policies -g veervrat-$ENV
+```
+
+Verify by its **output**, never its exit code (§21):
+
+```bash
+WS=$(az monitor log-analytics workspace show -g veervrat-$ENV -n veervrat-$ENV-logs --query customerId -o tsv)
+az monitor log-analytics query -w "$WS" --analytics-query \
+  "ContainerAppConsoleLogs_CL | where TimeGenerated > ago(30m) | where ContainerName_s == 'publish-policies' | project TimeGenerated, Log_s | order by TimeGenerated asc" -o table
+```
+
+```
+terms: published v1 -> v2
+privacy: published v1 -> v2
+
+2 document(s) published. Every user whose recorded consent is now behind will be asked to
+accept again on their next visit.
+```
+
+**Then check the documents actually changed**, in both languages — an English-only publish is
+worse than none, because half the readers would be shown one policy and consented to another:
+
+```bash
+B=https://api.$ENV.veervrat.jnanaprabodhini.org/api/v1   # prod: https://api.veervrat.jnanaprabodhini.org/api/v1
+for K in terms privacy; do curl -s "$B/cms-pages/$K" | python3 -m json.tool | head -5; done
+```
+
+**Then confirm the prompt appears.** Sign in as a user who accepted the previous version; the
+consent dialog should block the app until accepted, and not reappear afterwards. If it does not
+appear, the version bumped and nobody was asked — the exact failure this ordering exists to
+prevent.
+
+---
+
 ## Setting a secret out of band — a restart is not enough
 
 Several secrets are created by Terraform with a placeholder and their real value set afterwards:

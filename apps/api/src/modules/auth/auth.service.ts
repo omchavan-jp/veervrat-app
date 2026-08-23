@@ -20,6 +20,8 @@ import {
   AccountLockedException,
 } from '../../common/exceptions/app.exceptions';
 import { meetsMinimumAge } from '../../common/age/age';
+import { outstandingConsents } from './consent/outstanding-consents';
+import { POLICY_KEYS } from '../../database/policy-content';
 import { REDIS_CLIENT } from '../../common/redis/redis.provider';
 import {
   SessionUser,
@@ -82,6 +84,43 @@ export class AuthService {
    * A document the client names but which does not exist is rejected: consent to nothing is not
    * consent.
    */
+  /**
+   * Policy documents this person has not accepted at the version now published.
+   *
+   * Both documents promise, in both languages, that a material change means being asked again.
+   * That promise has been live since the documents were published and nothing honoured it
+   * (deferred item 3.3) — `findConsents` and `recordConsent` existed and were called from
+   * nowhere.
+   *
+   * A dedicated call rather than a field on `/auth/me`: the session is resolved server-side on
+   * every document request, so anything added there is paid on every page load. This is checked
+   * once per session.
+   */
+  async outstandingConsents(userId: string): Promise<{ documentKey: string; version: number }[]> {
+    const accepted = await this.authRepository.findConsents(userId);
+    const current = await this.authRepository.currentPolicyVersions(POLICY_KEYS);
+    return outstandingConsents(accepted, current);
+  }
+
+  /**
+   * Records acceptance of everything currently outstanding.
+   *
+   * The versions come from the database, never from the request. A client that could name its
+   * own version could claim acceptance of text nobody ever showed it — the same reasoning as
+   * `resolveConsents` at signup, and the reason this takes no version parameter at all.
+   */
+  async acceptOutstandingConsents(
+    userId: string,
+  ): Promise<{ documentKey: string; version: number }[]> {
+    const outstanding = await this.outstandingConsents(userId);
+
+    for (const { documentKey, version } of outstanding) {
+      await this.authRepository.recordConsent(userId, documentKey, version);
+    }
+
+    return outstanding;
+  }
+
   private async resolveConsents(
     claimed: { documentKey: string; version: number }[],
   ): Promise<{ documentKey: string; version: number }[]> {

@@ -1,6 +1,7 @@
 export const queryKeys = {
   auth: {
     me: ['auth', 'me'] as const,
+    outstandingConsents: ['auth', 'consents', 'outstanding'] as const,
   },
   connectedAccounts: ['users', 'me', 'connected-accounts'] as const,
   weaknesses: {

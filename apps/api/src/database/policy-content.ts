@@ -14,7 +14,22 @@
  * should be before this reaches real users; the English is authoritative in the meantime.
  */
 
-export const POLICY_VERSION = 1;
+/**
+ * Bumped when a change is material enough that consent should be asked again.
+ *
+ * v2 (2026-08-23) — two things became true that version 1 did not describe:
+ *   - error reports leave India (Sentry, EU); v1 said data is stored in India, full stop
+ *   - the Google sign-in link survives account deletion, deliberately
+ *
+ * The documents already promise "if we make a material change we will ask you to accept the new
+ * version", so raising this without a working re-prompt would break a promise inside the very
+ * document being edited. The two ship together.
+ *
+ * NOT included: storing a copy of a Google profile picture. That was decided but is not built —
+ * nothing sets `avatarUrl` yet — and a policy describing what the system does not do is wrong in
+ * the same way as one omitting what it does. It goes in when avatars ship (#139).
+ */
+export const POLICY_VERSION = 2;
 
 type Block = { text: string; bold?: boolean } | { list: string[] };
 
@@ -225,11 +240,16 @@ const privacyEn = doc([
   {
     text: 'Your data is stored in India, on Microsoft Azure’s Central India region. Email is sent through Jnana Prabodhini’s own mail servers. If you sign in with Google, Google knows you did so.',
   },
+  {
+    text: 'One exception: when something goes wrong on the server, the error report is sent to Sentry, an error-tracking service, on servers in the European Union. There is no Indian option for it. These reports contain what failed and where in the code — not your name, your email address, or anything you have written. We remove email addresses and access codes from them before they are sent, and they are deleted after 30 days.',
+  },
 
   { text: 'How long we keep it', bold: true },
   {
     list: [
       'Your account and its content: until you delete your account.',
+      'If you signed in with Google: the link between your account and your Google account is kept even after deletion, so that a deleted account cannot be quietly recreated and joined back to it.',
+      'Server error reports: 30 days.',
       'Sign-in sessions: for the life of the session.',
       'Records of administrative actions: retained as a security record.',
       'Backups: up to 35 days, after which they are overwritten.',
@@ -305,11 +325,16 @@ const privacyMr = doc([
   {
     text: 'तुमची माहिती भारतात, Microsoft Azure च्या मध्य भारत विभागात साठवली जाते. ईमेल ज्ञान प्रबोधिनीच्या स्वतःच्या मेल सर्व्हरमधून पाठवला जातो. Google ने साइन इन केल्यास तुम्ही तसे केले हे Google ला कळते.',
   },
+  {
+    text: 'एक अपवाद: सर्व्हरवर काही बिघडल्यास त्या चुकीचा अहवाल Sentry या सेवेकडे युरोपियन युनियनमधील सर्व्हरवर पाठवला जातो. त्यासाठी भारतात पर्याय उपलब्ध नाही. या अहवालांमध्ये काय बिघडले आणि कोडमध्ये कुठे हे असते — तुमचे नाव, ईमेल पत्ता किंवा तुम्ही लिहिलेले काहीही नसते. पाठवण्याआधी आम्ही ईमेल पत्ते व सांकेतिक कोड काढून टाकतो, आणि ते अहवाल ३० दिवसांनी हटवले जातात.',
+  },
 
   { text: 'किती काळ ठेवतो', bold: true },
   {
     list: [
       'तुमचे खाते व त्यातील मजकूर: तुम्ही खाते हटवेपर्यंत.',
+      'Google ने साइन इन केले असल्यास: तुमचे खाते व Google खाते यांमधील दुवा खाते हटवल्यानंतरही ठेवला जातो, जेणेकरून हटवलेले खाते गुपचूप पुन्हा तयार करून जोडता येऊ नये.',
+      'सर्व्हर चुकीचे अहवाल: ३० दिवस.',
       'साइन-इन सत्रे: सत्र संपेपर्यंत.',
       'प्रशासकीय कृतींच्या नोंदी: सुरक्षा नोंद म्हणून ठेवल्या जातात.',
       'बॅकअप: ३५ दिवसांपर्यंत, त्यानंतर ते पुन्हा लिहिले जातात.',
@@ -343,6 +368,10 @@ const privacyMr = doc([
   },
 ]);
 
+/**
+ * The documents whose acceptance is tracked. Derived from POLICY_DOCUMENTS rather than written
+ * out again, so adding a third document cannot leave the consent check silently ignoring it.
+ */
 export const POLICY_DOCUMENTS = [
   {
     key: 'terms',
@@ -361,3 +390,11 @@ export const POLICY_DOCUMENTS = [
     bodyMr: privacyMr,
   },
 ];
+
+/**
+ * The documents whose acceptance is tracked.
+ *
+ * Derived from POLICY_DOCUMENTS rather than written out again: adding a third document must not
+ * be able to leave the consent check silently ignoring it.
+ */
+export const POLICY_KEYS = POLICY_DOCUMENTS.map((d) => d.key);
