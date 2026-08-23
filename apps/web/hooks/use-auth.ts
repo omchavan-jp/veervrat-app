@@ -37,6 +37,14 @@ export function useAuth() {
     // Belt and braces for the genuine-error case (network, 500): do not refetch merely because
     // a new component subscribed.
     retryOnMount: false,
+    // Returning to the tab re-checks who this is. Without it an open tab never learned that a
+    // capability had been revoked, so the control kept rendering until a full reload (#122).
+    //
+    // Bounded by the 60s staleTime above — focusing repeatedly inside that window refetches
+    // nothing — which is what makes this safe given the request storm documented above. It is
+    // also the narrow case: this is set on the user query, not on the global default, so no
+    // other query gains focus refetching.
+    refetchOnWindowFocus: true,
   });
 
   return {
