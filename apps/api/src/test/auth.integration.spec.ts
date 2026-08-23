@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import {
   createTestApp,
@@ -245,6 +246,12 @@ describe('Auth — integration', () => {
       // the same address — that is the point.
       const prisma = getTestPrisma();
       const csrfToken = 'csrf-nat';
+      // Namespaced per run. `setup.ts` deliberately does NOT clear `lockout:*` between tests —
+      // the lockout tests need their counters to accumulate — so a fixed address collects one
+      // failed attempt on every suite run and eventually locks itself. This test then fails
+      // with ACCOUNT_LOCKED instead of the refusal it is checking for, on a machine that has
+      // simply run the suite ten times.
+      const run = randomUUID().slice(0, 8);
       const attempt = (email: string) =>
         getRequest()
           .post('/api/v1/auth/login')
@@ -252,9 +259,12 @@ describe('Auth — integration', () => {
           .set('X-CSRF-Token', csrfToken)
           .send({ email, password: 'WrongPassword1' });
 
+      const noisy = `nat_noisy_${run}@test.com`;
+      const quietEmail = `nat_quiet_${run}@test.com`;
+
       for (const [email, username] of [
-        ['nat_noisy@test.com', 'nat_noisy_u'],
-        ['nat_quiet@test.com', 'nat_quiet_u'],
+        [noisy, `nat_noisy_${run}`],
+        [quietEmail, `nat_quiet_${run}`],
       ]) {
         await prisma.user.create({
           data: {
@@ -276,11 +286,11 @@ describe('Auth — integration', () => {
       }
 
       // Exhaust the identity throttle (20 / 15 min) for one address.
-      for (let i = 0; i < 21; i++) await attempt('nat_noisy@test.com');
-      expect((await attempt('nat_noisy@test.com')).body.error).toBe('RATE_LIMITED');
+      for (let i = 0; i < 21; i++) await attempt(noisy);
+      expect((await attempt(noisy)).body.error).toBe('RATE_LIMITED');
 
       // The neighbour is untouched: refused for the right reason, not throttled.
-      const quiet = await attempt('nat_quiet@test.com');
+      const quiet = await attempt(quietEmail);
       expect(quiet.body.error).not.toBe('RATE_LIMITED');
       expect(quiet.status).not.toBe(429);
     });
