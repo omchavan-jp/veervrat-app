@@ -416,6 +416,11 @@ lint, the CD wiring check); the ones broken that day were all prose-only.
 - Read the relevant convention doc and spec decision file before starting work in any area
 - When uncertain about a decision: read `spec/decisions/` first. If still unclear — stop and ask, do not guess.
 - Never invent behaviour not described in `spec/decisions/` or `documentation/` — flag it instead
+- **Never block the session on a wait.** CI here takes ~3 minutes and CD ~9; a foreground `until`
+  loop, `gh run watch` or `sleep` freezes the conversation for that whole time with no output,
+  and the user loses the ability to redirect work mid-flight. Launch anything that polls a
+  remote job in a background shell or a monitor, keep working, and report when it reports.
+  Foreground commands should return promptly.
 
 ## What NOT to read (ignore entirely)
 - `node_modules/`, `.next/`, `dist/`, `.turbo/`
