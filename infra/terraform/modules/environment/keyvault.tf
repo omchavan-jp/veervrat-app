@@ -90,3 +90,30 @@ resource "azurerm_key_vault_secret" "google_client_secret" {
     ignore_changes = [value]
   }
 }
+
+# Sentry DSN for error tracking (#79).
+#
+# Same pattern and reasoning as the two secrets above: Terraform owns the secret's existence,
+# never its value. A DSN is an ingest endpoint — anyone holding it can post events into the
+# project — so it does not belong in state or in `az containerapp show` output.
+#
+# Set the real value out of band, per environment:
+#
+#   az keyvault secret set --vault-name veervrat-<env>-kv --name sentry-dsn \
+#     --value "https://<key>@<org>.ingest.<region>.sentry.io/<project>"
+#
+# Until then the app receives this placeholder, recognises it is not a DSN URL, and says on
+# startup that error tracking is disabled — rather than enabling and failing to send silently.
+#
+# Deliberately Sentry-*protocol* rather than Sentry-the-company: GlitchTip speaks the same
+# protocol, so moving to something self-hosted later is a change to this value alone.
+resource "azurerm_key_vault_secret" "sentry_dsn" {
+  name         = "sentry-dsn"
+  value        = "placeholder-set-out-of-band"
+  key_vault_id = azurerm_key_vault.this.id
+  depends_on   = [azurerm_role_assignment.key_vault_admins]
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+}

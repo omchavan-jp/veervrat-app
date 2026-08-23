@@ -57,7 +57,7 @@ Do NOT rebuild what exists. The real work is the ops/deploy cluster + a short bu
 | Item | Status | Evidence / gap |
 |---|---|---|
 | Rate limiting | DONE | reset-password now throttled 5/hr (BUG-3 fixed) alongside global 300/min + auth overrides |
-| Error tracking (GlitchTip/Sentry) | DONE | `instrument.ts` inits Sentry when `GLITCHTIP_DSN` set (no-op otherwise); 5xx forwarded from GlobalExceptionFilter; `GLITCHTIP_DSN` in config validation |
+| Error tracking (Sentry) | **PARTIAL** | Plumbing complete and a DSN is wired from Key Vault, but **no DSN value has been set in any environment**, so nothing is captured yet. Previously recorded here as DONE while `Sentry.init` had never once run — the code was present, the condition never true, and the silence read as health. The app now states on startup whether tracking is on. Issue #79 |
 | Security headers (Helmet) | DONE | `helmet()` in `configureApp` (CSP/COEP off — API is JSON-only); nosniff + X-Frame-Options verified in integration test |
 | Health check | DONE | `/health` = cheap liveness; new `/ready` = readiness (pings DB+Redis, 503 if down); integration-tested |
 | CORS | PARTIAL | Restricted to `FRONTEND_URL` + credentials; no URL-format validation at boot (low risk — deploy sets a fixed origin) |

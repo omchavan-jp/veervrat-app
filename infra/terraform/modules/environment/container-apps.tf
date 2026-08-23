@@ -88,6 +88,15 @@ resource "azurerm_container_app" "api" {
     identity            = azurerm_user_assigned_identity.api.id
   }
 
+  # Error-tracking ingest endpoint (#79). A Key Vault reference rather than a plain value: the
+  # DSN lets anyone holding it post events into the project, and a plain env value is readable
+  # by anyone who can run `az containerapp show`.
+  secret {
+    name                = "sentry-dsn"
+    key_vault_secret_id = azurerm_key_vault_secret.sentry_dsn.versionless_id
+    identity            = azurerm_user_assigned_identity.api.id
+  }
+
   ingress {
     external_enabled = true
     target_port      = 3001
@@ -151,6 +160,21 @@ resource "azurerm_container_app" "api" {
       env {
         name  = "TRUST_PROXY_HOPS"
         value = tostring(var.trust_proxy_hops)
+      }
+
+      # Unset or left at the Terraform placeholder means the app reports, on startup, that error
+      # tracking is disabled — rather than staying silent, which is how it went unnoticed that
+      # every 5xx in production was being reported nowhere.
+      env {
+        name        = "SENTRY_DSN"
+        secret_name = "sentry-dsn"
+      }
+
+      # The image tag is the commit SHA, so a Sentry release maps 1:1 to a deployed image with
+      # no extra bookkeeping (18_Observability-Standard).
+      env {
+        name  = "COMMIT_SHA"
+        value = var.image_tag
       }
       env {
         name        = "DATABASE_URL"
