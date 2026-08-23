@@ -56,6 +56,27 @@ export const authApi = {
 
   getMe: () => api.get<Wrapped<User>>('/auth/me').then((r) => r.data),
 
+  /**
+   * Policy documents this person has not accepted at the version now published.
+   *
+   * Its own call rather than a field on /auth/me: the session is resolved server-side on every
+   * document request, so anything added there is paid on every page load.
+   */
+  outstandingConsents: () =>
+    api
+      .get<Wrapped<{ documents: { documentKey: string; version: number }[] }>>(
+        '/auth/consents/outstanding',
+      )
+      .then((r) => r.data.documents),
+
+  /** Accepts everything outstanding. Sends no version — the server decides what is current. */
+  acceptConsents: () =>
+    api
+      .post<Wrapped<{ accepted: { documentKey: string; version: number }[] }>>(
+        '/auth/consents/accept',
+      )
+      .then((r) => r.data.accepted),
+
   verifyEmail: (token: string) =>
     api.post<Wrapped<AuthResponse>>('/auth/verify-email', { token }).then((r) => r.data),
 

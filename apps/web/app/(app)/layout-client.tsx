@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useRuntimeConfig } from '@/lib/runtime-config-provider';
 import { AppShell } from '@/components/layout/app-shell';
 import { FeedbackWidget } from '@/components/shared/feedback/feedback-widget';
+import { ConsentGate } from '@/components/shared/consent-gate';
 import dynamic from 'next/dynamic';
 
 // In-context content editor. Lazily imported, and rendered only when the ENVIRONMENT allows it
@@ -54,6 +55,10 @@ export function AppLayoutClient({ children }: { children: React.ReactNode }) {
     <AppShell user={user}>
       {children}
       <FeedbackWidget />
+      {/* Asks again when a policy has been republished. Mounted here so it covers all four
+          authenticated route groups and never public pages — nobody should be asked to
+          re-consent while signed out. */}
+      <ConsentGate enabled={isAuthenticated} />
       {contentEditEnabled && user.grants?.includes('CONTENT_EDIT') && <ContentEditor />}
     </AppShell>
   );

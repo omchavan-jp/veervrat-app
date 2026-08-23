@@ -1468,5 +1468,16 @@
       "successDescription": "Your observation has been recorded.",
       "errorTitle": "Could not submit — please try again."
     }
+  },
+  "consent": {
+    "title": "We've updated our policies",
+    "body": "Two things changed: where error reports are stored, and what is kept if you delete your account. Please read the updated documents and accept to continue.",
+    "accept": "I accept",
+    "accepting": "Saving…",
+    "failed": "That didn't save. Please try again.",
+    "document": {
+      "terms": "Terms of Use",
+      "privacy": "Privacy Policy"
+    }
   }
 }
