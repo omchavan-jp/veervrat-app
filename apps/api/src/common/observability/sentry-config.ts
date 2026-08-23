@@ -71,3 +71,37 @@ export function resolveSentryConfig(env: NodeJS.ProcessEnv = process.env): Sentr
       (release ? ` at release ${release}.` : ' (no release tag — COMMIT_SHA unset).'),
   };
 }
+
+/**
+ * Removes personal data that rides along in an error by accident.
+ *
+ * `sendDefaultPii: false` already stops the SDK attaching cookies, headers, IP addresses and
+ * user records. It does nothing about the *message*: a Prisma failure, a validation error or a
+ * mail-send rejection can carry an address or a token in its text, and that text is the one
+ * thing always sent.
+ *
+ * This matters more than usual here. The published privacy policy says data is stored in India;
+ * hosted Sentry stores in the EU. Diagnostics leaving the country is a disclosed, deliberate
+ * exception — an email address leaving with them is not.
+ *
+ * Redacts rather than drops: an error with `[redacted-email]` in it is still diagnosable, and a
+ * dropped event is an outage nobody hears about.
+ */
+export function scrubEvent<T>(event: T): T {
+  const EMAIL = /[\w.+-]+@[\w-]+\.[\w.-]+/g;
+  // Long opaque strings: session tokens, verification tokens, DSNs, JWTs.
+  const TOKEN = /\b[A-Za-z0-9_-]{32,}\b/g;
+
+  const redact = (value: unknown): unknown => {
+    if (typeof value === 'string') {
+      return value.replace(EMAIL, '[redacted-email]').replace(TOKEN, '[redacted-token]');
+    }
+    if (Array.isArray(value)) return value.map(redact);
+    if (value && typeof value === 'object') {
+      return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, redact(v)]));
+    }
+    return value;
+  };
+
+  return redact(event) as T;
+}

@@ -88,6 +88,35 @@ Every log line is JSON with these fields:
 
 ---
 
+## Where error data is stored (2026-08-23)
+
+Hosted Sentry offers **EU or US only** — there is no India region. **EU chosen.** GDPR-grade
+protection applies by default, and US providers are reachable under the CLOUD Act, so for a
+JP-run Indian service the EU is the defensible answer if anyone asks.
+
+**This contradicts a published sentence** and must be corrected, not quietly accepted. The live
+privacy policy says *"Your data is stored in India, on Microsoft Azure's Central India region."*
+Diagnostics now leave the country. That amendment joins the version bump already owed for the
+retained Google sign-in link and the stored Google profile photo — one bump, four items, not
+three separate ones.
+
+**Lawful, for the avoidance of doubt.** DPDP 2023 permits cross-border transfer except to
+countries the government notifies as restricted; none have been notified. The problem was never
+legality, it was a sentence that had stopped being true.
+
+**What actually leaves:** 5xx exceptions only, with `sendDefaultPii: false` (no cookies, headers,
+IP addresses or user records) and a `beforeSend` scrubber that redacts email addresses and long
+opaque tokens from message text. Diagnostics crossing a border is a disclosed, deliberate
+exception; an email address crossing with them is not.
+
+**The exit, if localisation ever becomes a hard requirement:** self-hosted GlitchTip in Central
+India speaks the same protocol, so it is a change to `SENTRY_DSN` and nothing else. It was not
+chosen now because it needs a web container, a worker, Postgres and Redis — real cost and real
+maintenance on a grant budget — while production currently has *no* error visibility at all.
+Visibility that is disclosed and scrubbed beats perfect localisation that sees nothing.
+
+---
+
 ## Azure App Insights — dropped (2026-08-23)
 
 Earlier documents name "Sentry + Azure App Insights" as the observability plan. **App Insights

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { resolveSentryConfig } from './sentry-config';
+import { resolveSentryConfig, scrubEvent } from './sentry-config';
 
 describe('resolveSentryConfig', () => {
   it('is disabled when no DSN is set, and SAYS so', () => {
@@ -71,5 +71,52 @@ describe('resolveSentryConfig', () => {
     expect(resolveSentryConfig({ GLITCHTIP_DSN: 'https://k@o1.ingest.sentry.io/2' }).enabled).toBe(
       false,
     );
+  });
+});
+
+describe('scrubEvent', () => {
+  it('redacts an email address carried inside an error message', () => {
+    // The realistic leak: nobody attaches an address deliberately, a failure quotes one.
+    const event = { message: 'Failed to send to someone@example.com after 3 attempts' };
+
+    const scrubbed = scrubEvent(event);
+
+    expect(scrubbed.message).toContain('[redacted-email]');
+    expect(scrubbed.message).not.toContain('someone@example.com');
+  });
+
+  it('redacts long opaque strings — session and verification tokens', () => {
+    const event = { message: 'invalid token 9f8e7d6c5b4a39281706abcdef1234567890abcd' };
+
+    expect(scrubEvent(event).message).toContain('[redacted-token]');
+  });
+
+  it('reaches into nested objects and arrays', () => {
+    const event = {
+      extra: { attempts: [{ to: 'a@b.com' }, { to: 'c@d.com' }] },
+      tags: { env: 'prod' },
+    };
+
+    const scrubbed = scrubEvent(event);
+
+    expect(JSON.stringify(scrubbed)).not.toContain('a@b.com');
+    expect(JSON.stringify(scrubbed)).not.toContain('c@d.com');
+    expect(scrubbed.tags.env).toBe('prod');
+  });
+
+  it('keeps the error diagnosable rather than dropping it', () => {
+    // A redacted event is still useful; a dropped one is an outage nobody hears about.
+    const event = { message: 'Unique constraint failed for user@x.com on users.email' };
+
+    const scrubbed = scrubEvent(event);
+
+    expect(scrubbed.message).toContain('Unique constraint failed');
+    expect(scrubbed.message).toContain('users.email');
+  });
+
+  it('leaves ordinary short values alone', () => {
+    const event = { message: 'ECONNREFUSED 10.0.0.4:5432', tags: { release: 'abc1234' } };
+
+    expect(scrubEvent(event)).toEqual(event);
   });
 });
