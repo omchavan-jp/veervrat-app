@@ -1,15 +1,15 @@
 import {
   Injectable,
+  Inject,
   BadRequestException,
   PayloadTooLargeException,
   ServiceUnavailableException,
   Logger,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { randomUUID } from 'crypto';
 import heicConvert from 'heic-convert';
 import { UploadsRepository } from './uploads.repository';
+import { STORAGE_PROVIDER, type StorageProvider } from './storage/storage-provider';
 import type { SessionUser } from '../auth/types/auth.types';
 
 interface UploadRequest {
@@ -37,35 +37,11 @@ export class UploadsService {
   private readonly logger = new Logger('UploadsService');
   private readonly ALLOWED_TYPES = [...Object.keys(EXT_BY_TYPE), ...HEIC_TYPES];
   private readonly MAX_SIZE_MB = 10;
-  private readonly s3: S3Client | null;
-  private readonly bucket?: string;
-  private readonly publicBase?: string;
 
   constructor(
     private readonly uploadsRepository: UploadsRepository,
-    private readonly config: ConfigService,
-  ) {
-    const endpoint = this.config.get<string>('S3_ENDPOINT');
-    const accessKeyId = this.config.get<string>('S3_ACCESS_KEY');
-    const secretAccessKey = this.config.get<string>('S3_SECRET_KEY');
-    this.bucket = this.config.get<string>('S3_BUCKET');
-    // Public URL base for serving; falls back to endpoint/bucket for local MinIO.
-    this.publicBase =
-      this.config.get<string>('S3_PUBLIC_URL') ??
-      (endpoint && this.bucket ? `${endpoint}/${this.bucket}` : undefined);
-
-    if (endpoint && accessKeyId && secretAccessKey && this.bucket) {
-      this.s3 = new S3Client({
-        endpoint,
-        region: this.config.get<string>('S3_REGION', 'us-east-1'),
-        credentials: { accessKeyId, secretAccessKey },
-        forcePathStyle: true, // required for MinIO
-      });
-    } else {
-      this.s3 = null;
-      this.logger.warn('S3/MinIO not configured — chat image uploads are disabled');
-    }
-  }
+    @Inject(STORAGE_PROVIDER) private readonly storage: StorageProvider,
+  ) {}
 
   async uploadChatImage(request: UploadRequest, user: SessionUser): Promise<{ url: string }> {
     return this.uploadImage(request, user, 'chat');
@@ -84,10 +60,6 @@ export class UploadsService {
     const sizeMB = buffer.byteLength / (1024 * 1024);
     if (sizeMB > this.MAX_SIZE_MB) {
       throw new PayloadTooLargeException(`File exceeds ${this.MAX_SIZE_MB}MB limit`);
-    }
-
-    if (!this.s3 || !this.bucket || !this.publicBase) {
-      throw new ServiceUnavailableException('File storage is not configured');
     }
 
     // HEIC/HEIF → JPEG so the stored image renders in every browser.
@@ -111,24 +83,17 @@ export class UploadsService {
     const ext = EXT_BY_TYPE[contentType];
     const key = `uploads/${randomUUID()}.${ext}`;
 
+    let url: string;
     try {
-      await this.s3.send(
-        new PutObjectCommand({
-          Bucket: this.bucket,
-          Key: key,
-          Body: body,
-          ContentType: contentType,
-        }),
-      );
+      ({ url } = await this.storage.put(key, body, contentType));
     } catch (error) {
       this.logger.error({
-        msg: 'S3 upload failed',
+        msg: 'Object storage upload failed',
         error: error instanceof Error ? error.message : String(error),
       });
       throw new ServiceUnavailableException('Failed to store the file');
     }
 
-    const url = `${this.publicBase}/${key}`;
     await this.uploadsRepository.createUploadRecord(user.id, url, request.filename, request.roomId);
     return { url };
   }

@@ -544,9 +544,11 @@ relay, delivering · Google sign-in in both environments · **prod's schema crea
 verified rather than assumed (#112) · first administrator grantable (#114, conventions §22)
 
 **Next**
-- [ ] Small app change: swap `@aws-sdk/client-s3` for `@azure/storage-blob` in
-      `apps/api/src/modules/uploads/uploads.service.ts` (currently speaks the S3 protocol,
-      which Azure Blob does not) — blocks provisioning Blob Storage (O15)
+- [ ] O15 / #139 — **built, not yet deployed** (2026-08-24). Was scoped as a swap; became a
+      seam instead (`StorageProvider` interface, `uploads.service.ts` depends only on that, not
+      an SDK), so the S3/MinIO path used locally is unaffected and Azure Blob is a second
+      implementation rather than a replacement. Terraform (storage account, container, the api
+      identity's two role grants) written but not yet applied to either environment.
 - [ ] Update `infra-budget-log.md` target architecture: "Azure Cache Basic C0" → Azure Managed
       Redis `Balanced_B0` (the former no longer accepts new deployments — see §5)
 - [ ] Revisit `api_min_replicas = 1` on prod before beta testers arrive — scale-to-zero means a

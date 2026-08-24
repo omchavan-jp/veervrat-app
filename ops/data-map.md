@@ -136,7 +136,7 @@ Decisions needed, none of them technical:
 | All application data | Azure Postgres Flexible Server, **Central India (Pune)** |
 | Sessions / cache | Azure Managed Redis, same region |
 | Secrets | Azure Key Vault, per environment |
-| Object storage | Not yet provisioned. Required by the application — see `documentation/22_Platform-Requirements.md` |
+| Object storage | Azure Blob, **Central India** — same region as everything else, so this does not affect the residency claim the way Sentry does. Built (#139), **not yet deployed** as of 2026-08-24 — see `documentation/22_Platform-Requirements.md` |
 | Email in transit | JP IT's relay (`dhoomketu.in`), sending as `notifications.jnanaprabodhini.org` |
 | Logs incl. IP/user agent | Azure Log Analytics, 30-day retention |
 | **Infrastructure state file** | ⚠️ Holds **every secret in plaintext**. Read access to it is equivalent to secret-store administrator access (issue #90) |

@@ -1,41 +1,32 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, PayloadTooLargeException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { UploadsService } from './uploads.service';
 import { UploadsRepository } from './uploads.repository';
+import { STORAGE_PROVIDER, type StorageProvider } from './storage/storage-provider';
 import type { SessionUser } from '../auth/types/auth.types';
 import { Role } from '@prisma/client';
 
-// Mock the S3 client so uploads resolve without a real MinIO.
-// vi.hoisted ensures sendMock exists when the (hoisted) vi.mock factory runs.
-const { sendMock } = vi.hoisted(() => ({ sendMock: vi.fn() }));
-vi.mock('@aws-sdk/client-s3', () => ({
-  S3Client: class {
-    send = sendMock;
-  },
-  PutObjectCommand: class {
-    constructor(public input: unknown) {}
-  },
-}));
-
-// Mock HEIC→JPEG conversion so the test needs no real libheif decode.
+// The service depends on StorageProvider, not any SDK — that is the entire point of #139. A mock
+// of the interface exercises the same contract Azure Blob and S3 both implement, so this test
+// stays correct regardless of which one is actually configured.
 const { heicConvertMock } = vi.hoisted(() => ({ heicConvertMock: vi.fn() }));
 vi.mock('heic-convert', () => ({ default: heicConvertMock }));
 
-const S3_CONFIG: Record<string, string> = {
-  S3_ENDPOINT: 'http://localhost:9000',
-  S3_REGION: 'us-east-1',
-  S3_BUCKET: 'veervrat-uploads',
-  S3_ACCESS_KEY: 'veervrat',
-  S3_SECRET_KEY: 'veervrat_local',
-};
+// Typed as the mock shape directly, not as `StorageProvider` with per-call-site casts: a bare
+// `mockStorage.put` reference (as an assertion target) trips
+// `@typescript-eslint/unbound-method` when the property's declared type is the interface's plain
+// method signature rather than a `Mock`.
+type MockedStorageProvider = { [K in keyof StorageProvider]: ReturnType<typeof vi.fn> };
 
 describe('UploadsService', () => {
   let service: UploadsService;
 
   const mockRepository = { createUploadRecord: vi.fn() };
-  const mockConfig = {
-    get: vi.fn((key: string, fallback?: string) => S3_CONFIG[key] ?? fallback),
+  const mockStorage: MockedStorageProvider = {
+    put: vi.fn(),
+    get: vi.fn(),
+    delete: vi.fn(),
+    signedUrl: vi.fn(),
   };
 
   const mockUser: SessionUser = {
@@ -49,13 +40,13 @@ describe('UploadsService', () => {
   } as SessionUser;
 
   beforeEach(async () => {
-    sendMock.mockResolvedValue({});
+    mockStorage.put.mockResolvedValue({ url: 'https://storage.example/uploads/generated-key.jpg' });
     heicConvertMock.mockResolvedValue(Buffer.from('converted-jpeg'));
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UploadsService,
         { provide: UploadsRepository, useValue: mockRepository },
-        { provide: ConfigService, useValue: mockConfig },
+        { provide: STORAGE_PROVIDER, useValue: mockStorage },
       ],
     }).compile();
 
@@ -78,14 +69,14 @@ describe('UploadsService', () => {
         },
         mockUser,
       );
-      expect(result.url).toContain('uploads/');
-      expect(sendMock).toHaveBeenCalledOnce();
+      expect(result.url).toBeDefined();
+      expect(mockStorage.put).toHaveBeenCalledOnce();
       expect(mockRepository.createUploadRecord).toHaveBeenCalled();
     });
 
     it('stores under a randomized path, not the original filename', async () => {
       mockRepository.createUploadRecord.mockResolvedValue({ id: 'upload-1' });
-      const result = await service.uploadChatImage(
+      await service.uploadChatImage(
         {
           fileBuffer: Buffer.from('x').toString('base64'),
           filename: 'secret-name.png',
@@ -93,8 +84,9 @@ describe('UploadsService', () => {
         },
         mockUser,
       );
-      expect(result.url).not.toContain('secret-name');
-      expect(result.url).toMatch(/uploads\/[0-9a-f-]+\.png$/);
+      const key = mockStorage.put.mock.calls[0][0] as string;
+      expect(key).not.toContain('secret-name');
+      expect(key).toMatch(/^uploads\/[0-9a-f-]+\.png$/);
     });
 
     it('rejects non-image file types', async () => {
@@ -104,7 +96,7 @@ describe('UploadsService', () => {
           mockUser,
         ),
       ).rejects.toThrow(BadRequestException);
-      expect(sendMock).not.toHaveBeenCalled();
+      expect(mockStorage.put).not.toHaveBeenCalled();
     });
 
     it('rejects files exceeding the size limit', async () => {
@@ -118,7 +110,7 @@ describe('UploadsService', () => {
           mockUser,
         ),
       ).rejects.toThrow(PayloadTooLargeException);
-      expect(sendMock).not.toHaveBeenCalled();
+      expect(mockStorage.put).not.toHaveBeenCalled();
     });
 
     it('accepts all supported image types', async () => {
@@ -143,10 +135,11 @@ describe('UploadsService', () => {
         mockUser,
       );
       expect(heicConvertMock).toHaveBeenCalledOnce();
-      expect(result.url).toMatch(/uploads\/[0-9a-f-]+\.jpg$/);
+      const [key, , contentType] = mockStorage.put.mock.calls[0] as [string, Buffer, string];
+      expect(key).toMatch(/^uploads\/[0-9a-f-]+\.jpg$/);
       // Stored object is the converted JPEG with the corrected content type.
-      const putInput = (sendMock.mock.calls[0][0] as { input: { ContentType: string } }).input;
-      expect(putInput.ContentType).toBe('image/jpeg');
+      expect(contentType).toBe('image/jpeg');
+      expect(result.url).toBeDefined();
     });
 
     it('rejects a HEIC file when conversion fails', async () => {
@@ -161,7 +154,21 @@ describe('UploadsService', () => {
           mockUser,
         ),
       ).rejects.toThrow(BadRequestException);
-      expect(sendMock).not.toHaveBeenCalled();
+      expect(mockStorage.put).not.toHaveBeenCalled();
+    });
+
+    it('reports 503 when the storage provider itself fails, without leaking the cause', async () => {
+      mockStorage.put.mockRejectedValue(new Error('network blip'));
+      await expect(
+        service.uploadChatImage(
+          {
+            fileBuffer: Buffer.from('x').toString('base64'),
+            filename: 'f.jpg',
+            mimeType: 'image/jpeg',
+          },
+          mockUser,
+        ),
+      ).rejects.toMatchObject({ status: 503 });
     });
   });
 });

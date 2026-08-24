@@ -146,7 +146,7 @@ its logs that is indistinguishable from success.
 
 ## 6. Object storage
 
-Required by the application; not currently provisioned.
+Required by the application; built (#139), not yet deployed as of 2026-08-24.
 
 - User-uploaded avatars and images
 - Private by default, served through the application rather than public bucket URLs
@@ -154,7 +154,17 @@ Required by the application; not currently provisioned.
 
 The storage protocol is an implementation detail of the application and is subject to change;
 it should not constrain platform selection. Any durable object store with an access-controlled
-API is suitable.
+API is suitable — enforced by a `StorageProvider` interface the upload service depends on
+rather than any SDK directly.
+
+⚠️ **The implementation does not currently meet the "private by default" requirement above.**
+Both providers (Azure Blob and the pre-existing S3/MinIO one) return a plain, unsigned, publicly
+readable URL — matching the S3/MinIO behaviour this application already had before #139, which
+that work deliberately preserved rather than changed. `StorageProvider.signedUrl()` exists and is
+implemented on both providers, so private-by-default is a config change (container/bucket access
+policy) plus a caller that uses `signedUrl()` instead of the URL `put()` returns — not a
+rewrite — but nobody has decided to make that change, or confirmed whether "private by default"
+here still reflects what the product should do. Tracked as #178.
 
 ---
 
