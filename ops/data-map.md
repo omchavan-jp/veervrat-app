@@ -101,7 +101,7 @@ nothing left to authenticate.
 | Content under the pseudonym | `spec/06`. A vratmitra's record of their guidance should not develop holes |
 | `audit_events` | A security record legitimately outlives the account it describes |
 | `sessions` IP address + user agent | Now swept nightly once expired (#77). Live sessions end at anonymisation |
-| avatar **file** in object storage | The reference is cleared; no stored file is ever deleted. Currently moot in a stronger sense than it looks — **nothing sets `avatarUrl` at all**, so no avatar files exist. Deletion must land together with avatar upload, and is a blocking criterion on #139 |
+| avatar **file** in object storage | The reference is cleared; **no stored file is ever deleted** — still true, and now slightly more pressing: uploads that are composed but never saved stay in storage as orphans (readable only by their uploader). Currently moot in a stronger sense than it looks — **nothing sets `avatarUrl` at all**, so no avatar files exist. Deletion must land together with avatar upload, and is a blocking criterion on #139 |
 
 ### Resolved 2026-08-23
 
@@ -136,7 +136,7 @@ Decisions needed, none of them technical:
 | All application data | Azure Postgres Flexible Server, **Central India (Pune)** |
 | Sessions / cache | Azure Managed Redis, same region |
 | Secrets | Azure Key Vault, per environment |
-| Object storage | Azure Blob, **Central India** — same region as everything else, so this does not affect the residency claim the way Sentry does. **UAT only** as of 2026-08-24 (`veervratuatuploads`); prod has no storage account yet, pending a `prod-*` tag. ✅ **Exercised end-to-end on UAT 2026-08-24** — a real PNG uploaded via `POST /api/v1/uploads/experience` as a signed-in user, then fetched back byte-identical. ⚠️ **It came back over the public internet with no credentials**, confirming uploads are NOT private by default (#178). See `documentation/22_Platform-Requirements.md` |
+| Object storage | Azure Blob, **Central India** — same region as everything else, so this does not affect the residency claim the way Sentry does. Both environments (`veervratuatuploads`, `veervratproduploads` — the latter created by `prod-2026-08-24.1`). ⚠️ **Prod's has never had a file written through it**, and prod still runs the pre-#178 single-container layout until the next prod tag. ✅ **Exercised end-to-end on UAT.** Uploaded 2026-08-24; made private 2026-08-25 (#178). An image is now served by the api, which decides per request whether the viewer may see it — **visibility derives from the document containing the image**, so a chat image follows room membership and an experience image follows that log's own visibility (including guest access to a published one). Verified on UAT: uploader 200, anonymous 404, blob unreachable directly 404. Blog images stay public and cacheable, deliberately. See `documentation/22_Platform-Requirements.md` |
 | Email in transit | JP IT's relay (`dhoomketu.in`), sending as `notifications.jnanaprabodhini.org` |
 | Logs incl. IP/user agent | Azure Log Analytics, 30-day retention |
 | **Infrastructure state file** | ⚠️ Holds **every secret in plaintext**. Read access to it is equivalent to secret-store administrator access (issue #90) |
