@@ -46,6 +46,18 @@ export type RuntimeConfig = {
    * unavailable state exists to prevent. It shipped that way once.
    */
   contentEditEnabled: boolean;
+  /**
+   * The browser Sentry DSN for this environment, or undefined if error tracking is off.
+   *
+   * Threaded through here rather than read as `NEXT_PUBLIC_SENTRY_DSN`, on purpose: that would
+   * be inlined at build time, and one web image is promoted from UAT to prod unchanged (§17) —
+   * UAT's DSN would ship to production, or an empty build-time value would ship to both.
+   *
+   * Not a secret. A browser Sentry SDK always ships its DSN in the page it instruments — it is
+   * a write-only ingest address, not a credential that reads anything back — so sending it down
+   * with the rest of RuntimeConfig is the same trust boundary this value already crosses.
+   */
+  sentryDsn: string | undefined;
 };
 
 /**
@@ -68,6 +80,20 @@ function parseFeedbackMode(raw: string | undefined): FeedbackMode {
 }
 
 /**
+ * `undefined` for both "not set" and "set to something that isn't a DSN".
+ *
+ * Terraform creates the `sentry-dsn` Key Vault secret with a placeholder value and never sets
+ * the real one — the value is set out of band per environment. Until someone does, this
+ * environment variable holds that placeholder, and initialising Sentry with it would mean
+ * believing tracking is on while every event silently fails to send — the same illusion the
+ * api-side `resolveSentryConfig` guards against.
+ */
+function parseSentryDsn(raw: string | undefined): string | undefined {
+  const trimmed = raw?.trim();
+  return trimmed && /^https?:\/\//i.test(trimmed) ? trimmed : undefined;
+}
+
+/**
  * Read from the server's environment. Safe only on the server — these are deliberately not
  * `NEXT_PUBLIC_*`, so they are absent in the browser.
  */
@@ -78,6 +104,7 @@ export function readServerRuntimeConfig(): RuntimeConfig {
     feedbackMode: parseFeedbackMode(process.env.FEEDBACK_MODE),
     environment: parseEnvironment(process.env.ENVIRONMENT),
     contentEditEnabled: process.env.CONTENT_EDIT_ENABLED === 'true',
+    sentryDsn: parseSentryDsn(process.env.SENTRY_DSN),
   };
 }
 

@@ -43,3 +43,13 @@ resource "azurerm_role_assignment" "api_kv_secrets" {
   role_definition_name = "Key Vault Secrets User"
   principal_id         = azurerm_user_assigned_identity.api.principal_id
 }
+
+# The web identity's first Key Vault access — nothing it read before this needed one, since
+# every other web env var is a plain runtime value (§17), never a secret. It needs the browser
+# Sentry DSN, which is not a credential (see runtime-config.ts) but is created as a Key Vault
+# secret to match how it is already handled on the api side.
+resource "azurerm_role_assignment" "web_kv_secrets" {
+  scope                = azurerm_key_vault.this.id
+  role_definition_name = "Key Vault Secrets User"
+  principal_id         = azurerm_user_assigned_identity.web.principal_id
+}

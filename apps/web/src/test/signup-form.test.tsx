@@ -88,6 +88,7 @@ const renderSignup = () =>
         feedbackMode: 'off',
         environment: 'local',
         contentEditEnabled: false,
+        sentryDsn: undefined,
       }}
     >
       <SignupPage />
