@@ -2,6 +2,7 @@
 
 import { createContext, useContext } from 'react';
 import { setClientRuntimeConfig, type RuntimeConfig } from './runtime-config';
+import { initBrowserSentry } from './sentry-client';
 
 const RuntimeConfigContext = createContext<RuntimeConfig | undefined>(undefined);
 
@@ -12,6 +13,9 @@ const RuntimeConfigContext = createContext<RuntimeConfig | undefined>(undefined)
  * `lib/api/client.ts` may be called before effects have run (a query firing during the first
  * paint), and a request that silently fell back to localhost is exactly the failure this
  * whole change exists to prevent.
+ *
+ * Sentry is initialised from here too, for the same reason: this is the earliest point in the
+ * client the DSN is known at all.
  */
 export function RuntimeConfigProvider({
   config,
@@ -21,6 +25,7 @@ export function RuntimeConfigProvider({
   children: React.ReactNode;
 }) {
   setClientRuntimeConfig(config);
+  initBrowserSentry(config);
 
   return <RuntimeConfigContext.Provider value={config}>{children}</RuntimeConfigContext.Provider>;
 }

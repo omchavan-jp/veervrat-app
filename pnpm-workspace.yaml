@@ -11,3 +11,8 @@ allowBuilds:
   bcrypt: true
   '@parcel/watcher': true
   '@swc/core': true
+  # Its postinstall only fetches Sentry's own sentry-cli binary for local source-map upload —
+  # verified by reading scripts/install.js before deciding. Not run: nothing here invokes the
+  # CLI (no source-map upload step exists yet), so there's no reason to execute even a trusted
+  # binary-fetch script for a feature that isn't wired up.
+  '@sentry/cli': false

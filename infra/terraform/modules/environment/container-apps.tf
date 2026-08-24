@@ -317,6 +317,16 @@ resource "azurerm_container_app" "web" {
     identity = azurerm_user_assigned_identity.web.id
   }
 
+  # Not a credential — a browser Sentry DSN is a write-only ingest address, sent to the browser
+  # in every page it instruments (runtime-config.ts). Held as a Key Vault reference anyway, to
+  # match how the same value is handled on the api side and to avoid it sitting in plain sight
+  # in `az containerapp show` output for no reason.
+  secret {
+    name                = "sentry-dsn"
+    key_vault_secret_id = azurerm_key_vault_secret.sentry_dsn.versionless_id
+    identity            = azurerm_user_assigned_identity.web.id
+  }
+
   ingress {
     external_enabled = true
     target_port      = 3000
@@ -377,6 +387,15 @@ resource "azurerm_container_app" "web" {
         name  = "CONTENT_EDIT_ENABLED"
         value = var.content_edit_enabled ? "true" : "false"
       }
+      # Read by RuntimeConfig, never NEXT_PUBLIC_SENTRY_DSN (§17) — that would be baked into
+      # the image at build time, and the same image is promoted from UAT to prod unchanged, so
+      # UAT's DSN would ship live to production, or an empty build-time value would ship to
+      # both. Unset or left at the Terraform placeholder means the browser SDK never
+      # initialises; runtime-config.ts treats anything that is not a real DSN URL as absent.
+      env {
+        name        = "SENTRY_DSN"
+        secret_name = "sentry-dsn"
+      }
       env {
         name  = "PORT"
         value = "3000"
@@ -392,5 +411,5 @@ resource "azurerm_container_app" "web" {
 
   tags = local.tags
 
-  depends_on = [azurerm_role_assignment.web_acr_pull]
+  depends_on = [azurerm_role_assignment.web_acr_pull, azurerm_role_assignment.web_kv_secrets]
 }
