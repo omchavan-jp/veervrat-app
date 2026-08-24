@@ -103,7 +103,11 @@ export class AdminUsersService {
         action: 'admin.capability.granted',
         resourceType: 'user',
         resourceId: id,
-        metadata: { capability, displayName: target.displayName },
+        // username alongside displayName, not instead of it (#144): username is what makes the
+        // row unambiguous — display names collide (three accounts in pre-production already
+        // share "Om Chavan") — but displayName stays for a human scanning the log, which
+        // resourceId alone does not serve.
+        metadata: { capability, displayName: target.displayName, username: target.username },
       });
     }
     for (const capability of revoked) {
@@ -112,7 +116,7 @@ export class AdminUsersService {
         action: 'admin.capability.revoked',
         resourceType: 'user',
         resourceId: id,
-        metadata: { capability, displayName: target.displayName },
+        metadata: { capability, displayName: target.displayName, username: target.username },
       });
     }
 
