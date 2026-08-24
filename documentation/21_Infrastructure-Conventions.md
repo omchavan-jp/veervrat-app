@@ -806,18 +806,30 @@ One user-assigned managed identity, `veervrat-github-actions` (in `veervrat-shar
 publish profile — GitHub exchanges a short-lived OIDC token for an Azure token at run time.
 
 **Three federated credentials, one per GitHub Environment** (`build`, `uat`, `prod` — see §14
-"declare an environment on every job" for why there are exactly these three, no more):
+"declare an environment on every job" for why there are exactly these three, no more).
+
+⚠️ **Do not copy the subject format below from memory — read it from
+`infra/terraform/envs/shared/github-oidc.tf`.** The repository has already moved owners once
+(`veer-vrat` → `omchavan-jp`, 2026-08-24, with a further move to `jnanaprabodhini` planned —
+see #132), and GitHub's subject format is **not** simply `repo:<owner>/<repo>:...` for a
+repository that has ever been renamed or transferred. After a transfer it becomes
+`repo:<owner>@<owner_id>/<repo>@<repo_id>:...` — GitHub's own anti-reuse guard, so that a
+*different* future owner reusing the same path string cannot inherit this trust relationship.
+This bit the OIDC login the moment the transfer happened, and will bite it again on the next
+move. Confirm the real numeric IDs against the API rather than guessing:
+`gh api repos/<owner>/<repo> -q '.id, .owner.id'`.
 
 ```
-repo:veer-vrat/veervrat-app:environment:build
-repo:veer-vrat/veervrat-app:environment:uat
-repo:veer-vrat/veervrat-app:environment:prod
+# Current, as of 2026-08-24 — see github-oidc.tf's own comment for the full story
+repo:omchavan-jp@317451750/veervrat-app@1287947867:environment:build
+repo:omchavan-jp@317451750/veervrat-app@1287947867:environment:uat
+repo:omchavan-jp@317451750/veervrat-app@1287947867:environment:prod
 ```
 
 Verify what exists: `az identity federated-credential list --identity-name
 veervrat-github-actions -g veervrat-shared -o table`.
 
-### Roles — all at subscription scope, deliberately
+### Roles — subscription-scoped, except the one narrow exception below
 
 | Role | Scope | Why |
 |---|---|---|
@@ -825,15 +837,32 @@ veervrat-github-actions -g veervrat-shared -o table`.
 | AcrPush | `veervratacr` | push built images — no admin password exists on the registry (`admin_enabled = false`) |
 | Storage Blob Data Contributor | `veervrattfstate` | read/write Terraform state |
 | Key Vault Secrets Officer | subscription | re-apply the same generated secrets on every run — Terraform is idempotent, so this must be read/write, not just read |
+| User Access Administrator | `veervrat-uat`, `veervrat-prod` resource groups **only** | added 2026-08-24 — see below |
 
-**Contributor cannot grant roles.** CD can deploy infrastructure but cannot widen anyone's
-access, including its own — the same escalation boundary Azure enforces everywhere else in
-this project.
+**Contributor cannot grant roles**, and still can't — that boundary is unchanged. What changed
+is that CD needed a *separate*, narrower power added alongside it.
 
-Because every grant is subscription-scoped rather than resource-group-scoped, **prod needed
-zero additional role assignments** once its resource group existed — confirmed via
-`az role assignment list --assignee <client-id> --scope /subscriptions/<id>` before the
-first prod deploy, rather than assumed.
+Every `azurerm_role_assignment` this repo declares had, until 2026-08-24, only ever been
+*created* by a human running `terraform apply` with their own (Owner-level) credentials — CD's
+own applies always saw them as already matching, so `Microsoft.Authorization/roleAssignments/write`
+was never actually exercised by the CD identity. The first PR to add a genuinely new role
+assignment and leave it for CD to create (#175, the web identity's first Key Vault access)
+failed with a 403, exposing that Contributor deliberately excludes exactly that permission.
+
+Fixed by granting `User Access Administrator` — the narrowest **built-in** role that includes
+`roleAssignments/write`; Azure has none scoped to "may grant only these specific roles" — but
+**resource-group scoped, not subscription-wide**, unlike everything else in this table. That
+asymmetry is deliberate: subscription-wide would let a compromised pipeline grant itself
+`Owner`. See `infra/terraform/envs/shared/github-oidc.tf` for the full reasoning, including a
+noted-but-not-built tightening (an ABAC condition restricting *which* roles CD may grant).
+
+The claim this section used to make — **"prod needed zero additional role assignments once its
+resource group existed"** — is no longer true. Both `User Access Administrator` grants apply to
+`veervrat-uat` and `veervrat-prod` identically, so prod does now receive role assignments CD
+creates itself; the situation the old sentence described (subscription-wide grants meaning
+nothing further was ever needed per-environment) stopped being the whole picture the day a
+resource-group-scoped grant was added for the first time. Confirm current reality rather than
+trusting this paragraph: `az role assignment list --assignee <client-id> --all`.
 
 ### No paid-plan reviewer gate — the tag is the gate
 
