@@ -5,12 +5,15 @@ import {
   DeleteObjectCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import type { StorageProvider } from './storage-provider';
+import type { StorageProvider, StorageVisibility } from './storage-provider';
 
 export type S3StorageConfig = {
   endpoint: string;
   region: string;
+  /** Bucket for private objects. */
   bucket: string;
+  /** Bucket for published objects, served without a signature. */
+  publicBucket: string;
   accessKeyId: string;
   secretAccessKey: string;
   publicBase: string;
@@ -24,6 +27,10 @@ export type S3StorageConfig = {
 export class S3StorageProvider implements StorageProvider {
   private readonly client: S3Client;
 
+  private bucket(visibility: StorageVisibility): string {
+    return visibility === 'public' ? this.config.publicBucket : this.config.bucket;
+  }
+
   constructor(private readonly config: S3StorageConfig) {
     this.client = new S3Client({
       endpoint: config.endpoint,
@@ -33,35 +40,46 @@ export class S3StorageProvider implements StorageProvider {
     });
   }
 
-  async put(key: string, body: Buffer, contentType: string): Promise<{ url: string }> {
+  async put(
+    key: string,
+    body: Buffer,
+    contentType: string,
+    visibility: StorageVisibility,
+  ): Promise<{ url: string }> {
     await this.client.send(
       new PutObjectCommand({
-        Bucket: this.config.bucket,
+        Bucket: this.bucket(visibility),
         Key: key,
         Body: body,
         ContentType: contentType,
       }),
     );
-    return { url: `${this.config.publicBase}/${key}` };
+    return { url: `${this.config.publicBase}/${this.bucket(visibility)}/${key}` };
   }
 
-  async get(key: string): Promise<Buffer> {
+  async get(key: string, visibility: StorageVisibility): Promise<Buffer> {
     const result = await this.client.send(
-      new GetObjectCommand({ Bucket: this.config.bucket, Key: key }),
+      new GetObjectCommand({ Bucket: this.bucket(visibility), Key: key }),
     );
     const bytes = await result.Body?.transformToByteArray();
     return Buffer.from(bytes ?? []);
   }
 
-  async delete(key: string): Promise<void> {
-    await this.client.send(new DeleteObjectCommand({ Bucket: this.config.bucket, Key: key }));
+  async delete(key: string, visibility: StorageVisibility): Promise<void> {
+    await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket(visibility), Key: key }));
   }
 
+  // Private bucket only — see the Azure provider's note. Signing a public object would defeat
+  // the caching that is the reason `blog` uploads are public in the first place.
   async signedUrl(key: string, expiresInSeconds: number): Promise<string> {
     return getSignedUrl(
       this.client,
-      new GetObjectCommand({ Bucket: this.config.bucket, Key: key }),
+      new GetObjectCommand({ Bucket: this.bucket('private'), Key: key }),
       { expiresIn: expiresInSeconds },
     );
+  }
+
+  publicUrl(key: string): string {
+    return `${this.config.publicBase}/${this.bucket('public')}/${key}`;
   }
 }

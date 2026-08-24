@@ -128,6 +128,14 @@ enum CheckinStatus {
   @@map("checkin_status")
 }
 
+enum UploadPurpose {
+  CHAT       @map("chat")
+  EXPERIENCE @map("experience")
+  BLOG       @map("blog")
+
+  @@map("upload_purpose")
+}
+
 enum ExperienceVisibility {
   ONLY_ME @map("only_me")
   FRIENDS @map("friends")
@@ -962,7 +970,11 @@ model Upload {
   id        String   @id @default(uuid()) @db.Uuid
   uploaderId String  @map("uploader_id") @db.Uuid
   roomId    String?  @map("room_id") // Optional: associate with chat room
-  minioUrl  String   @map("minio_url") // Public MinIO URL
+  storageKey String  @map("storage_key") // Object key, e.g. "<uuid>.png". Never a URL — the
+  // visibility policy decides how a key becomes a URL, and that decision must stay changeable.
+  // What the upload is FOR decides who may see it. Persisted because the resolver endpoint is
+  // handed only a key and must not have to guess.
+  purpose   UploadPurpose @default(EXPERIENCE)
   filename  String
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -970,6 +982,7 @@ model Upload {
 
   @@index([uploaderId])
   @@index([roomId])
+  @@index([storageKey])
   @@map("uploads")
 }
 

@@ -30,6 +30,7 @@ vi.mock('@azure/storage-blob', () => ({
 const config = {
   accountName: 'veervratuatuploads',
   containerName: 'uploads',
+  publicContainerName: 'uploads-public',
   managedIdentityClientId: 'abc-123',
 };
 
@@ -42,7 +43,12 @@ describe('AzureBlobStorageProvider', () => {
   });
 
   it('put() uploads with the given content type and returns the blob URL', async () => {
-    const result = await provider.put('uploads/x.jpg', Buffer.from('data'), 'image/jpeg');
+    const result = await provider.put(
+      'uploads/x.jpg',
+      Buffer.from('data'),
+      'image/jpeg',
+      'private',
+    );
 
     expect(containerClientMock.getBlockBlobClient).toHaveBeenCalledWith('uploads/x.jpg');
     expect(blockBlobMock.uploadData).toHaveBeenCalledWith(
@@ -54,14 +60,14 @@ describe('AzureBlobStorageProvider', () => {
 
   it('get() returns whatever the SDK downloads', async () => {
     blockBlobMock.downloadToBuffer.mockResolvedValue(Buffer.from('contents'));
-    const result = await provider.get('uploads/x.jpg');
+    const result = await provider.get('uploads/x.jpg', 'private');
     expect(result).toEqual(Buffer.from('contents'));
   });
 
   it('delete() uses deleteIfExists — idempotent on a key that is already gone', async () => {
     // #140's avatar-deletion path must not fail because the file was already removed, or
     // never existed. `deleteIfExists`, not `delete`, is the whole point of this test.
-    await provider.delete('uploads/x.jpg');
+    await provider.delete('uploads/x.jpg', 'private');
     expect(blockBlobMock.deleteIfExists).toHaveBeenCalledWith();
     expect(blockBlobMock.deleteIfExists).not.toHaveBeenCalledWith(expect.anything());
   });

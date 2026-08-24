@@ -4,11 +4,14 @@ import {
   BlobSASPermissions,
 } from '@azure/storage-blob';
 import { DefaultAzureCredential } from '@azure/identity';
-import type { StorageProvider } from './storage-provider';
+import type { StorageProvider, StorageVisibility } from './storage-provider';
 
 export type AzureBlobStorageConfig = {
   accountName: string;
+  /** Container for private objects — refuses anonymous reads. */
   containerName: string;
+  /** Container for published objects — blob-level anonymous read. */
+  publicContainerName: string;
   /** The user-assigned managed identity's client id — DefaultAzureCredential needs this to pick
    *  the right identity when a Container App has exactly one attached, since IMDS does not
    *  disambiguate on its own. */
@@ -30,39 +33,56 @@ export type AzureBlobStorageConfig = {
 export class AzureBlobStorageProvider implements StorageProvider {
   private readonly service: BlobServiceClient;
   private readonly containerName: string;
+  private readonly publicContainerName: string;
 
   constructor(config: AzureBlobStorageConfig) {
     this.containerName = config.containerName;
+    this.publicContainerName = config.publicContainerName;
     this.service = new BlobServiceClient(
       `https://${config.accountName}.blob.core.windows.net`,
       new DefaultAzureCredential({ managedIdentityClientId: config.managedIdentityClientId }),
     );
   }
 
-  private blockBlob(key: string) {
-    return this.service.getContainerClient(this.containerName).getBlockBlobClient(key);
+  private container(visibility: StorageVisibility): string {
+    return visibility === 'public' ? this.publicContainerName : this.containerName;
   }
 
-  async put(key: string, body: Buffer, contentType: string): Promise<{ url: string }> {
-    const blob = this.blockBlob(key);
+  private blockBlob(key: string, visibility: StorageVisibility) {
+    return this.service.getContainerClient(this.container(visibility)).getBlockBlobClient(key);
+  }
+
+  async put(
+    key: string,
+    body: Buffer,
+    contentType: string,
+    visibility: StorageVisibility,
+  ): Promise<{ url: string }> {
+    const blob = this.blockBlob(key, visibility);
     await blob.uploadData(body, { blobHTTPHeaders: { blobContentType: contentType } });
     return { url: blob.url };
   }
 
-  async get(key: string): Promise<Buffer> {
-    const blob = this.blockBlob(key);
+  async get(key: string, visibility: StorageVisibility): Promise<Buffer> {
+    const blob = this.blockBlob(key, visibility);
     const download = await blob.downloadToBuffer();
     return download;
   }
 
-  async delete(key: string): Promise<void> {
+  async delete(key: string, visibility: StorageVisibility): Promise<void> {
     // Idempotent: an avatar's delete path (#140) must not fail because the file was already
     // removed, or because it never existed in the first place.
-    await this.blockBlob(key).deleteIfExists();
+    await this.blockBlob(key, visibility).deleteIfExists();
   }
 
+  publicUrl(key: string): string {
+    return this.blockBlob(key, 'public').url;
+  }
+
+  // Private container only: signing a public object would defeat the caching that is the whole
+  // reason `blog` uploads are public.
   async signedUrl(key: string, expiresInSeconds: number): Promise<string> {
-    const blob = this.blockBlob(key);
+    const blob = this.blockBlob(key, 'private');
     const startsOn = new Date();
     const expiresOn = new Date(startsOn.getTime() + expiresInSeconds * 1000);
 

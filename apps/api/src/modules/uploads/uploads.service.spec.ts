@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, PayloadTooLargeException } from '@nestjs/common';
+import type { UploadPurpose } from './uploads.service';
 import { UploadsService } from './uploads.service';
 import { UploadsRepository } from './uploads.repository';
 import { STORAGE_PROVIDER, type StorageProvider } from './storage/storage-provider';
@@ -27,6 +28,7 @@ describe('UploadsService', () => {
     get: vi.fn(),
     delete: vi.fn(),
     signedUrl: vi.fn(),
+    publicUrl: vi.fn(),
   };
 
   const mockUser: SessionUser = {
@@ -86,7 +88,51 @@ describe('UploadsService', () => {
       );
       const key = mockStorage.put.mock.calls[0][0] as string;
       expect(key).not.toContain('secret-name');
-      expect(key).toMatch(/^uploads\/[0-9a-f-]+\.png$/);
+      // No `uploads/` prefix — the container is already called that, and carrying both
+      // produced /uploads/uploads/<uuid>.ext in every stored URL (#178).
+      expect(key).toMatch(/^[0-9a-f-]+\.png$/);
+    });
+
+    // #178: an image in a private chat was readable by anyone holding its URL, permanently.
+    // These pin the two halves of the fix — WHERE a file is written, and WHAT is handed back.
+    describe('visibility by purpose (#178)', () => {
+      const png = {
+        fileBuffer: Buffer.from('x').toString('base64'),
+        filename: 'a.png',
+        mimeType: 'image/png',
+      };
+
+      beforeEach(() => {
+        // Shared module-level mocks: without this, `calls[0]` is whatever an earlier test left
+        // behind. Asserting on `lastCall` below makes each case independent of ordering too.
+        vi.clearAllMocks();
+        mockRepository.createUploadRecord.mockResolvedValue({ id: 'u1' });
+      });
+
+      it.each([
+        ['chat', 'private'],
+        ['experience', 'private'],
+        ['blog', 'public'],
+      ])('stores a %s upload in the %s container', async (purpose, expected) => {
+        await service.uploadImage(png, mockUser, purpose as UploadPurpose);
+        expect(mockStorage.put.mock.lastCall?.[3]).toBe(expected);
+      });
+
+      it('records the purpose, so the resolver never has to guess who may see a key', async () => {
+        await service.uploadImage(png, mockUser, 'experience');
+        expect(mockRepository.createUploadRecord.mock.lastCall?.[3]).toBe('experience');
+      });
+
+      it('returns an application URL, never the blob address', async () => {
+        mockStorage.put.mockResolvedValue({ url: 'https://acct.blob.core.windows.net/x/y.png' });
+        const { url } = await service.uploadImage(png, mockUser, 'chat');
+
+        // What goes into a Tiptap AST and is never rewritten. A signature would expire inside
+        // stored content; a storage hostname would outlive the provider that issued it.
+        expect(url).toMatch(/^\/api\/v1\/uploads\/[0-9a-f-]+\.png$/);
+        expect(url).not.toContain('blob.core.windows.net');
+        expect(url).not.toContain('?');
+      });
     });
 
     it('rejects non-image file types', async () => {
@@ -136,7 +182,9 @@ describe('UploadsService', () => {
       );
       expect(heicConvertMock).toHaveBeenCalledOnce();
       const [key, , contentType] = mockStorage.put.mock.calls[0] as [string, Buffer, string];
-      expect(key).toMatch(/^uploads\/[0-9a-f-]+\.jpg$/);
+      // No `uploads/` prefix — the container is already called that, and carrying both
+      // produced /uploads/uploads/<uuid>.ext in every stored URL (#178).
+      expect(key).toMatch(/^[0-9a-f-]+\.jpg$/);
       // Stored object is the converted JPEG with the corrected content type.
       expect(contentType).toBe('image/jpeg');
       expect(result.url).toBeDefined();

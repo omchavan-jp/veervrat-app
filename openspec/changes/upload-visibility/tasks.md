@@ -20,23 +20,28 @@ Findings recorded in `design.md` → "Findings from section 1".
 - [x] 1.3 `signedUrl` inspected on both providers; Azure needs **Storage Blob Delegator**, which
   exists in `storage.tf` and is live on `veervratuatuploads`. Not yet *called* — that is 6.1.
 
-## 2. Storage layer: key, not URL
+## 2. Storage layer: key, not URL — DONE 2026-08-24
 
-- [ ] 2.1 Prisma migration: `uploads.minio_url` → `uploads.storage_key`. Convert existing rows by
+The migration was tested against a live Postgres in all three states: populated with both URL
+styles (converts), unconvertible (aborts), and empty as prod is (applies). An earlier draft
+renamed the column *before* checking and left the table half-migrated on failure — found by
+running it, not by reading it, and fixed by checking first.
+
+- [x] 2.1 Prisma migration: `uploads.minio_url` → `uploads.storage_key`. Convert existing rows by
   extracting the key from the stored URL; **fail loudly** on any row that cannot be converted
   rather than nulling it.
-- [ ] 2.2 Drop the duplicated path segment — keys become `<uuid>.<ext>`, since the container
+- [x] 2.2 Drop the duplicated path segment — keys become `<uuid>.<ext>`, since the container
   already carries the name.
-- [ ] 2.3 `uploads.repository.ts`: `createUploadRecord` takes and stores the key. Rename the
+- [x] 2.3 `uploads.repository.ts`: `createUploadRecord` takes and stores the key. Rename the
   parameter, which is currently `minioUrl`.
-- [ ] 2.4 Update the `Upload` model comment, which says "Public MinIO URL" and is wrong twice.
+- [x] 2.4 Update the `Upload` model comment, which says "Public MinIO URL" and is wrong twice.
 
 ## 3. Two containers
 
 - [ ] 3.1 Terraform: keep `uploads` but flip it to private (remove `container_access_type =
   "blob"`); add `uploads-public` with blob-level public read. Update the comment in `storage.tf`,
   which currently states this decision was deliberately deferred.
-- [ ] 3.2 Both providers need to address two containers. Prefer a container argument over a
+- [x] 3.2 Both providers need to address two containers. Prefer a container argument over a
   second provider instance, so the seam stays four methods (#139).
 - [ ] 3.3 Apply to UAT and verify: a blob in `uploads` returns 404/401 unauthenticated, and one
   in `uploads-public` returns 200. **Assert both positively** — a failed fetch that errors for an
@@ -44,10 +49,10 @@ Findings recorded in `design.md` → "Findings from section 1".
 
 ## 4. Visibility by purpose
 
-- [ ] 4.1 `uploads.service.ts`: stop ignoring `_purpose`. Map `blog` → public container,
+- [x] 4.1 `uploads.service.ts`: stop ignoring `_purpose`. Map `blog` → public container,
   `experience` and `chat` → private.
-- [ ] 4.2 Private purposes return `signedUrl(key, 900)`; public returns the plain URL.
-- [ ] 4.3 Unit tests per purpose, asserting **which container** and **whether the URL is signed** —
+- [x] 4.2 Private purposes return `signedUrl(key, 900)`; public returns the plain URL.
+- [x] 4.3 Unit tests per purpose, asserting **which container** and **whether the URL is signed** —
   not merely that a URL came back.
 
 ## 5. The resolver endpoint (revised — see design decision 5)

@@ -21,6 +21,15 @@ interface UploadRequest {
 
 export type UploadPurpose = 'chat' | 'experience' | 'blog';
 
+// Blog posts are published content: a stable, cacheable URL is the right answer there, not a
+// concession. Everything else is private (#178) — and the set is written as an allowlist so a
+// purpose added later is private until somebody deliberately decides otherwise.
+const PUBLIC_PURPOSES = new Set<UploadPurpose>(['blog']);
+
+// What gets embedded in stored content. Must stay stable across TTL changes, visibility changes
+// and storage providers, because it is written into Tiptap ASTs that are never rewritten.
+const UPLOADS_ROUTE = '/api/v1/uploads';
+
 const EXT_BY_TYPE: Record<string, string> = {
   'image/jpeg': 'jpg',
   'image/png': 'png',
@@ -50,7 +59,7 @@ export class UploadsService {
   async uploadImage(
     request: UploadRequest,
     user: SessionUser,
-    _purpose: UploadPurpose,
+    purpose: UploadPurpose,
   ): Promise<{ url: string }> {
     if (!this.ALLOWED_TYPES.includes(request.mimeType)) {
       throw new BadRequestException('File type not supported');
@@ -79,13 +88,18 @@ export class UploadsService {
       }
     }
 
-    // Randomized path — never the original filename (PES §uploads).
+    // Randomized name — never the original filename (PES §uploads). No `uploads/` prefix: the
+    // container is already called that, and carrying both produced /uploads/uploads/<uuid>.ext.
     const ext = EXT_BY_TYPE[contentType];
-    const key = `uploads/${randomUUID()}.${ext}`;
+    const key = `${randomUUID()}.${ext}`;
 
-    let url: string;
     try {
-      ({ url } = await this.storage.put(key, body, contentType));
+      await this.storage.put(
+        key,
+        body,
+        contentType,
+        PUBLIC_PURPOSES.has(purpose) ? 'public' : 'private',
+      );
     } catch (error) {
       this.logger.error({
         msg: 'Object storage upload failed',
@@ -94,7 +108,18 @@ export class UploadsService {
       throw new ServiceUnavailableException('Failed to store the file');
     }
 
-    await this.uploadsRepository.createUploadRecord(user.id, url, request.filename, request.roomId);
-    return { url };
+    await this.uploadsRepository.createUploadRecord(
+      user.id,
+      key,
+      request.filename,
+      purpose,
+      request.roomId,
+    );
+
+    // A stable application URL, never the blob's own address. Stored content (a Tiptap AST in a
+    // chat message or experience log) embeds whatever is returned here, so it must not carry a
+    // signature that expires or a hostname that changes with the storage provider. Resolution —
+    // authorise, then redirect to a signed or public URL — happens per request, in the resolver.
+    return { url: `${UPLOADS_ROUTE}/${key}` };
   }
 }
