@@ -559,7 +559,8 @@ relay, delivering · Google sign-in in both environments · **prod's schema crea
 verified rather than assumed (#112) · first administrator grantable (#114, conventions §22)
 
 **Next**
-- [ ] O15 / #139 — **deployed to UAT, not prod, and never exercised anywhere** (2026-08-24).
+- [ ] O15 / #139 — **exercised on UAT 2026-08-24** (real upload + byte-identical read-back);
+      prod storage account created by `prod-2026-08-24.1`, not yet exercised there.
       Was scoped as a swap; became a seam instead (`StorageProvider` interface,
       `uploads.service.ts` depends only on that, not an SDK), so the S3/MinIO path used locally
       is unaffected and Azure Blob is a second implementation rather than a replacement.
