@@ -146,17 +146,13 @@ its logs that is indistinguishable from success.
 
 ## 6. Object storage
 
-Required by the application. Built and deployed to **UAT** (#139, 2026-08-24); **prod has no
-storage account yet**, pending a `prod-*` tag.
+Required by the application. Provisioned in **both** environments; the upload path is
+exercised on UAT and **not yet in prod**, which also still runs the pre-#178 single-container
+layout until the next prod tag.
 
-✅ **Exercised on UAT 2026-08-24.** A real 16×16 PNG was uploaded through
-`POST /api/v1/uploads/experience` by a signed-in user and fetched back byte-identical — the
-first file ever written through this path in a deployed environment. The managed-identity
-credential path, the container, and the round trip all work.
-
-⚠️ **The fetch needed no credentials.** The returned URL is publicly readable by anyone who
-has it, which is what §6's "private by default" requirement below says it should not be — see
-the warning at the end of this section (#178).
+✅ **Exercised on UAT.** A real PNG uploaded through `POST /api/v1/uploads/experience` by a
+signed-in user and fetched back byte-identical. The managed-identity credential path, both
+containers, and the full round trip work.
 
 - User-uploaded avatars and images
 - Private by default, served through the application rather than public bucket URLs
@@ -167,14 +163,30 @@ it should not constrain platform selection. Any durable object store with an acc
 API is suitable — enforced by a `StorageProvider` interface the upload service depends on
 rather than any SDK directly.
 
-⚠️ **The implementation does not currently meet the "private by default" requirement above.**
-Both providers (Azure Blob and the pre-existing S3/MinIO one) return a plain, unsigned, publicly
-readable URL — matching the S3/MinIO behaviour this application already had before #139, which
-that work deliberately preserved rather than changed. `StorageProvider.signedUrl()` exists and is
-implemented on both providers, so private-by-default is a config change (container/bucket access
-policy) plus a caller that uses `signedUrl()` instead of the URL `put()` returns — not a
-rewrite — but nobody has decided to make that change, or confirmed whether "private by default"
-here still reflects what the product should do. Tracked as #178.
+✅ **Met since 2026-08-25 (#178).** Uploads are served through the application, not from bucket
+URLs, and visibility is decided per request.
+
+**Visibility derives from the document that contains the image**, never from the image itself:
+
+| Purpose | Served how |
+|---|---|
+| Blog | Public container, plain cacheable URL — published content |
+| Experience | Streamed by the api, after asking the log whether this viewer may read it |
+| Chat | Streamed by the api, after checking room membership |
+
+Two containers, because anonymous access is a per-container setting: an object in the private
+container cannot be made public by an application bug. Stored content references
+`/api/v1/uploads/<key>`, so nothing provider-specific or expiring is written into it.
+
+Private images are **streamed rather than handed out as signed URLs**. A signed URL is a bearer
+credential for its lifetime and cannot be withdrawn; streaming re-decides access on every
+request, so removing an image or making a log private takes effect immediately. The cost is api
+bandwidth — the thing to revisit first if private image traffic grows, and the switch back to a
+redirect is one branch.
+
+Verified against deployed UAT, not asserted: an uploader reads their image (200), an anonymous
+request is refused (404), the blob is unreachable directly (404), and a blog image is
+anonymously readable (200). Bytes returned are identical to bytes uploaded.
 
 ---
 

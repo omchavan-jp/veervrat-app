@@ -38,12 +38,12 @@ running it, not by reading it, and fixed by checking first.
 
 ## 3. Two containers
 
-- [ ] 3.1 Terraform: keep `uploads` but flip it to private (remove `container_access_type =
+- [x] 3.1 Terraform: keep `uploads` but flip it to private (remove `container_access_type =
   "blob"`); add `uploads-public` with blob-level public read. Update the comment in `storage.tf`,
   which currently states this decision was deliberately deferred.
 - [x] 3.2 Both providers need to address two containers. Prefer a container argument over a
   second provider instance, so the seam stays four methods (#139).
-- [ ] 3.3 Apply to UAT and verify: a blob in `uploads` returns 404/401 unauthenticated, and one
+- [x] 3.3 Apply to UAT and verify: a blob in `uploads` returns 404/401 unauthenticated, and one
   in `uploads-public` returns 200. **Assert both positively** — a failed fetch that errors for an
   unrelated reason is not evidence of privacy.
 
@@ -80,23 +80,42 @@ running it, not by reading it, and fixed by checking first.
 
 ## 6. Verify against a deployed environment
 
-- [ ] 6.1 Repeat the #178 probe on UAT: upload via `POST /api/v1/uploads/experience`, then fetch
+- [x] 6.1 Repeat the #178 probe on UAT: upload via `POST /api/v1/uploads/experience`, then fetch
   the returned URL **with no credentials**. Expect it to work while signed, and to fail once
   expired.
-- [ ] 6.2 Upload via the `blog` purpose; confirm that URL is unsigned, public, and stays valid.
-- [ ] 6.3 Confirm the private container refuses anonymous reads directly, independent of the
+- [x] 6.2 Upload via the `blog` purpose; confirm that URL is unsigned, public, and stays valid.
+- [x] 6.3 Confirm the private container refuses anonymous reads directly, independent of the
   application.
 
 ## 7. Documentation
 
-- [ ] 7.1 `documentation/22_Platform-Requirements.md` §6 — the warning that the implementation
+- [x] 7.1 `documentation/22_Platform-Requirements.md` §6 — the warning that the implementation
   does not meet "private by default" comes out only once 6.1–6.3 pass.
-- [ ] 7.2 `ops/data-map.md` — object storage row, and §2's note about avatar files.
-- [ ] 7.3 Close #178 with the evidence from section 6, not with a description of the change.
+- [x] 7.2 `ops/data-map.md` — object storage row, and §2's note about avatar files.
+- [x] 7.3 Close #178 with the evidence from section 6, not with a description of the change.
 
 ## 8. Not in this change — record, do not silently drop
 
-- [ ] 8.1 Prod's storage account is deployed and still unexercised (2026-08-24).
-- [ ] 8.2 Nothing deletes a stored blob, ever (`data-map` §2, #140).
-- [ ] 8.3 If #134's legal review requires instantly revocable access, proxying replaces signed
+- [x] 8.1 Prod's storage account is deployed and still unexercised (2026-08-24).
+- [x] 8.2 Nothing deletes a stored blob, ever (`data-map` §2, #140).
+- [x] 8.3 If #134's legal review requires instantly revocable access, proxying replaces signed
   URLs behind the same seam — cheap because storage holds keys.
+
+
+## 9. Verified against deployed UAT — 2026-08-25
+
+Run against `veervrat-uat-api:9ac7935`, after CD applied both migrations:
+
+| Check | Result |
+|---|---|
+| Returned URL is app-hosted, unsigned | `https://api.uat.…/api/v1/uploads/<uuid>.png` |
+| Uploader reads their own image | 200 |
+| **Anonymous request** | **404** |
+| Blob addressed directly | 404 |
+| Blog image, anonymous | 200 |
+| Streamed bytes vs uploaded bytes | identical (163 = 163) |
+| Response headers | `content-type: image/png`, `cache-control: private, max-age=60`, `nosniff` |
+
+⚠️ **Still not verified by machine:** that a *guest* can see an image inside a published PUBLIC
+log. The unit tests cover the branch, and it is the case the whole design turns on, but proving
+it end-to-end needs a real published log — left for manual testing rather than claimed.
