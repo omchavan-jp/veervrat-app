@@ -15,7 +15,9 @@ import {
 import type { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { AuthProvider } from '@prisma/client';
+import { Throttle } from '@nestjs/throttler';
 import { UsersService } from './users.service';
+import { DataExportService } from '../data-export/data-export.service';
 import { AuthService } from '../auth/auth.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateVisibilityDto } from './dto/update-visibility.dto';
@@ -36,6 +38,7 @@ export class UsersController {
 
   constructor(
     private readonly usersService: UsersService,
+    private readonly dataExportService: DataExportService,
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
   ) {
@@ -119,6 +122,30 @@ export class UsersController {
       authCookieOptions({ httpOnly: true, maxAgeMs: this.cookieMaxAgeMs }),
     );
     return { success: true };
+  }
+
+  /**
+   * Every category of personal data this account holds, as one JSON document.
+   *
+   * Self-service rather than an admin-only tool: the alternative is a manual database query by
+   * whoever holds prod credentials for every request, and the published privacy policy already
+   * says "you can ask what data we hold about you" — this is what makes that answerable without
+   * a person in the loop.
+   *
+   * Throttled hard. This is the heaviest read in the API by design — it touches nearly every
+   * table the account appears in — and unlike most rate limits here, the purpose is capacity
+   * protection rather than brute-force defence.
+   */
+  @Get('me/data-export')
+  @UseGuards(SessionGuard)
+  @Throttle({ default: { ttl: 3600000, limit: 3 } })
+  @Audited({
+    action: 'user.data_export',
+    resourceType: 'user',
+    resourceId: (c) => (c.req.user as SessionUser)?.id,
+  })
+  async exportMyData(@CurrentUser() user: SessionUser) {
+    return this.dataExportService.exportFor(user.id);
   }
 
   @Get('me/connected-accounts')
