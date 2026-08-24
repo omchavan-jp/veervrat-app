@@ -146,7 +146,12 @@ its logs that is indistinguishable from success.
 
 ## 6. Object storage
 
-Required by the application; built (#139), not yet deployed as of 2026-08-24.
+Required by the application. Built and deployed to **UAT** (#139, 2026-08-24); **prod has no
+storage account yet**, pending a `prod-*` tag.
+
+⚠️ **Deployed is not the same as exercised.** The storage account, container and the api
+identity's role grants are verified in UAT; **no file has ever been written through the upload
+path in any deployed environment.** Treat object storage as unproven until one has.
 
 - User-uploaded avatars and images
 - Private by default, served through the application rather than public bucket URLs

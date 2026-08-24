@@ -30,6 +30,11 @@ along the way.
 
 - **Never commit directly to `main`.** Branch → PR → squash merge, always. A `pre-commit` hook
   enforces this; if you find yourself reaching for the override, that is the signal to stop.
+- **Never `git checkout` / `switch` / `restore` on a dirty tree**, except `checkout -b` /
+  `switch -c`, which carry the changes along and are the normal way to start work mid-change.
+  `git checkout <ref> -- <path>` is the dangerous one: it overwrites the working file with no
+  conflict, no warning and nothing in the reflog. Enforced by
+  `.claude/hooks/guard-git-checkout.sh`. Stash first; a stash is recoverable and this is not.
 - Feature branches are **kept** after merging, never deleted.
 - Conventional commits. `main` must always be releasable.
 - Merging to `main` deploys **UAT**. Production ships only by pushing a `prod-YYYY-MM-DD` tag.
@@ -46,7 +51,9 @@ along the way.
   own `deploy-environment` action applies Terraform as its first step; a manual apply landing in
   that window collides on the state lock. Terraform's locking fails one side cleanly rather than
   corrupting anything — but it still means a CD run has to be diagnosed and rerun for a reason
-  that has nothing to do with the change it was deploying. Happened 2026-08-24.
+  that has nothing to do with the change it was deploying. Happened 2026-08-24. Enforced by
+  `.claude/hooks/guard-terraform-during-cd.sh`, which **fails open** — if `gh` is unavailable or
+  offline it allows the command, so this checkpoint still needs reading, not just trusting.
 - **Before saying "verified":** name what you actually tested, and what you did not.
 
 ## Editing files

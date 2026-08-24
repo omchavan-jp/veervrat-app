@@ -548,11 +548,14 @@ relay, delivering · Google sign-in in both environments · **prod's schema crea
 verified rather than assumed (#112) · first administrator grantable (#114, conventions §22)
 
 **Next**
-- [ ] O15 / #139 — **built, not yet deployed** (2026-08-24). Was scoped as a swap; became a
-      seam instead (`StorageProvider` interface, `uploads.service.ts` depends only on that, not
-      an SDK), so the S3/MinIO path used locally is unaffected and Azure Blob is a second
-      implementation rather than a replacement. Terraform (storage account, container, the api
-      identity's two role grants) written but not yet applied to either environment.
+- [ ] O15 / #139 — **deployed to UAT, not prod, and never exercised anywhere** (2026-08-24).
+      Was scoped as a swap; became a seam instead (`StorageProvider` interface,
+      `uploads.service.ts` depends only on that, not an SDK), so the S3/MinIO path used locally
+      is unaffected and Azure Blob is a second implementation rather than a replacement.
+      `veervratuatuploads` + container + the api identity's two role grants are applied and
+      verified in UAT; prod gets them on the next `prod-*` tag. ⚠️ **No file has been uploaded
+      through the Azure path in any environment** — the infrastructure is verified, the upload
+      path is not. Closing this item needs one real upload, not a green apply.
 - [ ] Update `infra-budget-log.md` target architecture: "Azure Cache Basic C0" → Azure Managed
       Redis `Balanced_B0` (the former no longer accepts new deployments — see §5)
 - [ ] Revisit `api_min_replicas = 1` on prod before beta testers arrive — scale-to-zero means a

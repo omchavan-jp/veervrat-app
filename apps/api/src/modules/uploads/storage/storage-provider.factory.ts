@@ -33,16 +33,26 @@ class UnconfiguredStorageProvider implements StorageProvider {
 }
 
 /**
- * Picks the storage backend from whichever configuration is present — Azure Blob first, then
- * S3/MinIO, then unconfigured — rather than a separate `STORAGE_PROVIDER=azure|s3` toggle.
+ * Picks the storage backend from whichever configuration is present — rather than a separate
+ * `STORAGE_PROVIDER=azure|s3` toggle.
  *
  * One flag and one set of credentials can drift out of sync (the flag says azure, the Azure
  * vars are unset); detecting by presence means there is only one thing to get right per
  * environment. Local dev sets the S3/MinIO vars and nothing Azure-shaped; a deployed environment
- * sets the Azure vars and nothing S3-shaped, because there is no MinIO to point at there. Azure
- * is checked first only because it is the target of O15 — if both were ever present, that
- * ambiguity deserves the same loud failure a real deployment ambiguity would get elsewhere in
- * this codebase, not a silent pick.
+ * sets the Azure vars and nothing S3-shaped, because there is no MinIO to point at there.
+ *
+ * **Both configured at once is refused, not silently resolved.** Which backend an upload lands
+ * in is not a detail to guess at: picking wrong means writing user files to a store nobody is
+ * reading from, and doing it quietly means nobody finds out until the files are missing. There
+ * is no correct default here, so this throws at startup — a container that will not boot is a
+ * far better failure than one that boots and writes to the wrong place.
+ *
+ * ⚠️ **`AZURE_CLIENT_ID` is a load-bearing part of that detection, and it is a name the wider
+ * Azure ecosystem also uses** — `DefaultAzureCredential` reads it for service-principal auth
+ * generally, not just for storage. If some future feature sets it for an unrelated Azure SDK in
+ * an environment that also has the S3 vars, this now fails loudly at boot rather than silently
+ * switching where uploads go. That is the intended outcome; the fix in that case is to give the
+ * unrelated feature its own variable, not to weaken this check.
  */
 export const storageProviderFactory: Provider = {
   provide: STORAGE_PROVIDER,
@@ -51,11 +61,7 @@ export const storageProviderFactory: Provider = {
     const accountName = config.get<string>('AZURE_STORAGE_ACCOUNT_NAME');
     const containerName = config.get<string>('AZURE_STORAGE_CONTAINER_NAME');
     const managedIdentityClientId = config.get<string>('AZURE_CLIENT_ID');
-
-    if (accountName && containerName && managedIdentityClientId) {
-      logger.log(`Object storage: Azure Blob (${accountName}/${containerName})`);
-      return new AzureBlobStorageProvider({ accountName, containerName, managedIdentityClientId });
-    }
+    const azureConfigured = Boolean(accountName && containerName && managedIdentityClientId);
 
     const endpoint = config.get<string>('S3_ENDPOINT');
     const accessKeyId = config.get<string>('S3_ACCESS_KEY');
@@ -64,16 +70,37 @@ export const storageProviderFactory: Provider = {
     const publicBase =
       config.get<string>('S3_PUBLIC_URL') ??
       (endpoint && bucket ? `${endpoint}/${bucket}` : undefined);
+    const s3Configured = Boolean(
+      endpoint && accessKeyId && secretAccessKey && bucket && publicBase,
+    );
 
-    if (endpoint && accessKeyId && secretAccessKey && bucket && publicBase) {
+    if (azureConfigured && s3Configured) {
+      throw new Error(
+        'Object storage is ambiguously configured: both Azure Blob ' +
+          `(AZURE_STORAGE_ACCOUNT_NAME=${accountName}) and S3-compatible (S3_ENDPOINT=${endpoint}) ` +
+          'are fully set. Refusing to guess which one uploads should go to — unset whichever ' +
+          'does not belong in this environment. See storage-provider.factory.ts.',
+      );
+    }
+
+    if (azureConfigured) {
+      logger.log(`Object storage: Azure Blob (${accountName}/${containerName})`);
+      return new AzureBlobStorageProvider({
+        accountName: accountName as string,
+        containerName: containerName as string,
+        managedIdentityClientId: managedIdentityClientId as string,
+      });
+    }
+
+    if (s3Configured) {
       logger.log(`Object storage: S3-compatible (${endpoint}/${bucket})`);
       return new S3StorageProvider({
-        endpoint,
+        endpoint: endpoint as string,
         region: config.get<string>('S3_REGION', 'us-east-1'),
-        bucket,
-        accessKeyId,
-        secretAccessKey,
-        publicBase,
+        bucket: bucket as string,
+        accessKeyId: accessKeyId as string,
+        secretAccessKey: secretAccessKey as string,
+        publicBase: publicBase as string,
       });
     }
 
