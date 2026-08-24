@@ -103,12 +103,12 @@ nothing left to authenticate.
 | `sessions` IP address + user agent | Now swept nightly once expired (#77). Live sessions end at anonymisation |
 | avatar **file** in object storage | The reference is cleared; no stored file is ever deleted. Currently moot in a stronger sense than it looks — **nothing sets `avatarUrl` at all**, so no avatar files exist. Deletion must land together with avatar upload, and is a blocking criterion on #139 |
 
-### Still outstanding
+### Resolved 2026-08-23
 
-The published privacy policy's retention line — *"Your account and its content: until you delete
-your account"* — does not yet mention the retained Google link. The words must be corrected to
-match, which needs a document version bump, and a version bump is what re-prompts every user for
-consent (deferred item 3.3, not yet built). Tracked as the remaining half of #140.
+The privacy policy was republished at **version 2**, disclosing the retained Google link, and the
+consent re-prompt mechanism (deferred item 3.3) shipped alongside it — publishing without it would
+have broken the promise the documents themselves make about being asked again on a material
+change. Both are now live on UAT; prod follows once the re-prompt is confirmed working there.
 
 ---
 
@@ -160,10 +160,12 @@ personal data, not none.
 
 **Retention:** 30 days on the free tier (Sentry's default for the Developer plan).
 
-⚠️ **The published privacy policy is currently wrong about this.** It says *"Your data is stored
-in India, on Microsoft Azure's Central India region."* That sentence predates this change and
-must be amended — one of four items in the outstanding policy version bump (retained Google
-sign-in link, stored Google profile photo, cross-border diagnostics, consent re-prompt).
+✅ **Resolved 2026-08-23.** The privacy policy (version 2) now discloses this directly, in both
+languages, including what a report contains and does not. Version 1 said data is stored in India,
+full stop — that sentence predates Sentry and was corrected rather than left standing. The stored
+Google profile picture is a separate, later item: not included in v2, because it is not built —
+nothing sets `avatarUrl` yet — and a policy describing what the system doesn't do would be wrong
+in the other direction. Goes in with #139.
 
 Lawful regardless: DPDP 2023 permits cross-border transfer except to countries the government
 notifies as restricted, and none have been notified. The defect is accuracy, not legality.
@@ -179,6 +181,43 @@ notifies as restricted, and none have been notified. The defect is accuracy, not
 - **JP IT** — controls DNS and the mail relay. Sees mail metadata; not application data.
 - **Vratmitras** — see their assigned vratarthi's journey content by design. This is a product
   relationship, not an administrative one, and the policy should describe it as such.
+
+## 5a. Self-service data export (#135, 2026-08-23)
+
+`GET /users/me/data-export` — the mechanism the privacy policy has promised since it went live
+("you can ask what data we hold about you") but that, until today, meant a manual database query
+by whoever holds prod credentials.
+
+**Included:** identity fields, linked auth providers (see exclusion below), consents, self-
+assessment attempts and answers, journeys with their exposures/resolutions/challenges/check-ins,
+experience logs (including private ones — they belong to the requester), chat messages in every
+room they are party to (both directions), blogs, blog comments.
+
+**Mentor sidenotes are included, but only if active.** The issue flagged these as "arguably the
+most sensitive category, and the least obvious" because they are authored by someone else, about
+the requester. Resolved by checking the product rather than guessing: an active sidenote is
+already shown to the vratarthi in their own journey activity feed with an acknowledge action, and
+a revoked one is already filtered out of every view they have. The export matches exactly what
+the product already shows — it introduces no new disclosure, only makes it exportable.
+
+**Excluded, deliberately:**
+
+| Excluded | Why |
+|---|---|
+| `auth_accounts.passwordHash` | Never returned to anyone, including the account it belongs to. Not what a portability right is for, and pure downside to disclose |
+| `audit_events` | A record of what an *administrator* did, not primarily the requester's own data. Left out pending the legal review in #134, not silently — flagged here for that review to weigh in on |
+
+**Format: JSON.** Portability favours machine-readable over a rendered document, per the issue's
+own framing.
+
+**Throttled at 3/hour.** The heaviest read in the API by construction — it touches nearly every
+table the account appears in — so the limit is capacity protection, not brute-force defence.
+
+**Self-service, not administrative**, per the issue's first open question: it removes a manual
+burden from whoever would otherwise run that query, and the endpoint can only ever return the
+caller's own data — there is no way to name another user's id.
+
+---
 
 ---
 
