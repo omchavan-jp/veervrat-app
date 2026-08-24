@@ -14,8 +14,8 @@ the other, and both are free at this scale.
 
 | Concern | Tool | Status |
 |---|---|---|
-| Error tracking (app) | **Sentry** free tier | Reads `SENTRY_DSN` from Key Vault. Plumbing done; **a DSN value must still be set per environment** — until then the app logs `Error tracking DISABLED` on startup |
-| Platform telemetry | **Azure Application Insights** | ❌ Not wired — no SDK, and **no Terraform resource** either. Only Log Analytics exists, and that is for Container Apps logs |
+| Error tracking (app) | **Sentry** free tier | ✅ **api: live in both UAT and prod. web: live in UAT only** — prod's web container has no `SENTRY_DSN` at all as of 2026-08-24, pending a `prod-*` tag that includes #175. Both verified by triggering a real error and confirming it arrived in Sentry, not by the config looking right. The app logs `Error tracking DISABLED` on startup wherever the DSN is unset, rather than staying silent |
+| Platform telemetry | **Azure Application Insights** | **Dropped, 2026-08-23** — decided against, not merely unstarted. Was the only Azure-coupled piece of this plan; adopting it would mean instrumentation to rewrite the day the platform changes. See the decision section below |
 | Structured logging | Pino (NestJS) + browser console (Next.js) | ✅ Working — Pino → stdout in prod, collected by Container Apps |
 | Alerting (infra) | Azure Monitor metric alerts | ✅ Partially — Postgres `storage_percent > 80%` is live (see `21_Infrastructure-Conventions.md` §13) |
 | Alerting (app errors) | Sentry alert rules | ❌ Pending issue #79 |

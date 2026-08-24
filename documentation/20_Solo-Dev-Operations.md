@@ -56,7 +56,10 @@ was *hidden* rather than *denied* while the API accepted feedback from anyone si
 
 ## Loop 2 — Triage
 
-**Canonical backlog: GitHub Issues** on `veer-vrat/veervrat-app`. Rationale:
+**Canonical backlog: GitHub Issues** on `omchavan-jp/veervrat-app` — a stopgap owner after
+GitHub Actions billing failed on the original personal account (2026-08-24); a further move to
+`jnanaprabodhini` is planned once that org accepts a transfer (#132). Confirm with `gh repo
+view` rather than trusting this line, which has already gone stale once. Rationale:
 `gh` CLI lets Claude read/create/label/close issues inside any session; issues
 link to commits/PRs (`fixes #NN` auto-closes); durable across chat sessions.
 

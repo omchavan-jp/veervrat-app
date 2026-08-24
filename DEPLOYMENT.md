@@ -1052,8 +1052,14 @@ Requires, on top of the normal vars:
 | `ENVIRONMENT` | `local` \| `uat` \| `prod`. Named explicitly — `NODE_ENV` is `production` on UAT too. `content.edit` is refused outright when this is `prod` (O7) |
 | `FEEDBACK_MODE` | `off` \| `all` \| `granted`. ⚠️ Must be set on the **api** as well as the web tier, or the widget is hidden rather than denied |
 | `CONTENT_EDIT_GITHUB_TOKEN` | fine-grained PAT, this repo only, Contents + PR write |
-| `CONTENT_EDIT_GITHUB_REPO` | `veer-vrat/veervrat-app` |
+| `CONTENT_EDIT_GITHUB_REPO` | `omchavan-jp/veervrat-app` — confirm against `gh repo view` before setting; the repo has moved owners once already (2026-08-24) and a move to `jnanaprabodhini` is planned (#132) |
 | `CONTENT_EDIT_GITHUB_BASE_BRANCH` | `main` |
 
-Overrides stage in object storage under `content-overrides/`, so this feature also waits on
-the Blob migration. Which environment it runs in is still open (O7).
+Overrides stage in object storage under `content-overrides/`. **Still genuinely blocked, not
+just historically** — `content-overrides.repository.ts` constructs its own `S3Client` directly
+(`@aws-sdk/client-s3`), independent of `uploads.service.ts`. #139 (2026-08-24) built a
+`StorageProvider` seam and an Azure Blob implementation for the *uploads* path specifically;
+`content-overrides` was not part of that change and still speaks S3 only. Confirm this by
+searching for `@aws-sdk` under `content-overrides/` before assuming otherwise — this note will
+go stale exactly the way the original one did if content-overrides is migrated later without
+updating it here. Which environment content-editing runs in is still open (O7).
