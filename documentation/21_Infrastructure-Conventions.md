@@ -59,7 +59,7 @@ infra/terraform/
                   Apps Environment. Called by envs/uat and (Phase 2B) envs/prod with a
                   different `environment` value. See §11.
   envs/
-    shared/      Cross-environment: DNS zone, container registry.
+    shared/      Cross-environment: container registry, GitHub OIDC federated credentials.
     uat/         Calls modules/environment. Landed 2026-08-16 (Phase 2A).
     prod/        Phase 2B — will call the same module.
 ```
@@ -71,32 +71,34 @@ group within a single subscription (decision D12).
 
 ---
 
-## 4. The two hand-created resources — and why
+## 4. The hand-created resource — and why
 
-Everything else is Terraform-managed. These two are not, deliberately:
+Everything else is Terraform-managed. This one is not, deliberately:
 
 **The state storage account (`veervrattfstate`).** Chicken-and-egg: Terraform cannot
 create the thing that stores its own record of what it created. Created once by
 `bootstrap/create-state-backend.sh`, which is idempotent and safe to re-run.
 
-**The DNS zone (`veervrat.jnanaprabodhini.org`).** Hand-created 2026-08-15 to unblock
-the NS delegation request to JP (a slow human round-trip via Rahul → Shantanoo) before
-Terraform existed for this project. **Imported** into state on 2026-08-16 — Terraform
-tracks it but did not create it.
+### The DNS rule — still true, no longer applies to anything here
 
-### The DNS rule
+**Never destroy and re-create a DNS zone something is delegating to.** Azure assigns
+nameservers per zone; a re-created zone gets different ones, invalidating any published
+delegation and requiring the whole request to the DNS operator again. Import such a zone
+rather than letting Terraform create it, and carry
+`lifecycle { prevent_destroy = true }` so `terraform destroy` fails loudly instead of
+succeeding quietly.
 
-**Never destroy and re-create the DNS zone.** Azure assigns nameservers per zone; a new
-zone gets different ones, invalidating the delegation JP has published and requiring the
-whole request again.
+**This project no longer manages a DNS zone.** `veervrat.jnanaprabodhini.org` was
+hand-created 2026-08-15 to unblock an NS delegation request to JP, imported into state
+2026-08-16 — and then superseded by decision D14, which switched to **per-record** CNAMEs
+published directly on `jnanaprabodhini.org`. Nothing ever delegated to the zone and no
+record was ever added to it.
 
-This is enforced in code, not just documented — `dns.tf` carries
-`lifecycle { prevent_destroy = true }`, so `terraform destroy` fails loudly instead of
-succeeding quietly. Verified: `terraform plan -destroy` errors with
-*"Instance cannot be destroyed."*
-
-If `plan` ever shows a change to `azurerm_dns_zone.veervrat`, stop and diagnose. Do not
-let Terraform "resolve" the diff.
+Destroyed 2026-08-24 (issue #80), after confirming it was orphaned rather than assuming
+it: no NS delegation pointed at the Azure nameservers, the zone held only its automatic
+NS and SOA records, and all four production hostnames resolved via CNAMEs independent of
+it. `prevent_destroy` had to be deliberately removed first — which is exactly the friction
+it exists to create, and the reason this was a considered removal rather than a drive-by.
 
 ---
 
@@ -149,8 +151,9 @@ recreated:
 ```bash
 # 1. Write the resource block matching the existing resource
 # 2. Get its ID — note Azure CLI returns lowercase type segments, but Terraform
-#    requires the canonical casing (e.g. `dnsZones`, not `dnszones`)
-az network dns zone show -g <rg> -n <name> --query id -o tsv
+#    requires the canonical casing (e.g. `dnsZones`, not `dnszones`). This bit
+#    us on the DNS zone import of 2026-08-16; the trap applies to any type.
+az <service> show -g <rg> -n <name> --query id -o tsv
 
 # 3. Import
 terraform import <address> "<resource-id>"

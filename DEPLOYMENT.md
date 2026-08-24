@@ -105,7 +105,8 @@ their guards. This section is the happy path; that one is why the path has this 
 
 - The environment name must be `uat` or `prod` (the module validates this — D10 allows no
   third deployed environment).
-- `envs/shared` must already exist: it holds the container registry and the DNS zone, and the
+- `envs/shared` must already exist: it holds the container registry and the GitHub OIDC
+  federated credentials, and the
   new environment's apps pull images from that registry.
 - Azure CLI logged in to the `veervrat` subscription.
   ⚠️ **If `az` hangs with no output, check IPv6 before anything else** — see §14.
@@ -469,7 +470,8 @@ records are added by **JP IT (Shantanoo Mahajan)** on their nameservers, per-rec
 - We do **not** control the zone. Adding or changing a hostname is a **request to a person**, not
   a `terraform apply`. Plan for human turnaround.
 - Four records are live: `veervrat`, `uat.veervrat`, `api.veervrat`, `api.uat.veervrat`.
-- An Azure DNS zone exists from the abandoned NS-delegation plan and is **unused** — see #80.
+- The Azure DNS zone left over from the abandoned NS-delegation plan was **removed 2026-08-24**
+  (#80). DNS is per-record on `jnanaprabodhini.org` and changes go through JP's operator.
 - ⚠️ The hostname must also be **bound to the Container App** on our side, and a managed
   certificate issued. DNS being live is not the same as the site working — that gap produced a
   404 on the real domain once, which looked like JP IT's problem and was ours.

@@ -662,5 +662,6 @@ an available choice. Recording it as a habit to keep: **when provisioning ahead 
 what the meter costs and what the alternative was.**
 
 If O7 concludes that prod is not needed soon, `terraform destroy` in `envs/prod` is safe
-today — it holds no data, and the DNS zone (the one genuinely unrecoverable resource) lives
-in `envs/shared`, untouched.
+today — it holds no data. (At the time this was written, `envs/shared` also held a DNS zone,
+called out here as the one genuinely unrecoverable resource. It was never used and was removed
+2026-08-24, #80 — so `envs/shared` now holds nothing irreplaceable either.)
