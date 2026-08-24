@@ -932,6 +932,9 @@ model ExperienceLog {
   @@index([authorId])
   @@index([featured])
   @@map("experience_logs")
+
+  // Images embedded in this log's body. See the Upload model — visibility derives from here.
+  uploads Upload[]
 }
 
 model ExperienceLogTag {
@@ -978,11 +981,19 @@ model Upload {
   filename  String
   createdAt DateTime @default(now()) @map("created_at")
 
-  uploader User @relation(fields: [uploaderId], references: [id])
+  // The document this image belongs to, once one exists. Visibility derives from it: the
+  // resolver asks the log the same question the app asks, rather than reimplementing the rule.
+  // Null while composing, and permanently if the log is never saved — an orphan, readable only
+  // by whoever uploaded it.
+  experienceLogId String? @map("experience_log_id") @db.Uuid
+
+  uploader      User           @relation(fields: [uploaderId], references: [id])
+  experienceLog ExperienceLog? @relation(fields: [experienceLogId], references: [id], onDelete: SetNull)
 
   @@index([uploaderId])
   @@index([roomId])
   @@index([storageKey])
+  @@index([experienceLogId])
   @@map("uploads")
 }
 

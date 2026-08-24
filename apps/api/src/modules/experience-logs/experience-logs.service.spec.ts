@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { ExperienceVisibility, Role } from '@prisma/client';
+import type { UploadsService } from '../uploads/uploads.service';
 import { ExperienceLogsService } from './experience-logs.service';
 import {
   AccessDeniedException,
@@ -60,11 +61,16 @@ const ownJourneySlim = {
   globalVmRelationship: null,
 };
 
+// Binding uploads to the saved log (#178) is asserted in its own tests; here it only needs to
+// exist so the service can be constructed.
+const makeUploads = () =>
+  ({ bindToExperienceLog: vi.fn().mockResolvedValue(undefined) }) as unknown as UploadsService;
+
 describe('ExperienceLogsService', () => {
   describe('create', () => {
     it('creates a global draft for a VA (forced draft/only_me)', async () => {
       const repo = makeRepo();
-      const service = new ExperienceLogsService(repo, makeJourneys(), makeFollows());
+      const service = new ExperienceLogsService(repo, makeJourneys(), makeFollows(), makeUploads());
       await service.create(VA, { body: goodBody });
       expect(repo.create).toHaveBeenCalledWith(
         expect.objectContaining({ authorId: 'va-1', journeyId: null }),
@@ -72,7 +78,12 @@ describe('ExperienceLogsService', () => {
     });
 
     it('NEGATIVE: rejects an empty/invalid body', async () => {
-      const service = new ExperienceLogsService(makeRepo(), makeJourneys(), makeFollows());
+      const service = new ExperienceLogsService(
+        makeRepo(),
+        makeJourneys(),
+        makeFollows(),
+        makeUploads(),
+      );
       await expect(
         service.create(VA, { body: { type: 'doc', content: [] } }),
       ).rejects.toBeInstanceOf(BadRequestException);
@@ -89,6 +100,7 @@ describe('ExperienceLogsService', () => {
         makeRepo(),
         makeJourneys(otherJourney),
         makeFollows(),
+        makeUploads(),
       );
       await expect(service.create(VA, { body: goodBody, journeyId: 'j2' })).rejects.toBeInstanceOf(
         AccessDeniedException,
@@ -97,13 +109,23 @@ describe('ExperienceLogsService', () => {
 
     it('creates a journey-scoped entry for the journey owner', async () => {
       const repo = makeRepo();
-      const service = new ExperienceLogsService(repo, makeJourneys(ownJourneySlim), makeFollows());
+      const service = new ExperienceLogsService(
+        repo,
+        makeJourneys(ownJourneySlim),
+        makeFollows(),
+        makeUploads(),
+      );
       await service.create(VA, { body: goodBody, journeyId: 'j1' });
       expect(repo.create).toHaveBeenCalledWith(expect.objectContaining({ journeyId: 'j1' }));
     });
 
     it('NEGATIVE: VM cannot create an experience log', async () => {
-      const service = new ExperienceLogsService(makeRepo(), makeJourneys(), makeFollows());
+      const service = new ExperienceLogsService(
+        makeRepo(),
+        makeJourneys(),
+        makeFollows(),
+        makeUploads(),
+      );
       await expect(service.create(VM, { body: goodBody })).rejects.toBeInstanceOf(
         AccessDeniedException,
       );
@@ -121,7 +143,7 @@ describe('ExperienceLogsService', () => {
           isDraft: true,
         }),
       });
-      const service = new ExperienceLogsService(repo, makeJourneys(), makeFollows());
+      const service = new ExperienceLogsService(repo, makeJourneys(), makeFollows(), makeUploads());
       await service.update(VA, 'log-1', {
         isDraft: false,
         visibility: ExperienceVisibility.PUBLIC,
@@ -142,7 +164,7 @@ describe('ExperienceLogsService', () => {
           isDraft: false,
         }),
       });
-      const service = new ExperienceLogsService(repo, makeJourneys(), makeFollows());
+      const service = new ExperienceLogsService(repo, makeJourneys(), makeFollows(), makeUploads());
       await expect(
         service.update(OTHER_VA, 'log-1', { visibility: ExperienceVisibility.PUBLIC }),
       ).rejects.toBeInstanceOf(AccessDeniedException);
@@ -160,7 +182,7 @@ describe('ExperienceLogsService', () => {
           isDraft: false,
         }),
       });
-      const service = new ExperienceLogsService(repo, makeJourneys(), makeFollows());
+      const service = new ExperienceLogsService(repo, makeJourneys(), makeFollows(), makeUploads());
       await service.remove(VA, 'log-1');
       expect(repo.softDelete).toHaveBeenCalledWith('log-1');
     });
@@ -175,7 +197,7 @@ describe('ExperienceLogsService', () => {
           isDraft: false,
         }),
       });
-      const service = new ExperienceLogsService(repo, makeJourneys(), makeFollows());
+      const service = new ExperienceLogsService(repo, makeJourneys(), makeFollows(), makeUploads());
       await expect(service.remove(OTHER_VA, 'log-1')).rejects.toBeInstanceOf(AccessDeniedException);
     });
   });
@@ -198,19 +220,19 @@ describe('ExperienceLogsService', () => {
 
     it('anyone reads a public entry', async () => {
       const repo = makeRepo({ findById: vi.fn().mockResolvedValue(publicEntry) });
-      const service = new ExperienceLogsService(repo, makeJourneys(), makeFollows());
+      const service = new ExperienceLogsService(repo, makeJourneys(), makeFollows(), makeUploads());
       await expect(service.getOne(OTHER_VA, 'log-1')).resolves.toEqual(publicEntry);
     });
 
     it('guest reads a public entry', async () => {
       const repo = makeRepo({ findById: vi.fn().mockResolvedValue(publicEntry) });
-      const service = new ExperienceLogsService(repo, makeJourneys(), makeFollows());
+      const service = new ExperienceLogsService(repo, makeJourneys(), makeFollows(), makeUploads());
       await expect(service.getOne(undefined, 'log-1')).resolves.toEqual(publicEntry);
     });
 
     it('NEGATIVE: guest cannot read an only-me entry (404, no leak)', async () => {
       const repo = makeRepo({ findById: vi.fn().mockResolvedValue(onlyMeEntry) });
-      const service = new ExperienceLogsService(repo, makeJourneys(), makeFollows());
+      const service = new ExperienceLogsService(repo, makeJourneys(), makeFollows(), makeUploads());
       await expect(service.getOne(undefined, 'log-1')).rejects.toBeInstanceOf(
         EntityNotFoundException,
       );
@@ -218,7 +240,7 @@ describe('ExperienceLogsService', () => {
 
     it('NEGATIVE: third-party cannot read an only-me entry', async () => {
       const repo = makeRepo({ findById: vi.fn().mockResolvedValue(onlyMeEntry) });
-      const service = new ExperienceLogsService(repo, makeJourneys(), makeFollows());
+      const service = new ExperienceLogsService(repo, makeJourneys(), makeFollows(), makeUploads());
       await expect(service.getOne(OTHER_VA, 'log-1')).rejects.toBeInstanceOf(
         EntityNotFoundException,
       );
@@ -226,7 +248,7 @@ describe('ExperienceLogsService', () => {
 
     it('author reads own only-me entry', async () => {
       const repo = makeRepo({ findById: vi.fn().mockResolvedValue(onlyMeEntry) });
-      const service = new ExperienceLogsService(repo, makeJourneys(), makeFollows());
+      const service = new ExperienceLogsService(repo, makeJourneys(), makeFollows(), makeUploads());
       await expect(service.getOne(VA, 'log-1')).resolves.toEqual(onlyMeEntry);
     });
 
@@ -240,13 +262,23 @@ describe('ExperienceLogsService', () => {
 
     it('mutual follower reads a FRIENDS entry', async () => {
       const repo = makeRepo({ findById: vi.fn().mockResolvedValue(friendsEntry) });
-      const service = new ExperienceLogsService(repo, makeJourneys(), makeFollows(true));
+      const service = new ExperienceLogsService(
+        repo,
+        makeJourneys(),
+        makeFollows(true),
+        makeUploads(),
+      );
       await expect(service.getOne(OTHER_VA, 'log-1')).resolves.toEqual(friendsEntry);
     });
 
     it('NEGATIVE: non-mutual viewer cannot read a FRIENDS entry', async () => {
       const repo = makeRepo({ findById: vi.fn().mockResolvedValue(friendsEntry) });
-      const service = new ExperienceLogsService(repo, makeJourneys(), makeFollows(false));
+      const service = new ExperienceLogsService(
+        repo,
+        makeJourneys(),
+        makeFollows(false),
+        makeUploads(),
+      );
       await expect(service.getOne(OTHER_VA, 'log-1')).rejects.toBeInstanceOf(
         EntityNotFoundException,
       );

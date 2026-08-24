@@ -55,19 +55,28 @@ running it, not by reading it, and fixed by checking first.
 - [x] 4.3 Unit tests per purpose, asserting **which container** and **whether the URL is signed** —
   not merely that a URL came back.
 
-## 5. The resolver endpoint (revised — see design decision 5)
+## 5. The resolver endpoint — DONE 2026-08-24
 
-- [ ] 5.1 `GET /api/v1/uploads/:key` — authorise, then 302 to `signedUrl(key, 900)` for private
-  purposes, or to the public URL for `blog`. This is what stored content points at.
-- [ ] 5.2 The three editors write `src: /api/v1/uploads/<key>` instead of the absolute blob URL,
-  so nothing provider-specific or expiring is ever written into a Tiptap AST.
-- [ ] 5.3 Decide and implement what "authorise" means per purpose. `blog` is public; `experience`
-  and `chat` are not, and the endpoint MUST NOT become an open redirect that hands a signed URL
-  to anyone who asks. At minimum it requires a session; whether it must also check room or log
-  membership is a real question — answer it deliberately, and write the answer down.
-- [ ] 5.4 Confirm an experience log and a chat message still render their image well after the
-  TTL has elapsed. Under the revised design this should be structurally impossible to break, so
-  a failure here means the indirection was bypassed somewhere.
+- [x] 5.1 `GET /api/v1/uploads/:key`, on its own controller because it must be reachable without
+  a session (public logs are guest-readable). Blog redirects to the public URL; private purposes
+  **stream the bytes**, so no bearer URL exists and access is re-decided every request.
+- [x] 5.2 No frontend change needed: the API already returns the resolver URL, which the editors
+  put straight into `src`.
+- [x] 5.3 **Answered: visibility derives from the containing document.** Chat checks `roomId`
+  membership (recorded at upload time). Experience delegates to `ExperienceLogsService.getOne`,
+  which already resolves guest access, ONLY_ME, FRIENDS-by-mutual-follow, drafts and the
+  permission system — so there is one authority, not two. An unbound upload (still composing, or
+  abandoned) is visible only to its uploader. Not-found and not-allowed are the same response, so
+  a refusal does not confirm a key exists.
+- [x] 5.4 Structurally impossible now: nothing expires, because nothing is signed.
+
+## 5a. Binding — the piece that made 5.3 answerable
+
+- [x] 5a.1 `uploads.experience_log_id`, nullable, ON DELETE SET NULL.
+- [x] 5a.2 `extractUploadKeys` walks the saved Tiptap AST for resolver URLs; bound on create and
+  re-bound on every body change, so a removed image stops inheriting the log's visibility.
+- [x] 5a.3 Binding is scoped to the uploader, so naming someone else's key in your log cannot
+  rebind their image to your document's visibility.
 
 ## 6. Verify against a deployed environment
 

@@ -10,6 +10,7 @@ import { randomUUID } from 'crypto';
 import heicConvert from 'heic-convert';
 import { ConfigService } from '@nestjs/config';
 import { UploadsRepository } from './uploads.repository';
+import { extractUploadKeys } from './upload-references';
 import { STORAGE_PROVIDER, type StorageProvider } from './storage/storage-provider';
 import type { SessionUser } from '../auth/types/auth.types';
 
@@ -140,5 +141,21 @@ export class UploadsService {
     // Terraform sets PUBLIC_API_ORIGIN there.
     const origin = this.config.get<string>('PUBLIC_API_ORIGIN', '');
     return { url: `${origin}${UPLOADS_PATH}/${key}` };
+  }
+
+  /**
+   * Called when an experience log is saved, with the body that was actually stored.
+   *
+   * Binding at save rather than at upload is what makes an image's visibility derive from the
+   * document containing it, instead of being a second, parallel rule that has to be kept in
+   * agreement with the log's own. Passing the *saved* body matters: an image inserted and then
+   * removed before saving is never bound, and one removed in a later edit is unbound again.
+   */
+  async bindToExperienceLog(experienceLogId: string, uploaderId: string, body: unknown) {
+    await this.uploadsRepository.bindToExperienceLog(
+      experienceLogId,
+      uploaderId,
+      extractUploadKeys(body),
+    );
   }
 }

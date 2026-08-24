@@ -35,12 +35,42 @@ export class UploadsRepository {
     });
   }
 
+  /**
+   * Links the uploads a saved log actually contains to that log.
+   *
+   * Scoped to `uploaderId` deliberately: without it, saving a log whose body names someone
+   * else's key would rebind their image to your document, and thereby to your document's
+   * visibility. That is a privilege escalation dressed up as a save.
+   *
+   * Unbinding is just as important as binding — an image removed while editing must stop
+   * inheriting the log's visibility, or a deleted picture stays readable through a public post.
+   */
+  async bindToExperienceLog(experienceLogId: string, uploaderId: string, storageKeys: string[]) {
+    await this.prisma.$transaction([
+      this.prisma.upload.updateMany({
+        where: { experienceLogId, uploaderId, storageKey: { notIn: storageKeys } },
+        data: { experienceLogId: null },
+      }),
+      this.prisma.upload.updateMany({
+        where: { storageKey: { in: storageKeys }, uploaderId },
+        data: { experienceLogId },
+      }),
+    ]);
+  }
+
   // The resolver endpoint needs to know what a key IS before it can decide who may see it:
   // which purpose it was uploaded for, and — for chat — which room it belongs to.
   async findByStorageKey(storageKey: string) {
     return this.prisma.upload.findFirst({
       where: { storageKey },
-      select: { id: true, uploaderId: true, roomId: true, storageKey: true, purpose: true },
+      select: {
+        id: true,
+        uploaderId: true,
+        roomId: true,
+        storageKey: true,
+        purpose: true,
+        experienceLogId: true,
+      },
     });
   }
 }
