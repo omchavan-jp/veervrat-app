@@ -20,6 +20,16 @@ does not limit access by anyone who obtains the name.
 - **THEN** the request is refused
 - **AND** the refusal comes from the storage service itself, not only from the application
 
+#### Scenario: The resolver is asked for a private image by an unauthorised caller
+
+- **GIVEN** an endpoint that resolves a stored reference to a retrievable URL
+- **WHEN** it is called for a private image by a caller who is not authorised to view it
+- **THEN** it refuses
+- **AND** it does not redirect to, disclose, or otherwise hand back a signed URL
+
+An indirection that issues a signed URL to any caller who asks has moved the bearer credential
+one step away without removing it.
+
 #### Scenario: An experience log image after its signed URL expires
 
 - **GIVEN** a signed URL previously issued for an `experience` image

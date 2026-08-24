@@ -5,16 +5,20 @@
   change is cheap only while the uploads table is effectively empty. **Confirm that is still
   true before starting** (task 1.1), rather than trusting a claim written on 2026-08-24.
 
-## 1. Establish the facts the plan assumes
+## 1. Establish the facts the plan assumes — DONE 2026-08-24
 
-- [ ] 1.1 Count rows in `uploads` in **both** UAT and prod. The plan assumes ~1 (a UAT probe) and
-  0 in prod. If either is materially larger, stop and re-plan the migration — do not proceed on
-  the assumption.
-- [ ] 1.2 Grep for consumers of the returned URL: chat message bodies and experience log bodies
-  are expected to embed it. Enumerate every place a URL is **stored inside user content**, not
-  just the `uploads` table. Design decision 5 depends on this list being complete.
-- [ ] 1.3 Confirm `signedUrl` behaviour on both providers by calling them — Azure SAS and the
-  S3/MinIO equivalent. It has never had a caller, so it has never been exercised outside tests.
+Findings recorded in `design.md` → "Findings from section 1".
+
+- [x] 1.1 Row counts. **Prod 0, UAT 1.** Neither database is reachable from a workstation, and a
+  prod firewall rule was not opened for a row count; established instead from the single writer,
+  the ordering of `put` before the insert, and configuration history proving no provider was ever
+  configured before 2026-08-24. ⚠️ A derivation, not a `SELECT` — 2.1's loud failure is the guard.
+- [x] 1.2 Consumers. **The URL is embedded in user content**, not just the `uploads` row: all
+  three editors call `setImage({ src: url })` and both bodies are Tiptap JSON ASTs. **This
+  revised design decision 5** — a stable `/api/v1/uploads/<key>` resolved per request, rather
+  than rewriting ASTs at render time.
+- [x] 1.3 `signedUrl` inspected on both providers; Azure needs **Storage Blob Delegator**, which
+  exists in `storage.tf` and is live on `veervratuatuploads`. Not yet *called* — that is 6.1.
 
 ## 2. Storage layer: key, not URL
 
@@ -46,13 +50,19 @@
 - [ ] 4.3 Unit tests per purpose, asserting **which container** and **whether the URL is signed** —
   not merely that a URL came back.
 
-## 5. Rendering (the part that reaches outside the uploads module)
+## 5. The resolver endpoint (revised — see design decision 5)
 
-- [ ] 5.1 For every consumer found in 1.2: store the key or an app-relative reference in message
-  and log bodies, and resolve to a signed URL at render time. A signed URL written into a stored
-  body expires and breaks — see design decision 5.
-- [ ] 5.2 Confirm an experience log and a chat message still render their image after the TTL has
-  elapsed. This is the failure this change could plausibly introduce; test it deliberately.
+- [ ] 5.1 `GET /api/v1/uploads/:key` — authorise, then 302 to `signedUrl(key, 900)` for private
+  purposes, or to the public URL for `blog`. This is what stored content points at.
+- [ ] 5.2 The three editors write `src: /api/v1/uploads/<key>` instead of the absolute blob URL,
+  so nothing provider-specific or expiring is ever written into a Tiptap AST.
+- [ ] 5.3 Decide and implement what "authorise" means per purpose. `blog` is public; `experience`
+  and `chat` are not, and the endpoint MUST NOT become an open redirect that hands a signed URL
+  to anyone who asks. At minimum it requires a session; whether it must also check room or log
+  membership is a real question — answer it deliberately, and write the answer down.
+- [ ] 5.4 Confirm an experience log and a chat message still render their image well after the
+  TTL has elapsed. Under the revised design this should be structurally impossible to break, so
+  a failure here means the indirection was bypassed somewhere.
 
 ## 6. Verify against a deployed environment
 
