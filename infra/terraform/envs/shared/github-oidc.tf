@@ -20,7 +20,17 @@ resource "azurerm_user_assigned_identity" "github_actions" {
 # fails at login with a generic "no matching federated identity record found", so keep these
 # aligned with the workflow's triggers and environment names.
 locals {
-  github_repo = "veer-vrat/veervrat-app"
+  # ⚠️ NOT "owner/repo". After the 2026-08-24 transfer (veer-vrat → omchavan-jp), GitHub started
+  # presenting `repo:<owner>@<owner_id>/<repo>@<repo_id>:...` — the plain-path form failed with
+  # AADSTS700213 even though the path itself ("omchavan-jp/veervrat-app") was correct. This is
+  # GitHub's anti-reuse guard on a renamed/transferred repository: appending the stable numeric
+  # IDs stops a *future* different owner who reuses this same path string from inheriting a trust
+  # relationship set up for a repo that once lived there. Confirmed against the API, not just the
+  # error log: `gh api repos/omchavan-jp/veervrat-app -q '.id, .owner.id'`.
+  #
+  # If the repo moves again, expect this same failure again — read whatever subject the error
+  # names (below), don't assume the plain-path form still applies.
+  github_repo = "omchavan-jp@317451750/veervrat-app@1287947867"
 
   # **Every CD job declares a GitHub Environment**, so every subject takes the
   # `environment:<name>` form. That is deliberate, and the reason is not obvious:
@@ -60,6 +70,19 @@ resource "azurerm_federated_identity_credential" "github" {
 # veervrat-uat / veervrat-prod), so a resource-group-scoped grant would be unable to create
 # them. Contributor cannot grant roles — deliberate: CI can deploy infrastructure but cannot
 # widen anyone's access, including its own.
+#
+# That held until 2026-08-24. Every `azurerm_role_assignment` this module declares — api's Key
+# Vault access, web's, ACR pull — had only ever been *created* by a human running `terraform
+# apply` with their own (Owner-level) credentials; every CD run since then saw those resources
+# as already matching and never exercised the write path. The first PR to add a genuinely NEW
+# role assignment and leave it for CD to create (#175, the web identity's first Key Vault
+# access) failed with a 403: `Microsoft.Authorization/roleAssignments/write` needs `Owner` or
+# `User Access Administrator`, and CI had neither. Confirmed by reading the SP's actual
+# assignments (`az role assignment list`), not assumed from the error message alone.
+#
+# Fixed below by granting `User Access Administrator`, deliberately **not** at subscription
+# scope like everything else here — that would let a compromised pipeline grant itself Owner.
+# Scoped to only the two resource groups CI ever needs to grant access within.
 
 data "azurerm_subscription" "current" {}
 
@@ -90,6 +113,32 @@ resource "azurerm_role_assignment" "github_tfstate" {
 resource "azurerm_role_assignment" "github_kv_secrets" {
   scope                = data.azurerm_subscription.current.id
   role_definition_name = "Key Vault Secrets Officer"
+  principal_id         = azurerm_user_assigned_identity.github_actions.principal_id
+}
+
+# Lets CI create role assignments — deliberately narrow, per the note above. Resource-group
+# scoped rather than subscription-wide: the two names are hardcoded rather than read from the
+# uat/prod state (a remote-state data source would work too, but would make this file depend on
+# those environments having been applied at least once, which is not true on a from-scratch
+# bootstrap).
+#
+# `User Access Administrator` is the narrowest BUILT-IN role that includes
+# `roleAssignments/write` — Azure has no built-in role scoped to "may grant only these specific
+# roles". A future tightening worth doing is an ABAC condition on these assignments restricting
+# WHICH roles CI may grant (Key Vault Secrets User, Storage Blob Data Contributor, AcrPull —
+# never Owner or User Access Administrator itself), so a compromised pipeline could still widen
+# access to a resource but never escalate its own privilege. Not built here: Azure's role-
+# assignment condition syntax is easy to get subtly wrong, and a wrong condition is worse than
+# none — it looks like a restriction while enforcing nothing.
+resource "azurerm_role_assignment" "github_user_access_admin_uat" {
+  scope                = "${data.azurerm_subscription.current.id}/resourceGroups/veervrat-uat"
+  role_definition_name = "User Access Administrator"
+  principal_id         = azurerm_user_assigned_identity.github_actions.principal_id
+}
+
+resource "azurerm_role_assignment" "github_user_access_admin_prod" {
+  scope                = "${data.azurerm_subscription.current.id}/resourceGroups/veervrat-prod"
+  role_definition_name = "User Access Administrator"
   principal_id         = azurerm_user_assigned_identity.github_actions.principal_id
 }
 
