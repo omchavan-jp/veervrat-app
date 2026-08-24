@@ -274,6 +274,24 @@ resource "azurerm_container_app" "api" {
         value = "${local.api_origin}/api/v1/auth/google/callback"
       }
 
+      # Object storage (#139). All three must be present together for the factory to select
+      # Azure Blob — see storage-provider.factory.ts. AZURE_CLIENT_ID is not a secret: it is the
+      # api's own managed identity's client id, needed because DefaultAzureCredential cannot
+      # disambiguate WHICH user-assigned identity to use when more than one exists in the
+      # subscription (see AzureBlobStorageConfig's doc comment).
+      env {
+        name  = "AZURE_STORAGE_ACCOUNT_NAME"
+        value = azurerm_storage_account.uploads.name
+      }
+      env {
+        name  = "AZURE_STORAGE_CONTAINER_NAME"
+        value = azurerm_storage_container.uploads.name
+      }
+      env {
+        name  = "AZURE_CLIENT_ID"
+        value = azurerm_user_assigned_identity.api.client_id
+      }
+
       liveness_probe {
         transport = "HTTP"
         port      = 3001
