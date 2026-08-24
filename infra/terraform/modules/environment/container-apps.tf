@@ -288,6 +288,17 @@ resource "azurerm_container_app" "api" {
         value = azurerm_storage_container.uploads.name
       }
       env {
+        name  = "AZURE_STORAGE_PUBLIC_CONTAINER_NAME"
+        value = azurerm_storage_container.uploads_public.name
+      }
+      env {
+        # The api builds the URL that gets embedded in stored content, so it has to know its own
+        # public address — the web tier is on a different hostname, and a relative URL would
+        # resolve against that one instead.
+        name  = "PUBLIC_API_ORIGIN"
+        value = local.api_origin
+      }
+      env {
         name  = "AZURE_CLIENT_ID"
         value = azurerm_user_assigned_identity.api.client_id
       }

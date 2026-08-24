@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import heicConvert from 'heic-convert';
+import { ConfigService } from '@nestjs/config';
 import { UploadsRepository } from './uploads.repository';
 import { STORAGE_PROVIDER, type StorageProvider } from './storage/storage-provider';
 import type { SessionUser } from '../auth/types/auth.types';
@@ -28,7 +29,20 @@ const PUBLIC_PURPOSES = new Set<UploadPurpose>(['blog']);
 
 // What gets embedded in stored content. Must stay stable across TTL changes, visibility changes
 // and storage providers, because it is written into Tiptap ASTs that are never rewritten.
-const UPLOADS_ROUTE = '/api/v1/uploads';
+//
+// ⚠️ Absolute, not relative, and that is a deliberate trade rather than an oversight. The web
+// tier is on a different hostname from the api (the Next.js rewrite proxy was removed because it
+// does not forward WebSocket upgrades), so a relative `/api/v1/uploads/...` in an <img src>
+// would resolve against the WEB origin and 404. The alternative — storing something host-free
+// and resolving it as each view renders — was rejected because stored content is rendered in
+// several places, and any one missed serves a broken image only after a TTL elapses.
+//
+// This does put a hostname back into stored content. The difference from what #178 fixed is
+// what KIND of hostname: this one is ours, stable, and carries no signature and no visibility
+// policy. A storage hostname changes when the provider does, and a signed URL expires; the api's
+// public origin changes roughly never, and if it ever did, that is a known one-time rewrite
+// rather than a policy decision silently baked into every row.
+const UPLOADS_PATH = '/api/v1/uploads';
 
 const EXT_BY_TYPE: Record<string, string> = {
   'image/jpeg': 'jpg',
@@ -50,6 +64,7 @@ export class UploadsService {
   constructor(
     private readonly uploadsRepository: UploadsRepository,
     @Inject(STORAGE_PROVIDER) private readonly storage: StorageProvider,
+    private readonly config: ConfigService,
   ) {}
 
   async uploadChatImage(request: UploadRequest, user: SessionUser): Promise<{ url: string }> {
@@ -120,6 +135,10 @@ export class UploadsService {
     // chat message or experience log) embeds whatever is returned here, so it must not carry a
     // signature that expires or a hostname that changes with the storage provider. Resolution —
     // authorise, then redirect to a signed or public URL — happens per request, in the resolver.
-    return { url: `${UPLOADS_ROUTE}/${key}` };
+    // Empty origin falls back to a relative URL, which is correct for local development where
+    // web and api share `localhost` — and wrong in a deployed environment, which is exactly why
+    // Terraform sets PUBLIC_API_ORIGIN there.
+    const origin = this.config.get<string>('PUBLIC_API_ORIGIN', '');
+    return { url: `${origin}${UPLOADS_PATH}/${key}` };
   }
 }

@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import { BadRequestException, PayloadTooLargeException } from '@nestjs/common';
 import type { UploadPurpose } from './uploads.service';
 import { UploadsService } from './uploads.service';
@@ -49,6 +50,9 @@ describe('UploadsService', () => {
         UploadsService,
         { provide: UploadsRepository, useValue: mockRepository },
         { provide: STORAGE_PROVIDER, useValue: mockStorage },
+        // Deployed environments set PUBLIC_API_ORIGIN; locally web and api share an origin, so
+        // the default is empty and the URL stays relative. Tests assert the relative form.
+        { provide: ConfigService, useValue: { get: (_k: string, d: string) => d } },
       ],
     }).compile();
 

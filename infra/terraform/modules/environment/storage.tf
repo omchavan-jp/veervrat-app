@@ -27,13 +27,29 @@ resource "azurerm_storage_account" "uploads" {
   tags = local.tags
 }
 
-# Public read at the BLOB level (not the container listing level) — matches the S3/MinIO
-# provider's existing behaviour exactly: `put()` returns a plain URL with no signature, and
-# anyone holding that URL can fetch it. Changing that is a real product decision (issue #139
-# scoped this to the interface + the Blob implementation, not to redesigning upload visibility)
-# and is not made here.
+# PRIVATE. Chat and experience images live here and are readable only through a signed URL the
+# api mints per request (#178).
+#
+# This container was created with `container_access_type = "blob"` — anonymous read — matching
+# the S3/MinIO behaviour that predated #139, which deliberately scoped itself to the provider
+# interface rather than to upload visibility. Exercising the path on 2026-08-24 showed what that
+# meant in practice: an image uploaded to a private chat could be fetched by anyone holding its
+# URL, with no credential, permanently. UUID names prevent enumeration, not access.
+#
+# Anonymous access is a per-container setting, which is why visibility is expressed as two
+# containers rather than one container and careful code. An object in here cannot be made public
+# by an application bug.
 resource "azurerm_storage_container" "uploads" {
   name                  = "uploads"
+  storage_account_id    = azurerm_storage_account.uploads.id
+  container_access_type = "private"
+}
+
+# PUBLIC, at the blob level only (never container listing). Blog images are published content:
+# a stable, cacheable URL is the correct answer for them, not a concession. Signing them would
+# defeat caching and buy nothing, since the post they sit in is world-readable anyway.
+resource "azurerm_storage_container" "uploads_public" {
+  name                  = "uploads-public"
   storage_account_id    = azurerm_storage_account.uploads.id
   container_access_type = "blob"
 }
