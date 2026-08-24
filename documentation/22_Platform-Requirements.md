@@ -164,7 +164,7 @@ that work deliberately preserved rather than changed. `StorageProvider.signedUrl
 implemented on both providers, so private-by-default is a config change (container/bucket access
 policy) plus a caller that uses `signedUrl()` instead of the URL `put()` returns — not a
 rewrite — but nobody has decided to make that change, or confirmed whether "private by default"
-here still reflects what the product should do. Flagged rather than resolved either way.
+here still reflects what the product should do. Tracked as #178.
 
 ---
 
