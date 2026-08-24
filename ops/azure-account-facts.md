@@ -141,7 +141,7 @@ state matches reality.
 
 | Name | Region | Tags | Holds |
 |---|---|---|---|
-| `veervrat-shared` | Central India | `project=veervrat`, `environment=shared` | DNS zone (imported), ACR, tfstate storage account |
+| `veervrat-shared` | Central India | `project=veervrat`, `environment=shared` | ACR, tfstate storage account, GitHub OIDC federated credentials (DNS zone removed 2026-08-24, #80) |
 | `veervrat-uat` | Central India | `project=veervrat`, `environment=uat` | Key Vault, Postgres, Redis, Container Apps env + **api/web apps + migration job**, identities, alerting |
 | `veervrat-prod` | Central India | `project=veervrat`, `environment=prod` | mirrors `veervrat-uat` — Key Vault, Postgres (35-day backups), Redis, Container Apps env + api/web + jobs, identities, alerting |
 
@@ -305,34 +305,45 @@ while `curl -4` succeeds is the signature. Fix: `sudo networksetup -setv6off Wi-
 change, not project — confirm with the machine owner, reverse with
 `sudo networksetup -setv6automatic Wi-Fi` once done).
 
-### DNS zone — `veervrat.jnanaprabodhini.org`
+### DNS — there is no Azure DNS zone, by design
 
-Created 2026-08-15 in `veervrat-shared`. Location **Global** (Azure DNS is not regional — the
-resource group's region is metadata only). Tags: `project=veervrat`, `environment=shared`,
-`managed-by=manual-bootstrap`. ~$0.50/mo, grant-covered. **Imported into Terraform state
-2026-08-16** (`terraform import`, zero changes) — still hand-created in origin, now tracked.
+**This subscription holds no DNS zone.** DNS for the application lives entirely on
+`jnanaprabodhini.org`, which JP's IT operator (Shantanoo) controls. Per decision **D14**, the
+four application hostnames are published there as **individual CNAME records** pointing at the
+Container Apps FQDNs — there is no delegation of a subdomain to Azure.
 
-**Nameservers** — these are what JP must publish as NS records on `jnanaprabodhini.org`:
+To confirm how a hostname actually resolves:
 
-```
-ns1-04.azure-dns.com.
-ns2-04.azure-dns.net.
-ns3-04.azure-dns.org.
-ns4-04.azure-dns.info.
+```bash
+dig +short veervrat.jnanaprabodhini.org        # → veervrat-prod-web.<env>.centralindia.azurecontainerapps.io
 ```
 
-> ⚠️ **Never delete and re-create this zone.** Azure assigns nameservers per zone; a new zone
-> gets *different* values, which would mean asking JP's DNS operator to change the delegation
-> all over again — a slow, third-party round-trip. Import it into Terraform
-> (`azurerm_dns_zone`) rather than letting Terraform create it. This is why it carries
-> `managed-by=manual-bootstrap`.
+**Changing DNS therefore means asking JP, not running Terraform.** Adding a hostname is a
+third-party round-trip (Om → Rahul → Shantanoo); budget days, not minutes. Binding the hostname
+to the Container App and issuing its managed certificate is the part that *is* ours — and is
+the step that was missed on 2026-08-17, producing Azure's default 404 page on a domain whose
+DNS was already correct.
 
-Zone starts with 2 record sets (the automatic NS and SOA records). All app records —
-`veervrat`, `api`, `uat`, `api.uat`, cert validation, SPF/DKIM/DMARC — will be created by
-Terraform *inside* this zone.
+#### The zone that used to exist (removed 2026-08-24)
 
-**Delegation status:** ⏳ requested from JP (Om → Rahul → Shantanoo, 2026-08-15). Verify with
-`dig NS veervrat.jnanaprabodhini.org` once done.
+`veervrat.jnanaprabodhini.org` was hand-created 2026-08-15 in `veervrat-shared` to unblock an
+NS **delegation** request, and imported into Terraform state 2026-08-16. D14 then superseded
+delegation with per-record CNAMEs, leaving the zone orphaned: nothing ever delegated to its
+nameservers and **no record was ever added to it** — it held only the automatic NS and SOA pair
+until the day it was deleted.
+
+Destroyed 2026-08-24 under issue **#80**, after verifying rather than assuming it was unused:
+`dig NS` showed no delegation to the Azure nameservers, `az network dns record-set list`
+returned only the 2 automatic records, and all four hostnames resolved via CNAMEs that never
+touched the zone — and still resolved immediately after the destroy. Removing it required
+deliberately deleting a `prevent_destroy` lifecycle block, which is the friction that rule
+exists to create. Saves ~$0.50/mo, which was never the point; removing a resource that implies
+DNS is managed here, when it isn't, was.
+
+> ⚠️ **The rule that produced `prevent_destroy` is still correct** and applies to any zone this
+> project manages in future: Azure assigns nameservers **per zone**, so destroying and
+> re-creating a zone something delegates to invalidates that delegation and forces the whole
+> third-party request again. Import such a zone; never let Terraform create it.
 
 ---
 
@@ -537,7 +548,7 @@ all three renames · budget ₹13,000/mo with alerts at 50/75/100% · invoice-by
 calendar reminder for July 2027
 
 **Also done ✅ (2026-08-16)** — 9 resource providers confirmed registered · Terraform Phase 1
-(state backend, DNS zone imported, ACR created; shared Key Vault created then deleted same
+(state backend, DNS zone imported — since removed, see §5 — ACR created; shared Key Vault created then deleted same
 day — see §5) · Terraform Phase 2A (`veervrat-uat`: per-env Key Vault, Postgres 18, Azure
 Managed Redis, Container Apps Environment — see §5)
 

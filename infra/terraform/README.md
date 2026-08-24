@@ -21,39 +21,51 @@ Three commands you'll use, always in this order, always from inside an
 
 ```
 envs/
-  shared/   Resource group veervrat-shared — DNS zone (imported, not created),
-            container registry, key vault. Cross-environment resources.
-  uat/      Not yet built — see envs/uat/README.md
-  prod/     Not yet built — see envs/prod/README.md
+  shared/   Resource group veervrat-shared — container registry, GitHub OIDC
+            federated credentials, tfstate storage account. Cross-environment.
+            (No key vault: secrets are per-environment. The shared vault created
+            in Phase 1 was a mistake and was deleted the same day.)
+  uat/      Live since 2026-08-16. Calls modules/environment.
+  prod/     Live since 2026-08-17. Calls the same module.
 bootstrap/
   create-state-backend.sh   One-time setup, already run. Re-running is safe
                              (every step is create-if-not-exists) but should
                              not be necessary again.
 ```
 
-## The one hard rule
+## The one hard rule — for any DNS zone this project ever manages
 
-**Never let Terraform create or destroy the DNS zone
-(`veervrat.jnanaprabodhini.org`).** It was hand-created before Terraform
-existed for this project and is imported into state, not managed from
-scratch. A new zone gets different nameservers, which means re-doing the NS
-delegation with JP's DNS operator. If `terraform plan` ever shows a change to
-`azurerm_dns_zone.veervrat`, stop and figure out why before applying.
+**Never destroy and re-create a DNS zone that something is delegating to.**
+Azure assigns nameservers per zone, so a re-created zone gets *different*
+ones — invalidating any published NS delegation and requiring the whole
+request to the DNS operator again. Where a zone is in use, import it rather
+than letting Terraform create it, and give it
+`lifecycle { prevent_destroy = true }`.
+
+This project currently manages **no** DNS zone. The one it had
+(`veervrat.jnanaprabodhini.org`, hand-created 2026-08-15) was decommissioned
+2026-08-24 — see below.
 
 ## Running `envs/shared` for the first time
 
 ```
 cd envs/shared
 terraform init
-
-# Bring the existing DNS zone under management — get the exact resource ID first:
-az network dns zone show \
-  --resource-group veervrat-shared \
-  --name veervrat.jnanaprabodhini.org \
-  --query id -o tsv
-
-terraform import azurerm_dns_zone.veervrat <the-id-from-above>
-
-terraform plan   # must show 0 changes for the DNS zone — if not, stop
-terraform apply  # creates the container registry + key vault only
+terraform plan   # review before applying, as always
+terraform apply  # container registry + GitHub OIDC federated credentials
 ```
+
+### The DNS zone that used to live here
+
+Created 2026-08-15 for a planned **NS delegation** of
+`veervrat.jnanaprabodhini.org` to Azure, and imported into state 2026-08-16.
+Decision D14 then superseded that approach: JP's DNS operator publishes
+**per-record** CNAMEs on `jnanaprabodhini.org` directly, so nothing ever
+delegated to the zone and no record was ever added to it.
+
+Destroyed 2026-08-24 (issue #80) after verifying it was genuinely orphaned:
+`dig NS veervrat.jnanaprabodhini.org` showed no delegation to the Azure
+nameservers, the zone held only its auto-created NS and SOA pair, and all four
+live hostnames resolved — and still resolve — via CNAMEs that never touched it.
+Removing it required deleting the `prevent_destroy` lifecycle block; that
+friction was working as intended.
