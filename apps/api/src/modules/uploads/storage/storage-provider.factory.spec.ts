@@ -35,18 +35,59 @@ describe('storageProviderFactory', () => {
     expect(provider).toBeInstanceOf(S3StorageProvider);
   });
 
-  it('prefers Azure over S3 when both happen to be configured', () => {
-    // Deliberate: Azure is the target of O15. Ambiguity here should be resolved the same way
-    // every time, not by whichever branch happened to run first.
+  it('refuses to start when both backends are fully configured', () => {
+    // Not a preference order. Which store an upload lands in is not something to guess at:
+    // picking wrong writes user files somewhere nobody reads from, and picking wrong QUIETLY
+    // means nobody finds out until the files are missing. A container that will not boot is the
+    // better failure.
+    expect(() =>
+      resolve(
+        makeConfig({
+          AZURE_STORAGE_ACCOUNT_NAME: 'veervratuatuploads',
+          AZURE_STORAGE_CONTAINER_NAME: 'uploads',
+          AZURE_CLIENT_ID: 'abc-123',
+          S3_ENDPOINT: 'http://localhost:9000',
+          S3_ACCESS_KEY: 'veervrat',
+          S3_SECRET_KEY: 'veervrat_local',
+          S3_BUCKET: 'veervrat-uploads',
+        }),
+      ),
+    ).toThrow(/ambiguously configured/);
+  });
+
+  it('names both offending settings in the ambiguity error, not just that one exists', () => {
+    // The person reading this error is looking at an environment they did not configure. Naming
+    // the two variables that collided is the difference between a two-minute fix and a hunt.
+    try {
+      resolve(
+        makeConfig({
+          AZURE_STORAGE_ACCOUNT_NAME: 'veervratuatuploads',
+          AZURE_STORAGE_CONTAINER_NAME: 'uploads',
+          AZURE_CLIENT_ID: 'abc-123',
+          S3_ENDPOINT: 'http://localhost:9000',
+          S3_ACCESS_KEY: 'veervrat',
+          S3_SECRET_KEY: 'veervrat_local',
+          S3_BUCKET: 'veervrat-uploads',
+        }),
+      );
+      expect.unreachable('should have thrown');
+    } catch (error) {
+      const message = (error as Error).message;
+      expect(message).toContain('AZURE_STORAGE_ACCOUNT_NAME=veervratuatuploads');
+      expect(message).toContain('S3_ENDPOINT=http://localhost:9000');
+    }
+  });
+
+  it('a PARTIAL second config is not ambiguity — the complete one still wins', () => {
+    // Only a fully-configured second backend is a real collision. A stray leftover variable
+    // (S3_ENDPOINT alone, say, from an old .env) must not brick the container — that would turn
+    // this guard into its own outage.
     const provider = resolve(
       makeConfig({
         AZURE_STORAGE_ACCOUNT_NAME: 'veervratuatuploads',
         AZURE_STORAGE_CONTAINER_NAME: 'uploads',
         AZURE_CLIENT_ID: 'abc-123',
         S3_ENDPOINT: 'http://localhost:9000',
-        S3_ACCESS_KEY: 'veervrat',
-        S3_SECRET_KEY: 'veervrat_local',
-        S3_BUCKET: 'veervrat-uploads',
       }),
     );
     expect(provider).toBeInstanceOf(AzureBlobStorageProvider);
