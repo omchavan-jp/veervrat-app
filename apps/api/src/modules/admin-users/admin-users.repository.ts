@@ -97,6 +97,11 @@ export class AdminUsersRepository {
       select: {
         id: true,
         displayName: true,
+        // Not currently displayed by this method's other callers — selected so audit metadata
+        // can record something unique (#144). Display names are not: three accounts in
+        // pre-production already share "Om Chavan", which made "who was this granted to?"
+        // unanswerable from the audit metadata alone.
+        username: true,
         suspendedAt: true,
         anonymisedAt: true,
         deletedAt: true,

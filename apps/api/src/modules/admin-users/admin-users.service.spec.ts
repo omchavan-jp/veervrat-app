@@ -37,6 +37,7 @@ function make(
     findById: vi.fn().mockResolvedValue({
       id: 'u9',
       displayName: 'Target',
+      username: 'target_u',
       suspendedAt: null,
       anonymisedAt: null,
       deletedAt: null,
@@ -190,6 +191,27 @@ describe('AdminUsersService.updateCapabilities', () => {
     expect(audit.record).toHaveBeenCalledWith(
       expect.objectContaining({ action: 'admin.capability.granted', resourceId: 'u9' }),
     );
+  });
+
+  it('records the unique username, not just displayName, in the audit metadata (#144)', async () => {
+    // Display names collide — three accounts in pre-production already share "Om Chavan" — so
+    // reconstructing "who was this granted to?" from an audit row needs something unique.
+    // resourceId answers that too, but the metadata should not be silently ambiguous on its own.
+    const { service, audit } = make();
+
+    await service.updateCapabilities(admin, 'u9', { add: [Capability.FEEDBACK_WIDGET] });
+
+    const call = audit.record.mock.calls[0][0] as { metadata: Record<string, unknown> };
+    expect(call.metadata).toMatchObject({ displayName: 'Target', username: 'target_u' });
+  });
+
+  it('records the username on a revoke too', async () => {
+    const { service, audit } = make();
+
+    await service.updateCapabilities(admin, 'u9', { remove: [Capability.FEEDBACK_WIDGET] });
+
+    const call = audit.record.mock.calls[0][0] as { metadata: Record<string, unknown> };
+    expect(call.metadata).toMatchObject({ username: 'target_u' });
   });
 
   it('does not audit a grant that changed nothing', async () => {
