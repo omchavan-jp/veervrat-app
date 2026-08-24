@@ -30,6 +30,11 @@ class UnconfiguredStorageProvider implements StorageProvider {
   signedUrl(): Promise<never> {
     return Promise.reject(new Error('File storage is not configured in this environment'));
   }
+  // Synchronous in the interface, so it throws rather than rejecting — same refusal, same
+  // message, expressed the way this one operation is shaped.
+  publicUrl(): never {
+    throw new Error('File storage is not configured in this environment');
+  }
 }
 
 /**
@@ -60,6 +65,13 @@ export const storageProviderFactory: Provider = {
   useFactory: (config: ConfigService): StorageProvider => {
     const accountName = config.get<string>('AZURE_STORAGE_ACCOUNT_NAME');
     const containerName = config.get<string>('AZURE_STORAGE_CONTAINER_NAME');
+    // Published content (blog images) lives in its own container, because anonymous-read is a
+    // per-container setting. Falls back to `<private>-public` so an environment that has not set
+    // it yet still boots and still keeps the two apart — it never silently shares one container,
+    // which would make every blog upload publicly readable AND every chat upload with it.
+    const publicContainerName =
+      config.get<string>('AZURE_STORAGE_PUBLIC_CONTAINER_NAME') ??
+      (containerName ? `${containerName}-public` : undefined);
     const managedIdentityClientId = config.get<string>('AZURE_CLIENT_ID');
     const azureConfigured = Boolean(accountName && containerName && managedIdentityClientId);
 
@@ -67,9 +79,11 @@ export const storageProviderFactory: Provider = {
     const accessKeyId = config.get<string>('S3_ACCESS_KEY');
     const secretAccessKey = config.get<string>('S3_SECRET_KEY');
     const bucket = config.get<string>('S3_BUCKET');
-    const publicBase =
-      config.get<string>('S3_PUBLIC_URL') ??
-      (endpoint && bucket ? `${endpoint}/${bucket}` : undefined);
+    const publicBucket =
+      config.get<string>('S3_PUBLIC_BUCKET') ?? (bucket ? `${bucket}-public` : undefined);
+    // Base only — the bucket is appended by the provider, which knows which of the two it is
+    // addressing. Previously this baked the private bucket into the base.
+    const publicBase = config.get<string>('S3_PUBLIC_URL') ?? endpoint;
     const s3Configured = Boolean(
       endpoint && accessKeyId && secretAccessKey && bucket && publicBase,
     );
@@ -88,6 +102,7 @@ export const storageProviderFactory: Provider = {
       return new AzureBlobStorageProvider({
         accountName: accountName as string,
         containerName: containerName as string,
+        publicContainerName: publicContainerName as string,
         managedIdentityClientId: managedIdentityClientId as string,
       });
     }
@@ -98,6 +113,7 @@ export const storageProviderFactory: Provider = {
         endpoint: endpoint as string,
         region: config.get<string>('S3_REGION', 'us-east-1'),
         bucket: bucket as string,
+        publicBucket: publicBucket as string,
         accessKeyId: accessKeyId as string,
         secretAccessKey: secretAccessKey as string,
         publicBase: publicBase as string,

@@ -1,7 +1,8 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, Inject, forwardRef } from '@nestjs/common';
 import { ExperienceVisibility } from '@prisma/client';
 import { ExperienceLogsRepository, type ExperienceTagInput } from './experience-logs.repository';
 import { JourneysService } from '../journeys/journeys.service';
+import { UploadsService } from '../uploads/uploads.service';
 import { FollowsService } from '../follows/follows.service';
 import { sanitizeTiptapDoc, InvalidTiptapContentError } from '../../common/tiptap/sanitize';
 import { hasPermission } from '../../common/permissions/has-permission';
@@ -21,6 +22,7 @@ export class ExperienceLogsService {
     private readonly repository: ExperienceLogsRepository,
     private readonly journeysService: JourneysService,
     private readonly followsService: FollowsService,
+    @Inject(forwardRef(() => UploadsService)) private readonly uploads: UploadsService,
   ) {}
 
   private sanitizeBody(body: unknown) {
@@ -57,12 +59,17 @@ export class ExperienceLogsService {
     }
 
     const body = this.sanitizeBody(dto.body);
-    return this.repository.create({
+    const created = await this.repository.create({
       authorId: user.id,
       journeyId,
       body,
       tags: this.toTags(dto.tags),
     });
+
+    // An image's visibility derives from the log containing it (#178). Bound here, from the body
+    // that was actually saved, because the image was uploaded before this log existed.
+    await this.uploads.bindToExperienceLog(created.id, user.id, body);
+    return created;
   }
 
   async update(user: SessionUser, id: string, dto: UpdateExperienceLogDto) {
@@ -77,13 +84,22 @@ export class ExperienceLogsService {
     }
 
     const publishing = dto.isDraft === false && slim.isDraft;
-    return this.repository.update(id, {
-      ...(dto.body !== undefined ? { body: this.sanitizeBody(dto.body) } : {}),
+    const body = dto.body !== undefined ? this.sanitizeBody(dto.body) : undefined;
+    const updated = await this.repository.update(id, {
+      ...(body !== undefined ? { body } : {}),
       ...(dto.visibility !== undefined ? { visibility: dto.visibility } : {}),
       ...(dto.isDraft !== undefined ? { isDraft: dto.isDraft } : {}),
       ...(publishing ? { publishedAt: new Date() } : {}),
       ...(dto.tags !== undefined ? { tags: this.toTags(dto.tags) } : {}),
     });
+
+    // Re-bind on every body change, so an image removed while editing stops inheriting this
+    // log's visibility. Scoped to the log's AUTHOR, not the editor: the author is who owns the
+    // uploads, and binding by editor would silently fail (or, worse, rebind someone else's).
+    if (body !== undefined) {
+      await this.uploads.bindToExperienceLog(id, slim.authorId, body);
+    }
+    return updated;
   }
 
   async remove(user: SessionUser, id: string) {

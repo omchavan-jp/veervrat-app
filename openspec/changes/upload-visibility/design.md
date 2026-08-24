@@ -19,6 +19,37 @@ Verified in the deployed system and in code before designing, not recalled:
 The container is `uploads` and the key prefix is also `uploads/`, producing
 `/uploads/uploads/<uuid>.png`.
 
+### Findings from section 1 of tasks.md (2026-08-24)
+
+**1.1 — How many rows exist.** Neither database is reachable from a workstation (both Postgres
+servers carry only the `AllowAzureServices` firewall rule), and `az containerapp exec` fails on
+this machine with a TLS certificate error unrelated to Azure. Rather than open a firewall rule to
+production for a row count, the answer was established from code and configuration history:
+
+- `uploads.repository.createUploadRecord` is the **only** writer of the `Upload` table — no seed,
+  no other call site.
+- It runs only after `storage.put()` resolves; a failed put throws before any row is created.
+- `git log -S "S3_ENDPOINT" -- infra/terraform/` is **empty across all history**: Terraform has
+  never configured the S3 provider for the api in any environment.
+- `AZURE_STORAGE_ACCOUNT_NAME` first appears in `0cbfc00` (#177), which reached UAT and prod on
+  2026-08-24.
+
+Therefore no upload could have succeeded in either environment before 2026-08-24. **Prod holds 0
+rows; UAT holds 1** — the probe from #178's verification, which returned 201.
+
+⚠️ This is a derivation, not a `SELECT count(*)`. Task 2.1's migration must still fail loudly on
+any row it cannot convert; that guard runs where database access exists and is what this
+derivation is trusted against, rather than instead of.
+
+**1.2 — Where the URL is stored.** See decision 5, which this finding revised.
+
+**1.3 — Whether `signedUrl` can work.** Both implementations read correctly: Azure mints a user
+delegation SAS (never caching the delegation key, deliberately); S3/MinIO uses
+`getSignedUrl(GetObjectCommand)`. The Azure path needs the **Storage Blob Delegator** role in
+addition to Data Contributor, and both role assignments exist in `storage.tf` and are live on
+`veervratuatuploads`. Confirmed by inspection and RBAC, **not** by calling either method — that
+happens in section 6, against a deployed environment.
+
 ## Goals / Non-Goals
 
 **Goals**
@@ -93,18 +124,53 @@ method behind the existing seam, because the database stores keys rather than UR
 recorded so a later reader does not mistake this decision for a considered rejection of proxying
 on the merits — it is a staged choice, and decision 1 is what keeps the later stage cheap.
 
-### 5. The API returns a URL, not a key, to the client
+### 5. The stored `src` is a stable application URL, resolved per request
 
-The client keeps receiving `{ url }`. Only storage changes.
+**Revised 2026-08-24 after task 1.2.** The original decision said message bodies should "resolve
+to a signed URL at render time". Investigating the consumers showed that is the wrong shape.
 
-For private purposes that URL is signed and expires; a client holding a stale one re-requests the
-resource rather than the blob. Returning raw keys would push URL construction into the frontend
-and duplicate the visibility policy there.
+What task 1.2 found:
 
-**Consequence, stated plainly:** a signed URL embedded in a *stored* chat message body would
-expire and break. Message bodies must therefore carry the key or an app-relative reference, and
-resolve to a signed URL at render time. This is the one place the change reaches beyond the
-uploads module, and is called out in tasks rather than discovered during implementation.
+- `chat-composer.tsx`, `experience-editor.tsx` and `blog-editor.tsx` all call
+  `editor.chain().setImage({ src: url })`.
+- `ChatMessage.body` and `ExperienceLog.body` are `Json  // Tiptap JSON AST`.
+
+So the absolute blob URL is embedded **inside user content**, in a rich-text AST, across three
+tables — not merely in the `uploads` row. Resolving at render time would mean walking that AST in
+every renderer: chat list, experience log view, blog view, data export, notifications, and
+anything added later. Each renderer that is missed silently serves a broken image, and the
+failure appears only after the TTL elapses.
+
+**Decision:** the `src` written into stored content is a stable, application-owned URL naming the
+object:
+
+```
+/api/v1/uploads/<key>
+```
+
+The API resolves it per request: authorise, then redirect (302) to a freshly signed URL for
+private purposes, or to the public URL for `blog`.
+
+Consequences, all of them good:
+
+- **Stored content never needs rewriting** — not when the TTL changes, not when visibility policy
+  changes, not when the storage provider changes.
+- **Policy lives server-side only.** No renderer, and no client, knows or decides anything.
+- **Decision 4's staged path gets cheaper still.** If #134 requires instantly revocable access,
+  this endpoint changes from *redirect* to *stream* — one method, no content migration, no
+  frontend change.
+- Expiry stops being a rendering concern: a browser follows the redirect on every load.
+
+**Considered and rejected:** rewriting stored ASTs whenever policy changes. That is the migration
+this whole change exists to avoid, made worse by living inside user content.
+
+**Considered and rejected:** returning a raw key to the client and having the frontend build the
+URL. It duplicates the visibility policy in the client, which is never a security boundary.
+
+**Cost, stated honestly:** every private image view now costs an API request before the blob
+request. That request is a cheap authorise-and-redirect, and it is the same request that buys
+revocability later. Public blog images can redirect to a cacheable URL, so the common
+high-volume case still benefits from CDN caching.
 
 ## Risks / Trade-offs
 
