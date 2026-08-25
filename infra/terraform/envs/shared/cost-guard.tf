@@ -82,6 +82,15 @@ resource "azurerm_automation_runbook" "stop_veervrat" {
   # runbook_type, and Azure rejects that outright ("Runbook Type cannot be modified") — so a
   # cosmetic tag would make every apply fail. The account carries the tags instead.
   #
+  # ⚠️ CHANGING THIS RUNBOOK'S CONTENT REQUIRES `-replace`:
+  #
+  #     terraform apply -replace=azurerm_automation_runbook.stop_veervrat
+  #
+  # An ordinary update fails with 400 "Runbook Type cannot be modified". The provider records the
+  # type as "PowerShell" in state while Azure holds "PowerShell72", so every update PUT carries a
+  # type mismatch and is rejected — the resource is effectively immutable in place. Replacing it
+  # is harmless: a runbook holds no state, and creation with PowerShell72 works correctly.
+  #
   # Azure reports this runbook as PowerShell72 (`az automation runbook show` → PowerShell72,
   # Published), but the provider reads it back as plain "PowerShell", so every plan wanted to
   # replace it forever. Ignoring the field keeps plans honest about real drift instead of

@@ -19,6 +19,21 @@
       • Storage, ACR and Log Analytics keep their (small) at-rest cost.
 
     Deliberately NOT deleting anything. A stop is reversible in minutes; a delete is a restore.
+
+    VERIFIED 2026-08-25, without stopping anything, via a disposable self-test runbook in this
+    same PowerShell 7.2 runtime:
+
+      • the managed identity authenticates                                    (IDENTITY: ok)
+      • every cmdlet below exists in this runtime                             (4/4 present)
+      • the custom role permits reading container apps and Postgres           (2 apps, 1 server)
+      • the custom role permits WRITING a container app — probed against a name that does not
+        exist, so the failure was ResourceNotFound rather than AuthorizationFailed, which is
+        what distinguishes "allowed" from "denied" without changing a resource
+
+    STILL UNPROVEN, and it cannot be proven without an outage: that scaling a real app to zero
+    and stopping a real Postgres server behave as intended end to end. Everything up to the
+    final call is confirmed. If this ever runs for real, read the job output rather than
+    assuming it worked.
 #>
 param(
     [string[]] $ResourceGroups = @('veervrat-uat', 'veervrat-prod')
