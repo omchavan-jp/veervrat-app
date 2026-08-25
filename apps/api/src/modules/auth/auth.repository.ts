@@ -203,6 +203,22 @@ export class AuthRepository {
     });
   }
 
+  /**
+   * Gives an account its first password.
+   *
+   * A Google signup creates only the OAuth row (`createUserWithOAuthAccount` above), so an
+   * account that has never had a password has no EMAIL row to update — which is why every
+   * password-shaped operation on it failed with "AuthAccount not found" (#196).
+   */
+  async createEmailAccountWithPassword(userId: string, email: string, passwordHash: string) {
+    return this.prisma.authAccount.create({
+      // `providerAccountId` is the email address for an EMAIL account, matching what
+      // `createUserWithEmailAccount` writes at signup — the column is the identifier within the
+      // provider, and for email that is the address.
+      data: { userId, provider: AuthProvider.EMAIL, providerAccountId: email, passwordHash },
+    });
+  }
+
   async updatePasswordHash(accountId: string, passwordHash: string) {
     return this.prisma.authAccount.update({
       where: { id: accountId },

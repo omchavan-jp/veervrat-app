@@ -27,17 +27,19 @@
 
 ## 3. Setting a first password
 
-- [ ] 3.1 `forgotPassword` sends a **set-password** link for an account with no password, reusing
+- [x] 3.1 `forgotPassword` sends a **set-password** link for an account with no password, reusing
   the existing token machinery rather than a parallel one.
-- [ ] 3.2 The set-password route accepts the token and creates the credential. Invalidate
+- [x] 3.2 `resetPassword` accepts the token and creates the credential. Invalidate
   outstanding tokens first, as `forgotPassword` already does.
-- [ ] 3.3 Existing sessions: `changePassword` currently kills every session and mints a new one.
-  Decide whether setting a *first* password should do the same, and write down why. It is not
-  obviously the same case.
+- [x] 3.3 **Decided: yes, sessions are still cleared.** `resetPassword` already deletes every
+  session, and setting a first password goes through the same path, so it inherits that. Kept
+  rather than special-cased: whoever asked for the mail may not be whoever is holding an open
+  session, and a new credential should not leave older sessions authorised. The cost is signing
+  in again — small, and on the safe side of a question about who is present.
 
 ## 4. Telling the truth
 
-- [ ] 4.1 `forgotPassword` returns three distinct outcomes: no account, account with password,
+- [x] 4.1 `forgotPassword` returns three distinct outcomes: no account, account with password,
   account without password. Keep the throttle.
 - [ ] 4.2 Frontend: forgot-password reflects all three, including offering the set-password path.
 - [ ] 4.3 Settings: an account with no password sees the warning that **Google is the only way

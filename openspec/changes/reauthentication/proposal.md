@@ -50,8 +50,8 @@ It answers `'sent'` either way today, intending anti-enumeration. It does not ac
 same question to anyone who asks. The vagueness protects nothing and makes a typo
 indistinguishable from a delivery failure.
 
-Existing rate limits stay (20 per email + IP per 15 minutes). Those are what actually prevent
-bulk checking, which is the real threat.
+The existing rate limit stays — **5 requests per hour** on this route. That is what actually
+prevents an address list being checked in bulk, and it is stricter than the login throttle.
 
 ## What This Does Not Change
 

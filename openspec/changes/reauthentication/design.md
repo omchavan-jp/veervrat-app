@@ -112,8 +112,14 @@ wrong" instead of "that address is already registered" — to protect a fact tha
 any platform where people know one another. The rate limits are the real control.
 
 **Risk accepted, and named:** this makes checking one address slightly easier than filling in a
-signup form. The mitigation is the existing throttle, which is what stops the volume that would
-make enumeration worth doing.
+signup form. The mitigation is the existing throttle — **5 per hour** on this route — which is
+what stops the volume that would make enumeration worth doing.
+
+**Consistency, stated rather than dodged:** `resend-verification` carries an explicit comment
+saying not to do what this change does. That divergence is now recorded in the controller. The
+argument applies to both routes; the reason for changing only one is that being locked out is
+when ambiguity hurts most, and resending a verification mail is not that moment. It is a
+judgement, and it should be revisited deliberately rather than for tidiness.
 
 ## Risks / Trade-offs
 

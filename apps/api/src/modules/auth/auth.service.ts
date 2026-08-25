@@ -57,6 +57,12 @@ const LOCKOUT_WINDOW_SECONDS = 3600;
 const USERNAME_REGEX = /^[a-z0-9_]{3,30}$/;
 const LOCKOUT_DURATION_SECONDS = 900;
 
+/**
+ * What a password-reset request actually resulted in. A union rather than a boolean because the
+ * three cases need three different things said to the person (#196).
+ */
+export type ForgotPasswordOutcome = 'no_account' | 'reset_sent' | 'set_password_sent';
+
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
@@ -560,18 +566,29 @@ export class AuthService {
     return 'sent';
   }
 
-  async forgotPassword(email: string): Promise<'sent'> {
+  /**
+   * Three honest answers, where there used to be one vague one (#196).
+   *
+   * This returned 'sent' whether or not the address existed, intending to conceal whether an
+   * account is registered. It did not conceal it: `register()` throws DuplicateEntityException
+   * on a known address, so signup already answers the same question to anyone who asks. The
+   * pretence cost a real person a silent wait for mail that would never arrive, with a typo
+   * indistinguishable from a delivery failure.
+   *
+   * What actually prevents an address list being checked in bulk is the throttle on this route
+   * (20 per email + IP per 15 minutes), and that is unchanged.
+   */
+  async forgotPassword(email: string): Promise<ForgotPasswordOutcome> {
     const user = await this.authRepository.findUserByEmail(email);
     if (!user) {
-      return 'sent';
+      return 'no_account';
     }
 
     const emailAccount = await this.authRepository.findEmailAccountByUserId(user.id);
-    if (!emailAccount) {
-      // Google-only account: no password to reset. Stay silent to the API; the real
-      // owner is helped out-of-band (they will simply log in with Google).
-      return 'sent';
-    }
+    // No password on this account — a Google signup creates only the OAuth row. The same token
+    // is sent, because setting a first password and resetting one are the same operation; only
+    // what the person is told differs.
+    const isFirstPassword = !emailAccount?.passwordHash;
 
     await this.authRepository.invalidateTokensByUserAndType(
       user.id,
@@ -596,7 +613,7 @@ export class AuthService {
       }),
     );
     await this.emailService.sendTransactional(email, getResetSubject(lang), resetHtml, resetText);
-    return 'sent';
+    return isFirstPassword ? 'set_password_sent' : 'reset_sent';
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
@@ -616,13 +633,24 @@ export class AuthService {
     const emailAccount = await this.authRepository.findEmailAccountByUserId(
       verificationToken.userId,
     );
-    if (!emailAccount) {
-      throw new EntityNotFoundException('AuthAccount', verificationToken.userId);
-    }
 
     const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
 
-    await this.authRepository.updatePasswordHash(emailAccount.id, passwordHash);
+    // No EMAIL account means this is the account's FIRST password, not a reset — a Google signup
+    // creates only the OAuth row. This used to throw, which is why a Google-only account could
+    // never acquire a password by any route (#196). Setting and resetting are the same operation
+    // from here: a token proving control of the mailbox, exchanged for a credential.
+    if (emailAccount) {
+      await this.authRepository.updatePasswordHash(emailAccount.id, passwordHash);
+    } else {
+      const owner = await this.authRepository.findUserById(verificationToken.userId);
+      if (!owner) throw new EntityNotFoundException('User', verificationToken.userId);
+      await this.authRepository.createEmailAccountWithPassword(
+        verificationToken.userId,
+        owner.email,
+        passwordHash,
+      );
+    }
     await this.authRepository.markTokenUsed(verificationToken.id);
     // Completing a reset means the user received a token sent to their address — the same
     // proof the verification link provides. Without this, a user can reset successfully and
