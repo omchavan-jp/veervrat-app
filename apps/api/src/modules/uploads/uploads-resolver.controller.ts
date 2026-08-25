@@ -54,7 +54,16 @@ export class UploadsResolverController {
     // Never inline-render an upload as a document: a file whose bytes are not what its type
     // claims cannot then execute in this origin.
     res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('Content-Security-Policy', "default-src 'none'; sandbox");
+    res.setHeader('Content-Security-Policy', "default-src 'none'");
+    // The web tier is a DIFFERENT ORIGIN from the api (uat.veervrat… vs api.uat.veervrat…), so
+    // helmet's global `Cross-Origin-Resource-Policy: same-origin` makes the browser refuse to
+    // render this image in a page — while curl, which ignores CORP entirely, downloads it
+    // happily. That gap is why this shipped: every automated check passed and the editor showed
+    // a broken-image icon.
+    //
+    // `same-site`, not `cross-origin`: both hostnames sit under jnanaprabodhini.org, so this is
+    // the narrowest value that works, and an unrelated site still cannot embed these images.
+    res.setHeader('Cross-Origin-Resource-Policy', 'same-site');
     res.end(result.body);
   }
 }
