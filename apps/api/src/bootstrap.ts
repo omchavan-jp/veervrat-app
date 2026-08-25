@@ -47,8 +47,13 @@ export function configureApp(app: INestApplication): void {
       new Logger('TrustProxy').warn(message),
     ),
   );
-  // HTTP security headers. The API serves JSON only, so disable the default CSP
-  // (that's the frontend's concern) and COEP (would block cross-origin image/CDN use).
+  // HTTP security headers. The API serves JSON *and*, since #178, uploaded images — so the
+  // "JSON only" reasoning that justified these exemptions no longer covers every response.
+  // CSP stays off here (the frontend's concern) and COEP off (would block cross-origin
+  // image/CDN use), but note `Cross-Origin-Resource-Policy` is left at helmet's `same-origin`
+  // default ON PURPOSE: it is the right default for an API, and the one route that serves a
+  // subresource to the web tier relaxes it to `same-site` on its own response rather than
+  // weakening it for everything.
   app.use(
     helmet({
       contentSecurityPolicy: false,
