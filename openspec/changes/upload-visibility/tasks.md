@@ -116,6 +116,27 @@ Run against `veervrat-uat-api:9ac7935`, after CD applied both migrations:
 | Streamed bytes vs uploaded bytes | identical (163 = 163) |
 | Response headers | `content-type: image/png`, `cache-control: private, max-age=60`, `nosniff` |
 
-⚠️ **Still not verified by machine:** that a *guest* can see an image inside a published PUBLIC
-log. The unit tests cover the branch, and it is the case the whole design turns on, but proving
-it end-to-end needs a real published log — left for manual testing rather than claimed.
+### Closed by manual testing, 2026-08-25
+
+✅ **A guest CAN see an image inside a published PUBLIC log.** Left open above as the one case no
+script could prove; closed by real use. A published log's image returned 200 to an anonymous
+caller, while an image bound to no log returned 404 from the same endpoint — the contrast that
+shows visibility is genuinely deriving from the containing document rather than from the image.
+
+✅ **The image renders in the browser.** It did not, at first, and no automated check could have
+caught why: helmet applies `Cross-Origin-Resource-Policy: same-origin` to every response, the web
+tier is a different origin from the api, and **curl ignores CORP entirely**. Server-side the
+response was a correct 200 with byte-identical bytes; only a browser applied the policy that
+rejected it. Fixed to `same-site` on that route (#188) and confirmed by reload.
+
+⚠️ **The standing lesson, since it recurred three times in two days.** Each failure was a check
+that confirmed the mechanism and missed what a user sees:
+
+| Check | What it proved | What it missed |
+|---|---|---|
+| 163-byte upload probe | credentials, round trip | every realistic file failed at 100kb (#187) |
+| api test suite | api behaviour | 22 web tests, and the toast stub behind them |
+| curl fetch, 200 + identical bytes | transport and authorisation | the browser refused to render it (#188) |
+
+The common factor is verifying with a tool that does not behave like the thing being verified.
+Where a claim is about what a person sees, a person has to look.
