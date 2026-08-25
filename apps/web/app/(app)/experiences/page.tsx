@@ -63,7 +63,14 @@ export default function MyExperiencesPage() {
           <span>·</span>
           <span>{new Date(e.updatedAt).toLocaleDateString()}</span>
         </div>
-        <p className="text-[14px] leading-relaxed">{excerptFromDoc(e.body) || t('untitled')}</p>
+        {/* Until #190 this list offered only "edit" — the author could change their own writing
+            but never simply read it back. */}
+        <Link
+          href={`/community/experiences/${e.id}`}
+          className="block text-[14px] leading-relaxed hover:text-accent"
+        >
+          {excerptFromDoc(e.body) || t('untitled')}
+        </Link>
         {e.tags.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-1.5">
             {e.tags.map((tg) => (

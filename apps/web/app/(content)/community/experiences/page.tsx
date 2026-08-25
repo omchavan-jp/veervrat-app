@@ -69,7 +69,15 @@ export default function PublicExperiencesPage() {
                     <span>·</span>
                     <span>{new Date(e.publishedAt ?? e.createdAt).toLocaleDateString()}</span>
                   </div>
-                  <p className="text-[14px] leading-relaxed">{excerptFromDoc(e.body)}</p>
+                  {/* The pool used to link only to the author's profile, because there was no
+                      page for the log itself (#190). Both links now exist: the author, and the
+                      writing the reader came for. */}
+                  <Link
+                    href={`/community/experiences/${e.id}`}
+                    className="block text-[14px] leading-relaxed hover:text-accent"
+                  >
+                    {excerptFromDoc(e.body)}
+                  </Link>
                   {e.tags.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {e.tags.map((tg) => (
