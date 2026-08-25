@@ -26,6 +26,7 @@ const ERROR_CODE_BY_STATUS: Readonly<Record<number, string>> = {
   [HttpStatus.FORBIDDEN]: 'FORBIDDEN',
   [HttpStatus.NOT_FOUND]: 'NOT_FOUND',
   [HttpStatus.BAD_REQUEST]: 'BAD_REQUEST',
+  [HttpStatus.PAYLOAD_TOO_LARGE]: 'PAYLOAD_TOO_LARGE',
 };
 
 function statusCodeToErrorCode(statusCode: number): string {
@@ -33,6 +34,21 @@ function statusCodeToErrorCode(statusCode: number): string {
   if (known) return known;
 
   return statusCode >= SERVER_ERROR_FLOOR ? 'INTERNAL_ERROR' : `HTTP_${statusCode}`;
+}
+
+/**
+ * body-parser's PayloadTooLargeError, recognised without importing it.
+ *
+ * It carries `type: 'entity.too.large'` and its own `status`. Matching on the type rather than
+ * the class avoids depending on a transitive dependency's identity, which is exactly the sort of
+ * thing that silently stops matching after an upgrade.
+ */
+function isPayloadTooLarge(exception: unknown): boolean {
+  return (
+    typeof exception === 'object' &&
+    exception !== null &&
+    (exception as { type?: unknown }).type === 'entity.too.large'
+  );
 }
 
 @Catch()
@@ -67,6 +83,15 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         message = String(body);
         error = statusCodeToErrorCode(statusCode);
       }
+    } else if (isPayloadTooLarge(exception)) {
+      // body-parser rejects an oversized request before any controller runs, and it throws a
+      // plain Error rather than an HttpException — so without this it fell through to a bare 500
+      // reading "An unexpected error occurred". The client could tell neither what went wrong nor
+      // that trying a smaller file would fix it. Observed on UAT 2026-08-25 as a 500 on every
+      // realistic image upload.
+      statusCode = HttpStatus.PAYLOAD_TOO_LARGE;
+      error = statusCodeToErrorCode(statusCode);
+      message = 'That file is too large to upload';
     }
 
     // Server errors are always logged with their stack; client (4xx) errors are not.

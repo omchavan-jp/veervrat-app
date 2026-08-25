@@ -21,6 +21,20 @@ interface UploadRequest {
   roomId?: string;
 }
 
+/**
+ * The advertised maximum upload size, in megabytes.
+ *
+ * Exported because the HTTP body limit MUST be derived from it (`bootstrap.ts`). They were
+ * independent until 2026-08-25, and the result was that this constant said 10MB while Express's
+ * default 100kb body limit rejected anything larger — before this service ever ran, so the
+ * friendly PayloadTooLargeException below was unreachable and the user got a bare 500.
+ *
+ * Any image a person would actually upload from a phone exceeds 100kb, so image upload had never
+ * worked in a deployed environment. It went unnoticed because the only file ever uploaded through
+ * it was a 163-byte test PNG.
+ */
+export const MAX_UPLOAD_MB = 10;
+
 export type UploadPurpose = 'chat' | 'experience' | 'blog';
 
 // Blog posts are published content: a stable, cacheable URL is the right answer there, not a
@@ -60,7 +74,7 @@ const HEIC_TYPES = new Set(['image/heic', 'image/heif']);
 export class UploadsService {
   private readonly logger = new Logger('UploadsService');
   private readonly ALLOWED_TYPES = [...Object.keys(EXT_BY_TYPE), ...HEIC_TYPES];
-  private readonly MAX_SIZE_MB = 10;
+  private readonly MAX_SIZE_MB = MAX_UPLOAD_MB;
 
   constructor(
     private readonly uploadsRepository: UploadsRepository,
