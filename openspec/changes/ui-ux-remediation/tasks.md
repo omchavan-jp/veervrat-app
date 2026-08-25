@@ -63,8 +63,19 @@
   But `QueryBoundary`, built and unit-tested in 1.14 for exactly this, is adopted in **one** route
   file app-wide. A primitive built to make a rule cheap to follow, then not used, leaves the rule
   depending on each author remembering it. Worth revisiting as adoption, not as a new build.
-- [x] 3.2 RC04: per-instance `isPending` disabling keyed by `variables` (fixes "all accept buttons disable"); inline Alert for destructive flows; ensure every mutation has user-visible error feedback.
-  ⚠️ **Scope note added 2026-08-21.** This covered **error** feedback only. Nothing in this change
+- [~] 3.2 RC04: per-instance `isPending` disabling keyed by `variables` (fixes "all accept buttons disable"); inline Alert for destructive flows; ensure every mutation has user-visible error feedback.
+  ❌ **Un-ticked 2026-08-25. The error feedback half was never visible to anyone.** Every one of
+  those calls was routed through `apps/web/hooks/use-toast.ts`, which was a stub: it called
+  `console.log` and returned, its own comment reading *"In a real app, this would dispatch to a
+  toast provider"*. The real toast system existed and `<Toaster/>` was mounted in `providers.tsx`
+  the whole time — **21 files, 51 call sites, displaying nothing**, including twelve `saveError`.
+  Found from an upload that returned 500 on UAT while the UI stayed completely silent.
+  The hook now delegates to the real provider (#187), so the calls work unchanged. Re-tick this
+  only after someone has *seen* a mutation error appear on screen — the calls were always
+  written correctly, which is exactly why reading the code could not catch this.
+  ⚠️ **Scope note added 2026-08-21** (and see the 2026-08-25 correction above — the error half
+  was inert, so #125's premise that errors were already handled was mistaken).
+  This covered **error** feedback only. Nothing in this change
   addresses **success confirmation** — an action that works says nothing. Found in use: revoking a
   capability from the admin dashboard applied correctly server-side (verified: `/auth/me` updated
   instantly, API returned 403) while the UI gave no acknowledgement at all, so the operator could
