@@ -97,4 +97,22 @@ describe('GlobalExceptionFilter', () => {
   it('omits details entirely when there are none', () => {
     expect('details' in run(new ForbiddenException('nope')).body).toBe(false);
   });
+
+  it("turns body-parser's oversize-request error into a 413, not a 500", () => {
+    // Observed on UAT 2026-08-25: every realistic image upload returned
+    // {"statusCode":500,"error":"INTERNAL_ERROR","message":"An unexpected error occurred"}.
+    // body-parser throws before any controller runs, and throws a plain Error rather than an
+    // HttpException, so it fell through to the unhandled-server-error branch. The client could
+    // not tell that a smaller file would work.
+    const err = Object.assign(new Error('request entity too large'), {
+      type: 'entity.too.large',
+      status: 413,
+    });
+
+    const { body, status } = run(err);
+
+    expect(status).toHaveBeenCalledWith(HttpStatus.PAYLOAD_TOO_LARGE);
+    expect(body.error).toBe('PAYLOAD_TOO_LARGE');
+    expect(body.message).not.toBe('An unexpected error occurred');
+  });
 });
