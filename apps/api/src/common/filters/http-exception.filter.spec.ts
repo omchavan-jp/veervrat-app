@@ -98,8 +98,7 @@ describe('GlobalExceptionFilter', () => {
     expect('details' in run(new ForbiddenException('nope')).body).toBe(false);
   });
 
-
-  it('turns body-parser\'s oversize-request error into a 413, not a 500', () => {
+  it("turns body-parser's oversize-request error into a 413, not a 500", () => {
     // Observed on UAT 2026-08-25: every realistic image upload returned
     // {"statusCode":500,"error":"INTERNAL_ERROR","message":"An unexpected error occurred"}.
     // body-parser throws before any controller runs, and throws a plain Error rather than an
