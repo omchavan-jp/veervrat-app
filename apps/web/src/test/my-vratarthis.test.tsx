@@ -95,10 +95,21 @@ describe('My Vratarthis roster (#193)', () => {
   });
 });
 
-describe('translation parity', () => {
-  it('Marathi carries every key the page asks for', () => {
-    // renderWithProviders feeds English messages regardless of locale, so a rendered test cannot
-    // catch a missing Marathi key. Compare the namespaces directly.
+describe('the page in Marathi', () => {
+  it('renders Marathi, not English wearing a Marathi locale', async () => {
+    getMyVratarthis.mockResolvedValue([vratarthi()]);
+
+    renderWithProviders(<MyVratarthisClient />, 'mr');
+
+    // Await the badge, not the title: the title is static and resolves before the query settles.
+    expect(await screen.findByText(mrMessages.my_vratarthis.global_scope)).toBeInTheDocument();
+    expect(screen.getByText(mrMessages.my_vratarthis.title)).toBeInTheDocument();
+    expect(screen.queryByText(enMessages.my_vratarthis.title)).not.toBeInTheDocument();
+  });
+
+  // A rendered test only reaches the keys that page state happens to exercise. This catches the
+  // rest — an empty state or an error string that is present in English and missing in Marathi.
+  it('carries every key the page can ask for', () => {
     expect(Object.keys(mrMessages.my_vratarthis).sort()).toEqual(
       Object.keys(enMessages.my_vratarthis).sort(),
     );
