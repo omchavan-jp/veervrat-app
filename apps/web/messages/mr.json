@@ -61,7 +61,8 @@
       "virtues": "सद्गुण व दुर्गुण",
       "moderation": "नियंत्रण",
       "admin": "प्रशासन",
-      "groupAdmin": "प्रशासन"
+      "groupAdmin": "प्रशासन",
+      "vmMyVratarthis": "माझे व्रतार्थी"
     },
     "actions": {
       "save": "जतन करा",
@@ -756,6 +757,16 @@
     "journey_vm": "प्रवास मार्गदर्शक",
     "assigned_journeys": "नियुक्त:",
     "assigned_count": "{count, plural, one {# प्रवास} other {# प्रवास}}"
+  },
+  "my_vratarthis": {
+    "title": "माझे व्रतार्थी",
+    "subtitle": "व्रतमित्र म्हणून तुम्ही ज्यांच्यासोबत चालता ते.",
+    "empty": "अद्याप कोणीही नाही",
+    "empty_hint": "कोणी तुम्हाला त्यांचा व्रतमित्र म्हणून स्वीकारल्यावर ते इथे दिसतील.",
+    "journey_count": "{count, plural, =0 {एकही प्रवास नाही} one {# प्रवास} other {# प्रवास}}",
+    "since": "{date} पासून",
+    "global_scope": "एकूण",
+    "journey_scope": "प्रवास"
   },
   "chat": {
     "title": "चॅट",

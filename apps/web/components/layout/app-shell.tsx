@@ -72,10 +72,12 @@ function useNavGroups() {
     { href: '/my-vratmitras', labelKey: 'myVratmitras', icon: Users },
   ];
 
-  // My Vratarthis page is deferred (see actions-guidance design Non-Goals); its nav
-  // item lands when that page is built. Only VM Guidance is wired here.
+  // Shown only to someone who actually mentors, and ALONGSIDE their own navigation rather than
+  // instead of it (#193). Most people here are both — a vratmitra is also walking their own vrat
+  // — so a mode switch would tax exactly those people on every visit.
   const vratmitra: NavItem[] = vm?.hasAssignments
     ? [
+        { href: '/vratmitra/my-vratarthis', labelKey: 'vmMyVratarthis', icon: Users },
         {
           href: '/vratmitra/guidance',
           labelKey: 'vmGuidance',

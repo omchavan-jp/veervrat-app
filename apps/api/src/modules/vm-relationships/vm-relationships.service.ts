@@ -107,6 +107,17 @@ export class VmRelationshipsService {
     return this.vmRelationshipsRepository.getMyVms(user.id, scope);
   }
 
+  /**
+   * The people this user mentors (#193).
+   *
+   * No role check. `getMyVms` requires `isVa` because being a vratarthi is what makes that
+   * question meaningful; here the relationships themselves answer it — someone who mentors
+   * nobody gets an empty list, which is the honest answer rather than a refusal.
+   */
+  async getMyVratarthis(user: SessionUser) {
+    return this.vmRelationshipsRepository.listVratarthisForVm(user.id);
+  }
+
   // Journeys this user is the assigned journey VM for — the actionable scope of the VM
   // guidance queue. Global-VM relationships are deliberately excluded (view-only).
   async getVmAssignedJourneys(vmId: string): Promise<{ journeyId: string; vratarthiId: string }[]> {

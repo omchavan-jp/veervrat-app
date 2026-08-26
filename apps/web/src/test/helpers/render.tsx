@@ -3,6 +3,7 @@ import { render } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { NextIntlClientProvider } from 'next-intl';
 import enMessages from '../../../messages/en.json';
+import mrMessages from '../../../messages/mr.json';
 import { ToastProvider } from '@/components/ui/toast';
 
 // Shared test render: wraps the UI in the providers every app component expects —
@@ -14,11 +15,15 @@ import { ToastProvider } from '@/components/ui/toast';
 // nothing in the real app. Now that the hook reaches the real provider, a component that toasts
 // needs one here too, exactly as it does in `providers.tsx`. Tests that pass without it are
 // tests of a component that cannot speak.
+// `locale` selects the message bundle too. Until 2026-08-26 it set the locale but always passed
+// the English bundle, so a test that asked for Marathi silently rendered English: no rendered
+// test could ever catch a missing Marathi key, while the signature implied several did.
 export function renderWithProviders(ui: ReactElement, locale: 'en' | 'mr' = 'en') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const messages = locale === 'mr' ? mrMessages : enMessages;
   function Wrapper({ children }: { children: ReactNode }) {
     return (
-      <NextIntlClientProvider locale={locale} messages={enMessages}>
+      <NextIntlClientProvider locale={locale} messages={messages}>
         <QueryClientProvider client={client}>
           <ToastProvider>{children}</ToastProvider>
         </QueryClientProvider>
