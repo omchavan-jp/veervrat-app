@@ -124,7 +124,7 @@ environment at runtime, so a value that was wrongly baked still looks correct th
   environment.
 - **Verify with something that behaves like the thing you are claiming about.** A check run with
   a tool that does not share the user's constraints confirms the mechanism and misses the
-  experience. Four instances in two days, each green everywhere and broken in use:
+  experience. Seven instances in three days, each green everywhere and broken in use:
 
   | Checked with | Proved | Missed |
   |---|---|---|
@@ -132,6 +132,14 @@ environment at runtime, so a value that was wrongly baked still looks correct th
   | The api test suite | api behaviour | 22 broken web tests, and the dead toast hook behind them |
   | `curl`, 200 + identical bytes | transport, authorisation | the browser refused to render it (CORP) |
   | `tsc` + 1176 tests + CI | types the compiler can see | `Request['user']` is an empty interface, so the wrong object typechecked |
+  | RBAC probes on the runbook | the identity was *allowed* to act | the action itself was rejected — `maxReplicas: 0` is invalid, so compute never stopped |
+  | `turbo run test` (cached) | that a previous run had passed | the web suite did not execute at all; CI caught the failure. Use `--force` |
+  | Piping JSON into a hook command | the command works | the harness had never loaded the hook — wrong directory, and it never fired |
+
+  Two of these are the same trap in different clothes: **a green result from something that did
+  not run** (the cache) and **a green result from something that ran somewhere else** (the pipe).
+  Before believing a pass, ask what would have had to execute for it to be true, and confirm that
+  it did.
 
   Where a claim is about what a person sees, a person has to look — or the check has to run in
   the same place they do. If that is impossible, say so instead of substituting a convenient
