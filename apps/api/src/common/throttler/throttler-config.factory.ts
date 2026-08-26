@@ -39,6 +39,29 @@ export const GLOBAL_THROTTLER = { name: 'default', ttl: 60000, limit: 300 } as c
  */
 export const IDENTITY_THROTTLER = { name: 'identity', ttl: 900000, limit: 1_000_000 } as const;
 
+/**
+ * Registration: 5 per hour per IP.
+ *
+ * The limit is configurable for one reason, and it is not "tests are inconvenient". The e2e
+ * suite registers roughly fifteen accounts from a single IP inside two minutes, because that is
+ * what exercising ten user journeys end to end requires. Against a 5/hour limit the suite and
+ * the control are structurally incompatible: five of its ten flows failed on HTTP 429 before
+ * reaching a single assertion. That is why the suite had never run in CI.
+ *
+ * **The override cannot loosen production.** `NODE_ENV === 'production'` — which is what UAT and
+ * prod both run — pins the limit at 5 regardless of what the environment says. The seam exists
+ * for local and CI runs, where the throttle is protecting nothing, and it cannot be widened
+ * where it protects something.
+ */
+export const REGISTER_LIMIT_DEFAULT = 5;
+
+export function registerThrottle(): { ttl: number; limit: number } {
+  const override = Number(process.env.AUTH_REGISTER_LIMIT);
+  const overridable =
+    process.env.NODE_ENV !== 'production' && Number.isFinite(override) && override > 0;
+  return { ttl: 3600000, limit: overridable ? override : REGISTER_LIMIT_DEFAULT };
+}
+
 export interface ThrottlerFactoryLogger {
   warn(message: string): void;
 }

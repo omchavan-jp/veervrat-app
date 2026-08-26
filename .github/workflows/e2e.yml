@@ -1,0 +1,134 @@
+name: E2E
+
+# The runtime pass: 12 Playwright flows driving the real API and the real web app in a
+# browser, against a real Postgres and Redis.
+#
+# Why this workflow exists. Until 2026-08-27 these specs existed and ran nowhere. The
+# workflows README said "Unit + integration + build cover the code paths" — and that belief
+# is what let a string of defects reach a person instead of a test: a 100kb body limit that
+# made every real image upload fail, a toast hook that silently discarded 51 call sites, a
+# CORP header the browser enforced and curl did not, and an accept flow that returned 403 to
+# every real user. All of them green in unit, integration and build.
+#
+# ⚠️ A runtime pass is only as honest as its fixtures. `e2e/helpers/global-setup.ts` grants
+# ADMIN and MODERATOR with raw SQL because the product has no path to those roles — correct.
+# It must NOT do the same for anything a user can reach on their own: doing so seeds a state
+# no user can reach, and the flow then proves nothing. That is exactly how the accept
+# deadlock survived a suite containing `flow-03-vm-invite-approve.spec.ts`.
+#
+# Separate from Integration so a browser flake never blocks the fast code gate.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: e2e-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    name: E2E flows (Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: veervrat
+          POSTGRES_PASSWORD: veervrat_local
+          POSTGRES_DB: veervrat
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U veervrat"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:8-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    # No Meilisearch and no MinIO service.
+    #
+    # Meilisearch: MEILI_HOST is optional in the config schema; unset, MeiliService logs a
+    # warning and search returns empty. No flow exercises search, and the search backend is
+    # moving to Postgres pg_trgm anyway (#194), so provisioning it here would add a container
+    # and a dependency for nothing.
+    #
+    # MinIO: no flow uploads a file. If one is added, add the service — do not add a flow
+    # that skips the upload and call it covered.
+    env:
+      DATABASE_URL: postgresql://veervrat:veervrat_local@localhost:5432/veervrat?schema=public
+      REDIS_URL: redis://localhost:6379
+      NODE_ENV: development
+      PORT: 3001
+      FRONTEND_URL: http://localhost:3000
+      SESSION_SECRET: ci_session_secret_at_least_32_chars_long_xx
+      # GoogleStrategy reads these with getOrThrow at module init, outside the Joi schema —
+      # the app cannot boot without them. No flow performs a real OAuth round trip.
+      GOOGLE_CLIENT_ID: ci-dummy-client-id
+      GOOGLE_CLIENT_SECRET: ci-dummy-client-secret
+      GOOGLE_CALLBACK_URL: http://localhost:3001/api/v1/auth/google/callback
+      # The web app reads these at runtime under `next dev`.
+      API_BASE_URL: http://localhost:3001/api/v1
+      SITE_URL: http://localhost:3000
+      ENVIRONMENT: e2e
+      FEEDBACK_MODE: all
+      CONTENT_EDIT_ENABLED: 'false'
+      # e2e/helpers/db.ts shells out to psql with this.
+      PGPASSWORD: veervrat_local
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install psql client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Generate Prisma client
+        run: pnpm --filter api db:generate
+
+      - name: Apply migrations
+        run: pnpm --filter api db:migrate:deploy
+
+      # The flows pick real sentences and weaknesses out of the database
+      # (`sampleSentenceWeakness` in e2e/helpers/db.ts). Without the seed they have nothing
+      # to start a journey from.
+      - name: Seed content
+        run: pnpm --filter api seed
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      # playwright.config.ts starts both servers itself and waits on their health URLs.
+      - name: Run E2E flows
+        run: pnpm exec playwright test --reporter=list
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

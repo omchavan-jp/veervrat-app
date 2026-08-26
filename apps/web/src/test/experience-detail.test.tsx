@@ -20,7 +20,10 @@ const log = (over: Record<string, unknown> = {}) => ({
   id: 'log-1',
   authorId: AUTHOR,
   author: { username: 'vratarthi', displayName: 'A Vratarthi' },
-  body: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'A reflection.' }] }] },
+  body: {
+    type: 'doc',
+    content: [{ type: 'paragraph', content: [{ type: 'text', text: 'A reflection.' }] }],
+  },
   visibility: 'ONLY_ME',
   isDraft: false,
   publishedAt: '2026-08-20T00:00:00.000Z',

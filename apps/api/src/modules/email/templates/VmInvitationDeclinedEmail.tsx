@@ -8,7 +8,8 @@ type Props = {
 const copy = {
   EN: {
     subject: 'Your Vratmitra invitation was declined',
-    body: () => `The person you invited has declined your Vratmitra invitation. You can send a new invitation to someone else from your My Vratmitras page.`,
+    body: () =>
+      `The person you invited has declined your Vratmitra invitation. You can send a new invitation to someone else from your My Vratmitras page.`,
   },
   MR: {
     subject: 'तुमचे व्रतमित्र आमंत्रण नाकारले गेले',
@@ -20,8 +21,19 @@ export function VmInvitationDeclinedEmail({ vaDisplayName, language }: Props): R
   const t = copy[language];
   return (
     <html>
-      <head><meta charSet="utf-8" /><title>{t.subject}</title></head>
-      <body style={{ fontFamily: 'sans-serif', color: '#1a1a1a', padding: '24px', maxWidth: '600px', margin: '0 auto' }}>
+      <head>
+        <meta charSet="utf-8" />
+        <title>{t.subject}</title>
+      </head>
+      <body
+        style={{
+          fontFamily: 'sans-serif',
+          color: '#1a1a1a',
+          padding: '24px',
+          maxWidth: '600px',
+          margin: '0 auto',
+        }}
+      >
         <p style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '16px' }}>Veervrat</p>
         <p>{t.body()}</p>
         <hr style={{ borderTop: '1px solid #eee', margin: '24px 0' }} />

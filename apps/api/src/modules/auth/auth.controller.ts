@@ -11,6 +11,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
+import { registerThrottle } from '../../common/throttler/throttler-config.factory';
 import { ConfigService } from '@nestjs/config';
 import type { Request, Response } from 'express';
 import { CapabilitiesService } from '../capabilities/capabilities.service';
@@ -54,7 +55,7 @@ export class AuthController {
   }
 
   @Post('register')
-  @Throttle({ default: { ttl: 3600000, limit: 5 } })
+  @Throttle({ default: registerThrottle() })
   async register(@Body() dto: RegisterDto) {
     const result = await this.authService.register(
       dto.email,

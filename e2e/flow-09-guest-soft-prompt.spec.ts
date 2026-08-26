@@ -34,6 +34,10 @@ test.describe('Flow 9: guest browse → soft prompt → signup', () => {
     await expect(signupLink).toBeVisible();
     await signupLink.click();
     await expect(page).toHaveURL(/\/signup/, { timeout: 15_000 });
+    // The email route is collapsed by default — Google is the primary path and the email
+    // fields are one click away (signup/page.tsx, the `emailCta` Collapsible). Tests written
+    // against the older single-form page looked for a password field that is not rendered yet.
+    await page.getByRole('button', { name: /sign up with email/i }).click();
     // The signup form is present (display name + password fields).
     await expect(page.locator('input[type="password"]').first()).toBeVisible();
   });
