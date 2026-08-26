@@ -11,6 +11,7 @@ import heicConvert from 'heic-convert';
 import { ConfigService } from '@nestjs/config';
 import { UploadsRepository } from './uploads.repository';
 import { extractUploadKeys } from './upload-references';
+import { processUploadedImage, NotAnImageError } from './image-pipeline';
 import { STORAGE_PROVIDER, type StorageProvider } from './storage/storage-provider';
 import type { SessionUser } from '../auth/types/auth.types';
 
@@ -59,21 +60,9 @@ const PUBLIC_PURPOSES = new Set<UploadPurpose>(['blog']);
 // rather than a policy decision silently baked into every row.
 const UPLOADS_PATH = '/api/v1/uploads';
 
-const EXT_BY_TYPE: Record<string, string> = {
-  'image/jpeg': 'jpg',
-  'image/png': 'png',
-  'image/gif': 'gif',
-  'image/webp': 'webp',
-};
-
-// HEIC/HEIF (the iPhone default) is accepted on upload but converted to JPEG so it
-// renders in every browser — Chrome and Firefox cannot display HEIC in <img>.
-const HEIC_TYPES = new Set(['image/heic', 'image/heif']);
-
 @Injectable()
 export class UploadsService {
   private readonly logger = new Logger('UploadsService');
-  private readonly ALLOWED_TYPES = [...Object.keys(EXT_BY_TYPE), ...HEIC_TYPES];
   private readonly MAX_SIZE_MB = MAX_UPLOAD_MB;
 
   constructor(
@@ -91,37 +80,42 @@ export class UploadsService {
     user: SessionUser,
     purpose: UploadPurpose,
   ): Promise<{ url: string }> {
-    if (!this.ALLOWED_TYPES.includes(request.mimeType)) {
-      throw new BadRequestException('File type not supported');
-    }
-
     const buffer = Buffer.from(request.fileBuffer, 'base64');
     const sizeMB = buffer.byteLength / (1024 * 1024);
     if (sizeMB > this.MAX_SIZE_MB) {
       throw new PayloadTooLargeException(`File exceeds ${this.MAX_SIZE_MB}MB limit`);
     }
 
-    // HEIC/HEIF → JPEG so the stored image renders in every browser.
-    let body = buffer;
-    let contentType = request.mimeType;
-    if (HEIC_TYPES.has(request.mimeType)) {
+    // What this is, decided by decoding it — never by `request.mimeType`, which the caller sets
+    // and which the platform standard wrongly claimed was sniffed (#189).
+    //
+    // HEIC is tried only when the decoder refuses, which makes the fallback self-describing:
+    // sharp cannot read HEIC (its prebuilt binaries omit it), so "sharp said no, heic-convert
+    // said yes" IS the detection. Nothing is trusted from the request.
+    let processed;
+    try {
+      processed = await processUploadedImage(buffer);
+    } catch (first) {
+      if (!(first instanceof NotAnImageError)) throw first;
       try {
         const jpeg = await heicConvert({ buffer, format: 'JPEG', quality: 0.9 });
-        body = Buffer.from(jpeg);
-        contentType = 'image/jpeg';
-      } catch (error) {
+        processed = await processUploadedImage(Buffer.from(jpeg));
+      } catch (second) {
         this.logger.warn({
-          msg: 'HEIC conversion failed',
-          error: error instanceof Error ? error.message : String(error),
+          msg: 'Upload rejected: not a readable image',
+          error: second instanceof Error ? second.message : String(second),
         });
-        throw new BadRequestException('Could not process this HEIC image');
+        throw new BadRequestException('File type not supported');
       }
     }
 
+    const { body, contentType } = processed;
+
     // Randomized name — never the original filename (PES §uploads). No `uploads/` prefix: the
     // container is already called that, and carrying both produced /uploads/uploads/<uuid>.ext.
-    const ext = EXT_BY_TYPE[contentType];
-    const key = `${randomUUID()}.${ext}`;
+    // The extension comes from what the bytes decoded as, so it cannot disagree with the stored
+    // content type.
+    const key = `${randomUUID()}.${processed.extension}`;
 
     try {
       await this.storage.put(

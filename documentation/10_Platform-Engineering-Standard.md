@@ -28,7 +28,8 @@ This document is the canonical reference for all library, tooling, and architect
 | Error tracking | **Sentry** (free tier, EU region) | `@sentry/node` (api), `@sentry/nextjs` (web) | D8 — GlitchTip dropped 2026-08. Reads `SENTRY_DSN` from Key Vault on the api; on the web the DSN is threaded through `RuntimeConfig`, never `NEXT_PUBLIC_SENTRY_DSN` — that is inlined at build time and the same image is promoted UAT → prod unchanged (§17). Both DSNs are set per environment, out of band, never in Terraform state |
 | Platform telemetry | **Dropped** (2026-08-23) | — | Was going to be Azure Application Insights; never started, and would have been the one Azure-coupled piece of an otherwise portable stack. See `18_Observability-Standard.md` for the full reasoning |
 | Object storage | Azure Blob (deployed), MinIO/S3-compatible (local) | `@azure/storage-blob`, `@azure/identity`; `@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner` | #139 (O15) — `uploads.service.ts` depends only on a `StorageProvider` interface (put/get/delete/signedUrl), never an SDK directly. A factory (`storage-provider.factory.ts`) selects the implementation by which environment variables are present: `AZURE_STORAGE_ACCOUNT_NAME`+`AZURE_STORAGE_CONTAINER_NAME`+`AZURE_CLIENT_ID` selects Azure Blob, `S3_*` selects S3/MinIO, neither present means every operation refuses with a clear error rather than the app silently doing nothing. Azure is reached with the api's existing managed identity — no access key exists anywhere for it. |
-| HEIC→JPEG conversion | heic-convert | `heic-convert` | Converts iPhone HEIC/HEIF uploads to JPEG server-side (Chrome/Firefox can't render HEIC). Pure-JS (libheif/wasm) — no native/libvips build. |
+| HEIC→JPEG conversion | heic-convert | `heic-convert` | Converts iPhone HEIC/HEIF uploads to JPEG server-side (Chrome/Firefox can't render HEIC). Pure-JS (libheif/wasm) — no native/libvips build. **Kept alongside sharp**: sharp's prebuilt binaries do not reliably carry HEIC support (licensing), so HEIC is decoded here first and handed on as JPEG. |
+| Image processing | **sharp** (libvips) | `sharp` | #189 — every upload is decoded, EXIF orientation applied, **all metadata stripped** (phone photos carry GPS coordinates, and a public experience log would otherwise publish where a picture was taken), downscaled to a maximum dimension, and re-encoded. Decoding is also what makes format detection real: sharp reports the format the bytes actually are, replacing a `mimeType` field the client set. Native (libvips) with prebuilt amd64 binaries — matches the runtime image; verify in the built image, not only under `pnpm dev`. |
 | Search | **Under revision — see #194** | `meilisearch` (installed, unprovisioned) | ⚠️ This row said "Already decided". That decision is being reversed: Meilisearch has never been provisioned in any environment, and costing it on Container Apps (~₹1,850–3,700/month for both) does not justify three read paths at beta scale. The proposal is to serve them from **PostgreSQL `pg_trgm`**, which already backs entity search. Do not provision Meilisearch on the strength of this row. |
 | Validation (backend) | class-validator + class-transformer | `class-validator`, `class-transformer` | Already in stack. All DTOs use this. |
 | Validation (frontend) | Zod | `zod` | Already in stack. All forms use React Hook Form + Zod. |
@@ -202,9 +203,23 @@ apps/web/
 ## Security Baseline
 
 ### Upload validation
-- MIME type sniffed server-side (not trusted from client Content-Type header)
+- **File type determined by decoding the image, not by what the caller says it is.** `sharp`
+  reports the actual format; anything that does not decode is refused.
+
+  ⚠️ **This line previously claimed the type was "sniffed server-side" and it was not true**
+  (found 2026-08-25, #189). `uploads.service.ts` checked `request.mimeType` — a field in the JSON
+  body, chosen by the caller — so arbitrary bytes could be stored and served as `image/png`. The
+  claim was wrong twice: not sniffed, and not even a header. Corrected only once the code
+  actually did it.
 - Allowed MIME types (v1): `image/jpeg`, `image/png`, `image/gif`, `image/webp`, `image/heic`, `image/heif`
 - **HEIC/HEIF** (iPhone default) is accepted but **converted to JPEG server-side** via `heic-convert` before storage — Chrome/Firefox cannot render HEIC in `<img>`. Stored as `.jpg`.
+- **All metadata is stripped, including GPS.** Phone cameras record where and when a photo was
+  taken; a public experience log would otherwise publish that alongside the picture, which nobody
+  chose. EXIF orientation is **applied first and then discarded** — stripping without applying it
+  turns every portrait photo sideways, because the rotation flag lives in the data being removed.
+- **Downscaled** beyond a maximum dimension. A 12MP phone photo is several megabytes and nothing
+  in a reflection needs that — and since #178 private images stream through the api, every byte
+  is api bandwidth rather than storage egress.
 - Max file size: 10MB per file
 - Max files per request: 5
 - Files stored in MinIO with randomized path (`uploads/{uuid}.{ext}`) — never the original filename

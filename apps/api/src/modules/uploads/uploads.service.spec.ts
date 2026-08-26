@@ -7,12 +7,32 @@ import { UploadsRepository } from './uploads.repository';
 import { STORAGE_PROVIDER, type StorageProvider } from './storage/storage-provider';
 import type { SessionUser } from '../auth/types/auth.types';
 import { Role } from '@prisma/client';
+import sharp from 'sharp';
 
 // The service depends on StorageProvider, not any SDK — that is the entire point of #139. A mock
 // of the interface exercises the same contract Azure Blob and S3 both implement, so this test
 // stays correct regardless of which one is actually configured.
 const { heicConvertMock } = vi.hoisted(() => ({ heicConvertMock: vi.fn() }));
 vi.mock('heic-convert', () => ({ default: heicConvertMock }));
+
+// Since #189 the service DECODES what it is handed rather than believing `mimeType`, so these
+// fixtures have to be real images. The old ones were the bytes 'x' declared as a PNG — exactly
+// the thing now refused, and a fair illustration of what the tests were previously asserting on.
+async function realImage(format: 'jpeg' | 'png' | 'gif' | 'webp', size = 40): Promise<string> {
+  const base = sharp({
+    create: { width: size, height: size, channels: 3, background: { r: 200, g: 100, b: 50 } },
+  });
+  const buf = await (
+    format === 'jpeg'
+      ? base.jpeg()
+      : format === 'png'
+        ? base.png()
+        : format === 'gif'
+          ? base.gif()
+          : base.webp()
+  ).toBuffer();
+  return buf.toString('base64');
+}
 
 // Typed as the mock shape directly, not as `StorageProvider` with per-call-site casts: a bare
 // `mockStorage.put` reference (as an assertion target) trips
@@ -44,7 +64,10 @@ describe('UploadsService', () => {
 
   beforeEach(async () => {
     mockStorage.put.mockResolvedValue({ url: 'https://storage.example/uploads/generated-key.jpg' });
-    heicConvertMock.mockResolvedValue(Buffer.from('converted-jpeg'));
+    // Rejects by default, which is what real heic-convert does for anything that is not HEIC.
+    // Resolving by default would make the fallback rescue EVERY undecodable input, so "rejects a
+    // PDF" would pass while the service actually accepted it.
+    heicConvertMock.mockRejectedValue(new Error('not a heic file'));
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UploadsService,
@@ -68,7 +91,7 @@ describe('UploadsService', () => {
       mockRepository.createUploadRecord.mockResolvedValue({ id: 'upload-1' });
       const result = await service.uploadChatImage(
         {
-          fileBuffer: Buffer.from('fake image data').toString('base64'),
+          fileBuffer: await realImage('jpeg'),
           filename: 'test.jpg',
           mimeType: 'image/jpeg',
           roomId: 'chat:user1:user2',
@@ -84,7 +107,7 @@ describe('UploadsService', () => {
       mockRepository.createUploadRecord.mockResolvedValue({ id: 'upload-1' });
       await service.uploadChatImage(
         {
-          fileBuffer: Buffer.from('x').toString('base64'),
+          fileBuffer: await realImage('png'),
           filename: 'secret-name.png',
           mimeType: 'image/png',
         },
@@ -100,13 +123,12 @@ describe('UploadsService', () => {
     // #178: an image in a private chat was readable by anyone holding its URL, permanently.
     // These pin the two halves of the fix — WHERE a file is written, and WHAT is handed back.
     describe('visibility by purpose (#178)', () => {
-      const png = {
-        fileBuffer: Buffer.from('x').toString('base64'),
-        filename: 'a.png',
-        mimeType: 'image/png',
-      };
+      // Built in `beforeEach` rather than at describe scope: `await` is not allowed there, and
+      // the fixture has to be a real PNG now that the service decodes what it is given.
+      let png: { fileBuffer: string; filename: string; mimeType: string };
 
-      beforeEach(() => {
+      beforeEach(async () => {
+        png = { fileBuffer: await realImage('png'), filename: 'a.png', mimeType: 'image/png' };
         // Shared module-level mocks: without this, `calls[0]` is whatever an earlier test left
         // behind. Asserting on `lastCall` below makes each case independent of ordering too.
         vi.clearAllMocks();
@@ -165,20 +187,31 @@ describe('UploadsService', () => {
 
     it('accepts all supported image types', async () => {
       mockRepository.createUploadRecord.mockResolvedValue({ id: 'upload-1' });
-      for (const mimeType of ['image/jpeg', 'image/png', 'image/gif', 'image/webp']) {
+      for (const format of ['jpeg', 'png', 'gif', 'webp'] as const) {
         const result = await service.uploadChatImage(
-          { fileBuffer: Buffer.from('x').toString('base64'), filename: 'f', mimeType },
+          // A real image of each format. `mimeType` is deliberately WRONG for all of them, to
+          // show the service no longer believes it: the format comes from decoding (#189).
+          { fileBuffer: await realImage(format), filename: 'f', mimeType: 'image/jpeg' },
           mockUser,
         );
         expect(result.url).toBeDefined();
+
+        const [key] = mockStorage.put.mock.lastCall as [string];
+        const expectedExt = format === 'jpeg' ? 'jpg' : format;
+        expect(key.endsWith(`.${expectedExt}`)).toBe(true);
       }
     });
 
     it('converts HEIC to JPEG and stores it as .jpg', async () => {
       mockRepository.createUploadRecord.mockResolvedValue({ id: 'upload-1' });
+      // A REAL JPEG back, because the service decodes whatever heic-convert returns. This is the
+      // one case where the fallback is meant to succeed.
+      heicConvertMock.mockResolvedValue(Buffer.from(await realImage('jpeg'), 'base64'));
       const result = await service.uploadChatImage(
         {
-          fileBuffer: Buffer.from('fake heic').toString('base64'),
+          fileBuffer: Buffer.from(
+            'not decodable by sharp — that is what makes it the HEIC path',
+          ).toString('base64'),
           filename: 'IMG_0001.heic',
           mimeType: 'image/heic',
         },
@@ -199,7 +232,8 @@ describe('UploadsService', () => {
       await expect(
         service.uploadChatImage(
           {
-            fileBuffer: Buffer.from('x').toString('base64'),
+            // Must NOT be decodable by sharp, or it never reaches the HEIC fallback at all.
+            fileBuffer: Buffer.from('claims to be heic, decodes as nothing').toString('base64'),
             filename: 'b.heic',
             mimeType: 'image/heic',
           },
@@ -214,7 +248,7 @@ describe('UploadsService', () => {
       await expect(
         service.uploadChatImage(
           {
-            fileBuffer: Buffer.from('x').toString('base64'),
+            fileBuffer: await realImage('png'),
             filename: 'f.jpg',
             mimeType: 'image/jpeg',
           },
