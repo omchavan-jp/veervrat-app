@@ -216,6 +216,25 @@ If one is added, add the service; do not add a flow that skips the upload and ca
   else is a check that does not share CI's constraints, which is the failure this whole audit is
   about.
 
+  Two more surfaced once the suite finally ran on a runner, and **both were real defects in the
+  suite, not workflow mistakes** — which is exactly what a runtime pass is for:
+
+  - **`e2e/helpers/db.ts` shells out to `docker exec veervrat-postgres`.** On a runner Postgres is
+    a service container reached over the network, so the first helper call took global-setup down
+    with it. The helpers now talk to psql directly when `E2E_PG_HOST` is set. `E2E_PG_PORT` exists
+    so that branch can be exercised locally against the dev container's published 5433 —
+    otherwise it could only ever be tested by pushing.
+  - **`flow-08` picked "any existing journey (the seeded VA has several)" out of the database.**
+    True of a long-lived dev database, false of a freshly seeded one: the content seed creates
+    virtues and sentences, not journeys. In CI the query returned null, a non-null assertion lied,
+    and the flow died three calls away inside a helper with *"Cannot read properties of null
+    (reading 'replace')"* — a data assumption surfacing as a type error. It now creates the
+    journey it overrides.
+
+  The second is the more interesting one. **A test that depends on ambient data passes wherever
+  that data happens to exist.** Every other flow creates what it needs; this one borrowed, and
+  borrowing is only visible on a clean database — which CI has and a dev machine does not.
+
   Locally, `apps/api/.env` supplies both config values, so no local run could have caught either.
   This is the same lesson as everything else in this audit, turned on the audit itself: *a green
   local run is not evidence about deployment machinery.* The workflow is fixed; the next CI run is
