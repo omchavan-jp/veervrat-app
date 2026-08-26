@@ -16,6 +16,7 @@ import mrMessages from '@/messages/mr.json';
 import { flattenMessages, type NestedMessages } from '@/lib/content-editor/messages';
 import { placeholdersEqual } from '@/lib/content-editor/icu';
 import { contentOverridesApi, type OverrideLocale } from '@/lib/api/content-overrides';
+import { errorMessage } from '@/lib/api/error-message';
 
 // Both catalogs are loaded here (dev-only chunk) so the panel can edit en + mr side by side
 // regardless of the active locale. Flattened once at module load.
@@ -127,7 +128,7 @@ export function ContentEditPanel({
       router.refresh();
       onClose();
     },
-    onError: () => toast.add({ title: t('saveError'), type: 'error' }),
+    onError: (err) => toast.add({ title: errorMessage(err, t('saveError')), type: 'error' }),
   });
 
   const discard = useMutation({
@@ -146,7 +147,7 @@ export function ContentEditPanel({
       router.refresh();
       onClose();
     },
-    onError: () => toast.add({ title: t('discardError'), type: 'error' }),
+    onError: (err) => toast.add({ title: errorMessage(err, t('discardError')), type: 'error' }),
   });
 
   const open = selection !== null;

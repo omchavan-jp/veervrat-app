@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Search, UserPlus, Mail, Copy, Check, X, Clock } from 'lucide-react';
 import { usersApi, type UserSearchResult } from '@/lib/api/users';
+import { errorMessage } from '@/lib/api/error-message';
 import {
   invitationsApi,
   type Invitation,
@@ -61,7 +62,7 @@ export default function InvitationsPage() {
       setQuery('');
       toast({ title: t('sent') });
     },
-    onError: () => toast({ title: t('sendError'), variant: 'destructive' }),
+    onError: (err) => toast({ title: errorMessage(err, t('sendError')), variant: 'destructive' }),
   });
 
   const remind = useMutation({
@@ -70,7 +71,8 @@ export default function InvitationsPage() {
       queryClient.invalidateQueries({ queryKey: queryKeys.invitations.list });
       toast({ title: t('reminderSent') });
     },
-    onError: () => toast({ title: t('reminderError'), variant: 'destructive' }),
+    onError: (err) =>
+      toast({ title: errorMessage(err, t('reminderError')), variant: 'destructive' }),
   });
 
   const cancel = useMutation({

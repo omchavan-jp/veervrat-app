@@ -31,6 +31,7 @@ import { Logo } from '@/components/auth/logo';
 import { LanguageToggle } from '@/components/shared/language-toggle';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
 import { NotificationBell } from '@/components/layout/notification-bell';
+import { errorMessage } from '@/lib/api/error-message';
 
 export type ShellUser = { displayName: string | null; email: string };
 
@@ -315,7 +316,11 @@ function LeftRail({
             <button
               onClick={() =>
                 logout.mutate(undefined, {
-                  onError: () => toast({ title: tA11y('logoutError'), variant: 'destructive' }),
+                  onError: (err) =>
+                    toast({
+                      title: errorMessage(err, tA11y('logoutError')),
+                      variant: 'destructive',
+                    }),
                 })
               }
               disabled={logout.isPending}
@@ -339,7 +344,11 @@ function LeftRail({
             <button
               onClick={() =>
                 logout.mutate(undefined, {
-                  onError: () => toast({ title: tA11y('logoutError'), variant: 'destructive' }),
+                  onError: (err) =>
+                    toast({
+                      title: errorMessage(err, tA11y('logoutError')),
+                      variant: 'destructive',
+                    }),
                 })
               }
               disabled={logout.isPending}

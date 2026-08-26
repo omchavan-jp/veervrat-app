@@ -21,6 +21,7 @@ import {
 } from '@/lib/api/experience-logs';
 import type { TiptapDoc } from '@/components/chat/message-content';
 import { EntityTagPicker, type SelectedTag } from './entity-tag-picker';
+import { errorMessage } from '@/lib/api/error-message';
 
 const VISIBILITIES: ExperienceVisibility[] = ['ONLY_ME', 'FRIENDS', 'PUBLIC'];
 
@@ -89,7 +90,7 @@ export function ExperienceEditor({
       toast({ title: t('savedDraft') });
       router.push('/experiences');
     },
-    onError: () => toast({ title: t('saveError'), variant: 'destructive' }),
+    onError: (err) => toast({ title: errorMessage(err, t('saveError')), variant: 'destructive' }),
   });
 
   const publish = useMutation({
@@ -111,7 +112,7 @@ export function ExperienceEditor({
       toast({ title: t('published') });
       router.push('/experiences');
     },
-    onError: () => toast({ title: t('saveError'), variant: 'destructive' }),
+    onError: (err) => toast({ title: errorMessage(err, t('saveError')), variant: 'destructive' }),
   });
 
   const onPickImage = async (e: React.ChangeEvent<HTMLInputElement>) => {

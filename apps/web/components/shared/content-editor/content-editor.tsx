@@ -18,6 +18,7 @@ import {
 import { disambiguateKeys } from '@/lib/content-editor/disambiguate';
 import { ContentEditPanel } from './content-edit-panel';
 import { ContentStagedList } from './content-staged-list';
+import { errorMessage } from '@/lib/api/error-message';
 
 type Edge = 'top' | 'bottom';
 const STORAGE_KEY = 'veervrat.contentEditor.pos';
@@ -144,7 +145,7 @@ function ContentEditorInner() {
     onSuccess: ({ prUrl }) => {
       toast.add({ title: t('publishedTitle'), description: prUrl, type: 'success' });
     },
-    onError: () => toast.add({ title: t('publishError'), type: 'error' }),
+    onError: (err) => toast.add({ title: errorMessage(err, t('publishError')), type: 'error' }),
   });
 
   return (

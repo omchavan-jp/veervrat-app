@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Spinner } from '@/components/ui/spinner';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useToast } from '@/hooks/use-toast';
+import { errorMessage } from '@/lib/api/error-message';
 
 export default function BlogDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -38,22 +39,26 @@ export default function BlogDetailPage({ params }: { params: Promise<{ id: strin
       setComment('');
       invalidate();
     },
-    onError: () => toast({ title: t('commentError'), variant: 'destructive' }),
+    onError: (err) =>
+      toast({ title: errorMessage(err, t('commentError')), variant: 'destructive' }),
   });
   const del = useMutation({
     mutationFn: (cid: string) => blogsApi.deleteComment(id, cid),
     onSuccess: invalidate,
-    onError: () => toast({ title: t('moderationError'), variant: 'destructive' }),
+    onError: (err) =>
+      toast({ title: errorMessage(err, t('moderationError')), variant: 'destructive' }),
   });
   const hide = useMutation({
     mutationFn: (cid: string) => blogsApi.hideComment(id, cid),
     onSuccess: invalidate,
-    onError: () => toast({ title: t('moderationError'), variant: 'destructive' }),
+    onError: (err) =>
+      toast({ title: errorMessage(err, t('moderationError')), variant: 'destructive' }),
   });
   const report = useMutation({
     mutationFn: (cid: string) => blogsApi.reportComment(id, cid),
     onSuccess: () => toast({ title: t('reported') }),
-    onError: () => toast({ title: t('moderationError'), variant: 'destructive' }),
+    onError: (err) =>
+      toast({ title: errorMessage(err, t('moderationError')), variant: 'destructive' }),
   });
 
   if (isLoading) {

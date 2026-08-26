@@ -16,6 +16,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
+import { errorMessage } from '@/lib/api/error-message';
 
 const FIELDS: { key: ProfileField; labelKey: string }[] = [
   { key: 'avatar', labelKey: 'fieldAvatar' },
@@ -51,7 +52,7 @@ export default function ProfilePage() {
       queryClient.setQueryData(['profile', 'me'], updated);
       toast({ title: t('saved') });
     },
-    onError: () => toast({ title: t('saveError'), variant: 'destructive' }),
+    onError: (err) => toast({ title: errorMessage(err, t('saveError')), variant: 'destructive' }),
   });
 
   if (isLoading) {

@@ -26,6 +26,7 @@ import {
   type FeedbackListResponse,
 } from '@/lib/api/feedback';
 import type { FeedbackMode } from './feedback-widget';
+import { errorMessage } from '@/lib/api/error-message';
 
 const FEEDBACK_TYPES: FeedbackItemType[] = ['ISSUE', 'IMPROVEMENT', 'MODIFICATION', 'ADDITION'];
 
@@ -315,8 +316,8 @@ function RaiseForm({ onDone }: { onDone: () => void }) {
       reset({ type: 'ISSUE', title: '', description: '' });
       onDone();
     },
-    onError: () => {
-      toast.add({ title: t('form.errorTitle'), type: 'error' });
+    onError: (err) => {
+      toast.add({ title: errorMessage(err, t('form.errorTitle')), type: 'error' });
     },
   });
 

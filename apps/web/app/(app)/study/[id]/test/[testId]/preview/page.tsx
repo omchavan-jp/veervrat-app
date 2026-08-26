@@ -13,6 +13,7 @@ import { Alert, AlertTitle } from '@/components/ui/alert';
 import { Collapsible, CollapsibleTrigger, CollapsiblePanel } from '@/components/ui/collapsible';
 import { BilingualText } from '@/components/shared/bilingual-text';
 import { useToast } from '@/hooks/use-toast';
+import { errorMessage } from '@/lib/api/error-message';
 
 type Score = 1 | 2 | 3 | 4;
 type Sentence = { sentenceId: string; textEn: string; textMr: string | null };
@@ -63,7 +64,8 @@ export default function TestPreviewPage() {
     setShowUnansweredConfirm(false);
     submitTest.mutate(testId, {
       onSuccess: () => router.push(`/study/${id}/test/${testId}/report`),
-      onError: () => toast({ title: t('submitError'), variant: 'destructive' }),
+      onError: (err) =>
+        toast({ title: errorMessage(err, t('submitError')), variant: 'destructive' }),
     });
   };
 

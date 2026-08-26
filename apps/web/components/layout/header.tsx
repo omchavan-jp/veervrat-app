@@ -10,6 +10,7 @@ import { LanguageToggle } from '@/components/shared/language-toggle';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
 import { NotificationBell } from '@/components/layout/notification-bell';
 import type { User } from '@/lib/api/auth';
+import { errorMessage } from '@/lib/api/error-message';
 
 export function Header({ user }: { user: User }) {
   const t = useTranslations('common.nav');
@@ -41,7 +42,11 @@ export function Header({ user }: { user: User }) {
             className="h-auto rounded-lg border-border-strong px-3 py-1.5 text-xs"
             onClick={() =>
               logout.mutate(undefined, {
-                onError: () => toast({ title: tCommon('logoutError'), variant: 'destructive' }),
+                onError: (err) =>
+                  toast({
+                    title: errorMessage(err, tCommon('logoutError')),
+                    variant: 'destructive',
+                  }),
               })
             }
             loading={logout.isPending}

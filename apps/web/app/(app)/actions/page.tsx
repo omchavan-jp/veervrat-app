@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { RotateCcw, Lightbulb, Clock, Plus, Flag, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { actionsApi, type VaActions } from '@/lib/api/actions';
+import { errorMessage } from '@/lib/api/error-message';
 import { ercApi, type ErcType } from '@/lib/api/journeys';
 import { queryKeys } from '@/lib/api/query-keys';
 import { BilingualText } from '@/components/shared/bilingual-text';
@@ -101,7 +102,7 @@ export default function ActionsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.actions.va });
     },
-    onError: () => toast({ title: t('acceptError'), variant: 'destructive' }),
+    onError: (err) => toast({ title: errorMessage(err, t('acceptError')), variant: 'destructive' }),
   });
 
   if (isLoading) {
