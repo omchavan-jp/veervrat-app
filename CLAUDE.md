@@ -122,6 +122,21 @@ environment at runtime, so a value that was wrongly baked still looks correct th
   answer is a guard, not a louder rule — this file already said "anything build-time cannot vary
   per environment" while a build-time flag was silently disabling a feature in every deployed
   environment.
+- **Verify with something that behaves like the thing you are claiming about.** A check run with
+  a tool that does not share the user's constraints confirms the mechanism and misses the
+  experience. Four instances in two days, each green everywhere and broken in use:
+
+  | Checked with | Proved | Missed |
+  |---|---|---|
+  | A 163-byte test PNG | credentials, round trip | every realistic file failed at a 100kb body limit |
+  | The api test suite | api behaviour | 22 broken web tests, and the dead toast hook behind them |
+  | `curl`, 200 + identical bytes | transport, authorisation | the browser refused to render it (CORP) |
+  | `tsc` + 1176 tests + CI | types the compiler can see | `Request['user']` is an empty interface, so the wrong object typechecked |
+
+  Where a claim is about what a person sees, a person has to look — or the check has to run in
+  the same place they do. If that is impossible, say so instead of substituting a convenient
+  stand-in and reporting it as verification.
+
 - **A completion record is a claim, not evidence.** Do not tick a task, close an issue or write
   "verified" for something you have not observed. And when you find a record that is false,
   **un-tick it** — work marked done is work nobody looks at again. Three in one day
