@@ -619,6 +619,13 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
   });
 
   const [addPwMsg, setAddPwMsg] = useState<string | null>(null);
+  // An account with no password proves itself with a fresh Google sign-in instead (#196). The
+  // round trip returns here with ?reauth=ok, and the server holds the proof — single-use, and
+  // only for a few minutes.
+  const hasPassword = connected.data?.hasPassword ?? true;
+  const reauthed =
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('reauth') === 'ok';
   // Adding a first password goes through the emailed link rather than straight from this page:
   // the credential outlives the session, so creating it should cost proof of the mailbox.
   const setPassword = useMutation({
@@ -653,7 +660,7 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
     onError: () => toast({ title: t('disconnectError'), variant: 'destructive' }),
   });
   const del = useMutation({
-    mutationFn: (password: string) => usersApi.deleteAccount(password),
+    mutationFn: (password?: string) => usersApi.deleteAccount(password),
     onSuccess: () => {
       setDeleteOpen(false);
       logout.mutate();
@@ -860,27 +867,47 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
             </Button>
             <Button
               variant="destructive"
-              onClick={() => del.mutate(deletePassword)}
+              onClick={() => del.mutate(hasPassword ? deletePassword : undefined)}
               loading={del.isPending}
-              disabled={!deletePassword || del.isPending}
+              disabled={(hasPassword ? !deletePassword : !reauthed) || del.isPending}
             >
               {t('deleteAccount')}
             </Button>
           </>
         }
       >
-        <Label htmlFor="settings-deletePassword" className="text-[12px] font-normal text-muted">
-          {t('deleteReauthPrompt')}
-        </Label>
-        <Input
-          id="settings-deletePassword"
-          type="password"
-          value={deletePassword}
-          onChange={(e) => setDeletePassword(e.target.value)}
-          aria-invalid={deleteMsg ? true : undefined}
-          aria-describedby={deleteMsg ? 'settings-deletePassword-error' : undefined}
-          className="mt-1.5 h-auto rounded-xl border-border bg-bg px-3 py-2 text-[14px] focus-visible:border-accent focus-visible:ring-0"
-        />
+        {hasPassword ? (
+          <>
+            <Label htmlFor="settings-deletePassword" className="text-[12px] font-normal text-muted">
+              {t('deleteReauthPrompt')}
+            </Label>
+            <Input
+              id="settings-deletePassword"
+              type="password"
+              value={deletePassword}
+              onChange={(e) => setDeletePassword(e.target.value)}
+              aria-invalid={deleteMsg ? true : undefined}
+              aria-describedby={deleteMsg ? 'settings-deletePassword-error' : undefined}
+              className="mt-1.5 h-auto rounded-xl border-border bg-bg px-3 py-2 text-[14px] focus-visible:border-accent focus-visible:ring-0"
+            />
+          </>
+        ) : reauthed ? (
+          // Proof already in hand — the server holds it, single-use, for a few minutes.
+          <p className="text-[12px] text-muted">{t('reauthDone')}</p>
+        ) : (
+          // No password to ask for. The proof is a Google round trip, which leaves the page —
+          // so the person returns to /settings?reauth=ok and re-opens this dialog.
+          <>
+            <p className="mb-2 text-[12px] text-muted">{t('deleteReauthGooglePrompt')}</p>
+            <Button
+              variant="outline"
+              nativeButton={false}
+              render={<a href={`${getRuntimeConfig().apiBaseUrl}/auth/google?intent=reauth`} />}
+            >
+              {t('verifyWithGoogle')}
+            </Button>
+          </>
+        )}
         {deleteMsg && (
           <p
             id="settings-deletePassword-error"

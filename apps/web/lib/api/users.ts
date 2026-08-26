@@ -135,7 +135,10 @@ export const usersApi = {
       .delete<Wrapped<{ provider: string }>>(`/users/me/connected-accounts/${provider}`)
       .then((r) => r.data),
 
-  deleteAccount: (currentPassword: string) =>
+  // The password is optional since #196: an account created with Google proves itself by a fresh
+  // Google sign-in instead, which the server holds against the session. Omitting it is not
+  // "no proof" — the server still demands one.
+  deleteAccount: (currentPassword?: string) =>
     api.delete<Wrapped<{ id: string }>>('/users/me', { currentPassword }).then((r) => r.data),
 
   getPublicProfile: (username: string) =>
