@@ -82,11 +82,20 @@ jobs:
       # The web app reads these at runtime under `next dev`.
       API_BASE_URL: http://localhost:3001/api/v1
       SITE_URL: http://localhost:3000
-      ENVIRONMENT: e2e
-      FEEDBACK_MODE: all
+      # Both are Joi-validated: ENVIRONMENT ∈ (local|uat|prod), FEEDBACK_MODE ∈ (off|granted).
+      # The first CI run failed here — invented values ('e2e', 'all') aborted the API at module
+      # load, Playwright timed out waiting for a server that was never coming, and the whole
+      # suite reported as a Playwright failure. 'all' is not merely unset here: it was removed
+      # from the schema when UAT stopped diverging from prod (#119).
+      ENVIRONMENT: local
+      FEEDBACK_MODE: granted
       CONTENT_EDIT_ENABLED: 'false'
       # e2e/helpers/db.ts shells out to psql with this.
       PGPASSWORD: veervrat_local
+      # Without this the suite cannot pass: register is 5/hour per IP and ten journeys need
+      # ~15 accounts. Honoured only because NODE_ENV is not 'production' — see
+      # registerThrottle() in throttler-config.factory.ts.
+      AUTH_REGISTER_LIMIT: '500'
 
     steps:
       - uses: actions/checkout@v4

@@ -172,9 +172,23 @@ If one is added, add the service; do not add a flow that skips the upload and ca
 
 ## 7. What this pass did NOT establish
 
-- **Whether the workflow passes in CI.** It has run green locally, many times. GitHub's runner is
-  a different machine with different timing, and `retries: 2` is set for CI and not for local. The
-  first CI run is the evidence, and it has not happened yet at the time of writing.
+- **Whether the workflow passes in CI.** ~~Not yet run.~~ **It ran, and it failed** — recorded
+  here rather than quietly fixed, because it is the point of the section.
+
+  Two mistakes, both mine, neither catchable locally:
+  1. I invented `ENVIRONMENT: e2e` and `FEEDBACK_MODE: all`. Both are Joi-validated —
+     `ENVIRONMENT ∈ (local|uat|prod)`, `FEEDBACK_MODE ∈ (off|granted)`. The API aborted at module
+     load, Playwright waited 60s for a server that was never coming, and the failure surfaced as
+     a Playwright timeout rather than a config error. (`all` was removed from the schema when UAT
+     stopped diverging from prod, #119 — so the value I reached for had been deliberately
+     retired.)
+  2. **I forgot `AUTH_REGISTER_LIMIT` entirely** — the variable this whole pass added. Locally I
+     had been passing it on the command line every run, so the omission was invisible.
+
+  Locally, `apps/api/.env` supplies both config values, so no local run could have caught either.
+  This is the same lesson as everything else in this audit, turned on the audit itself: *a green
+  local run is not evidence about deployment machinery.* The workflow is fixed; the next CI run is
+  the evidence.
 - **That the flows cover what matters.** They cover ten journeys. Nobody has checked that ten is
   the right ten, or that the assertions inside them are strong. A green suite is a floor.
 - **Anything about uploads, search, email delivery, or payments.** Not exercised.
