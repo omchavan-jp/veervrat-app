@@ -41,8 +41,8 @@
 
 - [x] 4.1 `forgotPassword` returns three distinct outcomes: no account, account with password,
   account without password. Keep the throttle.
-- [ ] 4.2 Frontend: forgot-password reflects all three, including offering the set-password path.
-- [ ] 4.3 Settings: an account with no password sees the warning that **Google is the only way
+- [x] 4.2 Frontend: forgot-password reflects all three, including offering the set-password path.
+- [x] 4.3 Settings: an account with no password sees the warning that **Google is the only way
   in**, then the action. Warning first — see design decision 3.
 - [ ] 4.4 Replace `EntityNotFoundException('AuthAccount')` wherever it reaches a user. It names a
   database table to somebody changing their password, and it is wrong in substance: nothing is
@@ -57,3 +57,17 @@
   decoration.
 
 ⚠️ 5.1 needs a throwaway Google account, not a real one — it ends by deleting the account.
+
+
+## 6. Carried forward, not done here
+
+- [ ] 6.1 The Google half: re-authentication for **delete** and **email change**, which still
+  demand a password. Needs the redirect + short-lived marker from design 1a. Until it lands, an
+  account with no password can now *acquire* one and use that — a route out of the lockout, but
+  not the same as the flows working directly.
+- [ ] 6.2 `changePassword` still throws `EntityNotFoundException('AuthAccount')` for an account
+  with no password. Unreachable from the UI now (settings shows the set-password panel instead),
+  but the API still answers that way to a direct caller. Task 4.4.
+- [ ] 6.3 **The new Marathi strings are unreviewed.** Written by a non-speaker, same caveat as
+  #154 — and #154's pack covers policy documents, not interface copy. Worth adding to whatever
+  review that becomes.

@@ -37,15 +37,47 @@ export default function ForgotPasswordPage() {
     gloss: t('heroGloss'),
   };
 
-  // Enumeration prevention: the API always returns 'sent'. We show one neutral
-  // confirmation regardless of whether the address has an account.
+  // Three answers, where there used to be one (#196). This page previously showed a single
+  // neutral confirmation whatever happened, to conceal whether an address is registered — which
+  // signup already reveals by refusing a duplicate address. All the ambiguity bought was a person
+  // who mistyped their address waiting for mail that would never arrive.
   if (forgotPassword.isSuccess) {
+    const outcome = forgotPassword.data.status;
+
+    // `no_account` uses the error styling deliberately: nothing was sent and the person has to do
+    // something about it. Both mail-sent cases are successes; only the wording differs.
+    const banner =
+      outcome === 'no_account'
+        ? {
+            variant: 'error' as const,
+            title: t('noAccountTitle'),
+            body: t('noAccountDescription'),
+          }
+        : outcome === 'set_password_sent'
+          ? {
+              variant: 'success' as const,
+              title: t('setPasswordTitle'),
+              body: t('setPasswordDescription'),
+            }
+          : { variant: 'success' as const, title: t('sentTitle'), body: t('sentDescription') };
+
     return (
       <AuthShell hero={hero}>
-        <StatusBanner variant="success" title={t('sentTitle')} description={t('sentDescription')} />
+        <StatusBanner variant={banner.variant} title={banner.title} description={banner.body} />
+        {outcome === 'no_account' && (
+          <Button
+            size="lg"
+            className="mt-4 min-h-12 w-full text-[15px]"
+            nativeButton={false}
+            render={<Link href="/signup" />}
+          >
+            {t('createAccount')}
+          </Button>
+        )}
         <Button
           size="lg"
-          className="mt-4 min-h-12 w-full text-[15px]"
+          variant={outcome === 'no_account' ? 'outline' : undefined}
+          className="mt-3 min-h-12 w-full text-[15px]"
           nativeButton={false}
           render={<Link href="/login" />}
         >

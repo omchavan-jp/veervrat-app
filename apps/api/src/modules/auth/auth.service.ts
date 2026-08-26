@@ -695,11 +695,22 @@ export class AuthService {
   }
 
   // ─── Connected accounts ──────────────────────────────────────────────────────
-  async listConnectedAccounts(
-    userId: string,
-  ): Promise<{ provider: AuthProvider; connectedAt: Date }[]> {
+  /**
+   * `hasPassword` is stated rather than left to be inferred from the provider list (#196).
+   *
+   * A caller could guess it from the absence of an EMAIL entry, and would be wrong for an EMAIL
+   * account whose hash is null — a real state, and precisely the one where getting it wrong shows
+   * somebody a "change password" form they can never use.
+   */
+  async listConnectedAccounts(userId: string): Promise<{
+    accounts: { provider: AuthProvider; connectedAt: Date }[];
+    hasPassword: boolean;
+  }> {
     const accounts = await this.authRepository.listAuthAccounts(userId);
-    return accounts.map((a) => ({ provider: a.provider, connectedAt: a.createdAt }));
+    return {
+      accounts: accounts.map((a) => ({ provider: a.provider, connectedAt: a.createdAt })),
+      hasPassword: accounts.some((a) => a.provider === AuthProvider.EMAIL && !!a.passwordHash),
+    };
   }
 
   async disconnectAccount(
