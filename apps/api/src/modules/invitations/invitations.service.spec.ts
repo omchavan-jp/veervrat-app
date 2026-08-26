@@ -79,6 +79,7 @@ function makeInvitationsRepo(overrides: Record<string, unknown> = {}) {
       .mockImplementation((id, status) => Promise.resolve({ ...PENDING_INVITE, status })),
     markReminderSent: vi.fn().mockResolvedValue({ ...PENDING_INVITE, reminderSentAt: new Date() }),
     listByInviter: vi.fn().mockResolvedValue([PENDING_INVITE]),
+    grantVratmitraRole: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   };
 }

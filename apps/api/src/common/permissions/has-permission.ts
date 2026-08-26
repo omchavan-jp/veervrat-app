@@ -285,9 +285,16 @@ function checkLayerOne(
     case 'vm_invitation.send':
       return isVa(user);
 
+    // Being the named invitee IS the authorisation — an invitation is a specific vratarthi asking
+    // a specific person. This used to also require `isVm(user)`, which deadlocked the flow: you
+    // had to already be a vratmitra to accept an invitation to become one, and nothing outside the
+    // admin screen ever granted the role. Accepting now grants it (invitations.service).
+    // Safe because the role alone opens nothing: every VM data permission below pairs `isVm` with
+    // `isActiveJourneyVm` or `isGlobalVmForJourney`, and the bare `isVa(user) || isVm(user)` cases
+    // are already true for anyone who signed up.
     case 'vm_invitation.accept': {
       if (resource.type !== 'invitation') return false;
-      return isVm(user) && resource.invitation.inviteeId === user.id;
+      return resource.invitation.inviteeId === user.id;
     }
 
     case 'vm_invitation.cancel': {
@@ -295,9 +302,11 @@ function checkLayerOne(
       return isVa(user) && resource.invitation.inviterId === user.id;
     }
 
+    // Same reasoning as accept: an invitee who cannot decline can only ignore, and the invitation
+    // sits pending forever, blocking the vratarthi from inviting anyone else.
     case 'vm_invitation.decline': {
       if (resource.type !== 'invitation') return false;
-      return isVm(user) && resource.invitation.inviteeId === user.id;
+      return resource.invitation.inviteeId === user.id;
     }
 
     case 'vm_relationship.withdraw': {

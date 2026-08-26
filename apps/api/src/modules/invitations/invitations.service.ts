@@ -229,6 +229,13 @@ export class InvitationsService {
       await this.vmRelationshipsService.createFromJourneyInvite(invitation.scopeId, user.id, now);
     }
 
+    // The role follows from the relationship. Granted after it exists, so a failure to form the
+    // relationship never leaves someone holding a role they did not earn — and before the
+    // notification, so the vratarthi is not told about a vratmitra who cannot yet act.
+    if (invitation.type !== InvitationType.PLATFORM) {
+      await this.invitationsRepository.grantVratmitraRole(user.id);
+    }
+
     void this.notificationsService.create(
       invitation.inviterId,
       user.id,
