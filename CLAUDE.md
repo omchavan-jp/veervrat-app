@@ -124,7 +124,7 @@ environment at runtime, so a value that was wrongly baked still looks correct th
   environment.
 - **Verify with something that behaves like the thing you are claiming about.** A check run with
   a tool that does not share the user's constraints confirms the mechanism and misses the
-  experience. Seven instances in three days, each green everywhere and broken in use:
+  experience. Eight instances, each green everywhere and broken in use:
 
   | Checked with | Proved | Missed |
   |---|---|---|
@@ -135,11 +135,19 @@ environment at runtime, so a value that was wrongly baked still looks correct th
   | RBAC probes on the runbook | the identity was *allowed* to act | the action itself was rejected — `maxReplicas: 0` is invalid, so compute never stopped |
   | `turbo run test` (cached) | that a previous run had passed | the web suite did not execute at all; CI caught the failure. Use `--force` |
   | Piping JSON into a hook command | the command works | the harness had never loaded the hook — wrong directory, and it never fired |
+  | Every test granting `VRATMITRA` in a fixture | the flow, given the role | **nobody could get the role** — accept returned 403 to every real user for months |
 
   Two of these are the same trap in different clothes: **a green result from something that did
   not run** (the cache) and **a green result from something that ran somewhere else** (the pipe).
   Before believing a pass, ask what would have had to execute for it to be true, and confirm that
   it did.
+
+  The last row is the worst kind, and it is worth its own rule. **A fixture may grant what the
+  product cannot, and nothing else.** `e2e/helpers/global-setup.ts` may insert `admin` and
+  `moderator` because no product path grants them. It may not insert anything a user is supposed
+  to obtain themselves: doing so seeds a state **no user can reach**, and every test downstream
+  then proves something about a world that does not exist. Full account:
+  `ops/audit/README.md`.
 
   Where a claim is about what a person sees, a person has to look — or the check has to run in
   the same place they do. If that is impossible, say so instead of substituting a convenient
