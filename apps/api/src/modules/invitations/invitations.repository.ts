@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { InvitationType, InvitationStatus, InvitationChannel } from '@prisma/client';
+import { InvitationType, InvitationStatus, InvitationChannel, Role } from '@prisma/client';
 import { randomBytes } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 
@@ -51,6 +51,18 @@ export class InvitationsRepository {
         expiresAt,
         channel: data.channel ?? InvitationChannel.IN_APP,
       },
+    });
+  }
+
+  // Accepting a vratmitra invitation is what makes someone a vratmitra. Signup grants VRATARTHI
+  // and nothing else, and until 2026-08-27 the only other grant path was an admin editing the
+  // user by hand — so the role never arrived and every VM permission check failed for the person
+  // who had just accepted. `skipDuplicates` because someone already mentoring one vratarthi
+  // accepts a second invitation with the role already held.
+  async grantVratmitraRole(userId: string): Promise<void> {
+    await this.prisma.userRole.createMany({
+      data: [{ userId, role: Role.VRATMITRA }],
+      skipDuplicates: true,
     });
   }
 
