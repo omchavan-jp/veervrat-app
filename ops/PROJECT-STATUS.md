@@ -8,6 +8,26 @@ root, which meant every infrastructure decision had no history, no diff and no b
 
 ---
 
+## ⚠️ Audit, 2026-08-27 — read `ops/audit/README.md`
+
+Five passes over the whole product. The diagnosis is narrow and it holds in every case: **the
+backend was built, tested and correct, and the thing a person touches was missing, inert, or
+pointed somewhere useless.** The working definition of *done* had become "the API can do it".
+
+Eight defects fixed, including three that made core flows impossible: nobody could accept a
+vratmitra invitation, nobody invited by email could ever accept, and removing a vratmitra did not
+stop them reading your journeys.
+
+**Five things need you, not me** — full list in `ops/audit/README.md`:
+
+1. 🔴 **O18** below — a real password is in git history. Rotate it.
+2. 🔴 **#217** — data export has no UI; #135 was closed with an endpoint no user can call.
+3. Ratify or overrule: accepting an invitation now makes someone a vratmitra **self-service**.
+4. Decide notification destinations (#218) and whether the two deep-link maps should agree.
+5. Decide whether `ENDED` joins `VmRelationshipState`.
+
+---
+
 ## Where things live
 
 **Test:** *would a new engineer need it to build/run/deploy the app?* → `documentation/`.
