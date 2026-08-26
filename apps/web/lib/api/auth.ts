@@ -21,6 +21,13 @@ export type User = {
 type AuthResponse = User & { message: string };
 type Wrapped<T> = { data: T };
 
+/**
+ * What a reset request actually resulted in (#196). Three answers, where there used to be one:
+ * the address has no account, a reset was sent, or the account signs in with Google and has been
+ * sent a link to add a password.
+ */
+export type ForgotPasswordOutcome = 'no_account' | 'reset_sent' | 'set_password_sent';
+
 export const authApi = {
   register: (data: {
     email: string;
@@ -86,7 +93,9 @@ export const authApi = {
       .then((r) => r.data),
 
   forgotPassword: (email: string) =>
-    api.post<Wrapped<{ status: 'sent' }>>('/auth/forgot-password', { email }).then((r) => r.data),
+    api
+      .post<Wrapped<{ status: ForgotPasswordOutcome }>>('/auth/forgot-password', { email })
+      .then((r) => r.data),
 
   resetPassword: (data: { token: string; newPassword: string }) =>
     api.post<Wrapped<{ message: string }>>('/auth/reset-password', data).then((r) => r.data),

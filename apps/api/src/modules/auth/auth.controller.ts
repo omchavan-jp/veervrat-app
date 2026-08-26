@@ -166,8 +166,17 @@ export class AuthController {
   // the caller chooses, so an unlimited version is a way to bombard someone else's inbox.
   //
   // The response is deliberately identical for every input — see AuthService.resendVerification.
-  // Do not add an early return or a distinct message for "unknown address"; that reintroduces
-  // account enumeration.
+  //
+  // ⚠️ `forgot-password` NO LONGER behaves this way, deliberately (#196), and the divergence is
+  // recorded here rather than left to look like an oversight. That route now says when no account
+  // exists, because the concealment was ineffective — `register()` refuses a duplicate address
+  // and says so, answering the same question to anyone who asks — while costing a person who
+  // mistyped their address a silent wait for mail that would never arrive.
+  //
+  // The same argument applies here and this route has not been changed with it. Resending a
+  // verification email is not something a person does while locked out and anxious, so the cost
+  // of ambiguity is lower; that is a judgement, not a principle. If it is revisited, revisit it
+  // deliberately rather than for consistency's sake.
   @Post('resend-verification')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { ttl: 3600000, limit: 5 } })

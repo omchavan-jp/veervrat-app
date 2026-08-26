@@ -124,7 +124,11 @@ export const usersApi = {
       .then((r) => r.data),
 
   listConnectedAccounts: () =>
-    api.get<Wrapped<ConnectedAccount[]>>('/users/me/connected-accounts').then((r) => r.data),
+    api
+      .get<
+        Wrapped<{ accounts: ConnectedAccount[]; hasPassword: boolean }>
+      >('/users/me/connected-accounts')
+      .then((r) => r.data),
 
   disconnectAccount: (provider: string) =>
     api

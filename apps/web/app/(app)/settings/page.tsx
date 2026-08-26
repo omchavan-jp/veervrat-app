@@ -618,6 +618,15 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
     queryFn: () => usersApi.listConnectedAccounts(),
   });
 
+  const [addPwMsg, setAddPwMsg] = useState<string | null>(null);
+  // Adding a first password goes through the emailed link rather than straight from this page:
+  // the credential outlives the session, so creating it should cost proof of the mailbox.
+  const setPassword = useMutation({
+    mutationFn: () => authApi.forgotPassword(profile.email),
+    onSuccess: () => setAddPwMsg(t('setPasswordSent')),
+    onError: () => setAddPwMsg(t('setPasswordError')),
+  });
+
   const changePw = useMutation({
     mutationFn: () => usersApi.changePassword(pw.current, pw.next),
     onSuccess: () => {
@@ -659,7 +668,27 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
       title={t('accountTitle')}
       desc={t('accountDesc')}
     >
-      {/* Change password */}
+      {/* Change password — or, for an account that has none, an offer to add one (#196).
+          The warning is the larger half: nobody in this state knows they are one lost Google
+          account away from losing everything, because the app has never said so. */}
+      {connected.isSuccess && !connected.data.hasPassword ? (
+        <div className="mb-5">
+          <h3 className="mb-2 text-[13px] font-medium">{t('noPasswordTitle')}</h3>
+          <p className="mb-3 text-[13px] text-muted">{t('noPasswordDescription')}</p>
+          {addPwMsg && (
+            <p role="status" className="mb-2 text-[12px] text-muted">
+              {addPwMsg}
+            </p>
+          )}
+          <Button
+            onClick={() => setPassword.mutate()}
+            loading={setPassword.isPending}
+            disabled={setPassword.isPending}
+          >
+            {t('setPassword')}
+          </Button>
+        </div>
+      ) : (
       <div className="mb-5">
         <h3 className="mb-2 text-[13px] font-medium">{t('changePassword')}</h3>
         <div className="grid gap-2">
@@ -705,6 +734,7 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
           </div>
         </div>
       </div>
+      )}
 
       {/* Change email */}
       <div className="mb-5 border-t border-border pt-4">
@@ -758,7 +788,7 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
       <div className="mb-5 border-t border-border pt-4">
         <h3 className="mb-2 text-[13px] font-medium">{t('connectedAccounts')}</h3>
         <div className="space-y-1.5">
-          {(connected.data ?? []).map((acc) => (
+          {(connected.data?.accounts ?? []).map((acc) => (
             <div
               key={acc.provider}
               className="flex items-center justify-between rounded-lg border border-border bg-bg px-3 py-2 text-[13px]"
@@ -778,7 +808,7 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
               )}
             </div>
           ))}
-          {connected.data && !connected.data.some((acc) => acc.provider === 'GOOGLE') && (
+          {connected.data && !connected.data.accounts.some((acc) => acc.provider === 'GOOGLE') && (
             <div className="flex items-center justify-between rounded-lg border border-dashed border-border bg-bg px-3 py-2 text-[13px]">
               <span className="text-muted">Google</span>
               {/* Full-page navigation into the OAuth flow; the callback recognises the
