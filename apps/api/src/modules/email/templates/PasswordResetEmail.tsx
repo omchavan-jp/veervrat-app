@@ -4,6 +4,15 @@ type Props = {
   displayName: string;
   resetUrl: string;
   language: 'EN' | 'MR';
+  /**
+   * True when the account has never had a password (#196).
+   *
+   * The mechanism is identical — one token, delivered to the mailbox, exchanged for a
+   * credential — but telling somebody "we received a request to RESET your password" when they
+   * have never had one is simply untrue, and reads as a security alert about an account they
+   * cannot recognise.
+   */
+  isFirstPassword?: boolean;
 };
 
 const copy = {
@@ -25,8 +34,33 @@ const copy = {
   },
 };
 
-export function PasswordResetEmail({ displayName, resetUrl, language }: Props): React.ReactElement {
-  const t = copy[language];
+/** Copy for an account that signs in with Google and is adding a password for the first time. */
+const firstPasswordCopy = {
+  EN: {
+    subject: 'Set a password for your Veervrat account',
+    greeting: (name: string) => `Hello ${name},`,
+    body: 'Your Veervrat account signs in with Google. You asked to add a password as well, so you have a second way in. Click the link below to choose one.',
+    cta: 'Set Password',
+    expiry: 'This link expires in 1 hour.',
+    ignore: 'If you did not ask for this, you can safely ignore this email. Your account is unchanged and you can still sign in with Google.',
+  },
+  MR: {
+    subject: 'तुमच्या Veervrat खात्यासाठी पासवर्ड सेट करा',
+    greeting: (name: string) => `नमस्कार ${name},`,
+    body: 'तुमचे Veervrat खाते Google ने साइन इन करते. तुम्ही पासवर्डही जोडण्याची विनंती केली, म्हणजे आत येण्याचा दुसरा मार्ग राहील. निवडण्यासाठी खालील लिंकवर क्लिक करा.',
+    cta: 'पासवर्ड सेट करा',
+    expiry: 'ही लिंक 1 तासानंतर कालबाह्य होते.',
+    ignore: 'तुम्ही ही विनंती केली नसेल, तर हा ईमेल दुर्लक्षित करा. तुमचे खाते बदललेले नाही आणि तुम्ही Google ने साइन इन करू शकता.',
+  },
+};
+
+export function PasswordResetEmail({
+  displayName,
+  resetUrl,
+  language,
+  isFirstPassword = false,
+}: Props): React.ReactElement {
+  const t = (isFirstPassword ? firstPasswordCopy : copy)[language];
 
   return (
     <html>
@@ -64,6 +98,6 @@ export function PasswordResetEmail({ displayName, resetUrl, language }: Props): 
   );
 }
 
-export function getSubject(language: 'EN' | 'MR'): string {
-  return copy[language].subject;
+export function getSubject(language: 'EN' | 'MR', isFirstPassword = false): string {
+  return (isFirstPassword ? firstPasswordCopy : copy)[language].subject;
 }

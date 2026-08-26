@@ -100,7 +100,10 @@ export const authApi = {
   resetPassword: (data: { token: string; newPassword: string }) =>
     api.post<Wrapped<{ message: string }>>('/auth/reset-password', data).then((r) => r.data),
 
-  requestEmailChange: (data: { newEmail: string; currentPassword: string }) =>
+  // `currentPassword` optional since #196 — an account that signs in with Google proves itself
+  // by a fresh Google sign-in instead. Omitting it is not "no proof": the server still requires
+  // one, and refuses when neither is present.
+  requestEmailChange: (data: { newEmail: string; currentPassword?: string }) =>
     api.post<Wrapped<{ message: string }>>('/auth/request-email-change', data).then((r) => r.data),
 
   confirmEmailChange: (token: string) =>

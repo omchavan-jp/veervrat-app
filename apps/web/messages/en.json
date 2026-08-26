@@ -1417,7 +1417,8 @@
     "setPasswordError": "We couldn't send that link. Please try again.",
     "verifyWithGoogle": "Verify with Google",
     "deleteReauthGooglePrompt": "This account signs in with Google. Verify with Google to confirm it is you, then return here.",
-    "reauthDone": "You've verified with Google. You can confirm below."
+    "reauthDone": "You've verified with Google. You can confirm below.",
+    "emailReauthGooglePrompt": "This account signs in with Google. Verify with Google to confirm it is you, then return here."
   },
   "confirmEmailChange": {
     "title": "Confirm email change",

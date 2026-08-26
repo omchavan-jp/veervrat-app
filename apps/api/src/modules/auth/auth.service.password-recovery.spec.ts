@@ -95,6 +95,47 @@ describe('forgotPassword — three honest answers (#196)', () => {
   });
 });
 
+describe('what the email actually says (#196)', () => {
+  it('a first password gets SET copy and a /set-password link, not reset', async () => {
+    // Reported from real use: the mail said "we received a request to reset your Veervrat
+    // password" to somebody who has never had one, and linked to /reset-password. The mechanism
+    // is the same; telling them it is a reset is simply untrue, and reads as a security alert
+    // about an account they cannot recognise.
+    const repo = makeRepo({ findEmailAccountByUserId: vi.fn().mockResolvedValue(null) });
+    const email = { sendTransactional: vi.fn() };
+    const service = makeService(repo, email);
+    const render = vi.fn().mockResolvedValue({ html: '<p/>', text: 't' });
+    (service as unknown as Record<string, Record<string, unknown>>)['emailService'] = {
+      ...email,
+      renderTemplate: render,
+    };
+
+    await service.forgotPassword('om@example.com');
+
+    const props = (render.mock.calls[0][0] as { props: Record<string, unknown> }).props;
+    expect(props.isFirstPassword).toBe(true);
+    expect(String(props.resetUrl)).toContain('/set-password?token=');
+    expect(String(props.resetUrl)).not.toContain('/reset-password');
+  });
+
+  it('an ordinary reset is unchanged', async () => {
+    const repo = makeRepo();
+    const email = { sendTransactional: vi.fn() };
+    const service = makeService(repo, email);
+    const render = vi.fn().mockResolvedValue({ html: '<p/>', text: 't' });
+    (service as unknown as Record<string, Record<string, unknown>>)['emailService'] = {
+      ...email,
+      renderTemplate: render,
+    };
+
+    await service.forgotPassword('om@example.com');
+
+    const props = (render.mock.calls[0][0] as { props: Record<string, unknown> }).props;
+    expect(props.isFirstPassword).toBe(false);
+    expect(String(props.resetUrl)).toContain('/reset-password?token=');
+  });
+});
+
 describe('resetPassword — setting a first password is the same operation', () => {
   const validToken = {
     id: 'tok-1',
