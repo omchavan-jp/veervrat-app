@@ -1417,7 +1417,8 @@
     "setPasswordError": "तो दुवा पाठवता आला नाही. कृपया पुन्हा प्रयत्न करा.",
     "verifyWithGoogle": "Google ने पडताळा",
     "deleteReauthGooglePrompt": "हे खाते Google ने साइन इन करते. तुम्हीच आहात याची खात्री करण्यासाठी Google ने पडताळा करा, मग इथे परत या.",
-    "reauthDone": "तुम्ही Google ने पडताळणी केली आहे. खाली खात्री करू शकता."
+    "reauthDone": "तुम्ही Google ने पडताळणी केली आहे. खाली खात्री करू शकता.",
+    "emailReauthGooglePrompt": "हे खाते Google ने साइन इन करते. तुम्हीच आहात याची खात्री करण्यासाठी Google ने पडताळा करा, मग इथे परत या."
   },
   "confirmEmailChange": {
     "title": "ईमेल बदल निश्चित करा",

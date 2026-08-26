@@ -646,7 +646,7 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
     mutationFn: () =>
       authApi.requestEmailChange({
         newEmail: emailForm.newEmail.trim(),
-        currentPassword: emailForm.password,
+        currentPassword: hasPassword ? emailForm.password : undefined,
       }),
     onSuccess: () => {
       setEmailMsg(t('emailChangeSent'));
@@ -760,19 +760,38 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
               className="h-auto rounded-xl border-border bg-bg px-3 py-2 text-[14px] focus-visible:border-accent focus-visible:ring-0"
             />
           </div>
-          <div>
-            <Label htmlFor="settings-emailPassword" className="sr-only">
-              {t('currentPassword')}
-            </Label>
-            <Input
-              id="settings-emailPassword"
-              type="password"
-              value={emailForm.password}
-              onChange={(e) => setEmailForm({ ...emailForm, password: e.target.value })}
-              placeholder={t('currentPassword')}
-              className="h-auto rounded-xl border-border bg-bg px-3 py-2 text-[14px] focus-visible:border-accent focus-visible:ring-0"
-            />
-          </div>
+          {/* Same two proofs as deleting an account (#196). This form demanded a password
+              unconditionally, so an account that signs in with Google could never change its
+              email — the button could not even be enabled. */}
+          {hasPassword ? (
+            <div>
+              <Label htmlFor="settings-emailPassword" className="sr-only">
+                {t('currentPassword')}
+              </Label>
+              <Input
+                id="settings-emailPassword"
+                type="password"
+                value={emailForm.password}
+                onChange={(e) => setEmailForm({ ...emailForm, password: e.target.value })}
+                placeholder={t('currentPassword')}
+                className="h-auto rounded-xl border-border bg-bg px-3 py-2 text-[14px] focus-visible:border-accent focus-visible:ring-0"
+              />
+            </div>
+          ) : reauthed ? (
+            <p className="text-[12px] text-muted">{t('reauthDone')}</p>
+          ) : (
+            <div>
+              <p className="mb-2 text-[12px] text-muted">{t('emailReauthGooglePrompt')}</p>
+              <Button
+                variant="outline"
+                size="sm"
+                nativeButton={false}
+                render={<a href={`${getRuntimeConfig().apiBaseUrl}/auth/google?intent=reauth`} />}
+              >
+                {t('verifyWithGoogle')}
+              </Button>
+            </div>
+          )}
           {emailMsg && (
             <p role="alert" className="text-[12px] text-muted">
               {emailMsg}
@@ -783,7 +802,11 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
               variant="outline"
               onClick={() => changeEmail.mutate()}
               loading={changeEmail.isPending}
-              disabled={!emailForm.newEmail || !emailForm.password || changeEmail.isPending}
+              disabled={
+                !emailForm.newEmail ||
+                (hasPassword ? !emailForm.password : !reauthed) ||
+                changeEmail.isPending
+              }
             >
               {t('sendConfirmation')}
             </Button>

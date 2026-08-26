@@ -612,16 +612,25 @@ export class AuthService {
       expiresAt: this.hoursFromNow(PASSWORD_RESET_TOKEN_EXPIRY_HOURS),
     });
 
-    const resetUrl = `${this.configService.get<string>('FRONTEND_URL', 'http://localhost:3000')}/reset-password?token=${resetToken}`;
+    // A distinct route for a first password: the page it lands on says "Set a password", and a
+    // URL reading /reset-password for somebody who never had one is its own small untruth.
+    const path = isFirstPassword ? 'set-password' : 'reset-password';
+    const resetUrl = `${this.configService.get<string>('FRONTEND_URL', 'http://localhost:3000')}/${path}?token=${resetToken}`;
     const lang = user.language ?? 'EN';
     const { html: resetHtml, text: resetText } = await this.emailService.renderTemplate(
       createElement(PasswordResetEmail, {
         displayName: user.displayName,
         resetUrl,
         language: lang,
+        isFirstPassword,
       }),
     );
-    await this.emailService.sendTransactional(email, getResetSubject(lang), resetHtml, resetText);
+    await this.emailService.sendTransactional(
+      email,
+      getResetSubject(lang, isFirstPassword),
+      resetHtml,
+      resetText,
+    );
     return isFirstPassword ? 'set_password_sent' : 'reset_sent';
   }
 
