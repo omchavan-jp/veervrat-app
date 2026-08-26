@@ -97,6 +97,9 @@ running it, not by reading it, and fixed by checking first.
 ## 8. Not in this change — record, do not silently drop
 
 - [x] 8.1 Prod's storage account is deployed and still unexercised (2026-08-24).
+  *Update 2026-08-27: exercised manually since — an image was uploaded to prod and rendered. The
+  parenthetical above is a dated observation, not a standing fact; left in place because this
+  section records things deliberately, and a record that silently updates itself is not a record.*
 - [x] 8.2 Nothing deletes a stored blob, ever (`data-map` §2, #140).
 - [x] 8.3 If #134's legal review requires instantly revocable access, proxying replaces signed
   URLs behind the same seam — cheap because storage holds keys.
