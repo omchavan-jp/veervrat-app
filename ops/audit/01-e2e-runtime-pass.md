@@ -185,6 +185,11 @@ If one is added, add the service; do not add a flow that skips the upload and ca
   2. **I forgot `AUTH_REGISTER_LIMIT` entirely** — the variable this whole pass added. Locally I
      had been passing it on the command line every run, so the omission was invisible.
 
+  A third followed on the next run, and it is the same shape again: `nest start --watch` binds
+  3001, rebinds after its first rebuild, and on a CI runner the two overlap — `EADDRINUSE`. Locally
+  the machine is fast enough that they never collide. CI now runs a single non-watching `nest
+  start`, with server timeouts raised because a cold compile on a runner is not a 60-second job.
+
   Locally, `apps/api/.env` supplies both config values, so no local run could have caught either.
   This is the same lesson as everything else in this audit, turned on the audit itself: *a green
   local run is not evidence about deployment machinery.* The workflow is fixed; the next CI run is
