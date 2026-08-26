@@ -185,10 +185,25 @@ If one is added, add the service; do not add a flow that skips the upload and ca
   2. **I forgot `AUTH_REGISTER_LIMIT` entirely** — the variable this whole pass added. Locally I
      had been passing it on the command line every run, so the omission was invisible.
 
-  A third followed on the next run, and it is the same shape again: `nest start --watch` binds
-  3001, rebinds after its first rebuild, and on a CI runner the two overlap — `EADDRINUSE`. Locally
-  the machine is fast enough that they never collide. CI now runs a single non-watching `nest
-  start`, with server timeouts raised because a cold compile on a runner is not a 60-second job.
+  A third followed, `EADDRINUSE :::3001`, **and I misdiagnosed it** — blamed `nest start --watch`
+  rebinding the port, changed CI to a non-watching start, and pushed. It failed again identically.
+  Reading the log properly rather than pattern-matching showed the actual sequence:
+
+  ```
+  $ nest start          ← API binds 3001
+  $ next dev            ← web starts
+  ⨯ Failed to start server
+  Error: listen EADDRINUSE :::3001
+  ```
+
+  **`next dev` was the one failing.** Next reads `PORT` from the environment, and this workflow
+  sets `PORT=3001` for the API at job level — so the web server inherited it and tried to bind the
+  port the API already held. My own workflow caused it, one variable away from where I was looking.
+  Fixed by pinning `--port 3000` on the web command. The watch-mode change was kept, but its
+  comment now says plainly that it was made on a wrong diagnosis.
+
+  Worth stating: **the first fix "looked right" and changed nothing.** A green-looking rationale is
+  not a diagnosis, and I should have read the twelve lines above the error before editing.
 
   Locally, `apps/api/.env` supplies both config values, so no local run could have caught either.
   This is the same lesson as everything else in this audit, turned on the audit itself: *a green
