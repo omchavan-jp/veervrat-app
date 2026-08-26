@@ -9,6 +9,57 @@ Note: merging to `main` ships to **UAT**, not to users. A line here is live for 
 testers only once a `prod-*` tag has been deployed.
 
 ## Unreleased
+
+### Attaching images
+- **Attaching an image now works at all.** Any photo larger than roughly 75KB — which is nearly
+  every photo — failed with "an unexpected error occurred". Images were accepted in principle and
+  every realistic one was rejected.
+- **The app now tells you when something goes wrong.** Error messages across 51 places, including
+  every "couldn't save", were being sent nowhere at all. A failure looked identical to nothing
+  happening.
+- **Images you attach are private.** A picture in a private conversation, or in a reflection you
+  have not published, can no longer be opened by anyone who happens to have its address. It is
+  served only to people allowed to see the thing it belongs to — so an image in a published
+  entry stays visible to everyone, and one in a private entry does not.
+- **Photos no longer carry where they were taken.** Phone cameras record GPS coordinates and a
+  timestamp inside the image. Publishing a reflection would have published those too, which
+  nobody chose and most people do not know is there. All of it is now removed, after the photo's
+  own orientation has been applied so it still appears the right way up.
+- Large photos are scaled down before being stored, so a reflection loads quickly.
+- Fixed: an attached image showed as a broken picture in the editor.
+
+### Reading and writing
+- **You can now open an experience log and read it.** Until now they could be written and edited
+  but never viewed — not by their author, not by a vratmitra, and not by anyone visiting a log
+  its author had deliberately published. Both lists now link to it.
+
+### Signing in
+- **If you signed up with Google, you can now add a password**, so a lost Google account no
+  longer means a lost Veervrat account. Settings says plainly when Google is the only way in.
+- **You can now delete your account or change your email address if you signed in with Google.**
+  Both previously required a password, which such an account has never had — so neither was
+  possible at all. Deleting your own account is a right, not a convenience.
+- **Password recovery now tells you the truth.** Asking to reset a password for an address with
+  no account said the same thing as asking for one that exists, so a typo was indistinguishable
+  from an email that never arrived. It now says when no account exists, and when an account signs
+  in with Google it offers to send a link to add a password.
+- Fixed: the link for adding a first password sent you to the dashboard if you were already
+  signed in — which you always are, since the flow starts in Settings. The same trap affected
+  verification and email-change links.
+
+### Your data
+- **You can download everything the app holds about you** as a single file — your entries,
+  journeys, messages, consents and the notes your vratmitra has written about you.
+- Fixed: signed-in users could not open the terms or privacy policy at all. A document nobody can
+  open is not one anyone can be asked to accept.
+
+### Internal
+- Error reporting is now wired on the web app as well as the server, so failures a person sees in
+  their browser reach us rather than only server-side ones.
+- A spending control now stops the platform if monthly cost crosses a threshold, rather than only
+  emailing about it. The card backing this subscription belongs to an individual.
+- Fixed: admin records of who was granted what named people by display name, which is not unique.
+
 - Veervrat is now for adults aged 18 and over. Signing up asks for your date of birth and asks
   you to accept the terms; both are recorded. Signing up with Google now asks for these first,
   before Google is involved.
