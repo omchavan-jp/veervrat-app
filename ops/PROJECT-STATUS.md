@@ -185,6 +185,7 @@ with its guard.
 | O17 | **ACR purge task** — retention policies are Premium-only; on Basic use a scheduled `acr purge`. Needed once CD pushes an image per merge | Claude | registry cost |
 | O11 | UAT data policy — seeded, never real users (per D11) | settled in principle | — |
 | O12 | Rotate exposed secrets at cutover (PAT, session secret, R2 keys) | Om + Claude | cutover |
+| O18 | 🔴 **Rotate the account password committed to the repository.** `e2e/auth-and-nav.spec.ts` hardcoded a real personal login — `om.chavan501@gmail.com` and its plaintext password — from commit `258395a` until it was removed on 2026-08-27. **Removing the line does not remove it from history**, and the repository is on GitHub. This is the one finding from the 2026-08-27 audit that cannot be fixed in code. Rotate the password, and treat any account reachable with it as exposed. Found in `ops/audit/01-e2e-runtime-pass.md` §2 | Om | **now, not cutover** |
 | O13 | Turn **off** root-scope Elevate access | Om (deferred by choice) | — |
 | O14 | Budget→automation **hard stop** before public launch (MCA has no spending limit) | later | launch |
 
