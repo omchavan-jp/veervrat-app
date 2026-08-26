@@ -23,12 +23,14 @@ export class SessionGuard implements CanActivate {
       throw new SessionExpiredException();
     }
 
-    const user = await this.authService.validateSession(token);
-    if (!user) {
+    const session = await this.authService.validateSession(token);
+    if (!session) {
       throw new SessionExpiredException();
     }
 
-    request.user = user;
+    request.user = session.user;
+    // Carried so a sensitive action can check whether THIS session re-authenticated recently.
+    (request as Request & { sessionId?: string }).sessionId = session.sessionId;
     return true;
   }
 }

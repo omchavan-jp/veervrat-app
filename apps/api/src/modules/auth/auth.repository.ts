@@ -285,6 +285,29 @@ export class AuthRepository {
     });
   }
 
+  /** Stamps this session as having just proved who holds it. */
+  async markSessionReauthenticated(sessionId: string) {
+    return this.prisma.session.update({
+      where: { id: sessionId },
+      data: { reauthenticatedAt: new Date() },
+    });
+  }
+
+  /**
+   * Spends the proof.
+   *
+   * Conditional on the timestamp so two concurrent requests cannot both spend the same one: the
+   * second matches zero rows. Returns whether it actually consumed anything, which is what the
+   * caller must act on — checking and then clearing in two steps would leave exactly that race.
+   */
+  async consumeSessionReauthentication(sessionId: string, notBefore: Date): Promise<boolean> {
+    const { count } = await this.prisma.session.updateMany({
+      where: { id: sessionId, reauthenticatedAt: { gte: notBefore } },
+      data: { reauthenticatedAt: null },
+    });
+    return count > 0;
+  }
+
   async updateSessionActivity(sessionId: string, expiresAt: Date) {
     return this.prisma.session.update({
       where: { id: sessionId },

@@ -1,0 +1,16 @@
+-- Records that the holder of a session proved, recently, that they are the account holder (#196).
+--
+-- Sensitive self-service actions — deleting an account, changing an email — demand a password.
+-- An account created with Google has none, so those actions were impossible for it. Deleting
+-- your own account is a right, not a convenience, so "you signed in a different way" is not an
+-- acceptable reason to refuse.
+--
+-- The proof lives on the SESSION rather than on the user. A marker keyed only to a user would be
+-- consumable from any browser holding a session for that user, so re-authenticating on one
+-- device would silently authorise a sensitive action on another. Bound to the session, the proof
+-- belongs to the browser that actually performed it.
+--
+-- Nullable, and short-lived by policy rather than by constraint: the column records WHEN, and
+-- the application decides how recent is recent enough. Storing an expiry here instead would put
+-- the policy in the schema, where changing it means a migration.
+ALTER TABLE "sessions" ADD COLUMN "reauthenticated_at" timestamptz;

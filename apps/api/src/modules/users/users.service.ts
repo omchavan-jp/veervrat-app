@@ -20,7 +20,6 @@ import {
   UnderageException,
   EntityNotFoundException,
   UserUsernameTakenException,
-  InvalidCredentialsException,
 } from '../../common/exceptions/app.exceptions';
 
 const USERNAME_REGEX = /^[a-z0-9_]{3,30}$/;
@@ -300,9 +299,15 @@ export class UsersService implements OnModuleInit {
 
   // Self-service account deletion. Re-authenticates with the current password, then routes
   // through the shared anonymisation primitive (spec/06: anonymise, don't hard-delete).
-  async selfDelete(userId: string, currentPassword: string): Promise<{ id: string }> {
-    const ok = await this.authService.verifyPassword(userId, currentPassword);
-    if (!ok) throw new InvalidCredentialsException();
+  async selfDelete(
+    userId: string,
+    sessionId: string,
+    currentPassword?: string,
+  ): Promise<{ id: string }> {
+    // Either proof will do (#196). This used to demand a password, which an account created with
+    // Google does not have — so deleting your own account, a right rather than a convenience,
+    // was impossible for it.
+    await this.authService.assertRecentlyAuthenticated(userId, sessionId, currentPassword);
     await this.anonymiseAccount(userId);
     return { id: userId };
   }

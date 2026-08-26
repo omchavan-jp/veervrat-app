@@ -57,7 +57,7 @@ function makeService(parts: {
   if (parts.index) Object.assign(s['usersIndex'] as object, parts.index);
   s['authService'] = {
     forceLogout: vi.fn().mockResolvedValue(undefined),
-    verifyPassword: vi.fn().mockResolvedValue(true),
+    assertRecentlyAuthenticated: vi.fn().mockResolvedValue(undefined),
     ...parts.auth,
   };
   return { service, s };
@@ -103,9 +103,9 @@ describe('UsersService — anonymiseAccount', () => {
 describe('UsersService — selfDelete', () => {
   it('anonymises when the password is correct', async () => {
     const { service, s } = makeService({
-      auth: { verifyPassword: vi.fn().mockResolvedValue(true) },
+      auth: { assertRecentlyAuthenticated: vi.fn().mockResolvedValue(undefined) },
     });
-    await service.selfDelete('u1', 'correct');
+    await service.selfDelete('u1', 'sess-1', 'correct');
     expect(
       (s['usersRepository'] as Record<string, ReturnType<typeof vi.fn>>)['anonymise'],
     ).toHaveBeenCalled();
@@ -113,9 +113,11 @@ describe('UsersService — selfDelete', () => {
 
   it('rejects a wrong password without anonymising', async () => {
     const { service, s } = makeService({
-      auth: { verifyPassword: vi.fn().mockResolvedValue(false) },
+      auth: {
+        assertRecentlyAuthenticated: vi.fn().mockRejectedValue(new InvalidCredentialsException()),
+      },
     });
-    await expect(service.selfDelete('u1', 'wrong')).rejects.toBeInstanceOf(
+    await expect(service.selfDelete('u1', 'sess-1', 'wrong')).rejects.toBeInstanceOf(
       InvalidCredentialsException,
     );
     expect(
