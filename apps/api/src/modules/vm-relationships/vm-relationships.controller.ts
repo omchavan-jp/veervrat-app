@@ -16,6 +16,12 @@ export class VmRelationshipsController {
     return { data: vms };
   }
 
+  @Get('vm-relationships/my-vratarthis')
+  async getMyVratarthis(@CurrentUser() user: SessionUser) {
+    const vratarthis = await this.vmRelationshipsService.getMyVratarthis(user);
+    return { data: vratarthis };
+  }
+
   @Delete('vm-relationships/global')
   @HttpCode(200)
   removeGlobalVm(@CurrentUser() user: SessionUser, @Body() body: RemoveGlobalVmDto) {

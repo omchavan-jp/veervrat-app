@@ -61,7 +61,8 @@
       "virtues": "Virtues & Weaknesses",
       "moderation": "Moderation",
       "admin": "Admin",
-      "groupAdmin": "Admin"
+      "groupAdmin": "Admin",
+      "vmMyVratarthis": "My Vratarthis"
     },
     "actions": {
       "save": "Save",
@@ -756,6 +757,16 @@
     "journey_vm": "Journey Mentor",
     "assigned_journeys": "Assigned to:",
     "assigned_count": "{count, plural, one {# journey} other {# journeys}}"
+  },
+  "my_vratarthis": {
+    "title": "My Vratarthis",
+    "subtitle": "The people you walk alongside as a vratmitra.",
+    "empty": "No one yet",
+    "empty_hint": "When someone accepts you as their vratmitra, they will appear here.",
+    "journey_count": "{count, plural, =0 {No journeys} one {# journey} other {# journeys}}",
+    "since": "Since {date}",
+    "global_scope": "Overall",
+    "journey_scope": "Journey"
   },
   "chat": {
     "title": "Chat",

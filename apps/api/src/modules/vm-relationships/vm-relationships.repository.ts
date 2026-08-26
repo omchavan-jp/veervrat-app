@@ -14,6 +14,15 @@ type VmWithUser = { vm: VmUserSummary };
 type JourneyVmWithUser = { vm: VmUserSummary; journey: { id: string } };
 export type MyVm = VmUserSummary & { scope: 'GLOBAL' | 'JOURNEY'; assignedJourneys: string[] };
 
+// The mirror of MyVm, seen from the vratmitra's side. Identity, scope and counts only —
+// never journey content, weaknesses or anything the person has written.
+export type MyVratarthi = MyVm & {
+  relationshipId: string;
+  since: Date | null;
+  joinedAt: Date;
+  journeyCount: number;
+};
+
 export type VmRelationshipRecord = {
   id: string;
   vratarthiId: string;
@@ -211,6 +220,99 @@ export class VmRelationshipsRepository {
       },
     });
     return journeyCount > 0;
+  }
+
+  /**
+   * The mirror of `getMyVms`: the people this user is the vratmitra for (#193).
+   *
+   * Global relationships only. Journey-scoped assignments already have a home in the guidance
+   * queue, and a roster is a list of people rather than a list of work.
+   *
+   * Selects identity and a joined date, and deliberately nothing about what those people are
+   * working on. What a vratmitra may read follows from the relationship; a list of names is not
+   * the place to disclose weaknesses.
+   */
+  async listVratarthisForVm(vmId: string): Promise<MyVratarthi[]> {
+    const identity = {
+      id: true,
+      displayName: true,
+      username: true,
+      avatarUrl: true,
+      createdAt: true,
+      _count: { select: { journeys: true } },
+    } as const;
+
+    // Both scopes, because `hasAnyVmAssignment` — the gate that decides whether this page is
+    // reachable at all — counts both. Querying only global relationships here would send a
+    // journey-scoped vratmitra to a page that says they mentor nobody, while they mentor someone.
+    const [globals, journeyAssignments] = await Promise.all([
+      this.prisma.vmRelationship.findMany({
+        where: { vmId, state: VmRelationshipState.ACTIVE, endedAt: null },
+        orderBy: { acceptedAt: 'desc' },
+        select: { id: true, acceptedAt: true, vratarthi: { select: identity } },
+      }),
+      this.prisma.journeyVmAssignment.findMany({
+        where: { vmId, state: VmRelationshipState.ACTIVE, endedAt: null },
+        orderBy: { acceptedAt: 'desc' },
+        select: {
+          id: true,
+          acceptedAt: true,
+          journey: { select: { id: true, vratarthi: { select: identity } } },
+        },
+      }),
+    ]);
+
+    const roster: MyVratarthi[] = [];
+    const byId = new Map<string, MyVratarthi>();
+
+    const add = (
+      person: {
+        id: string;
+        displayName: string;
+        username: string;
+        avatarUrl: string | null;
+        createdAt: Date;
+        _count: { journeys: number };
+      },
+      entry: { relationshipId: string; since: Date | null; scope: 'GLOBAL' | 'JOURNEY' },
+      journeyId?: string,
+    ) => {
+      const existing = byId.get(person.id);
+      if (existing) {
+        // Someone can be both a global vratarthi and hold journey assignments with the same
+        // vratmitra. They are one person on this roster, listed once, under the broader scope.
+        if (journeyId) existing.assignedJourneys.push(journeyId);
+        return;
+      }
+      const created: MyVratarthi = {
+        relationshipId: entry.relationshipId,
+        since: entry.since,
+        scope: entry.scope,
+        assignedJourneys: journeyId ? [journeyId] : [],
+        id: person.id,
+        displayName: person.displayName,
+        username: person.username,
+        avatarUrl: person.avatarUrl,
+        joinedAt: person.createdAt,
+        journeyCount: person._count.journeys,
+      };
+      byId.set(person.id, created);
+      roster.push(created);
+    };
+
+    // Global first, so a person who is both is recorded under GLOBAL.
+    globals.forEach((r) =>
+      add(r.vratarthi, { relationshipId: r.id, since: r.acceptedAt, scope: 'GLOBAL' }),
+    );
+    journeyAssignments.forEach((a) =>
+      add(
+        a.journey.vratarthi,
+        { relationshipId: a.id, since: a.acceptedAt, scope: 'JOURNEY' },
+        a.journey.id,
+      ),
+    );
+
+    return roster;
   }
 
   async getMyVms(vratarthiId: string, scope?: 'GLOBAL' | 'JOURNEY'): Promise<MyVm[]> {

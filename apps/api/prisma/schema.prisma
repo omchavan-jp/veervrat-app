@@ -278,6 +278,8 @@ model User {
   journeys           Journey[]             @relation("VratarthiJourneys")
   testAttempts       TestAttempt[]
   globalVmFor        VmRelationship[]      @relation("GlobalVM")
+  // The mirror of globalVmFor: relationships in which this user is the vratarthi.
+  globalVratmitraOf  VmRelationship[]      @relation("GlobalVratarthi")
   journeyVmFor       JourneyVmAssignment[] @relation("JourneyVM")
   experienceLogs     ExperienceLog[]
   blogs              Blog[]
@@ -737,6 +739,11 @@ model VmRelationship {
 
   // Global VM relationship (not journey-scoped)
   vm User @relation("GlobalVM", fields: [vmId], references: [id])
+
+  // The other half of the same relationship. Absent until 2026-08-26, which is why the table had
+  // a foreign key on vm_id and none on vratarthi_id — one side was enforced and the other was
+  // not. Also what lets a vratmitra's roster fetch its people in one query.
+  vratarthi User @relation("GlobalVratarthi", fields: [vratarthiId], references: [id])
 
   @@index([vratarthiId])
   @@index([vmId])
