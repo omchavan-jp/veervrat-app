@@ -205,6 +205,17 @@ If one is added, add the service; do not add a flow that skips the upload and ca
   Worth stating: **the first fix "looked right" and changed nothing.** A green-looking rationale is
   not a diagnosis, and I should have read the twelve lines above the error before editing.
 
+  A fourth followed — `next dev -- --port 3000` forwards the `--` literally, so Next read `--port`
+  as a directory name. Fixed by setting the port through Playwright's per-server `env` instead of
+  a CLI flag.
+
+  **What finally ended it was reproducing the environment rather than reasoning about it.**
+  `PORT=3001 CI=1 pnpm exec playwright test` runs locally under the two conditions that made CI
+  different, and it fails and passes in step with CI. Four pushes were spent guessing before
+  spending one minute on that. **That command is the way to change this workflow** — anything
+  else is a check that does not share CI's constraints, which is the failure this whole audit is
+  about.
+
   Locally, `apps/api/.env` supplies both config values, so no local run could have caught either.
   This is the same lesson as everything else in this audit, turned on the audit itself: *a green
   local run is not evidence about deployment machinery.* The workflow is fixed; the next CI run is

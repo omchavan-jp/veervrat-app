@@ -32,11 +32,13 @@ export default defineConfig({
       timeout: process.env.CI ? 180_000 : 60_000,
     },
     {
-      // `--port 3000` explicitly. Next reads `PORT` from the environment, and the e2e workflow
-      // sets `PORT=3001` for the API at job level — so the web server inherited it, tried to bind
-      // the port the API already held, and died with EADDRINUSE. The API's own port stays on the
-      // environment variable; the web's is pinned here so the two can never be the same value.
-      command: 'pnpm --filter web dev -- --port 3000',
+      // Next reads `PORT` from the environment, and the e2e workflow sets `PORT=3001` for the API
+      // at job level — so the web server inherited it, tried to bind the port the API already
+      // held, and died with EADDRINUSE. Overridden per-process here rather than as a CLI flag:
+      // `pnpm --filter web dev -- --port 3000` forwards the `--` literally and Next reads
+      // `--port` as a directory name ("Invalid project directory provided").
+      command: 'pnpm --filter web dev',
+      env: { PORT: '3000' },
       url: 'http://localhost:3000',
       reuseExistingServer: !process.env.CI,
       // `next dev` compiles each route on first request, which is slow on a CI runner.
