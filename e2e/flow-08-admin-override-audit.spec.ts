@@ -1,29 +1,43 @@
 import { test, expect } from '@playwright/test';
 import { ADMIN } from './helpers/global-setup';
-import { loginApi, apiHeaders, loginUI } from './helpers/auth';
-import { sql, scalar, latestAuditEvent, journeyState } from './helpers/db';
+import { loginApi, apiHeaders, loginUI, makeUser, registerAndOnboard } from './helpers/auth';
+import {
+  latestAuditEvent,
+  journeyState,
+  sampleSentenceWeakness,
+  deleteUserByEmail,
+} from './helpers/db';
 
 // Flow 8: admin overrides a journey's state → the change is applied AND an audit event is
 // written. The override UI uses window.prompt for the reason (awkward to automate), so the
 // override is driven through the real admin API; the audit trail is asserted in the DB and
 // the admin audit dashboard is asserted in the UI.
 test.describe('Flow 8: admin override journey state → audit log', () => {
+  const va = makeUser('f8va');
   let journeyId: string;
   let priorState: string;
 
-  test.beforeAll(() => {
-    // Pick any existing journey (the seeded VA has several).
-    journeyId = scalar(
-      `SELECT id FROM journeys WHERE deleted_at IS NULL ORDER BY created_at LIMIT 1`,
-    )!;
+  // This used to pick "any existing journey (the seeded VA has several)" out of the database.
+  // That is true of a long-lived dev database and false of a freshly seeded one: the content
+  // seed creates virtues and sentences, not journeys. In CI the query returned null, the
+  // non-null assertion lied, and the flow died in a helper with
+  // "Cannot read properties of null (reading 'replace')" — a data assumption surfacing as a
+  // type error three calls away. The flow now creates the journey it overrides.
+  test.beforeAll(async () => {
+    await registerAndOnboard(va);
+    const { sentenceId, weaknessId } = sampleSentenceWeakness();
+    const { ctx, csrf } = await loginApi(va);
+    const jr = await ctx.post('/api/v1/journeys', {
+      headers: apiHeaders(csrf),
+      data: { sentenceId, weaknessId, title: 'E2E Flow 8 Journey' },
+    });
+    journeyId = (await jr.json()).data.id;
+    await ctx.dispose();
     priorState = journeyState(journeyId)!;
   });
 
   test.afterAll(() => {
-    // Restore the journey's original state.
-    if (journeyId && priorState) {
-      sql(`UPDATE journeys SET state = '${priorState}' WHERE id = '${journeyId}'`);
-    }
+    deleteUserByEmail(va.email);
   });
 
   test('admin overrides journey state via API and an audit event is recorded', async () => {
