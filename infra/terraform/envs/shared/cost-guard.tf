@@ -49,7 +49,11 @@ resource "azurerm_role_definition" "cost_guard" {
   permissions {
     actions = [
       "Microsoft.App/containerApps/read",
-      "Microsoft.App/containerApps/write",
+      # Deactivating a revision is what actually stops a Container App — scaling to 0/0 is
+      # rejected by Azure ("maxReplicas must be greater than 0"), found by running the runbook
+      # for real on 2026-08-26.
+      "Microsoft.App/containerApps/revisions/read",
+      "Microsoft.App/containerApps/revisions/deactivate/action",
       "Microsoft.DBforPostgreSQL/flexibleServers/read",
       "Microsoft.DBforPostgreSQL/flexibleServers/stop/action",
       "Microsoft.Resources/subscriptions/resourceGroups/read",
