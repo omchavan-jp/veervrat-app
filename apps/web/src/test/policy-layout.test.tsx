@@ -2,10 +2,18 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
 const replace = vi.fn();
-vi.mock('next/navigation', () => ({ useRouter: () => ({ replace }) }));
+// `searchParams` is settable per test: the layout suppresses its redirect when the address
+// carries a `token`, because that means somebody signed in is completing an emailed action
+// (#196). Default is empty — the ordinary login/signup case.
+let searchParams = new URLSearchParams();
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ replace }),
+  useSearchParams: () => searchParams,
+}));
 
 beforeEach(() => {
   replace.mockClear();
+  searchParams = new URLSearchParams();
 });
 
 /**
@@ -47,5 +55,24 @@ describe('the (policy) layout — terms and privacy render regardless of auth st
 
     expect(screen.getByText('the policy text')).toBeTruthy();
     expect(replace).not.toHaveBeenCalled();
+  });
+});
+
+describe('completing an emailed action while signed in', () => {
+  it('does NOT redirect when the address carries a token', async () => {
+    // Reported from real use: clicking the "set a password" link while signed in bounced to the
+    // dashboard, and the only way through was a private window. The set-password flow STARTS
+    // from an authenticated settings page, so a signed-in visitor here is expected — and the
+    // same trap applied to verify-email and confirm-email-change.
+    searchParams = new URLSearchParams('token=abc123');
+    vi.doMock('@/hooks/use-auth', () => ({
+      useAuth: () => ({ isAuthenticated: true, user: { onboardingCompletedAt: '2026-01-01' } }),
+    }));
+    const { PublicLayoutClient } = await import('../../app/(public)/layout-client');
+
+    render(<PublicLayoutClient>{'set a password'}</PublicLayoutClient>);
+
+    expect(replace).not.toHaveBeenCalled();
+    expect(screen.getByText('set a password')).toBeInTheDocument();
   });
 });
