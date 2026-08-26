@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { InvitationStatus } from '@prisma/client';
+import { InvitationStatus, VmRelationshipState } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 
 const ownProfileSelect = {
@@ -101,8 +101,19 @@ export class UsersRepository {
     ]);
 
     // VM credibility: completed journeys this user was the assigned VM for (spec/22).
+    //
+    // `state: ACTIVE` matters — without it this counted PENDING assignments too, so an invitation
+    // someone never accepted inflated a number shown on their public profile.
+    //
+    // `endedAt` is deliberately NOT filtered. An assignment that ended after the journey was
+    // completed should still count: they did guide it. Filtering it would erase credit for every
+    // relationship that has since wound down, which is most of them over time.
     const guidedJourneysCompleted = await this.prisma.journeyVmAssignment.count({
-      where: { vmId: user.id, journey: { state: 'COMPLETED', deletedAt: null } },
+      where: {
+        vmId: user.id,
+        state: VmRelationshipState.ACTIVE,
+        journey: { state: 'COMPLETED', deletedAt: null },
+      },
     });
 
     return {

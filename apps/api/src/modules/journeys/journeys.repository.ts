@@ -59,7 +59,11 @@ const journeySelect = {
   },
   vmAssignments: {
     select: { id: true, vmId: true, state: true },
-    where: { state: VmRelationshipState.ACTIVE },
+    // `endedAt: null` is not optional here. There is no ENDED state — an assignment ends by
+    // having `endedAt` set while its state stays ACTIVE — and `isActiveJourneyVm` decides on
+    // `state` alone. Without this filter, ending an assignment did not take away what that
+    // vratmitra could read.
+    where: { state: VmRelationshipState.ACTIVE, endedAt: null },
   },
   _count: {
     select: {
@@ -146,7 +150,14 @@ export class JourneysRepository {
     // Fetch global VM + all ERC counts in parallel (was sequential)
     const [globalVm, expCounts, resCounts, chalCounts] = await Promise.all([
       this.prisma.vmRelationship.findFirst({
-        where: { vratarthiId: journey.vratarthiId, state: VmRelationshipState.ACTIVE },
+        // Same trap as vmAssignments above: `endGlobalVm` sets `endedAt` and leaves the state
+        // ACTIVE, and `isGlobalVmForJourney` checks only the state. Removing a global vratmitra
+        // left them reading the journey.
+        where: {
+          vratarthiId: journey.vratarthiId,
+          state: VmRelationshipState.ACTIVE,
+          endedAt: null,
+        },
         select: { vmId: true, vratarthiId: true, state: true },
       }),
       this.prisma.journeyExposure.groupBy({

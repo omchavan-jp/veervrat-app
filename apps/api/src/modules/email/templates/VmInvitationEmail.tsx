@@ -28,17 +28,43 @@ const copy = {
   },
 };
 
-export function VmInvitationEmail({ vaDisplayName, scope, acceptUrl, language }: Props): React.ReactElement {
+export function VmInvitationEmail({
+  vaDisplayName,
+  scope,
+  acceptUrl,
+  language,
+}: Props): React.ReactElement {
   const t = copy[language];
   return (
     <html>
-      <head><meta charSet="utf-8" /><title>{t.subject}</title></head>
-      <body style={{ fontFamily: 'sans-serif', color: '#1a1a1a', padding: '24px', maxWidth: '600px', margin: '0 auto' }}>
+      <head>
+        <meta charSet="utf-8" />
+        <title>{t.subject}</title>
+      </head>
+      <body
+        style={{
+          fontFamily: 'sans-serif',
+          color: '#1a1a1a',
+          padding: '24px',
+          maxWidth: '600px',
+          margin: '0 auto',
+        }}
+      >
         <p style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '16px' }}>Veervrat</p>
         <p>{t.greeting(vaDisplayName)}</p>
         <p>{t.body(vaDisplayName, scope)}</p>
         <p style={{ margin: '24px 0' }}>
-          <a href={acceptUrl} style={{ backgroundColor: '#2f5b4f', color: '#ffffff', padding: '12px 24px', textDecoration: 'none', borderRadius: '6px', display: 'inline-block' }}>
+          <a
+            href={acceptUrl}
+            style={{
+              backgroundColor: '#2f5b4f',
+              color: '#ffffff',
+              padding: '12px 24px',
+              textDecoration: 'none',
+              borderRadius: '6px',
+              display: 'inline-block',
+            }}
+          >
             {t.cta}
           </a>
         </p>

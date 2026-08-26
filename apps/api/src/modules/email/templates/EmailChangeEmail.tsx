@@ -13,7 +13,8 @@ const copy = {
     body: 'We received a request to change the email address on your Veervrat account to this one. Click below to confirm.',
     cta: 'Confirm Email Change',
     expiry: 'This link expires in 1 hour.',
-    ignore: 'If you did not request this change, you can safely ignore this email. Your account email will not change.',
+    ignore:
+      'If you did not request this change, you can safely ignore this email. Your account email will not change.',
   },
   MR: {
     subject: 'तुमचा नवीन Veervrat ईमेल निश्चित करा',
@@ -21,7 +22,8 @@ const copy = {
     body: 'आम्हाला तुमच्या Veervrat खात्याचा ईमेल पत्ता यावर बदलण्याची विनंती मिळाली. निश्चित करण्यासाठी खाली क्लिक करा.',
     cta: 'ईमेल बदल निश्चित करा',
     expiry: 'ही लिंक 1 तासानंतर कालबाह्य होते.',
-    ignore: 'जर तुम्ही हा बदल विनंती केला नसेल, तर हा ईमेल दुर्लक्षित करा. तुमच्या खात्याचा ईमेल बदलणार नाही.',
+    ignore:
+      'जर तुम्ही हा बदल विनंती केला नसेल, तर हा ईमेल दुर्लक्षित करा. तुमच्या खात्याचा ईमेल बदलणार नाही.',
   },
 };
 
@@ -34,7 +36,15 @@ export function EmailChangeEmail({ displayName, confirmUrl, language }: Props): 
         <meta charSet="utf-8" />
         <title>{t.subject}</title>
       </head>
-      <body style={{ fontFamily: 'sans-serif', color: '#1a1a1a', padding: '24px', maxWidth: '600px', margin: '0 auto' }}>
+      <body
+        style={{
+          fontFamily: 'sans-serif',
+          color: '#1a1a1a',
+          padding: '24px',
+          maxWidth: '600px',
+          margin: '0 auto',
+        }}
+      >
         <p style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '16px' }}>Veervrat</p>
         <p>{t.greeting(displayName)}</p>
         <p>{t.body}</p>
