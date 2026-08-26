@@ -22,8 +22,18 @@ export class OptionalSessionGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<Request>();
     const token = (request.cookies as Record<string, string> | undefined)?.[this.cookieName];
     if (token) {
-      const user = await this.authService.validateSession(token).catch(() => null);
-      if (user) request.user = user;
+      const session = await this.authService.validateSession(token).catch(() => null);
+      if (session) {
+        // `validateSession` returns { user, sessionId }, not a bare user. Assigning the wrapper
+        // here made `@CurrentUser()` hand every guest-accessible route an object whose `id` is
+        // undefined — so an author could not read their own experience log, and a private image
+        // 404'd for the person who uploaded it (#196 regression, found 2026-08-26).
+        //
+        // TypeScript did not catch it: Passport augments `Request['user']` with an empty
+        // interface, so any object satisfies it. Hence the guard spec below asserts the shape.
+        request.user = session.user;
+        (request as Request & { sessionId?: string }).sessionId = session.sessionId;
+      }
     }
     return true;
   }
