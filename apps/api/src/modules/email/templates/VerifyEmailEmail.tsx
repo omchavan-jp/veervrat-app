@@ -34,7 +34,15 @@ export function VerifyEmailEmail({ displayName, verifyUrl, language }: Props): R
         <meta charSet="utf-8" />
         <title>{t.subject}</title>
       </head>
-      <body style={{ fontFamily: 'sans-serif', color: '#1a1a1a', padding: '24px', maxWidth: '600px', margin: '0 auto' }}>
+      <body
+        style={{
+          fontFamily: 'sans-serif',
+          color: '#1a1a1a',
+          padding: '24px',
+          maxWidth: '600px',
+          margin: '0 auto',
+        }}
+      >
         <p style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '16px' }}>Veervrat</p>
         <p>{t.greeting(displayName)}</p>
         <p>{t.body}</p>
@@ -56,9 +64,7 @@ export function VerifyEmailEmail({ displayName, verifyUrl, language }: Props): R
         <p style={{ fontSize: '13px', color: '#666' }}>{t.expiry}</p>
         <p style={{ fontSize: '13px', color: '#666' }}>{t.ignore}</p>
         <hr style={{ borderTop: '1px solid #eee', margin: '24px 0' }} />
-        <p style={{ fontSize: '12px', color: '#999' }}>
-          {verifyUrl}
-        </p>
+        <p style={{ fontSize: '12px', color: '#999' }}>{verifyUrl}</p>
       </body>
     </html>
   );
