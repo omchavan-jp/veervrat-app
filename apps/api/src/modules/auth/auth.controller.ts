@@ -24,8 +24,9 @@ import { VerifyEmailDto } from './dto/verify-email.dto';
 import { CompleteOnboardingDto } from './dto/complete-onboarding.dto';
 import { RequestEmailChangeDto, ConfirmEmailChangeDto } from './dto/email-change.dto';
 import { SessionGuard } from './guards/session.guard';
-import { GoogleOAuthGuard } from './guards/google-oauth.guard';
+import { GoogleOAuthGuard, REAUTH_STATE } from './guards/google-oauth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
+import { CurrentSessionId } from './decorators/current-session-id.decorator';
 import { SkipCsrf } from '../../common/guards/csrf.guard';
 import { authCookieOptions, clearLegacyHostOnlyCookie } from '../../common/http/cookie';
 import { Audited } from '../audit/audited.decorator';
@@ -219,8 +220,17 @@ export class AuthController {
     resourceType: 'user',
     resourceId: (c) => (c.req.user as SessionUser)?.id,
   })
-  async requestEmailChange(@Body() dto: RequestEmailChangeDto, @CurrentUser() user: SessionUser) {
-    await this.authService.requestEmailChange(user.id, dto.newEmail, dto.currentPassword);
+  async requestEmailChange(
+    @Body() dto: RequestEmailChangeDto,
+    @CurrentUser() user: SessionUser,
+    @CurrentSessionId() sessionId: string,
+  ) {
+    await this.authService.requestEmailChange(
+      user.id,
+      sessionId,
+      dto.newEmail,
+      dto.currentPassword,
+    );
     return { message: 'A confirmation link has been sent to the new email address.' };
   }
 
@@ -269,7 +279,32 @@ export class AuthController {
     try {
       // Google returns the `state` we sent. It holds only a pending-signup id, and its presence
       // is what distinguishes signup from sign-in.
-      const pendingSignupId = typeof req.query.state === 'string' ? req.query.state : undefined;
+      const state = typeof req.query.state === 'string' ? req.query.state : undefined;
+
+      // Re-authentication (#196): an existing session proving, mid-session, that the person is
+      // still the account holder. This must NOT fall through to handleGoogleLogin — that issues
+      // a session for whoever signed in, so signing in as somebody else would hand over their
+      // account. Nothing here creates or replaces a session; it only stamps the one already held.
+      if (state === REAUTH_STATE) {
+        const token = (req.cookies as Record<string, string> | undefined)?.[this.cookieName];
+        const session = token ? await this.authService.validateSession(token) : null;
+        if (!session) {
+          res.redirect(`${this.frontendUrl}/login?notice=reauth_session_expired`);
+          return;
+        }
+
+        const ok = await this.authService.reauthenticateWithGoogle(
+          session.user.id,
+          session.sessionId,
+          profile.googleId,
+        );
+        // A mismatch means a DIFFERENT Google account was used. Not an error the person made in
+        // the system's terms, but it proves nothing about this account, so it authorises nothing.
+        res.redirect(`${this.frontendUrl}/settings?reauth=${ok ? 'ok' : 'wrong_account'}`);
+        return;
+      }
+
+      const pendingSignupId = state;
 
       const result = await this.authService.handleGoogleLogin(
         profile,

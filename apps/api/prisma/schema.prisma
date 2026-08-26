@@ -402,6 +402,11 @@ model Session {
   userAgent    String?  @map("user_agent")
   createdAt    DateTime @default(now()) @map("created_at")
 
+  // When the holder of THIS session last proved they are the account holder — by password, or by
+  // signing in with Google again. Sensitive actions require it to be recent, and consume it.
+  // On the session rather than the user so the proof cannot be spent from another browser (#196).
+  reauthenticatedAt DateTime? @map("reauthenticated_at")
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])

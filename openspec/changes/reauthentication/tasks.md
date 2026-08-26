@@ -17,12 +17,12 @@
 
 ## 2. The re-authentication step
 
-- [ ] 2.1 Replace `verifyPassword` with a step that accepts a password **or** a fresh Google
+- [x] 2.1 Replace `verifyPassword` with a step that accepts a password **or** a fresh Google
   assertion. Its name should say what it establishes, not how.
-- [ ] 2.2 Define and enforce **fresh**. A Google token minted at login and replayed later is not
+- [x] 2.2 Define and enforce **fresh**. A Google token minted at login and replayed later is not
   proof of anything present-tense. Write down the window and reject anything older.
-- [ ] 2.3 Every current caller moves to it: `selfDelete`, `requestEmailChange`, `changePassword`.
-- [ ] 2.4 Tests per account type — password-only, Google-only, both linked — asserting each flow
+- [x] 2.3 Every current caller moves to it: `selfDelete`, `requestEmailChange`, `changePassword`.
+- [x] 2.4 Tests per account type — password-only, Google-only, both linked — asserting each flow
   works for each. The Google-only cases are the ones that fail today.
 
 ## 3. Setting a first password
@@ -61,13 +61,29 @@
 
 ## 6. Carried forward, not done here
 
-- [ ] 6.1 The Google half: re-authentication for **delete** and **email change**, which still
-  demand a password. Needs the redirect + short-lived marker from design 1a. Until it lands, an
-  account with no password can now *acquire* one and use that — a route out of the lockout, but
-  not the same as the flows working directly.
+- [x] 6.1 **Done.** Delete and email change now accept either proof. `reauthenticated_at` on the
+  session, stamped by the OAuth callback, consumed on use.
 - [ ] 6.2 `changePassword` still throws `EntityNotFoundException('AuthAccount')` for an account
   with no password. Unreachable from the UI now (settings shows the set-password panel instead),
   but the API still answers that way to a direct caller. Task 4.4.
 - [ ] 6.3 **The new Marathi strings are unreviewed.** Written by a non-speaker, same caveat as
   #154 — and #154's pack covers policy documents, not interface copy. Worth adding to whatever
   review that becomes.
+
+
+## 7. Freshness, as actually implemented
+
+**10 minutes, single-use, bound to the session.**
+
+- *Bound to the session*, not the user: a marker keyed to a user could be spent from any browser
+  holding a session for them, so proving yourself on a phone would authorise a deletion from a
+  shared desktop.
+- *Consumed*, not read: `consumeSessionReauthentication` clears the stamp in the same conditional
+  UPDATE that checks it, so two concurrent requests cannot both spend one — the second matches
+  zero rows. Checking and then clearing would leave exactly that race.
+- *10 minutes* lives in the service, not the schema. A column storing an expiry would put the
+  policy where changing it needs a migration.
+
+The dangerous case has its own test: re-authenticating with **somebody else's** Google account
+stamps nothing and returns false. The callback also must not fall through to `handleGoogleLogin`,
+which would issue a session for whoever signed in — handing over the wrong account entirely.

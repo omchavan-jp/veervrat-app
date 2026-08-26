@@ -1414,7 +1414,10 @@
     "noPasswordDescription": "If you lose access to that Google account, you lose access here too — there is no other way to sign in. Adding a password gives you a second way in.",
     "setPassword": "Set a password",
     "setPasswordSent": "We've emailed you a link to set your password.",
-    "setPasswordError": "We couldn't send that link. Please try again."
+    "setPasswordError": "We couldn't send that link. Please try again.",
+    "verifyWithGoogle": "Verify with Google",
+    "deleteReauthGooglePrompt": "This account signs in with Google. Verify with Google to confirm it is you, then return here.",
+    "reauthDone": "You've verified with Google. You can confirm below."
   },
   "confirmEmailChange": {
     "title": "Confirm email change",

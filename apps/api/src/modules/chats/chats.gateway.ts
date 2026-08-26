@@ -138,12 +138,13 @@ export class ChatsGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
       throw new Error('No session cookie found');
     }
 
-    const user = await this.authService.validateSession(sessionToken);
-    if (!user) {
+    const session = await this.authService.validateSession(sessionToken);
+    if (!session) {
       throw new Error('Invalid or expired session');
     }
 
-    return user;
+    // The socket only needs who, not which session — re-authentication is an HTTP concern.
+    return session.user;
   }
 
   private extractSessionCookie(cookieString: string): string | null {

@@ -45,6 +45,9 @@ describe('AuthService — changePassword', () => {
     mockedCompare.mockResolvedValue(false as never);
     const repo = {
       findEmailAccountByUserId: vi.fn().mockResolvedValue({ id: 'a1', passwordHash: HASH }),
+      // A wrong password no longer fails outright — it falls through to the Google proof (#196).
+      // `false` is "and there isn't one either", which is what makes the refusal correct.
+      consumeSessionReauthentication: vi.fn().mockResolvedValue(false),
     };
     const service = makeService(repo);
     await expect(service.changePassword('u1', 'wrong', 'newpassword1')).rejects.toBeInstanceOf(
@@ -57,6 +60,9 @@ describe('AuthService — changePassword', () => {
     mockedHash.mockResolvedValue('newhash' as never);
     const repo = {
       findEmailAccountByUserId: vi.fn().mockResolvedValue({ id: 'a1', passwordHash: HASH }),
+      // A wrong password no longer fails outright — it falls through to the Google proof (#196).
+      // `false` is "and there isn't one either", which is what makes the refusal correct.
+      consumeSessionReauthentication: vi.fn().mockResolvedValue(false),
       updatePasswordHash: vi.fn().mockResolvedValue({}),
       deleteAllUserSessions: vi.fn().mockResolvedValue({}),
       createSession: vi.fn().mockResolvedValue({}),
@@ -69,7 +75,10 @@ describe('AuthService — changePassword', () => {
   });
 
   it('rejects when there is no credential account (Google-only)', async () => {
-    const repo = { findEmailAccountByUserId: vi.fn().mockResolvedValue(null) };
+    const repo = {
+      findEmailAccountByUserId: vi.fn().mockResolvedValue(null),
+      consumeSessionReauthentication: vi.fn().mockResolvedValue(false),
+    };
     const service = makeService(repo);
     await expect(service.changePassword('u1', 'x', 'newpassword1')).rejects.toBeInstanceOf(
       EntityNotFoundException,
@@ -85,12 +94,15 @@ describe('AuthService — requestEmailChange', () => {
         .fn()
         .mockResolvedValue({ id: 'u1', email: 'old@x.com', displayName: 'U', language: 'EN' }),
       findEmailAccountByUserId: vi.fn().mockResolvedValue({ id: 'a1', passwordHash: HASH }),
+      // A wrong password no longer fails outright — it falls through to the Google proof (#196).
+      // `false` is "and there isn't one either", which is what makes the refusal correct.
+      consumeSessionReauthentication: vi.fn().mockResolvedValue(false),
       emailInUse: vi.fn().mockResolvedValue(true),
     };
     const service = makeService(repo);
-    await expect(service.requestEmailChange('u1', 'taken@x.com', 'pw')).rejects.toBeInstanceOf(
-      DuplicateEntityException,
-    );
+    await expect(
+      service.requestEmailChange('u1', 'sess-1', 'taken@x.com', 'pw'),
+    ).rejects.toBeInstanceOf(DuplicateEntityException);
   });
 
   it('rejects a wrong password', async () => {
@@ -100,11 +112,14 @@ describe('AuthService — requestEmailChange', () => {
         .fn()
         .mockResolvedValue({ id: 'u1', email: 'old@x.com', displayName: 'U', language: 'EN' }),
       findEmailAccountByUserId: vi.fn().mockResolvedValue({ id: 'a1', passwordHash: HASH }),
+      // A wrong password no longer fails outright — it falls through to the Google proof (#196).
+      // `false` is "and there isn't one either", which is what makes the refusal correct.
+      consumeSessionReauthentication: vi.fn().mockResolvedValue(false),
     };
     const service = makeService(repo);
-    await expect(service.requestEmailChange('u1', 'new@x.com', 'wrong')).rejects.toBeInstanceOf(
-      InvalidCredentialsException,
-    );
+    await expect(
+      service.requestEmailChange('u1', 'sess-1', 'new@x.com', 'wrong'),
+    ).rejects.toBeInstanceOf(InvalidCredentialsException);
   });
 
   it('stores pendingEmail + issues a token + emails the new address', async () => {
@@ -114,6 +129,9 @@ describe('AuthService — requestEmailChange', () => {
         .fn()
         .mockResolvedValue({ id: 'u1', email: 'old@x.com', displayName: 'U', language: 'EN' }),
       findEmailAccountByUserId: vi.fn().mockResolvedValue({ id: 'a1', passwordHash: HASH }),
+      // A wrong password no longer fails outright — it falls through to the Google proof (#196).
+      // `false` is "and there isn't one either", which is what makes the refusal correct.
+      consumeSessionReauthentication: vi.fn().mockResolvedValue(false),
       emailInUse: vi.fn().mockResolvedValue(false),
       setPendingEmail: vi.fn().mockResolvedValue({ id: 'u1' }),
       invalidateTokensByUserAndType: vi.fn().mockResolvedValue({}),
@@ -121,7 +139,7 @@ describe('AuthService — requestEmailChange', () => {
     };
     const sendTransactional = vi.fn().mockResolvedValue(undefined);
     const service = makeService(repo, { sendTransactional });
-    const r = await service.requestEmailChange('u1', 'New@x.com', 'pw');
+    const r = await service.requestEmailChange('u1', 'sess-1', 'New@x.com', 'pw');
     expect(r).toBe('sent');
     expect(repo.setPendingEmail).toHaveBeenCalledWith('u1', 'new@x.com');
     expect(repo.createVerificationToken).toHaveBeenCalledWith(

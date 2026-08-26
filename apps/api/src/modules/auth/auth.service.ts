@@ -61,6 +61,15 @@ const LOCKOUT_DURATION_SECONDS = 900;
  * What a password-reset request actually resulted in. A union rather than a boolean because the
  * three cases need three different things said to the person (#196).
  */
+/**
+ * How recent a re-authentication has to be to still count.
+ *
+ * Long enough to finish a Google round trip and read a confirmation dialog; short enough that a
+ * borrowed browser is not left holding the proof. Not stored in the database — that would put
+ * the policy in the schema, where changing it needs a migration.
+ */
+const REAUTH_WINDOW_MINUTES = 10;
+
 export type ForgotPasswordOutcome = 'no_account' | 'reset_sent' | 'set_password_sent';
 
 @Injectable()
@@ -687,11 +696,76 @@ export class AuthService {
     return { sessionToken };
   }
 
-  // Verify a user's password (re-auth gate for sensitive self-service actions like delete).
+  // Verify a user's password. Still used where a password is the proof offered; the gate that
+  // callers should reach for is `assertRecentlyAuthenticated` below.
   async verifyPassword(userId: string, password: string): Promise<boolean> {
     const emailAccount = await this.authRepository.findEmailAccountByUserId(userId);
     if (!emailAccount?.passwordHash) return false;
     return bcrypt.compare(password, emailAccount.passwordHash);
+  }
+
+  /**
+   * "Has this person just proved they are the account holder?" — the question every sensitive
+   * self-service action actually needs answered (#196).
+   *
+   * Two proofs are accepted, and which one an account can offer depends on how it signs in:
+   *
+   *   - **a current password**, for an account that has one;
+   *   - **a recent Google re-authentication**, stamped on this session by the OAuth callback.
+   *
+   * Asking `verifyPassword` instead encoded "the proof is a password" into five call sites, and
+   * an account created with Google has no password — which is why deleting your own account and
+   * changing your email were impossible for it. Deletion is a right, so "you signed in a
+   * different way" was never an acceptable reason to refuse.
+   *
+   * The Google proof is **consumed**, not merely read. Left in place it would authorise every
+   * sensitive action for the rest of its window — one re-authentication, unlimited consequences,
+   * which is the replay this exists to prevent.
+   */
+  async assertRecentlyAuthenticated(
+    userId: string,
+    sessionId: string,
+    password?: string,
+  ): Promise<void> {
+    if (password && (await this.verifyPassword(userId, password))) return;
+
+    const notBefore = new Date(Date.now() - REAUTH_WINDOW_MINUTES * 60_000);
+    if (await this.authRepository.consumeSessionReauthentication(sessionId, notBefore)) return;
+
+    throw new InvalidCredentialsException();
+  }
+
+  /**
+   * Re-authentication through Google, for a session that already exists.
+   *
+   * Deliberately NOT `handleGoogleLogin`. That issues a session for whoever signed in — which
+   * here would mean signing in as somebody else and being handed their account. This proves a
+   * narrower thing: that the Google identity just presented is one *this* account is linked to.
+   *
+   * Returns false rather than throwing on a mismatch, because the caller is a redirect handler
+   * and the person needs a page, not a stack trace.
+   */
+  async reauthenticateWithGoogle(
+    userId: string,
+    sessionId: string,
+    googleId: string,
+  ): Promise<boolean> {
+    const account = await this.authRepository.findAuthAccount(AuthProvider.GOOGLE, googleId);
+    if (!account || account.userId !== userId) return false;
+
+    await this.markSessionReauthenticated(sessionId);
+    return true;
+  }
+
+  /**
+   * Records that the holder of this session just signed in with Google again.
+   *
+   * The caller MUST have established that the Google identity belongs to this user. Doing that
+   * check here is not possible — the callback is where both the profile and the session are in
+   * hand — so it is stated as a precondition rather than assumed silently.
+   */
+  async markSessionReauthenticated(sessionId: string): Promise<void> {
+    await this.authRepository.markSessionReauthenticated(sessionId);
   }
 
   // ─── Connected accounts ──────────────────────────────────────────────────────
@@ -736,17 +810,18 @@ export class AuthService {
 
   async requestEmailChange(
     userId: string,
+    sessionId: string,
     newEmail: string,
-    currentPassword: string,
+    currentPassword?: string,
   ): Promise<'sent'> {
     const normalized = newEmail.trim().toLowerCase();
     const user = await this.authRepository.findUserById(userId);
     if (!user) throw new EntityNotFoundException('User', userId);
 
-    const emailAccount = await this.authRepository.findEmailAccountByUserId(userId);
-    if (!emailAccount?.passwordHash) throw new EntityNotFoundException('AuthAccount', userId);
-    const valid = await bcrypt.compare(currentPassword, emailAccount.passwordHash);
-    if (!valid) throw new InvalidCredentialsException();
+    // Either proof (#196). This previously threw EntityNotFoundException('AuthAccount') for an
+    // account with no password — naming a database table to somebody changing their email, and
+    // wrong in substance: nothing was missing, the check simply did not apply.
+    await this.assertRecentlyAuthenticated(userId, sessionId, currentPassword);
 
     if (normalized === user.email.toLowerCase())
       throw new DuplicateEntityException('User', 'email');
@@ -800,7 +875,14 @@ export class AuthService {
     return { user: this.toSessionUser(user) };
   }
 
-  async validateSession(token: string): Promise<SessionUser | null> {
+  /**
+   * Returns the session id alongside the user.
+   *
+   * Sensitive actions need to know WHICH session is asking, because the re-authentication proof
+   * is bound to a session rather than to a user (#196) — otherwise proving yourself on one
+   * device would silently authorise a deletion from another.
+   */
+  async validateSession(token: string): Promise<{ user: SessionUser; sessionId: string } | null> {
     const session = await this.authRepository.findSessionByToken(token);
 
     if (!session) {
@@ -820,7 +902,7 @@ export class AuthService {
     const newExpiresAt = this.daysFromNow(this.sessionTtlDays);
     await this.authRepository.updateSessionActivity(session.id, newExpiresAt);
 
-    return this.toSessionUser(session.user);
+    return { user: this.toSessionUser(session.user), sessionId: session.id };
   }
 
   // Step 1: account setup. Persists profile fields and marks account-setup complete.

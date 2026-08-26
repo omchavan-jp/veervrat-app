@@ -27,6 +27,7 @@ import { authCookieOptions } from '../../common/http/cookie';
 import { SessionGuard } from '../auth/guards/session.guard';
 import { OptionalSessionGuard } from '../auth/guards/optional-session.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { CurrentSessionId } from '../auth/decorators/current-session-id.decorator';
 import { Audited } from '../audit/audited.decorator';
 import type { SessionUser } from '../auth/types/auth.types';
 
@@ -177,9 +178,10 @@ export class UsersController {
   async deleteAccount(
     @Body() dto: DeleteAccountDto,
     @CurrentUser() user: SessionUser,
+    @CurrentSessionId() sessionId: string,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const result = await this.usersService.selfDelete(user.id, dto.currentPassword);
+    const result = await this.usersService.selfDelete(user.id, sessionId, dto.currentPassword);
     // Same scope as it was set with, domain included — otherwise the cookie survives account
     // deletion and the browser keeps presenting a session for a user that no longer exists.
     res.clearCookie(this.cookieName, authCookieOptions({ httpOnly: true }));
