@@ -16,6 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
+import { errorMessage } from '@/lib/api/error-message';
 
 export default function CustomErcReviewPage() {
   const t = useTranslations('moderation');
@@ -55,7 +56,7 @@ export default function CustomErcReviewPage() {
       invalidate();
       toast({ title: t('approved') });
     },
-    onError: () => toast({ title: t('actionError'), variant: 'destructive' }),
+    onError: (err) => toast({ title: errorMessage(err, t('actionError')), variant: 'destructive' }),
   });
   const reject = useMutation({
     mutationFn: ({ id, reason }: { id: string; reason: string }) =>
@@ -64,7 +65,7 @@ export default function CustomErcReviewPage() {
       invalidate();
       toast({ title: t('rejected') });
     },
-    onError: () => toast({ title: t('actionError'), variant: 'destructive' }),
+    onError: (err) => toast({ title: errorMessage(err, t('actionError')), variant: 'destructive' }),
   });
 
   // While auth resolves, isMod is false but no redirect has fired — show a spinner

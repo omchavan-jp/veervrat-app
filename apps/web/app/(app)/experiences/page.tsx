@@ -11,6 +11,7 @@ import {
   type ExperienceVisibility,
 } from '@/lib/api/experience-logs';
 import { queryKeys } from '@/lib/api/query-keys';
+import { errorMessage } from '@/lib/api/error-message';
 import { excerptFromDoc } from '@/components/experience/experience-excerpt';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
@@ -39,7 +40,7 @@ export default function MyExperiencesPage() {
   const del = useMutation({
     mutationFn: (id: string) => experienceLogsApi.remove(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.experiences.mine }),
-    onError: () => toast({ title: t('deleteError'), variant: 'destructive' }),
+    onError: (err) => toast({ title: errorMessage(err, t('deleteError')), variant: 'destructive' }),
     onSettled: () => setPendingDeleteId(null),
   });
 

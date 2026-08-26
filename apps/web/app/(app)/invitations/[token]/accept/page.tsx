@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { useMutation } from '@tanstack/react-query';
 import { UserPlus, Check, X } from 'lucide-react';
 import { invitationsApi } from '@/lib/api/invitations';
+import { errorMessage } from '@/lib/api/error-message';
 
 type Outcome = 'pending' | 'accepted' | 'declined' | 'error';
 
@@ -14,16 +15,25 @@ export default function InvitationAcceptPage() {
   const { token } = useParams<{ token: string }>();
   const t = useTranslations('invitation');
   const [outcome, setOutcome] = useState<Outcome>('pending');
+  // An invitation fails for reasons the person can act on — it expired, it was already accepted,
+  // it belongs to a different account. The API names which; showing a generic sentence instead
+  // leaves them with a dead end and no idea whether to ask for a new invite.
+  const [reason, setReason] = useState<string | null>(null);
+
+  const fail = (err: unknown) => {
+    setReason(errorMessage(err, t('errorBody')));
+    setOutcome('error');
+  };
 
   const accept = useMutation({
     mutationFn: () => invitationsApi.accept(token),
     onSuccess: () => setOutcome('accepted'),
-    onError: () => setOutcome('error'),
+    onError: fail,
   });
   const decline = useMutation({
     mutationFn: () => invitationsApi.decline(token),
     onSuccess: () => setOutcome('declined'),
-    onError: () => setOutcome('error'),
+    onError: fail,
   });
 
   const pending = accept.isPending || decline.isPending;
@@ -98,7 +108,7 @@ export default function InvitationAcceptPage() {
             <X className="h-6 w-6" />
           </div>
           <h1 className="font-display text-[26px] font-medium tracking-tight">{t('errorTitle')}</h1>
-          <p className="mt-2 text-[14px] text-muted">{t('errorBody')}</p>
+          <p className="mt-2 text-[14px] text-muted">{reason ?? t('errorBody')}</p>
           <Link
             href="/dashboard"
             className="mt-6 rounded-xl border border-border-strong px-6 py-3 text-[14px] hover:border-accent"

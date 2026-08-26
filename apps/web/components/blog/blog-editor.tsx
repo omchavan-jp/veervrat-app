@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { queryKeys } from '@/lib/api/query-keys';
 import { blogsApi, type Blog } from '@/lib/api/blogs';
 import type { TiptapDoc } from '@/components/chat/message-content';
+import { errorMessage } from '@/lib/api/error-message';
 
 export function BlogEditor({ existing }: { existing?: Blog }) {
   const t = useTranslations('blogs');
@@ -61,7 +62,7 @@ export function BlogEditor({ existing }: { existing?: Blog }) {
       toast({ title: t('savedDraft') });
       router.push('/blogs/mine');
     },
-    onError: () => toast({ title: t('saveError'), variant: 'destructive' }),
+    onError: (err) => toast({ title: errorMessage(err, t('saveError')), variant: 'destructive' }),
   });
 
   const publish = useMutation({
@@ -71,7 +72,7 @@ export function BlogEditor({ existing }: { existing?: Blog }) {
       toast({ title: t('published') });
       router.push(`/community/blogs/${id}`);
     },
-    onError: () => toast({ title: t('saveError'), variant: 'destructive' }),
+    onError: (err) => toast({ title: errorMessage(err, t('saveError')), variant: 'destructive' }),
   });
 
   const onPickImage = async (e: React.ChangeEvent<HTMLInputElement>) => {

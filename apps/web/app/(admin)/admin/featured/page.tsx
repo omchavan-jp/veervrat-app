@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Star, Newspaper, PenLine } from 'lucide-react';
 import { blogsApi } from '@/lib/api/blogs';
+import { errorMessage } from '@/lib/api/error-message';
 import { experienceLogsApi } from '@/lib/api/experience-logs';
 import { adminApi } from '@/lib/api/admin';
 import { queryKeys } from '@/lib/api/query-keys';
@@ -64,13 +65,15 @@ export default function FeaturedPanel() {
     mutationFn: ({ id, featured }: { id: string; featured: boolean }) =>
       adminApi.featureBlog(id, featured),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.blogs.list }),
-    onError: () => toast({ title: t('toggleFeaturedError'), variant: 'destructive' }),
+    onError: (err) =>
+      toast({ title: errorMessage(err, t('toggleFeaturedError')), variant: 'destructive' }),
   });
   const toggleExp = useMutation({
     mutationFn: ({ id, featured }: { id: string; featured: boolean }) =>
       adminApi.featureExperience(id, featured),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.experiences.public }),
-    onError: () => toast({ title: t('toggleFeaturedError'), variant: 'destructive' }),
+    onError: (err) =>
+      toast({ title: errorMessage(err, t('toggleFeaturedError')), variant: 'destructive' }),
   });
 
   if (ready && !isAdmin) return null;

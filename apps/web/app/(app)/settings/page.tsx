@@ -31,6 +31,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { useToast } from '@/hooks/use-toast';
 import { EMAILABLE_EVENTS } from '@/lib/notification-events';
 import { getRuntimeConfig } from '@/lib/runtime-config';
+import { errorMessage } from '@/lib/api/error-message';
 
 function Section({
   icon,
@@ -358,7 +359,7 @@ function PrivacySection({ profile }: { profile: OwnProfile }) {
     mutationFn: (data: Parameters<typeof usersApi.updateSettings>[0]) =>
       usersApi.updateSettings(data),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.auth.me }),
-    onError: () => toast({ title: t('saveError'), variant: 'destructive' }),
+    onError: (err) => toast({ title: errorMessage(err, t('saveError')), variant: 'destructive' }),
   });
   return (
     <Section
@@ -400,7 +401,7 @@ function LanguageSection({ profile }: { profile: OwnProfile }) {
       return usersApi.updateSettings({ language });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.auth.me }),
-    onError: () => toast({ title: t('saveError'), variant: 'destructive' }),
+    onError: (err) => toast({ title: errorMessage(err, t('saveError')), variant: 'destructive' }),
   });
   return (
     <Section
@@ -432,7 +433,7 @@ function NotificationsSection({ profile }: { profile: OwnProfile }) {
     mutationFn: (notificationPrefs: Record<string, boolean>) =>
       usersApi.updateSettings({ notificationPrefs }),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.auth.me }),
-    onError: () => toast({ title: t('saveError'), variant: 'destructive' }),
+    onError: (err) => toast({ title: errorMessage(err, t('saveError')), variant: 'destructive' }),
   });
   return (
     <Section
@@ -480,7 +481,7 @@ function VratmitraSection({ profile }: { profile: OwnProfile }) {
       // "Change" = remove then send a fresh global invite via the invitations flow.
       if (action === 'change') router.push('/invitations');
     },
-    onError: () => toast({ title: t('saveError'), variant: 'destructive' }),
+    onError: (err) => toast({ title: errorMessage(err, t('saveError')), variant: 'destructive' }),
   });
 
   const restart = useMutation({
@@ -489,7 +490,7 @@ function VratmitraSection({ profile }: { profile: OwnProfile }) {
       setTourDone(true);
       qc.invalidateQueries({ queryKey: queryKeys.auth.me });
     },
-    onError: () => toast({ title: t('saveError'), variant: 'destructive' }),
+    onError: (err) => toast({ title: errorMessage(err, t('saveError')), variant: 'destructive' }),
   });
 
   return (
@@ -631,7 +632,7 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
   const setPassword = useMutation({
     mutationFn: () => authApi.forgotPassword(profile.email),
     onSuccess: () => setAddPwMsg(t('setPasswordSent')),
-    onError: () => setAddPwMsg(t('setPasswordError')),
+    onError: (err) => setAddPwMsg(errorMessage(err, t('setPasswordError'))),
   });
 
   const changePw = useMutation({
@@ -657,7 +658,8 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
   const disconnect = useMutation({
     mutationFn: (provider: string) => usersApi.disconnectAccount(provider),
     onSuccess: () => connected.refetch(),
-    onError: () => toast({ title: t('disconnectError'), variant: 'destructive' }),
+    onError: (err) =>
+      toast({ title: errorMessage(err, t('disconnectError')), variant: 'destructive' }),
   });
   const del = useMutation({
     mutationFn: (password?: string) => usersApi.deleteAccount(password),
@@ -696,51 +698,51 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
           </Button>
         </div>
       ) : (
-      <div className="mb-5">
-        <h3 className="mb-2 text-[13px] font-medium">{t('changePassword')}</h3>
-        <div className="grid gap-2">
-          <div>
-            <Label htmlFor="settings-currentPassword" className="sr-only">
-              {t('currentPassword')}
-            </Label>
-            <Input
-              id="settings-currentPassword"
-              type="password"
-              value={pw.current}
-              onChange={(e) => setPw({ ...pw, current: e.target.value })}
-              placeholder={t('currentPassword')}
-              className="h-auto rounded-xl border-border bg-bg px-3 py-2 text-[14px] focus-visible:border-accent focus-visible:ring-0"
-            />
-          </div>
-          <div>
-            <Label htmlFor="settings-newPassword" className="sr-only">
-              {t('newPassword')}
-            </Label>
-            <Input
-              id="settings-newPassword"
-              type="password"
-              value={pw.next}
-              onChange={(e) => setPw({ ...pw, next: e.target.value })}
-              placeholder={t('newPassword')}
-              className="h-auto rounded-xl border-border bg-bg px-3 py-2 text-[14px] focus-visible:border-accent focus-visible:ring-0"
-            />
-          </div>
-          {pwMsg && (
-            <p role="alert" className="text-[12px] text-muted">
-              {pwMsg}
-            </p>
-          )}
-          <div>
-            <Button
-              onClick={() => changePw.mutate()}
-              loading={changePw.isPending}
-              disabled={!pw.current || pw.next.length < 8 || changePw.isPending}
-            >
-              {t('updatePassword')}
-            </Button>
+        <div className="mb-5">
+          <h3 className="mb-2 text-[13px] font-medium">{t('changePassword')}</h3>
+          <div className="grid gap-2">
+            <div>
+              <Label htmlFor="settings-currentPassword" className="sr-only">
+                {t('currentPassword')}
+              </Label>
+              <Input
+                id="settings-currentPassword"
+                type="password"
+                value={pw.current}
+                onChange={(e) => setPw({ ...pw, current: e.target.value })}
+                placeholder={t('currentPassword')}
+                className="h-auto rounded-xl border-border bg-bg px-3 py-2 text-[14px] focus-visible:border-accent focus-visible:ring-0"
+              />
+            </div>
+            <div>
+              <Label htmlFor="settings-newPassword" className="sr-only">
+                {t('newPassword')}
+              </Label>
+              <Input
+                id="settings-newPassword"
+                type="password"
+                value={pw.next}
+                onChange={(e) => setPw({ ...pw, next: e.target.value })}
+                placeholder={t('newPassword')}
+                className="h-auto rounded-xl border-border bg-bg px-3 py-2 text-[14px] focus-visible:border-accent focus-visible:ring-0"
+              />
+            </div>
+            {pwMsg && (
+              <p role="alert" className="text-[12px] text-muted">
+                {pwMsg}
+              </p>
+            )}
+            <div>
+              <Button
+                onClick={() => changePw.mutate()}
+                loading={changePw.isPending}
+                disabled={!pw.current || pw.next.length < 8 || changePw.isPending}
+              >
+                {t('updatePassword')}
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
       )}
 
       {/* Change email */}

@@ -16,6 +16,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Switch } from '@/components/ui/switch';
 import { BilingualText } from '@/components/shared/bilingual-text';
 import { useToast } from '@/hooks/use-toast';
+import { errorMessage } from '@/lib/api/error-message';
 
 const AUTO_NEXT_STORAGE_KEY = 'veervrat.study.autoNext';
 
@@ -203,7 +204,8 @@ export default function TestQuestionPage() {
         if (payload.length > 0) {
           saveAnswers.mutate(payload, {
             onSuccess: () => setDirty(false),
-            onError: () => toast({ title: t('saveError'), variant: 'destructive' }),
+            onError: (err) =>
+              toast({ title: errorMessage(err, t('saveError')), variant: 'destructive' }),
           });
         }
       }, 600);
@@ -248,7 +250,8 @@ export default function TestQuestionPage() {
     if (payload.length > 0) {
       saveAnswers.mutate(payload, {
         onSuccess: () => setDirty(false),
-        onError: () => toast({ title: t('saveError'), variant: 'destructive' }),
+        onError: (err) =>
+          toast({ title: errorMessage(err, t('saveError')), variant: 'destructive' }),
         onSettled: afterSave,
       });
     } else {
