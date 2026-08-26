@@ -90,7 +90,9 @@ jobs:
       ENVIRONMENT: local
       FEEDBACK_MODE: granted
       CONTENT_EDIT_ENABLED: 'false'
-      # e2e/helpers/db.ts shells out to psql with this.
+      # e2e/helpers/db.ts talks to Postgres directly when E2E_PG_HOST is set. Locally it
+      # `docker exec`s into the dev container; there is no such container on a runner.
+      E2E_PG_HOST: localhost
       PGPASSWORD: veervrat_local
       # Without this the suite cannot pass: register is 5/hour per IP and ten journeys need
       # ~15 accounts. Honoured only because NODE_ENV is not 'production' — see
