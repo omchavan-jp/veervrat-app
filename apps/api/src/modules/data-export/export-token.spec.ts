@@ -1,3 +1,4 @@
+import { createHmac } from 'node:crypto';
 import { describe, it, expect } from 'vitest';
 import { createExportToken, verifyExportToken } from './export-token';
 
@@ -23,7 +24,6 @@ describe('export-token', () => {
   it('rejects an expired token', () => {
     // Forge a token with an expiry in the past by manipulating the internals.
     // The token format is base64url(userId.expiresAt.hmac).
-    const { createHmac } = require('node:crypto');
     const expiresAt = Date.now() - 1000;
     const payload = `${USER_ID}.${expiresAt}`;
     const sig = createHmac('sha256', 'veervrat-data-export:' + SECRET)
