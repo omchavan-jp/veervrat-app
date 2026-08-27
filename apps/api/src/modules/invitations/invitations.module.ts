@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { InvitationsController } from './invitations.controller';
+import { PublicInvitationsController } from './public-invitations.controller';
 import { InvitationsService } from './invitations.service';
 import { InvitationsRepository } from './invitations.repository';
 import { AuthModule } from '../auth/auth.module';
@@ -18,7 +19,10 @@ import { NotificationsModule } from '../notifications/notifications.module';
     VmRelationshipsModule,
     NotificationsModule,
   ],
-  controllers: [InvitationsController],
+  // ⚠️ ORDER MATTERS. InvitationsController declares `GET received`; PublicInvitationsController
+  // declares `GET :token`. Nest matches in registration order, so swapping these makes "received"
+  // parse as a token and 404. Guarded by invitations-received.integration.spec.ts.
+  controllers: [InvitationsController, PublicInvitationsController],
   providers: [InvitationsService, InvitationsRepository],
   exports: [InvitationsService],
 })

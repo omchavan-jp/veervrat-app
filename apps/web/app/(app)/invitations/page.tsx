@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Search, UserPlus, Mail, Copy, Check, X, Clock } from 'lucide-react';
 import { usersApi, type UserSearchResult } from '@/lib/api/users';
 import { errorMessage } from '@/lib/api/error-message';
+import { ReceivedInvitations } from '@/components/invitations/received-invitations';
 import {
   invitationsApi,
   type Invitation,
@@ -85,8 +86,16 @@ export default function InvitationsPage() {
 
   return (
     <div className="mx-auto max-w-[680px]">
-      <h1 className="font-display text-[30px] font-medium tracking-tight">{t('title')}</h1>
-      <p className="mt-1 text-[14px] text-muted">{t('subtitle')}</p>
+      {/* The title no longer assumes you came to send. This page was called "Invite a Vratmitra"
+          while being the destination every invitation notification pointed at — including the
+          ones telling you that you had been invited (#22). */}
+      <h1 className="font-display text-[30px] font-medium tracking-tight">{t('titleBoth')}</h1>
+      <p className="mt-1 text-[14px] text-muted">{t('subtitleBoth')}</p>
+
+      {/* Renders nothing when there is nothing addressed to you. */}
+      <div className="mt-8">
+        <ReceivedInvitations />
+      </div>
 
       {/* Search + select */}
       <section className="mt-6">

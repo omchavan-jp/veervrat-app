@@ -319,6 +319,36 @@ export class InvitationsService {
     return this.invitationsRepository.updateStatus(invitation.id, InvitationStatus.CANCELLED);
   }
 
+  /**
+   * Invitations addressed to this person.
+   *
+   * No permission check beyond having a session: these are invitations sent *to* you, and being
+   * the recipient is what makes the question meaningful. Scoped to `user.id` in the query rather
+   * than filtered afterwards, so nothing a caller passes can widen it.
+   */
+  async listReceived(user: SessionUser) {
+    return this.invitationsRepository.listByInvitee(user.id);
+  }
+
+  /**
+   * One invitation by token, for the page where it is accepted.
+   *
+   * **Public.** The person holding the link may have no account yet — that is exactly why the
+   * accept page could not say who was asking.
+   *
+   * ⚠️ Because it is public it is enumerable, so **a missing invitation and an expired one are
+   * the same answer**. Returning "expired" for a real token and "not found" for a guess confirms
+   * which strings are real invitations, which is an oracle for guessing them. The page still
+   * tells an invited person that their invitation has expired — it learns that from `status` and
+   * `expiresAt` on an invitation it was allowed to read, not from the difference between two
+   * error codes.
+   */
+  async getByTokenForDisplay(token: string) {
+    const invitation = await this.invitationsRepository.findByTokenForDisplay(token);
+    if (!invitation) throw new EntityNotFoundException('Invitation', token);
+    return invitation;
+  }
+
   async listInvitations(user: SessionUser) {
     const invitations = await this.invitationsRepository.listByInviter(user.id);
     return invitations.map((inv) => ({

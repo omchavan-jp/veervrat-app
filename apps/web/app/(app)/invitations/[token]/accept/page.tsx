@@ -4,10 +4,12 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { UserPlus, Check, X } from 'lucide-react';
 import { invitationsApi } from '@/lib/api/invitations';
 import { errorMessage } from '@/lib/api/error-message';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Spinner } from '@/components/ui/spinner';
 
 type Outcome = 'pending' | 'accepted' | 'declined' | 'error';
 
@@ -36,17 +38,81 @@ export default function InvitationAcceptPage() {
     onError: fail,
   });
 
+  /**
+   * Who is asking.
+   *
+   * This page used to fetch nothing: it rendered static copy and two buttons, so it looked
+   * identical for a valid invitation, an expired one, and one already used — and it never said
+   * who had sent it (#222). Accepting gives that person read access to your journeys, weaknesses
+   * and reflections; nobody should agree to that without a name.
+   *
+   * Readable without a session, because whoever holds the link may not have an account yet.
+   */
+  const {
+    data: invitation,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ['invitation', token],
+    queryFn: () => invitationsApi.byToken(token),
+    retry: false,
+  });
+
   const pending = accept.isPending || decline.isPending;
+  // Told BEFORE being offered a choice, rather than on click.
+  const unusable = isError || (invitation?.status !== undefined && invitation.status !== 'PENDING');
 
   return (
     <div className="mx-auto flex min-h-[60vh] max-w-[460px] flex-col items-center justify-center text-center">
-      {outcome === 'pending' && (
+      {outcome === 'pending' && isLoading && <Spinner size="lg" label={t('title')} />}
+
+      {outcome === 'pending' && !isLoading && unusable && (
         <>
-          <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-accent/10 text-accent">
-            <UserPlus className="h-6 w-6" />
+          <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-muted/15 text-muted">
+            <X className="h-6 w-6" />
           </div>
+          <h1 className="font-display text-[26px] font-medium tracking-tight">{t('errorTitle')}</h1>
+          <p className="mt-2 text-[14px] text-muted">{t('errorBody')}</p>
+          <Link
+            href="/invitations"
+            className="mt-6 rounded-xl border border-border-strong px-6 py-3 text-[14px] hover:border-accent"
+          >
+            {t('goToInvitations')}
+          </Link>
+        </>
+      )}
+
+      {outcome === 'pending' && !isLoading && !unusable && (
+        <>
+          {invitation ? (
+            <Avatar className="mb-5 h-14 w-14">
+              {invitation.inviter.avatarUrl && <AvatarImage src={invitation.inviter.avatarUrl} />}
+              <AvatarFallback>
+                {invitation.inviter.displayName.slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+          ) : (
+            <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-accent/10 text-accent">
+              <UserPlus className="h-6 w-6" />
+            </div>
+          )}
           <h1 className="font-display text-[26px] font-medium tracking-tight">{t('title')}</h1>
-          <p className="mt-2 text-[14px] text-muted">{t('body')}</p>
+          {invitation ? (
+            <p className="mt-2 text-[14px] text-muted">
+              {t.rich('bodyFrom', {
+                name: () => (
+                  <Link
+                    href={`/u/${invitation.inviter.username}`}
+                    className="text-accent underline decoration-accent/40 underline-offset-2 hover:no-underline"
+                  >
+                    {invitation.inviter.displayName}
+                  </Link>
+                ),
+              })}
+            </p>
+          ) : (
+            <p className="mt-2 text-[14px] text-muted">{t('body')}</p>
+          )}
           <div className="mt-7 flex w-full flex-col gap-2.5 sm:flex-row sm:justify-center">
             <button
               onClick={() => accept.mutate()}
