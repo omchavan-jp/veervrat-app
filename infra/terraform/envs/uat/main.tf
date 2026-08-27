@@ -110,10 +110,14 @@ module "environment" {
   deploy_apps     = var.deploy_apps
   migrate_command = var.migrate_command
 
-  # UAT is disposable and has no real users: scale to zero when idle (free), and keep the
-  # per-replica connection count low so it cannot exhaust Burstable Postgres.
-  api_min_replicas  = 0
-  web_min_replicas  = 0
+  # Kept warm (2026-08-27). UAT is disposable and has no real users, but it is where every
+  # verification actually happens — each deployed check paid a 5–20s cold start first, on a
+  # person's time. Prod, which has nobody, gave up its warm replicas for this: the spend moved
+  # to the environment being used rather than increasing.
+  #
+  # BOTH tiers, not just api: warming one leaves the other's cold start in the path.
+  api_min_replicas  = 1
+  web_min_replicas  = 1
   database_pool_max = 5
 }
 

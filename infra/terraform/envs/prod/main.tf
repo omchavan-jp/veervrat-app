@@ -127,12 +127,27 @@ module "environment" {
   # BOTH tiers, not just api: setting only one leaves the other's cold start in the path, so the
   # user still waits.
   #
-  # ⚠️ This costs roughly $14–20/month for zero benefit until testers actually arrive — it buys
-  # a first impression, and there is nobody to impress yet. Deliberate: the alternative is
-  # remembering to flip it at exactly the right moment, and the cost of forgetting is that the
-  # first tester ever to open the app waits twenty seconds and concludes it is broken.
-  api_min_replicas = 1
-  web_min_replicas = 1
+  # ⚠️ **Set back to 1 before the first beta tester is invited.** Tracked as #92.
+  #
+  # Applied to prod manually on 2026-08-27 (cd.yml applies prod terraform only on a `prod-*`
+  # tag, so merging this file alone would have changed nothing there).
+  #
+  # 🛑 If you run terraform here by hand, pass the same variables CD does:
+  #     -var="deploy_apps=true" -var="image_tag=<current>" -var="app_image_tag=<current>"
+  # `deploy_apps` defaults to FALSE, and a bare `terraform plan` against prod therefore reports
+  # **8 to destroy** — the api and web Container Apps and the migration job. This has bitten
+  # before; see the note in .github/actions/deploy-environment/action.yml.
+  #
+  # Was 1, on the reasoning that keeping prod warm costs ~$14–20/month and buys a first
+  # impression, and that flipping it at the right moment is a thing one forgets. That reasoning
+  # still holds — the risk has not gone away, it has been accepted deliberately (2026-08-27):
+  # prod has no users at all, UAT is where every verification actually happens, and paying to
+  # keep an empty environment warm while the one being used goes cold is the wrong way round.
+  #
+  # The cost of forgetting is unchanged and real: the first tester ever to open the app waits
+  # twenty seconds and concludes it is broken. #92 exists to make sure that does not happen.
+  api_min_replicas = 0
+  web_min_replicas = 0
 
   # Same Burstable Postgres ceiling as UAT: DATABASE_POOL_MAX × api_max_replicas + headroom
   # must stay under the server's max_connections.
