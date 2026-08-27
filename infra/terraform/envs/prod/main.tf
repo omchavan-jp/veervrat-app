@@ -129,6 +129,15 @@ module "environment" {
   #
   # ⚠️ **Set back to 1 before the first beta tester is invited.** Tracked as #92.
   #
+  # Applied to prod manually on 2026-08-27 (cd.yml applies prod terraform only on a `prod-*`
+  # tag, so merging this file alone would have changed nothing there).
+  #
+  # 🛑 If you run terraform here by hand, pass the same variables CD does:
+  #     -var="deploy_apps=true" -var="image_tag=<current>" -var="app_image_tag=<current>"
+  # `deploy_apps` defaults to FALSE, and a bare `terraform plan` against prod therefore reports
+  # **8 to destroy** — the api and web Container Apps and the migration job. This has bitten
+  # before; see the note in .github/actions/deploy-environment/action.yml.
+  #
   # Was 1, on the reasoning that keeping prod warm costs ~$14–20/month and buys a first
   # impression, and that flipping it at the right moment is a thing one forgets. That reasoning
   # still holds — the risk has not gone away, it has been accepted deliberately (2026-08-27):
