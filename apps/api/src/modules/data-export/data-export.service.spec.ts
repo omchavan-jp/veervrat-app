@@ -13,6 +13,10 @@ function makeRepo(overrides: Partial<Record<keyof DataExportRepository, unknown>
     chatMessages: vi.fn().mockResolvedValue([]),
     blogs: vi.fn().mockResolvedValue([]),
     blogComments: vi.fn().mockResolvedValue([]),
+    contentSuggestions: vi.fn().mockResolvedValue([]),
+    follows: vi.fn().mockResolvedValue({ following: [], followers: [] }),
+    invitations: vi.fn().mockResolvedValue({ sent: [], received: [] }),
+    feedbackItems: vi.fn().mockResolvedValue([]),
     ...overrides,
   };
   return base as unknown as DataExportRepository;
@@ -32,9 +36,13 @@ describe('DataExportService.exportFor', () => {
         'blogs',
         'chatMessages',
         'consents',
+        'contentSuggestions',
         'experienceLogs',
         'exportedAt',
+        'feedbackItems',
+        'follows',
         'identity',
+        'invitations',
         'journeys',
         'selfAssessments',
       ].sort(),
@@ -55,6 +63,10 @@ describe('DataExportService.exportFor', () => {
       'chatMessages',
       'blogs',
       'blogComments',
+      'contentSuggestions',
+      'follows',
+      'invitations',
+      'feedbackItems',
     ] as const) {
       expect(repo[key]).toHaveBeenCalledWith('the-requester');
     }

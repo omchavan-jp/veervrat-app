@@ -6,6 +6,7 @@ import { AuthModule } from '../auth/auth.module';
 import { FollowsModule } from '../follows/follows.module';
 import { ExperienceLogsModule } from '../experience-logs/experience-logs.module';
 import { DataExportModule } from '../data-export/data-export.module';
+import { EmailModule } from '../email/email.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { DataExportModule } from '../data-export/data-export.module';
     forwardRef(() => FollowsModule),
     forwardRef(() => ExperienceLogsModule),
     DataExportModule,
+    EmailModule,
   ],
   controllers: [UsersController],
   providers: [UsersService, UsersRepository],
