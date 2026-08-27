@@ -31,7 +31,9 @@ const FIELD_LABEL = 'mb-2 block font-mono text-[11px] uppercase tracking-[0.1em]
 
 // 'error' distinguishes a failed availability check from 'idle' (not-yet-typed),
 // so a network failure is surfaced and retriable instead of silently swallowed.
-type UsernameStatus = 'idle' | 'checking' | 'available' | 'taken' | 'error';
+// 'invalid' distinguishes a format violation from a taken name — the API returns
+// `reason: 'invalid'` when the input does not match /^[a-z0-9_]{3,30}$/.
+type UsernameStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid' | 'error';
 
 export default function SignupPage() {
   const t = useTranslations('auth.signup');
@@ -84,7 +86,11 @@ export default function SignupPage() {
     debounceRef.current = setTimeout(async () => {
       try {
         const result = await authApi.checkUsername(username);
-        setUsernameStatus(result.available ? 'available' : 'taken');
+        if (result.available) {
+          setUsernameStatus('available');
+        } else {
+          setUsernameStatus(result.reason === 'invalid' ? 'invalid' : 'taken');
+        }
       } catch {
         setUsernameStatus('error');
       }
@@ -197,7 +203,7 @@ export default function SignupPage() {
             type="text"
             variant="underline"
             placeholder={t('usernamePlaceholder')}
-            aria-invalid={errors.username || usernameStatus === 'taken' ? true : undefined}
+            aria-invalid={errors.username || usernameStatus === 'taken' || usernameStatus === 'invalid' ? true : undefined}
             aria-describedby="signup-username-status"
             {...register('username')}
           />
@@ -213,6 +219,9 @@ export default function SignupPage() {
             )}
             {!errors.username && usernameStatus === 'taken' && (
               <p className="text-xs text-danger">{t('usernameTaken')}</p>
+            )}
+            {!errors.username && usernameStatus === 'invalid' && (
+              <p className="text-xs text-danger">{t('usernameHint')}</p>
             )}
             {!errors.username && usernameStatus === 'error' && (
               <p className="text-xs text-danger">{t('usernameError')}</p>
