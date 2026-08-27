@@ -4,7 +4,7 @@ Operational reference for Jnana Prabodhini's Microsoft tenant and the Veervrat A
 **This is the base truth.** If something here disagrees with memory, this file wins — and if
 reality diverges from this file, update the file in the same session.
 
-Last verified: **2026-08-18**
+Last verified: **2026-08-27**
 
 > Sensitive-ish but not secret: tenant/subscription IDs are identifiers, not credentials. No
 > passwords, keys, or card numbers belong in this file — ever.
@@ -193,6 +193,10 @@ First successful Azure deploy 2026-08-16. `/ready` returns `database: up, redis:
 | Migration job | `veervrat-uat-migrate` | manual trigger only, `replica_retry_limit=0`, runs the **build**-stage image |
 | Seed job | `veervrat-uat-seed` | manual trigger only; reference content, idempotent upserts |
 | Grant-admin job | `veervrat-uat-grant-admin` | manual trigger only. ⚠️ **Can mint an administrator** — targets `bootstrap_admin_email`, empty by default. Refuses unverified addresses unless deliberately overridden. Kept on purpose: it is the only way back in if admin access is lost. See conventions §22 |
+| Wipe-users job | `veervrat-uat-wipe-users` | manual trigger only; deletes all user accounts (age-gate compliance) |
+| Cleanup-expired job | `veervrat-uat-cleanup-expired` | manual trigger only; cleans expired sessions and tokens |
+| Publish-policies job | `veervrat-uat-publish-policies` | manual trigger only; publishes terms/privacy policy content |
+| Blob storage | `veervratuatuploads` | StorageV2 account, container for file uploads; api identity has Storage Blob Data Contributor + Reader |
 | Identities | `veervrat-uat-api-id`, `veervrat-uat-web-id` | user-assigned; AcrPull on the registry, api additionally Key Vault Secrets User. **No registry password or connection string anywhere** |
 | Alerting | `veervrat-uat-ops` + `veervrat-uat-psql-storage` | storage > 80%, hourly → `om.chavan@jnanaprabodhini.org` |
 
@@ -216,6 +220,10 @@ ones that matter under pressure.
 | Migration job | `veervrat-prod-migrate` | manual trigger, `replica_retry_limit=0`. ⚠️ Reported success without migrating anything until 2026-08-21 — see the traps table and conventions §21 |
 | Seed job | `veervrat-prod-seed` | reference content, idempotent upserts. First run 2026-08-21: 6 virtues, 33 subvirtues, 35 weaknesses, 226 sentences, 128 resolutions, 82 exposures, 31 challenges |
 | Grant-admin job | `veervrat-prod-grant-admin` | manual trigger. ⚠️ **Can mint an administrator** — targets `bootstrap_admin_email`, empty by default. Refuses unverified addresses unless deliberately overridden. Kept on purpose: the only way back in if admin access is lost. Conventions §22 |
+| Wipe-users job | `veervrat-prod-wipe-users` | manual trigger only; deletes all user accounts (age-gate compliance) |
+| Cleanup-expired job | `veervrat-prod-cleanup-expired` | manual trigger only; cleans expired sessions and tokens |
+| Publish-policies job | `veervrat-prod-publish-policies` | manual trigger only; publishes terms/privacy policy content |
+| Blob storage | `veervratproduploads` | StorageV2 account, container for file uploads; api identity has Storage Blob Data Contributor + Reader |
 | Identities | `veervrat-prod-api-id`, `veervrat-prod-web-id` | user-assigned; same grants as UAT |
 | Alerting | `veervrat-prod-ops` + `veervrat-prod-psql-storage` | storage > 80% |
 
@@ -559,15 +567,10 @@ relay, delivering · Google sign-in in both environments · **prod's schema crea
 verified rather than assumed (#112) · first administrator grantable (#114, conventions §22)
 
 **Next**
-- [ ] O15 / #139 — **exercised on UAT 2026-08-24** (real upload + byte-identical read-back);
-      prod storage account created by `prod-2026-08-24.1`, not yet exercised there.
-      Was scoped as a swap; became a seam instead (`StorageProvider` interface,
-      `uploads.service.ts` depends only on that, not an SDK), so the S3/MinIO path used locally
-      is unaffected and Azure Blob is a second implementation rather than a replacement.
-      `veervratuatuploads` + container + the api identity's two role grants are applied and
-      verified in UAT; prod gets them on the next `prod-*` tag. ⚠️ **No file has been uploaded
-      through the Azure path in any environment** — the infrastructure is verified, the upload
-      path is not. Closing this item needs one real upload, not a green apply.
+- [x] O15 / #139 — **closed 2026-08-24.** Blob storage implemented as a `StorageProvider`
+      strategy pattern (Azure Blob + S3/MinIO). `veervratuatuploads` and `veervratproduploads`
+      storage accounts provisioned via Terraform; exercised on UAT with real upload +
+      byte-identical read-back.
 - [ ] Update `infra-budget-log.md` target architecture: "Azure Cache Basic C0" → Azure Managed
       Redis `Balanced_B0` (the former no longer accepts new deployments — see §5)
 - [ ] Revisit `api_min_replicas = 1` on prod before beta testers arrive — scale-to-zero means a

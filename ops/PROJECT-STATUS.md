@@ -20,11 +20,11 @@ stop them reading your journeys.
 
 **Five things need you, not me** — full list in `ops/audit/README.md`:
 
-1. 🔴 **O18** below — a real password is in git history. Rotate it.
-2. 🔴 **#217** — data export has no UI; #135 was closed with an endpoint no user can call.
+1. ~~🔴 **O18** — password in git history~~ → rotated, O24 closed 2026-08-27.
+2. ~~🔴 **#217** — data export has no UI~~ → implemented, PR #233 merged, #217 closed 2026-08-27.
 3. Ratify or overrule: accepting an invitation now makes someone a vratmitra **self-service**.
 4. Decide notification destinations (#218) and whether the two deep-link maps should agree.
-5. Decide whether `ENDED` joins `VmRelationshipState`.
+5. ~~Decide whether `ENDED` joins `VmRelationshipState`~~ → implemented, PR #233 merged 2026-08-27.
 
 ---
 
@@ -221,20 +221,19 @@ with its guard.
 `openspec/changes/` — genuinely incomplete work, not process debt. Task counts verified
 2026-08-27. Archived changes live in `openspec/changes/archive/`.
 
-**Should archive (all tasks done):**
-- `bootstrap-admin-grant` — 32/32 (#40 closed)
-- `vratmitra-roster` — 14/14
+**Archived 2026-08-27** (PR #234 + this batch):
+`bootstrap-admin-grant` (32/32), `vratmitra-roster` (14/14), `data-export-ui` (13/13),
+`ended-enum` (8/8), `capability-grants` (35/35). All in `openspec/changes/archive/`.
 
-**Near-complete (1–2 tasks remaining, primary issues closed):**
-- `capability-grants` — 35/36
+**Near-complete (1–2 tasks remaining):**
 - `upload-visibility` — 29/31 (#139 closed)
 
 **In progress:**
 
 | Change | Tasks | Note |
 |---|---|---|
-| `ui-ux-remediation` | 36/42 | 6 remaining |
-| `age-gate-and-consent` | 39/45 | 6 remaining |
+| `ui-ux-remediation` | 36/39 | 3 remaining |
+| `age-gate-and-consent` | 39/42 | 3 remaining |
 | `content-suggestions` | 24/28 | |
 | `received-invitations` | 19/23 | |
 | `server-resolved-auth` | 19/24 | |

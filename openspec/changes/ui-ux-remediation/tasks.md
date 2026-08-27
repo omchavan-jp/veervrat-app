@@ -51,7 +51,9 @@
 - [x] 1.12 Extend `Input`: add `underline`/`ghost` variant so auth pages stop overriding the primitive (RC05/CONSISTENCY). Update test.
 - [x] 1.13 Rebuild `StatusBanner` on top of `Alert` with `success`/`danger` tokens + `role="alert"` (RC06). Update test.
 - [x] 1.14 `QueryBoundary` helper (loading→Spinner, error→Alert+retry, empty→EmptyState) for RC03 adoption. Unit test.
-- [ ] 1.15 Add default mutation `onError` toast at the QueryClient level (RC04). Test.
+- [x] 1.15 Add default mutation `onError` toast at the QueryClient level (RC04). Test.
+  Done 2026-08-27: `setMutationErrorToast` bridge in `query-client.ts`, wired in `providers.tsx`.
+  Skips mutations with their own `onError` (avoids double toast). Uses `errorMessage()` for 4xx.
   ⚠️ **Un-ticked 2026-08-21 — this was never implemented.** `apps/web/lib/query-client.ts` has no
   `MutationCache` and no global `onError`; the whole file is `staleTime` + `refetchOnWindowFocus`.
   The session-1 note says it was "folded into RC04/Tier 2", but RC04 (3.2) delivered *per-call*
