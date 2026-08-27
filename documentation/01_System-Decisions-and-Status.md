@@ -16,7 +16,7 @@ This is the master reference for all technology and architecture decisions. Read
 | ORM | Prisma | ✅ Built — driver adapter (`PrismaPg`), explicit pool sizing |
 | Cache / sessions store | Redis | ✅ Live — Azure Managed Redis; rate limits, lockout, Socket.IO adapter |
 | Search | Meilisearch | Decided, **deferred** — runs in docker-compose locally, **not deployed**; search degrades gracefully |
-| File storage | MinIO locally · **Azure Blob** in cloud | ⚠️ Decided but **not implemented** — code still speaks S3 (`@aws-sdk/client-s3`), which Azure Blob does not. Uploads degrade gracefully (chat images disabled). O15 / B-items |
+| File storage | MinIO locally · **Azure Blob** in cloud | ✅ **Implemented** (#139, 2026-08-24) — strategy pattern selects `azure-blob-storage.provider.ts` (cloud) or `s3-storage.provider.ts` (local MinIO). Azure Blob accounts provisioned (`veervratuatuploads`, `veervratproduploads`). Exercised on UAT with real upload + byte-identical read-back. ⚠️ `content-overrides.repository.ts` still imports `@aws-sdk/client-s3` directly |
 | Hosting | **Azure** (Container Apps, Central India) | ✅ **UAT live and serving**; prod deployed 2026-08-16 but 🔴 **not usable** — prod web talks to UAT's api (O22) and no login path works (O23). See `../DEPLOYMENT.md` |
 | CI / CD | GitHub Actions | ✅ Both — CI gates PRs; CD builds → migrates → deploys UAT on merge, prod by `prod-*` tag |
 | Observability | Sentry (app errors) + stdout logs | **api: live and verified in both UAT and prod** (2026-08-23/24) — DSN set in both Key Vaults, confirmed by triggering a real error and watching it arrive in Sentry, not just by the config looking right. **web: live and verified in UAT only.** ⚠️ Prod's web container has **no `SENTRY_DSN` env var at all** as of this writing — confirmed directly (`az containerapp show -n veervrat-prod-web ... env`), not assumed from git history — because the frontend Sentry PR (#175) has not yet reached prod via a `prod-*` tag. Verify with that command before treating prod web as covered. **Azure App Insights dropped** — it was the only Azure-coupled piece and was never started; see `18_Observability-Standard.md`. Issue #79 (closed) |
@@ -94,10 +94,10 @@ locked out with no self-service route (issue **#74**).
 **Why**: simple, fast, good enough for the app's needs. Async indexing via events/jobs.
 **Status**: ⚠️ **Running locally, not deployed.** Meilisearch *is* in `docker-compose.yml`. It is not deployed to Azure — search degrades gracefully, and entity search was moved off Meili onto Postgres trigram indexes so vratmitra lookup works without it.
 
-### 10. S3-compatible object storage
-**Decision**: ~~use S3-compatible API for file storage, provider TBD~~ → **superseded 2026-08 by D7**: Azure Blob Storage, with managed identity instead of static keys. ⚠️ The code still speaks the S3 API (`@aws-sdk/client-s3`), which Azure Blob does **not** — an SDK swap is required before Blob can be provisioned (O15). Uploads degrade gracefully meanwhile (chat images disabled). MinIO remains the local-dev provider.
-**Why**: app needs file uploads (images, documents). S3 API is the standard abstraction — provider is pluggable.
-**Status**: ⚠️ Provider **is** chosen (Azure Blob, D7). The SDK swap is what remains — see the note above and O15.
+### 10. Azure Blob Storage
+**Decision**: ~~S3-compatible API~~ → **Azure Blob Storage** (D7), with managed identity instead of static keys. **Implemented** as #139 (2026-08-24). Strategy pattern: `azure-blob-storage.provider.ts` (cloud) / `s3-storage.provider.ts` (local MinIO). Azure Blob accounts: `veervratuatuploads`, `veervratproduploads`.
+**Why**: app needs file uploads (images, documents). Provider-agnostic abstraction via a strategy interface.
+**Status**: ✅ **Done.** Exercised on UAT 2026-08-24 (real upload + byte-identical read-back). ⚠️ One residual: `content-overrides.repository.ts` still imports `@aws-sdk/client-s3` directly, bypassing the abstraction.
 
 ### 11. Monorepo with pnpm + Turborepo
 **Decision**: monorepo using pnpm workspaces and Turborepo.
@@ -136,7 +136,7 @@ These are acknowledged but not yet decided in detail:
 | ~~Hosting~~ | ✅ Decided 2026-08 — **Azure**, Central India, single cloud + Terraform. Container Apps (not self-run Kubernetes), managed Postgres/Redis, zero VMs. See `../ops/azure-account-facts.md` and `21_Infrastructure-Conventions.md` |
 | ~~Release process~~ | ✅ Decided 2026-08-16 (O6) — single `main` trunk, UAT auto-deploys on merge, prod ships by `prod-*` tag promoting the same image. See `../AGENTS.md` → Git conventions |
 | ~~CI/CD~~ | ✅ **Both built** (O18) — CI gates PRs; CD does build → migrate → deploy with GitHub OIDC to Azure, no stored secrets. ⚠️ Merge is **not** blocked on green checks: branch protection is paywalled on this plan (issue #85) |
-| Object storage | Provider decided (Azure Blob) but **not implemented** — app still uses the S3 API via `@aws-sdk/client-s3`; needs an `@azure/storage-blob` swap |
+| ~~Object storage~~ | ✅ **Implemented** (#139, 2026-08-24) — Azure Blob with strategy pattern (`azure-blob-storage.provider.ts` / `s3-storage.provider.ts`). Exercised on UAT |
 | ~~AI/recommendations~~ | ✅ Deferred to v2 explicitly. See spec/decisions/08_out-of-scope.md |
 | ~~Visual design system~~ | ✅ Decided **and built** — tokens, typography, dark mode, motion, component language. `15_Design-System.md` (now merged with the former design-language doc) + `15a_UI-Consistency-Rules.md` |
 
