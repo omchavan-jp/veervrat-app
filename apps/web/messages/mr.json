@@ -1256,7 +1256,9 @@
     "toggleFeaturedError": "वैशिष्ट्यीकृत स्थिती अद्ययावत करता आली नाही. कृपया पुन्हा प्रयत्न करा.",
     "noBlogs": "अद्याप कोणतेही ब्लॉग नाहीत",
     "noExperiences": "अद्याप कोणतेही अनुभव नाहीत",
-    "cmsKeyLabel": "की"
+    "cmsKeyLabel": "की",
+    "suggestionsTitle": "मजकूर सूचना",
+    "suggestionsDesc": "लोकांनी काय सुचवले, आणि ते कुठे जाते"
   },
   "adminUsers": {
     "title": "वापरकर्ते",

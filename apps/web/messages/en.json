@@ -1256,7 +1256,9 @@
     "toggleFeaturedError": "Couldn't update featured status. Please try again.",
     "noBlogs": "No blogs yet",
     "noExperiences": "No experiences yet",
-    "cmsKeyLabel": "Key"
+    "cmsKeyLabel": "Key",
+    "suggestionsTitle": "Content suggestions",
+    "suggestionsDesc": "What people have proposed, and where it goes"
   },
   "adminUsers": {
     "title": "Users",
