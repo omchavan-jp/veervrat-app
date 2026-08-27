@@ -3,7 +3,9 @@ import { render, screen, fireEvent, act, waitFor } from '@testing-library/react'
 import { ApiError } from '@/lib/api/client';
 
 const resendVerification = vi.fn();
-vi.mock('@/lib/api/auth', () => ({ authApi: { resendVerification: (e: string) => resendVerification(e) } }));
+vi.mock('@/lib/api/auth', () => ({
+  authApi: { resendVerification: (e: string) => resendVerification(e) },
+}));
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string, vars?: Record<string, unknown>) =>
     vars ? `${key}:${Object.values(vars).join(',')}` : key,

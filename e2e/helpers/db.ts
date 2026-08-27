@@ -8,13 +8,30 @@ const CONTAINER = process.env.E2E_PG_CONTAINER ?? 'veervrat-postgres';
 const DB = process.env.E2E_PG_DB ?? 'veervrat';
 const USER = process.env.E2E_PG_USER ?? 'veervrat';
 
+// In CI there is no `veervrat-postgres` container to exec into — Postgres is a service
+// container reached over the network — so `docker exec` failed on the very first helper call and
+// took global-setup down with it. When `E2E_PG_HOST` is set we talk to psql directly; unset, the
+// local docker path is unchanged.
+const HOST = process.env.E2E_PG_HOST;
+// Defaults to 5432 (the CI service container). Settable so the direct path can be exercised
+// locally, where the dev container publishes 5433 — otherwise this branch could only ever be
+// tested by pushing, which is the habit this audit exists to break.
+const PORT = process.env.E2E_PG_PORT ?? '5432';
+const PSQL_ARGS = ['-t', '-A', '-F', '\t'] as const;
+
 // Run SQL and return rows as arrays of column strings (tab-separated, -A -F'\t').
 export function sql(query: string): string[][] {
-  const out = execFileSync(
-    'docker',
-    ['exec', CONTAINER, 'psql', '-U', USER, '-d', DB, '-t', '-A', '-F', '\t', '-c', query],
-    { encoding: 'utf8' },
-  );
+  const out = HOST
+    ? execFileSync(
+        'psql',
+        ['-h', HOST, '-p', PORT, '-U', USER, '-d', DB, ...PSQL_ARGS, '-c', query],
+        { encoding: 'utf8' },
+      )
+    : execFileSync(
+        'docker',
+        ['exec', CONTAINER, 'psql', '-U', USER, '-d', DB, ...PSQL_ARGS, '-c', query],
+        { encoding: 'utf8' },
+      );
   return out
     .trim()
     .split('\n')

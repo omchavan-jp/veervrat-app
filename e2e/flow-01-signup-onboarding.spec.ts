@@ -19,16 +19,38 @@ test.describe('Flow 1: signup → onboarding → app access', () => {
 
   test('new user signs up via the form and verifies their email', async ({ page }) => {
     await page.goto('/signup');
-    // Labels aren't htmlFor-associated; target by type/order (displayName, username, then email/password).
-    await page.locator('input[type="text"]').nth(0).fill(user.displayName);
-    await page.locator('input[type="text"]').nth(1).fill(user.username);
-    await page.locator('input[type="email"]').fill(user.email);
-    await page.locator('input[type="password"]').first().fill(user.password);
+    // The email route is collapsed by default — Google is the primary path and the email
+    // fields are one click away (signup/page.tsx, the `emailCta` Collapsible). Tests written
+    // against the older single-form page looked for a password field that is not rendered yet.
+    // Fields are targeted by id, not by index. Index-targeting is what broke this spec: the
+    // restructure put username above the collapsible and displayName inside it, silently
+    // swapping nth(0) and nth(1) so the account was created with the two values reversed —
+    // or not at all.
+    await page.fill('#signup-username', user.username);
+
+    // Date of birth: a DatePicker popover, not a text field (the 18+ gate, #133). It opens on
+    // the most recent qualifying month with later dates disabled, so day 1 of that month is
+    // always a valid choice.
+    await page.getByRole('button', { name: /select your date of birth/i }).click();
+    // Day cells carry a full accessible date ("Monday, 1 September 2008"), not a bare number,
+    // so pick the first day the calendar has not disabled rather than matching on text.
+    await page.locator('[role="gridcell"] button:not([disabled])').first().click();
+
+    // Consent is required at account creation and the server rejects a registration without
+    // it. A signup spec that skips the checkbox is not testing signup.
+    await page.locator('input[type="checkbox"]').first().check();
+
+    // The email route is collapsed by default — Google is the primary path.
+    await page.getByRole('button', { name: /sign up with email/i }).click();
+    await page.fill('#signup-displayName', user.displayName);
+    await page.fill('#signup-email', user.email);
+    await page.fill('#signup-password', user.password);
     await page.waitForTimeout(700); // username availability debounce
-    await page
-      .getByRole('button', { name: /sign ?up|create account|register/i })
-      .first()
-      .click();
+    // Exact match on purpose: /sign ?up/ also matches "Sign up with email instead", and
+    // `.first()` picks that one in DOM order — so the click closed the panel it had just
+    // opened and no submit ever fired. The account was never created and the failure surfaced
+    // 15 seconds later as a missing verification token.
+    await page.getByRole('button', { name: /^create account$/i }).click();
 
     // The account now exists with a verification token.
     await expect

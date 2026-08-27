@@ -4,7 +4,11 @@ import { ApiError } from '@/lib/api/client';
 import { queryKeys } from '@/lib/api/query-keys';
 
 /** Drive a query to failure through the real cache, so the real onError path runs. */
-async function failQuery(client: ReturnType<typeof makeQueryClient>, key: unknown[], error: unknown) {
+async function failQuery(
+  client: ReturnType<typeof makeQueryClient>,
+  key: unknown[],
+  error: unknown,
+) {
   await client
     .fetchQuery({ queryKey: key, queryFn: () => Promise.reject(error), retry: false })
     .catch(() => undefined);

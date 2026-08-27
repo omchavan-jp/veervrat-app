@@ -108,6 +108,53 @@ describe('Accepting a vratmitra invitation — integration', () => {
     expect(roles.map((r) => r.role).sort()).toEqual(['VRATARTHI', 'VRATMITRA']);
   });
 
+  // The other half of "Ledger #8". An invitation to an address with no account is created with
+  // `inviteeId = null`; nothing filled it in at signup, so the invitation pointed at nobody and
+  // the identity check refused the very person it was addressed to — permanently. Inviting
+  // someone who is not yet on Veervrat could never complete.
+  it('links an invitation sent to a stranger once that stranger signs up, so they can accept', async () => {
+    const strangerEmail = 'not_yet_a_member@test.com';
+    const inviter = await makeSignedUpUser('link_va');
+
+    const sent = await post('/api/v1/invitations', inviter.token).send({
+      type: 'VM_GLOBAL',
+      inviteeEmail: strangerEmail,
+    });
+    expect(sent.status, JSON.stringify(sent.body)).toBe(201);
+
+    const before = await prisma().invitation.findUnique({ where: { id: sent.body.data.id } });
+    expect(before!.inviteeId, 'no account exists yet, so nothing to point at').toBeNull();
+
+    // The account arrives afterwards, through the same creation path signup uses.
+    const arrived = await prisma().user.create({
+      data: {
+        dob: new Date('1990-01-01'),
+        email: strangerEmail,
+        displayName: 'Newcomer',
+        username: 'newcomer',
+        emailVerifiedAt: new Date(),
+        roles: { create: { role: 'VRATARTHI' } },
+      },
+    });
+    // createUserWithEmailAccount does this via linkPendingInvitations; replicated here because
+    // this spec creates the row directly. The behaviour under test is what accept then does.
+    await prisma().invitation.updateMany({
+      where: { inviteeEmail: strangerEmail, inviteeId: null, status: 'PENDING' },
+      data: { inviteeId: arrived.id },
+    });
+
+    const linked = await prisma().invitation.findUnique({ where: { id: sent.body.data.id } });
+    expect(linked!.inviteeId).toBe(arrived.id);
+
+    const session = `session-token-${arrived.id}`;
+    await prisma().session.create({
+      data: { userId: arrived.id, token: session, expiresAt: new Date(Date.now() + 86400000) },
+    });
+
+    const res = await post(`/api/v1/invitations/${before!.token}/accept`, session);
+    expect(res.status, JSON.stringify(res.body)).toBe(200);
+  });
+
   it('NEGATIVE: someone who is not the invitee cannot accept, even knowing the token', async () => {
     const token = await sendInvite();
 

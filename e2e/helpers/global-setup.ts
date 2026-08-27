@@ -41,7 +41,18 @@ async function ensure(user: TestUser, roles: string[]): Promise<void> {
 // Playwright globalSetup — runs once before the suite. Seeds the privileged/shared accounts
 // the flows depend on (they don't exist in the base seed). Non-destructive on the dev DB.
 export default async function globalSetup(): Promise<void> {
+  // ADMIN and MODERATOR are granted directly because the product has no path to those roles —
+  // deliberately. There is nothing a test could drive instead.
   await ensure(ADMIN, ['admin']);
   await ensure(MODERATOR, ['moderator']);
-  await ensure(VM, ['vratmitra']);
+
+  // VM gets NO role here. It used to get `vratmitra` by raw SQL, and that one line is why
+  // `flow-03-vm-invite-approve.spec.ts` passed for months while accepting a vratmitra
+  // invitation returned 403 to every real user: accepting required the role, nothing in the
+  // product granted it, and the fixture supplied it before the flow began. The suite was
+  // asserting against a state no user could reach.
+  //
+  // Accepting an invitation now grants the role (invitations.service, #214), so the flows earn
+  // it the way a person does. Do not add a role here for anything a user can reach on their own.
+  await ensure(VM, []);
 }

@@ -23,7 +23,9 @@ service containers.
 - **`prettier/prettier` is enforced via eslint** on api code. Repo-wide
   `format:check` is NOT a CI gate (≈471 unformatted markdown/spec docs — a separate
   cosmetic cleanup, out of scope for the code gate).
-- **Playwright E2E is not in CI yet** — it needs the full docker stack (pg/redis/
-  meili/minio) + both servers; deferred to a dedicated workflow. Unit + integration +
-  build cover the code paths.
+- **Playwright E2E runs in CI** (`e2e.yml`, wired 2026-08-27). It had existed and run nowhere;
+  the stated reason was the docker stack, but the real one was that registration is throttled to
+  5/hour and the suite needs ~15 accounts. "Unit + integration + build cover the code paths" was
+  the belief that let a string of defects reach a person instead of a test — see
+  `ops/audit/01-e2e-runtime-pass.md`.
 - Everything here was verified green locally before the workflows were written.

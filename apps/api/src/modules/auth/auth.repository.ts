@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AuthProvider, Role, VerificationType, Prisma } from '@prisma/client';
+import { AuthProvider, InvitationStatus, Prisma, Role, VerificationType } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 
 // Shared select shape that returns all fields needed for SessionUser
@@ -58,7 +58,7 @@ export class AuthRepository {
     // user. A crash between the two would leave an account whose agreement has no record, and
     // that is the one state here that cannot be repaired afterwards — there is nothing to
     // reconstruct it from.
-    return this.prisma.user.create({
+    const user = await this.prisma.user.create({
       data: {
         email: params.email,
         displayName: params.displayName,
@@ -76,6 +76,29 @@ export class AuthRepository {
         roles: { create: { role: Role.VRATARTHI } },
       },
       select: userSelect,
+    });
+    await this.linkPendingInvitations(user.id, user.email);
+    return user;
+  }
+
+  /**
+   * Point invitations addressed to this email at the account that now holds it.
+   *
+   * A vratmitra invitation to someone not yet on Veervrat is created with `inviteeId = null` —
+   * there is no account to reference. Nothing filled it in when they signed up, so the
+   * invitation kept pointing at nobody and `vm_invitation.accept`, which requires
+   * `invitation.inviteeId === user.id`, refused them forever. Inviting a person by email could
+   * therefore never complete. Recorded in `e2e/flow-04` as the second half of "Ledger #8", in a
+   * skipped test, and nowhere else.
+   *
+   * Lives here rather than in InvitationsRepository because InvitationsModule imports AuthModule;
+   * the reverse would be a cycle. Only PENDING invitations are linked — an expired or cancelled
+   * one stays as it was.
+   */
+  private async linkPendingInvitations(userId: string, email: string): Promise<void> {
+    await this.prisma.invitation.updateMany({
+      where: { inviteeEmail: email, inviteeId: null, status: InvitationStatus.PENDING },
+      data: { inviteeId: userId },
     });
   }
 
@@ -161,7 +184,7 @@ export class AuthRepository {
     // dob and consents are required here too. The OAuth path is a second route to account
     // creation, and a gate on only one route is not a gate — they come from the pending-signup
     // record created before the redirect.
-    return this.prisma.user.create({
+    const user = await this.prisma.user.create({
       data: {
         email: params.email,
         displayName: params.displayName,
@@ -180,6 +203,8 @@ export class AuthRepository {
       },
       select: userSelect,
     });
+    await this.linkPendingInvitations(user.id, user.email);
+    return user;
   }
 
   async markEmailVerified(userId: string) {

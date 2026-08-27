@@ -1,11 +1,27 @@
 import { test, expect } from '@playwright/test';
+import { makeUser, registerAndOnboard } from './helpers/auth';
+import { deleteUserByEmail } from './helpers/db';
 
 // Critical-path smoke flows against the running stack (web :3000 + api :3001).
-// Uses the seeded local-dev VA account. Resilient selectors (role/label/url) over
-// brittle DOM structure. Covers: guest redirect, login, authenticated navigation,
-// language persistence — the flows that gate every other feature.
+// Resilient selectors (role/label/url) over brittle DOM structure. Covers: guest redirect,
+// login, authenticated navigation, language persistence — the flows that gate every other
+// feature.
+//
+// The account is created by the suite. It used to be a hardcoded real personal address and
+// its plaintext password, which was wrong twice over: a live credential committed to the
+// repository, and a test whose outcome depended on the state of one human's account. It
+// failed for exactly that reason — the account predates the consent gate, so a blocking
+// consent dialog intercepted every click and no navigation assertion could run. A registered
+// account consents during registration and starts clean.
+const VA = makeUser('nav');
 
-const VA = { email: 'om.chavan501@gmail.com', password: 'Om@12345678' };
+test.beforeAll(async () => {
+  await registerAndOnboard(VA);
+});
+
+test.afterAll(() => {
+  deleteUserByEmail(VA.email);
+});
 
 async function login(page: import('@playwright/test').Page) {
   await page.goto('/login');

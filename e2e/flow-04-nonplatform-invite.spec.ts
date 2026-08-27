@@ -55,9 +55,16 @@ test.describe('Flow 4: non-platform VM invite → signup → accept', () => {
     expect(exists).toBe('1');
   });
 
-  // BLOCKED (Ledger #8): accepting the VM role after signup requires invite→account linking +
-  // VRATMITRA role grant that is not yet implemented. Re-enable when that backfill lands.
-  test.skip('the new user accepts the VM role via the invite link', async () => {
+  // Re-enabled 2026-08-27. Was skipped as "BLOCKED (Ledger #8): accepting the VM role after
+  // signup requires invite→account linking + VRATMITRA role grant that is not yet implemented."
+  //
+  // That note was correct, and it was the only place the defect was written down. Nothing
+  // tracked it into an issue or a beta blocker, so for months the product shipped an invitation
+  // flow that returned 403 to every real user while this — the one test that would have caught
+  // it — sat skipped. A skipped test is not a record; it is a defect nobody is looking at.
+  //
+  // Accepting now grants the role (#214), so the path works and this runs.
+  test('the new user accepts the VM role via the invite link', async () => {
     const token = latestInvitationToken(newcomer.email)!;
     const nc = await loginApi(newcomer);
     const accept = await nc.ctx.post(`/api/v1/invitations/${token}/accept`, {

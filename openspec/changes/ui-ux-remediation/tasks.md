@@ -1,4 +1,16 @@
-> Defect IDs (D001–D453, B001–B005, RC01–RC13) refer to `/Users/omc1/Documents/om/jp/veervrat/ui-audit/UI_DEFECTS.md`. Each tier is independently shippable; commit one tier (or one sweep) at a time. Run `pnpm --filter web typecheck` + relevant Vitest after each, full E2E before archive.
+> ⚠️ **The defect register this change is written against no longer exists** (audit 2026-08-27,
+> `ops/audit/02-completion-records.md`). Defect IDs D001–D453, B001–B005 and RC01–RC13 refer to
+> `/Users/omc1/Documents/om/jp/veervrat/ui-audit/UI_DEFECTS.md`, and so does the deferred list
+> `sweep-deferred.json`. Neither file exists anywhere on disk — the `om/jp/` tree they lived
+> under is gone, and both were outside version control, which is precisely the risk `CLAUDE.md`
+> records about untracked working files.
+>
+> **Consequence: no defect ID in this document can be resolved by anyone.** "D207 fixed" is
+> unverifiable and unfalsifiable. Ticks below that describe a concrete code change remain
+> checkable against the code; ticks that only cite a defect ID do not.
+>
+> Each tier is independently shippable; commit one tier (or one sweep) at a time. Run
+> `pnpm --filter web typecheck` + relevant Vitest after each, full E2E before archive.
 
 > **Progress (session 1):**
 > - **Tier 0 complete** (1.1–1.14): all primitives built + wired + tested (18 new tests), zero new deps, full web suite green (112), tsc clean. Commit `0259270`. (1.15 global mutation-onError folded into RC04/Tier 2 — Toast provider is wired; per-call adoption pending.)
@@ -83,7 +95,11 @@
   mutate: **9 of 17** app-wide, **1 of 7** in admin. Tracked separately — this is a design question,
   not a sweep.
 - [x] 3.3 RC05: convert raw `<label>`/`<input>`/`<textarea>` to `Field`+`Input`/`Textarea` with association + aria wiring across auth, onboarding, settings, journey detail, custom-erc, checkin, blog comment, chat composer.
-- [x] 3.4 RC09: swap hand-rolled widgets for primitives — `Tabs` for the journey tab bar, `Dialog`/`AlertDialog` for the exit-confirm + delete-account modals, `RadioGroup` for language/gender, `Collapsible` for disclosures, `ToggleGroup` for score/status; add `aria-label` to icon-only triggers (notification bell, mobile avatar).
+- [x] 3.4 RC09: swap hand-rolled widgets for primitives — `Tabs` for the journey tab bar, `Dialog` for the exit-confirm + delete-account modals, `RadioGroup` for language/gender, `Collapsible` for disclosures, `ToggleGroup` for score/status; add `aria-label` to icon-only triggers (notification bell, mobile avatar).
+  *Wording corrected 2026-08-27: this said `Dialog`/`AlertDialog`, and no `AlertDialog` component
+  was ever built. The work was done — `settings/page.tsx:881` uses the `Dialog` primitive for the
+  delete-account confirm, focus-trapped and keyboard-navigable. The tick stands; only the name of
+  a component that does not exist was removed, so the claim can be checked.*
 
 ## 4. Tier 3 — Individual high-impact defects
 
@@ -104,5 +120,9 @@
 - [x] 5.1 `pnpm --filter web typecheck` clean; `pnpm --filter web build` succeeds.
 - [x] 5.2 Vitest/RTL (web) green incl. new primitive tests; backend suites untouched/green.
 - [ ] 5.3 Playwright E2E suite — NOT YET RUN. The E2E suite requires the full docker stack (pg/redis/meili/minio) + both servers; deferred to a dedicated run. Unit/RTL (113) + production build are green, and a manual browser re-walk (5.4) verified the key flows.
-- [x] 5.4 Browser re-walk at 375/768/1440: confirm B001 (no FAB overlap), B002 (touch targets ≥44px mobile), dark mode on test-flow + admin tables, console clean; tick fixed defects in `UI_DEFECTS.md`.
+- [ ] 5.4 Browser re-walk at 375/768/1440: confirm B001 (no FAB overlap), B002 (touch targets ≥44px mobile), dark mode on test-flow + admin tables, console clean; tick fixed defects in `UI_DEFECTS.md`.
+  **Un-ticked 2026-08-27.** Not because the re-walk did not happen — it may well have — but
+  because its entire result was recorded in `UI_DEFECTS.md`, which no longer exists. A tick whose
+  evidence cannot be produced is a claim, not a record. B001 and B002 are unresolvable: nobody can
+  now say what they were. Re-doing this means re-deriving the checks, not finding the old file.
 - [x] 5.5 en/mr message-key parity check passes.
