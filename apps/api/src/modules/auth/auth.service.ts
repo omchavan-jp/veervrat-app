@@ -18,6 +18,7 @@ import {
   EntityNotFoundException,
   EntityInUseException,
   AccountLockedException,
+  NoPasswordSetException,
 } from '../../common/exceptions/app.exceptions';
 import { meetsMinimumAge } from '../../common/age/age';
 import { outstandingConsents } from './consent/outstanding-consents';
@@ -686,8 +687,10 @@ export class AuthService {
   ): Promise<{ sessionToken: string }> {
     const emailAccount = await this.authRepository.findEmailAccountByUserId(userId);
     if (!emailAccount?.passwordHash) {
-      // Google-only account — no password to change.
-      throw new EntityNotFoundException('AuthAccount', userId);
+      // Google-only account — no password to change. Telling them the entity is "not found"
+      // names a database table and misstates the problem: nothing is missing, the operation
+      // simply does not apply to their account type.
+      throw new NoPasswordSetException();
     }
     const valid = await bcrypt.compare(currentPassword, emailAccount.passwordHash);
     if (!valid) throw new InvalidCredentialsException();
@@ -802,7 +805,7 @@ export class AuthService {
   ): Promise<{ provider: AuthProvider }> {
     const accounts = await this.authRepository.listAuthAccounts(userId);
     const target = accounts.find((a) => a.provider === provider);
-    if (!target) throw new EntityNotFoundException('AuthAccount', provider);
+    if (!target) throw new EntityNotFoundException('Login method', provider);
 
     // A login method counts if it can authenticate: an EMAIL account with a password, or any
     // OAuth provider. Block removing the last one (would orphan the account).

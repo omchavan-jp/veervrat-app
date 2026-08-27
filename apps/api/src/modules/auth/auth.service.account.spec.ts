@@ -15,6 +15,7 @@ import {
   DuplicateEntityException,
   EntityInUseException,
   EntityNotFoundException,
+  NoPasswordSetException,
   TokenInvalidException,
 } from '../../common/exceptions/app.exceptions';
 
@@ -81,7 +82,7 @@ describe('AuthService — changePassword', () => {
     };
     const service = makeService(repo);
     await expect(service.changePassword('u1', 'x', 'newpassword1')).rejects.toBeInstanceOf(
-      EntityNotFoundException,
+      NoPasswordSetException,
     );
   });
 });

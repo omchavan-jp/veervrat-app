@@ -269,6 +269,18 @@ export class CustomErcAlreadyPendingException extends ConflictException {
   }
 }
 
+// A password-bearing action was attempted on an account that has no password set
+// (e.g. a Google-only user calling changePassword). The user is not missing — the
+// operation simply does not apply to their account type.
+export class NoPasswordSetException extends UnprocessableEntityException {
+  constructor() {
+    super({
+      error: 'NO_PASSWORD_SET',
+      message: 'This account has no password. Set a password first using forgot-password or the settings page.',
+    });
+  }
+}
+
 export class EntityInUseException extends ConflictException {
   constructor(entity: string, reason: string) {
     super({
