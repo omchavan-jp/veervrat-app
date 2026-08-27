@@ -3,13 +3,26 @@
 import { useEffect, useState } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
-import { makeQueryClient } from './query-client';
+import { makeQueryClient, setMutationErrorToast } from './query-client';
 import { queryKeys } from './api/query-keys';
 import { setUnauthorizedHandler } from './api/client';
 import type { SessionUser } from './session-user';
 import { BfcacheGuard } from '@/components/shared/bfcache-guard';
-import { ToastProvider, Toaster } from '@/components/ui/toast';
+import { ToastProvider, Toaster, useToast } from '@/components/ui/toast';
 import { TooltipProvider } from '@/components/ui/tooltip';
+
+/**
+ * Bridges the mutation-error callback (which runs outside React) to the toast system (which
+ * requires React context). Mounted inside `<ToastProvider>` so `useToast` resolves.
+ */
+function MutationErrorBridge() {
+  const { add } = useToast();
+  useEffect(() => {
+    setMutationErrorToast((message) => add({ title: message, type: 'error' }));
+    return () => setMutationErrorToast(null);
+  }, [add]);
+  return null;
+}
 
 export function Providers({
   children,
@@ -51,6 +64,7 @@ export function Providers({
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <ToastProvider>
+        <MutationErrorBridge />
         <QueryClientProvider client={queryClient}>
           <TooltipProvider>
             <BfcacheGuard />
