@@ -30,8 +30,9 @@ enum Role {
 // each time a feature joined it, leaving audit rows that record a grant whose consequences
 // drifted after the fact.
 enum Capability {
-  FEEDBACK_WIDGET @map("feedback_widget")
-  CONTENT_EDIT    @map("content_edit")
+  FEEDBACK_WIDGET  @map("feedback_widget")
+  CONTENT_EDIT     @map("content_edit")
+  CONTENT_SUGGEST  @map("content_suggest")
 
   @@map("capability")
 }
@@ -293,6 +294,8 @@ model User {
   @@index([username])
   @@index([email])
   @@map("users")
+
+  contentSuggestions ContentSuggestion[] @relation("SuggestionAuthor")
 }
 
 model UserRole {
@@ -1279,4 +1282,82 @@ model AuditEvent {
   @@index([action])
   @@index([createdAt])
   @@map("audit_events")
+}
+
+// ─── Content suggestions ───────────────────────────────────────────────────────
+// Someone who knows what the content should say, saying it in the place it belongs.
+// Feedback captures which page but never where on it; the content editor can only edit what is
+// already a CmsPage. A suggestion is the frontier case: propose content that does not exist yet.
+// See openspec/changes/content-suggestions/.
+
+enum SuggestionKind {
+  ADD_SECTION @map("add_section")
+  EDIT_COPY   @map("edit_copy")
+  ADD_FIELD   @map("add_field")
+  REMOVE      @map("remove")
+  NOTE        @map("note")
+
+  @@map("suggestion_kind")
+}
+
+enum SuggestionStatus {
+  NEW      @map("new")
+  TRIAGED  @map("triaged")
+  ACCEPTED @map("accepted")
+  DECLINED @map("declined")
+  // Distinct from ACCEPTED on purpose: "we agreed" and "it is live" are different facts, and
+  // collapsing them is how a register comes to claim work that has not shipped.
+  SHIPPED  @map("shipped")
+
+  @@map("suggestion_status")
+}
+
+model ContentSuggestion {
+  id       String           @id @default(uuid()) @db.Uuid
+  authorId String           @map("author_id") @db.Uuid
+  kind     SuggestionKind
+  status   SuggestionStatus @default(NEW)
+
+  // Where it was made. Captured by the picker, never typed.
+  //
+  // Four signals, ordered by how well they survive the page changing. A reader resolves an
+  // anchor by trying anchorKey, then anchorText within the route, then anchorPath. When all
+  // three miss, entityType + entityId + route still say which thing on which page — which is
+  // enough to act on. anchorPath is recorded because it is free and sometimes exact; nothing
+  // may be built that assumes it resolves.
+  route      String // the PATTERN, e.g. /weaknesses/[id] — not the resolved URL
+  url        String // the resolved URL, for going back to the exact page
+  entityType String? @map("entity_type")
+  entityId   String? @map("entity_id")
+  locale     String // which language the author was reading when they wrote it
+  anchorKey  String? @map("anchor_key")
+  anchorText String? @map("anchor_text")
+  anchorPath String? @map("anchor_path")
+  viewport   String?
+
+  // What they propose. Bilingual, in the shape CmsPage already stores.
+  titleEn     String  @map("title_en")
+  titleMr     String? @map("title_mr")
+  bodyEn      Json?   @map("body_en")
+  bodyMr      Json?   @map("body_mr")
+  currentText String? @map("current_text") // what was there, for EDIT_COPY
+
+  // Where it went. Triage ends in a conversion, not a bare status.
+  resolution   String?
+  linkedIssue  String? @map("linked_issue")
+  linkedCmsKey String? @map("linked_cms_key")
+  triagedById  String? @map("triaged_by_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Matches FeedbackItem: a deleted account takes its suggestions with it. An accepted
+  // suggestion has already become a CmsPage, which does not cascade.
+  author User @relation("SuggestionAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([entityType, entityId])
+  @@index([route])
+  @@index([authorId])
+  @@map("content_suggestions")
 }

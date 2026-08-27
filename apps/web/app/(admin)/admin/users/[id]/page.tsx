@@ -28,7 +28,7 @@ const ALL_ROLES: AdminRole[] = ['VRATARTHI', 'VRATMITRA', 'MODERATOR', 'ADMIN'];
 
 // What a person may TRY, as opposed to who they ARE. Kept as a separate list, and a separate
 // section below, so the distinction stays visible to whoever is clicking.
-const ALL_CAPABILITIES: AdminCapability[] = ['FEEDBACK_WIDGET', 'CONTENT_EDIT'];
+const ALL_CAPABILITIES: AdminCapability[] = ['FEEDBACK_WIDGET', 'CONTENT_EDIT', 'CONTENT_SUGGEST'];
 const JOURNEY_STATES = ['NOT_STARTED', 'ACTIVE', 'PAUSED', 'DORMANT', 'COMPLETED'];
 
 // Grapheme-safe initials: Array.from splits on full code points so a Devanagari

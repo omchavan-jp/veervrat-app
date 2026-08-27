@@ -72,9 +72,7 @@ export function ConsentGate({ enabled }: { enabled: boolean }) {
           {accept.isPending ? t('accepting') : t('accept')}
         </Button>
 
-        {accept.isError && (
-          <p className="mt-3 text-[13px] text-destructive">{t('failed')}</p>
-        )}
+        {accept.isError && <p className="mt-3 text-[13px] text-destructive">{t('failed')}</p>}
       </div>
     </div>
   );

@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '@/hooks/use-auth';
 import { useRuntimeConfig } from '@/lib/runtime-config-provider';
 import { AppShell } from '@/components/layout/app-shell';
-import { FeedbackWidget } from '@/components/shared/feedback/feedback-widget';
+import { ActionLauncher } from '@/components/shared/launcher/action-launcher';
 import { ConsentGate } from '@/components/shared/consent-gate';
 import dynamic from 'next/dynamic';
 
@@ -54,7 +54,7 @@ export function AppLayoutClient({ children }: { children: React.ReactNode }) {
   return (
     <AppShell user={user}>
       {children}
-      <FeedbackWidget />
+      <ActionLauncher />
       {/* Asks again when a policy has been republished. Mounted here so it covers all four
           authenticated route groups and never public pages — nobody should be asked to
           re-consent while signed out. */}

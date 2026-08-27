@@ -360,6 +360,31 @@ function checkLayerOne(
         allowedByFeature(resource.featureMode, resource.grants, 'CONTENT_EDIT')
       );
 
+    // ── Content suggestions ──────────────────────────────────────────────────
+    // Enforced here, not only in the widget. Both existing capability-gated features shipped
+    // with the check in the browser alone — the feedback widget's flag reached the web tier
+    // while the API admitted any authenticated user, and the content editor's flag was set in
+    // no infrastructure at all. A capability that only hides a button is not a capability.
+    case 'content_suggestion.create':
+      return (
+        resource.type === 'platform' &&
+        allowedByFeature(resource.featureMode, resource.grants, 'CONTENT_SUGGEST')
+      );
+
+    // Reading your own requires the capability too: someone whose grant was withdrawn stops
+    // being an author. Their existing suggestions survive — see the service — but the authoring
+    // surface closes.
+    case 'content_suggestion.read_own':
+      return (
+        resource.type === 'platform' &&
+        allowedByFeature(resource.featureMode, resource.grants, 'CONTENT_SUGGEST')
+      );
+
+    // Triage is an admin action and deliberately NOT capability-gated: an admin must be able to
+    // read what was suggested without being granted the authoring tool.
+    case 'content_suggestion.triage':
+      return isAdmin(user);
+
     // Layer 2 actions — not handled here
     default:
       return false;

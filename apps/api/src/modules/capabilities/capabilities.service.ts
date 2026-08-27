@@ -33,16 +33,35 @@ export class CapabilitiesService {
    * silently do nothing.
    */
   featureMode(capability: Capability): FeatureMode {
-    if (capability === 'CONTENT_EDIT') {
-      // Two independent gates, and prod must fail both. ENVIRONMENT is named explicitly rather
-      // than inferred: NODE_ENV is `production` on UAT too, and sniffing the cookie domain or
-      // hostname would break silently the first time a host changed.
-      if (this.config.get<string>('ENVIRONMENT') === 'prod') return 'off';
-      return this.config.get<boolean>('CONTENT_EDIT_ENABLED', false) ? 'granted' : 'off';
-    }
+    switch (capability) {
+      case 'CONTENT_EDIT': {
+        // Two independent gates, and prod must fail both. ENVIRONMENT is named explicitly rather
+        // than inferred: NODE_ENV is `production` on UAT too, and sniffing the cookie domain or
+        // hostname would break silently the first time a host changed.
+        if (this.config.get<string>('ENVIRONMENT') === 'prod') return 'off';
+        return this.config.get<boolean>('CONTENT_EDIT_ENABLED', false) ? 'granted' : 'off';
+      }
 
-    // Unrecognised values fail closed — a typo in config must not open a gated feature.
-    const raw = this.config.get<string>('FEEDBACK_MODE', 'off');
-    return raw === 'granted' ? 'granted' : 'off';
+      /**
+       * Content suggestions have **no environment gate**, and that is a decision, not an omission.
+       *
+       * The per-user grant is the whole gate: an environment where suggestions should be off is
+       * an environment where nobody has been granted the capability. Adding a second switch that
+       * must be set in three Terraform files to work is precisely how `CONTENT_EDIT_ENABLED`
+       * became inert — read by the code, set in no infrastructure, so the capability could be
+       * granted and silently do nothing (#40, ops/audit/README.md). One gate that cannot be
+       * mis-wired beats two that can.
+       *
+       * Unlike the content editor this is safe on production: a suggestion is inert data. It
+       * changes nothing a visitor sees, which is the reason the editor is barred there.
+       */
+      case 'CONTENT_SUGGEST':
+        return 'granted';
+
+      case 'FEEDBACK_WIDGET': {
+        // Unrecognised values fail closed — a typo in config must not open a gated feature.
+        return this.config.get<string>('FEEDBACK_MODE', 'off') === 'granted' ? 'granted' : 'off';
+      }
+    }
   }
 }

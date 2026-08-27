@@ -71,17 +71,17 @@ export const authApi = {
    */
   outstandingConsents: () =>
     api
-      .get<Wrapped<{ documents: { documentKey: string; version: number }[] }>>(
-        '/auth/consents/outstanding',
-      )
+      .get<
+        Wrapped<{ documents: { documentKey: string; version: number }[] }>
+      >('/auth/consents/outstanding')
       .then((r) => r.data.documents),
 
   /** Accepts everything outstanding. Sends no version — the server decides what is current. */
   acceptConsents: () =>
     api
-      .post<Wrapped<{ accepted: { documentKey: string; version: number }[] }>>(
-        '/auth/consents/accept',
-      )
+      .post<
+        Wrapped<{ accepted: { documentKey: string; version: number }[] }>
+      >('/auth/consents/accept')
       .then((r) => r.data.accepted),
 
   verifyEmail: (token: string) =>

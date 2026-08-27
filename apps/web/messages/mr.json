@@ -1317,7 +1317,8 @@
     "grantedOn": "{date} रोजी दिले",
     "capability": {
       "FEEDBACK_WIDGET": "अभिप्राय विजेट",
-      "CONTENT_EDIT": "मजकूर संपादक"
+      "CONTENT_EDIT": "मजकूर संपादक",
+      "CONTENT_SUGGEST": "मजकूर सूचना"
     }
   },
   "audit": {
@@ -1504,5 +1505,56 @@
       "terms": "वापराच्या अटी",
       "privacy": "गोपनीयता धोरण"
     }
+  },
+  "launcher": {
+    "buttonLabel": "क्रिया",
+    "closeMenu": "मेनू बंद करा",
+    "reportProblem": "अडचण कळवा",
+    "suggestContent": "मजकूर सुचवा"
+  },
+  "suggestions": {
+    "panelTitle": "मजकूर सुचवा",
+    "pickerHint": "इथे सूचना ठेवण्यासाठी क्लिक करा",
+    "pickerPrompt": "ज्या भागाबद्दल सुचवायचे आहे त्यावर क्लिक करा · रद्द करण्यासाठी Esc",
+    "pickerAria": "पानाचा भाग निवडा",
+    "kindLabel": "कोणत्या प्रकारचा बदल",
+    "kind": {
+      "ADD_SECTION": "विभाग जोडा",
+      "EDIT_COPY": "हा मजकूर बदला",
+      "ADD_FIELD": "इथे अधिक दाखवा",
+      "REMOVE": "हे काढून टाका",
+      "NOTE": "टिप"
+    },
+    "currentLabel": "सध्या काय आहे",
+    "titleLabel": "एका ओळीत",
+    "titlePlaceholder": "या दुर्गुणाला वर्णन हवे",
+    "bodyLabel": "तुम्ही सुचवत असलेला मजकूर",
+    "bodyPlaceholder": "जसा दिसायला हवा तसा लिहा.",
+    "english": "English",
+    "marathi": "मराठी",
+    "cancel": "रद्द करा",
+    "close": "बंद करा",
+    "submit": "सूचना जतन करा",
+    "saved": "सूचना जतन झाली",
+    "saveError": "सूचना जतन करता आली नाही",
+    "status": {
+      "NEW": "नवीन",
+      "TRIAGED": "पाहिली जात आहे",
+      "ACCEPTED": "स्वीकारली",
+      "DECLINED": "नाकारली",
+      "SHIPPED": "लागू झाली"
+    },
+    "mineTitle": "माझ्या सूचना",
+    "mineEmpty": "तुम्ही अद्याप काही सुचवलेले नाही",
+    "mineEmptyHint": "कोणतेही पान उघडा, मजकूर सुचवा निवडा, आणि ज्या भागाबद्दल बोलायचे आहे त्यावर क्लिक करा.",
+    "adminTitle": "मजकूर सूचना",
+    "adminEmpty": "अद्याप काही सुचवलेले नाही",
+    "by": "{name} कडून",
+    "on": "{route} वर",
+    "triage": "छाननी",
+    "allStatuses": "सर्व",
+    "cmsKeyPlaceholder": "CMS की झाली (उदा. weakness.description)",
+    "issuePlaceholder": "इश्यू क्रमांक झाला",
+    "resolutionPlaceholder": "लेखक वाचेल अशी टिप"
   }
 }

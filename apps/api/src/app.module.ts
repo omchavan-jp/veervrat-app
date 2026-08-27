@@ -19,6 +19,7 @@ import { InvitationsModule } from './modules/invitations/invitations.module';
 import { VmRelationshipsModule } from './modules/vm-relationships/vm-relationships.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { FeedbackModule } from './modules/feedback/feedback.module';
+import { ContentSuggestionsModule } from './modules/content-suggestions/content-suggestions.module';
 import { ContentOverridesModule } from './modules/content-overrides/content-overrides.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { ChatsModule } from './modules/chats/chats.module';
@@ -83,6 +84,7 @@ import { CsrfGuard } from './common/guards/csrf.guard';
     VmRelationshipsModule,
     NotificationsModule,
     FeedbackModule,
+    ContentSuggestionsModule,
     ContentOverridesModule,
     DashboardModule,
     ChatsModule,
