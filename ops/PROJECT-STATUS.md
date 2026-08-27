@@ -62,7 +62,7 @@ a design the app now implements.
 
 ---
 
-## Current state (2026-08-21)
+## Current state (2026-08-27)
 
 **Both environments are live, correctly wired, signed into, and — as of today — actually
 usable.** Prod was none of those last things until 2026-08-21, while appearing to be all of
@@ -200,12 +200,12 @@ with its guard.
 | O8 | **Chat production-readiness** — own work packet. The gateway is competently built (auth on connect, rooms, sequence numbers, image upload) but **has never once run successfully in production** — the Next.js rewrite proxy blocked WebSocket upgrades from day one, so all real-world behaviour is unverified. Redis adapter now fixed; transport half needs the custom domain. Needs: reconnection, delivery guarantees, offline/unread, push notifications, UX review | later | scaling >1 replica |
 | O9 | ✅ **CLOSED 2026-08-15** — Round 1 app fixes shipped (shutdown, distributed throttler, socket adapter, DB pool) | — | — |
 | O10 | ✅ **CLOSED 2026-08-18** — Terraform complete: `envs/shared`, `envs/uat`, `envs/prod` all applied, both environments verify `No changes` against `main`. Phase 2B landed 2026-08-16 and prod has been serving since `prod-2026-08-17` | — | — |
-| O15 | **Blob storage** — app speaks S3 (`@aws-sdk/client-s3`); Azure Blob does not. Needs an SDK swap before Blob can be provisioned | Claude | uploads (degrades gracefully meanwhile) |
+| O15 | ✅ **CLOSED 2026-08-24** — SDK swap shipped as **#139**. `uploads.service.ts` now uses a strategy pattern: `azure-blob-storage.provider.ts` (cloud) / `s3-storage.provider.ts` (local). Azure Blob accounts provisioned (`veervratuatuploads`, `veervratproduploads`). **Exercised on UAT 2026-08-24** — real upload + byte-identical read-back. ⚠️ One residual: `content-overrides.repository.ts` still imports `@aws-sdk/client-s3` directly, bypassing the abstraction | — | — |
 | O16 | ✅ **CLOSED 2026-08-21** — ⚠️ **This was closed wrongly on 2026-08-16 as "built + proven". It was built; it was never proven.** The job had not applied a single migration in any environment, ever. CD started it with `az containerapp job start --image`, which replaces the whole container spec — dropping `command`, `args` and `env`. Each run executed the image's default entrypoint with no `DATABASE_URL`, migrated nothing, printed nothing, and exited 0; Container Apps recorded **Succeeded** and CD reported "migrations applied". Prod's database was created 2026-08-16 and held **no tables at all** until 2026-08-21 — five days, three "successful" migrations. Surfaced only when a real signup returned 500 with `The table 'public.users' does not exist`. Fixed in **#112**: no overrides, the job's configured image asserted first, and prisma's own output **required** before a migration is accepted. Written up as `documentation/21_Infrastructure-Conventions.md` §21, with the general rule — *a success status is a claim, not evidence.* Now genuinely proven: prod migrated 2026-08-21 (`All migrations have been successfully applied.`), and the next prod deploy verified itself through the new guard | — | — |
 | O17 | **ACR purge task** — retention policies are Premium-only; on Basic use a scheduled `acr purge`. Needed once CD pushes an image per merge | Claude | registry cost |
 | O11 | UAT data policy — seeded, never real users (per D11) | settled in principle | — |
 | O12 | Rotate exposed secrets at cutover (PAT, session secret, R2 keys) | Om + Claude | cutover |
-| O18 | 🔴 **Rotate the account password committed to the repository.** `e2e/auth-and-nav.spec.ts` hardcoded a real personal login — `om.chavan501@gmail.com` and its plaintext password — from commit `258395a` until it was removed on 2026-08-27. **Removing the line does not remove it from history**, and the repository is on GitHub. This is the one finding from the 2026-08-27 audit that cannot be fixed in code. Rotate the password, and treat any account reachable with it as exposed. Found in `ops/audit/01-e2e-runtime-pass.md` §2 | Om | **now, not cutover** |
+| O24 | ✅ **CLOSED 2026-08-27** — password rotated. Originally filed as a second O18 (duplicate id, corrected here). `e2e/auth-and-nav.spec.ts` had hardcoded a real personal login — `om.chavan501@gmail.com` and its plaintext password — from commit `258395a` until removed on 2026-08-27. Password rotated same day; the line is gone from working tree but remains in git history (repository is on GitHub). Found in `ops/audit/01-e2e-runtime-pass.md` §2 | Om | — |
 | O13 | Turn **off** root-scope Elevate access | Om (deferred by choice) | — |
 | O14 | Budget→automation **hard stop** before public launch (MCA has no spending limit) | later | launch |
 
@@ -219,17 +219,29 @@ with its guard.
 ## 🔄 In-flight OpenSpec changes
 
 `openspec/changes/` — genuinely incomplete work, not process debt. Task counts verified
-2026-08-16. Archived changes live in `openspec/changes/archive/` (36 of them).
+2026-08-27. Archived changes live in `openspec/changes/archive/`.
+
+**Should archive (all tasks done):**
+- `bootstrap-admin-grant` — 32/32 (#40 closed)
+- `vratmitra-roster` — 14/14
+
+**Near-complete (1–2 tasks remaining, primary issues closed):**
+- `capability-grants` — 35/36
+- `upload-visibility` — 29/31 (#139 closed)
+
+**In progress:**
 
 | Change | Tasks | Note |
 |---|---|---|
-| `ui-ux-remediation` | 39/42 | closest to done |
+| `ui-ux-remediation` | 36/42 | 6 remaining |
+| `age-gate-and-consent` | 39/45 | 6 remaining |
+| `content-suggestions` | 24/28 | |
+| `received-invitations` | 19/23 | |
+| `server-resolved-auth` | 19/24 | |
+| `experience-log-view` | 14/18 | |
+| `reauthentication` | 13/22 | |
 | `my-vratmitras-chat` | 49/62 | the remainder is O8 — chat has never run in production |
 | `prevent-duplicate-journeys` | 0/11 | proposed, not started |
-
-`multi-instance-readiness` was archived 2026-08-16 at 35/35 — it had been left unarchived
-after completion, which `documentation/04` §12 correctly calls a defect: half-finished process
-state reads as ambiguous status to the next session.
 
 ---
 
@@ -320,16 +332,14 @@ History of already-triaged items: `triage-archive.md`.
 14. ✅ **Google sign-in live** (O23) — project `veervrat` under the JP org, one OAuth client per
     environment, secret in each Key Vault. Signed in successfully on UAT 2026-08-18. Testing
     mode, 100-user cap; no "unverified app" warning, since the scopes are non-sensitive
-15. **← next: #74** — an unverified account is a permanent dead end. Small, and it is the one
-    users hit by themselves: miss one email and there is no route back in. Auth change, so
-    OpenSpec change lane
-16. **Then #40** — per-user capability grants + admin dashboard, OpenSpec full cycle. The last
-    thing between prod and real beta testers, now that people can actually log in
-17. **Before inviting the first tester:** #88 (prove prod actually sends email) and #92
-    (`min_replicas=1`, so nobody's first impression is a cold start). Both are small; both are
-    invisible until a real person hits them
-18. Blob storage (O15) → decommission Neon/Upstash/R2 → #84 (budget proposal owed to JP
-    finance — not blocking, but a human commitment that silently slips)
+15. ✅ **#74** — re-send verification email. Closed 2026-08-20, archived as
+    `account-verification-recovery`
+16. ✅ **#40** — per-user capability grants + admin dashboard. Closed 2026-08-21, archived as
+    `bootstrap-admin-grant`
+17. ✅ **#88** (prod email) closed 2026-08-21. **#92 (`min_replicas=1`) still open** — the last
+    thing before inviting a real beta tester
+18. ✅ Blob storage (O15) — SDK swap shipped as #139, exercised UAT 2026-08-24. Decommission
+    Neon/Upstash/R2 and #84 (budget proposal) remain
 19. Not urgent, but do not lose: #89 (backups have never been restored — untested is not a
     backup), #93 (no hard spending cap; grant expiry silently bills a personal card), #90
     (Terraform state RBAC is broader than it should be), #91 (VNet/private endpoints, deferred
@@ -367,20 +377,9 @@ from a guess. Full version in `veervrat-app/AGENTS.md`.
 
 
 
-# manual entries section to integrate properly into above backlog
-
-in signup page username checks 
-- what chars are allowed/not alowed isn't displayed
-- when i enter invalid, endpoint response is 
-{"data":{"available":false,"reason":"invalid"}}
-but error message displayed is "Username already taken"
-
-----
-
-After verifying email, during first sign in, it takes me to Step 1 of 2
-Set up your account page, there i again get option to change display name and username (though both were filled during sign up) - proper ux (like just prefill as non immutable or what) discussion required.
-
-----
-
-in step 2 (onboarding) - "take me to test" button still took me to dashboard.
+<!-- Manual entries filed as GitHub Issues 2026-08-27:
+     #230 — username validation display + wrong error
+     #231 — onboarding step 1 re-asks display name/username
+     #232 — "take me to test" button goes to dashboard
+-->
 

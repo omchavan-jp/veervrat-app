@@ -66,14 +66,14 @@ export class VmRelationshipsRepository {
 
   async findActiveGlobalVm(vratarthiId: string): Promise<VmRelationshipRecord | null> {
     return this.prisma.vmRelationship.findFirst({
-      where: { vratarthiId, state: VmRelationshipState.ACTIVE, endedAt: null },
+      where: { vratarthiId, state: VmRelationshipState.ACTIVE },
     });
   }
 
   async endGlobalVm(id: string): Promise<VmRelationshipRecord> {
     return this.prisma.vmRelationship.update({
       where: { id },
-      data: { endedAt: new Date() },
+      data: { state: VmRelationshipState.ENDED, endedAt: new Date() },
     });
   }
 
@@ -85,7 +85,6 @@ export class VmRelationshipsRepository {
       where: {
         vmId,
         state: VmRelationshipState.ACTIVE,
-        endedAt: null,
         journey: { vratarthiId },
       },
       select: { journeyId: true, journey: { select: { title: true } } },
@@ -108,14 +107,14 @@ export class VmRelationshipsRepository {
     vmId: string,
   ): Promise<JourneyVmAssignmentRecord | null> {
     return this.prisma.journeyVmAssignment.findFirst({
-      where: { journeyId, vmId, state: VmRelationshipState.ACTIVE, endedAt: null },
+      where: { journeyId, vmId, state: VmRelationshipState.ACTIVE },
     });
   }
 
   async endJourneyAssignment(id: string): Promise<JourneyVmAssignmentRecord> {
     return this.prisma.journeyVmAssignment.update({
       where: { id },
-      data: { endedAt: new Date() },
+      data: { state: VmRelationshipState.ENDED, endedAt: new Date() },
     });
   }
 
@@ -127,10 +126,9 @@ export class VmRelationshipsRepository {
       where: {
         vmId,
         state: VmRelationshipState.ACTIVE,
-        endedAt: null,
         journey: { vratarthiId },
       },
-      data: { endedAt: new Date() },
+      data: { state: VmRelationshipState.ENDED, endedAt: new Date() },
     });
     return result.count;
   }
@@ -144,14 +142,13 @@ export class VmRelationshipsRepository {
     vmAssignments: { vmId: string; state: VmRelationshipState }[];
   }> {
     const globalVm = await this.prisma.vmRelationship.findFirst({
-      where: { vratarthiId, state: VmRelationshipState.ACTIVE, endedAt: null },
+      where: { vratarthiId, state: VmRelationshipState.ACTIVE },
       select: { vmId: true, vratarthiId: true, state: true },
     });
 
     const assignments = await this.prisma.journeyVmAssignment.findMany({
       where: {
         state: VmRelationshipState.ACTIVE,
-        endedAt: null,
         journey: { vratarthiId },
       },
       distinct: ['vmId'],
@@ -171,7 +168,6 @@ export class VmRelationshipsRepository {
       where: {
         vmId,
         state: VmRelationshipState.ACTIVE,
-        endedAt: null,
         journey: { deletedAt: null },
       },
       select: { journeyId: true, journey: { select: { vratarthiId: true } } },
@@ -185,10 +181,10 @@ export class VmRelationshipsRepository {
   async hasAnyVmAssignment(vmId: string): Promise<boolean> {
     const [journeyCount, globalCount] = await Promise.all([
       this.prisma.journeyVmAssignment.count({
-        where: { vmId, state: VmRelationshipState.ACTIVE, endedAt: null },
+        where: { vmId, state: VmRelationshipState.ACTIVE },
       }),
       this.prisma.vmRelationship.count({
-        where: { vmId, state: VmRelationshipState.ACTIVE, endedAt: null },
+        where: { vmId, state: VmRelationshipState.ACTIVE },
       }),
     ]);
     return journeyCount + globalCount > 0;
@@ -200,7 +196,6 @@ export class VmRelationshipsRepository {
     const globalCount = await this.prisma.vmRelationship.count({
       where: {
         state: VmRelationshipState.ACTIVE,
-        endedAt: null,
         OR: [
           { vratarthiId: userA, vmId: userB },
           { vratarthiId: userB, vmId: userA },
@@ -212,7 +207,6 @@ export class VmRelationshipsRepository {
     const journeyCount = await this.prisma.journeyVmAssignment.count({
       where: {
         state: VmRelationshipState.ACTIVE,
-        endedAt: null,
         OR: [
           { vmId: userA, journey: { vratarthiId: userB } },
           { vmId: userB, journey: { vratarthiId: userA } },
@@ -247,12 +241,12 @@ export class VmRelationshipsRepository {
     // journey-scoped vratmitra to a page that says they mentor nobody, while they mentor someone.
     const [globals, journeyAssignments] = await Promise.all([
       this.prisma.vmRelationship.findMany({
-        where: { vmId, state: VmRelationshipState.ACTIVE, endedAt: null },
+        where: { vmId, state: VmRelationshipState.ACTIVE },
         orderBy: { acceptedAt: 'desc' },
         select: { id: true, acceptedAt: true, vratarthi: { select: identity } },
       }),
       this.prisma.journeyVmAssignment.findMany({
-        where: { vmId, state: VmRelationshipState.ACTIVE, endedAt: null },
+        where: { vmId, state: VmRelationshipState.ACTIVE },
         orderBy: { acceptedAt: 'desc' },
         select: {
           id: true,
@@ -324,7 +318,6 @@ export class VmRelationshipsRepository {
         where: {
           vratarthiId,
           state: VmRelationshipState.ACTIVE,
-          endedAt: null,
         },
         include: {
           vm: {
@@ -346,7 +339,6 @@ export class VmRelationshipsRepository {
             vratarthiId,
           },
           state: VmRelationshipState.ACTIVE,
-          endedAt: null,
         },
         distinct: ['vmId'],
         include: {

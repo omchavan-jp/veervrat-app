@@ -12,8 +12,10 @@ import {
   KeyRound,
   Users as UsersIcon,
   RotateCcw,
+  Download,
 } from 'lucide-react';
 import { usersApi, type OwnProfile } from '@/lib/api/users';
+import { dataExportApi } from '@/lib/api/data-export';
 import { vmRelationshipsApi, type MyVm, type GlobalVmCascade } from '@/lib/api/vm-relationships';
 import { authApi } from '@/lib/api/auth';
 import { queryKeys } from '@/lib/api/query-keys';
@@ -125,6 +127,7 @@ export default function SettingsPage() {
         <LanguageSection profile={profile.data} />
         <NotificationsSection profile={profile.data} />
         <VratmitraSection profile={profile.data} />
+        <DataExportSection />
         <AccountSection profile={profile.data} />
       </div>
     </div>
@@ -596,6 +599,59 @@ function VratmitraSection({ profile }: { profile: OwnProfile }) {
           </div>
           {tourDone && <p className="mt-1 text-[12px] text-accent-2">{t('vratmitraTourReset')}</p>}
         </div>
+      </div>
+    </Section>
+  );
+}
+
+function DataExportSection() {
+  const t = useTranslations('settings');
+  const { toast } = useToast();
+
+  const download = useMutation({
+    mutationFn: async () => {
+      const data = await dataExportApi.download();
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `veervrat-export-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    },
+    onError: (err) =>
+      toast({ title: errorMessage(err, t('dataExportError')), variant: 'destructive' }),
+  });
+
+  const email = useMutation({
+    mutationFn: () => dataExportApi.emailLink(),
+    onSuccess: () => toast({ title: t('dataExportEmailSent') }),
+    onError: (err) =>
+      toast({ title: errorMessage(err, t('dataExportError')), variant: 'destructive' }),
+  });
+
+  const busy = download.isPending || email.isPending;
+
+  return (
+    <Section
+      icon={<Download className="h-4 w-4" />}
+      title={t('dataExportTitle')}
+      desc={t('dataExportDesc')}
+    >
+      <p className="mb-3 text-[13px] text-muted">{t('dataExportBody')}</p>
+      <div className="flex flex-wrap gap-2">
+        <Button onClick={() => download.mutate()} loading={download.isPending} disabled={busy}>
+          {t('dataExportDownload')}
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => email.mutate()}
+          loading={email.isPending}
+          disabled={busy}
+        >
+          {t('dataExportEmail')}
+        </Button>
       </div>
     </Section>
   );

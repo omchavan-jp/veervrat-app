@@ -167,4 +167,81 @@ export class DataExportRepository {
       select: { id: true, blogId: true, body: true, createdAt: true },
     });
   }
+
+  contentSuggestions(userId: string) {
+    return this.prisma.contentSuggestion.findMany({
+      where: { authorId: userId },
+      select: {
+        id: true,
+        kind: true,
+        status: true,
+        route: true,
+        entityType: true,
+        entityId: true,
+        locale: true,
+        titleEn: true,
+        titleMr: true,
+        bodyEn: true,
+        bodyMr: true,
+        currentText: true,
+        createdAt: true,
+      },
+    });
+  }
+
+  async follows(userId: string) {
+    const [following, followers] = await Promise.all([
+      this.prisma.userFollow.findMany({
+        where: { followerId: userId },
+        select: { followeeId: true, createdAt: true },
+      }),
+      this.prisma.userFollow.findMany({
+        where: { followeeId: userId },
+        select: { followerId: true, createdAt: true },
+      }),
+    ]);
+    return { following, followers };
+  }
+
+  async invitations(userId: string) {
+    const select = {
+      id: true,
+      type: true,
+      status: true,
+      scopeId: true,
+      inviteeEmail: true,
+      invitedAt: true,
+      expiresAt: true,
+      acceptedAt: true,
+      createdAt: true,
+      // `token` deliberately excluded — it is a secret accept/decline link.
+    } as const;
+
+    const [sent, received] = await Promise.all([
+      this.prisma.invitation.findMany({
+        where: { inviterId: userId },
+        select,
+      }),
+      this.prisma.invitation.findMany({
+        where: { inviteeId: userId },
+        select,
+      }),
+    ]);
+    return { sent, received };
+  }
+
+  feedbackItems(userId: string) {
+    return this.prisma.feedbackItem.findMany({
+      where: { reporterId: userId },
+      select: {
+        id: true,
+        type: true,
+        status: true,
+        title: true,
+        description: true,
+        route: true,
+        createdAt: true,
+      },
+    });
+  }
 }

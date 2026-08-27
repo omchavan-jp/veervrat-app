@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { VmRelationshipState } from '@prisma/client';
 import {
   createTestApp,
   closeTestApp,
@@ -10,10 +11,8 @@ import {
 /**
  * Ending a vratmitra relationship must end the access it granted.
  *
- * `VmRelationshipState` has only PENDING and ACTIVE — there is no ENDED. A relationship ends by
- * having `endedAt` set **while its state stays ACTIVE**. So any query that filters on
- * `state: ACTIVE` and forgets `endedAt: null` treats an ended relationship as a live one, and
- * `isGlobalVmForJourney` / `isActiveJourneyVm` both decide on `state` alone.
+ * `VmRelationshipState` now has ENDED. Ending a relationship sets both `state: ENDED` and
+ * `endedAt`, so queries filtering `state: ACTIVE` correctly exclude ended relationships.
  *
  * That combination meant removing your vratmitra did not take away what they could see. These
  * tests exist so it cannot come back: the whole point of removing a vratmitra is that they stop
@@ -104,10 +103,10 @@ describe('Access after a vratmitra relationship ends — integration', () => {
   });
 
   it('a global vratmitra who has been removed CANNOT read the journey', async () => {
-    // Exactly what endGlobalVm does: set endedAt, leave state ACTIVE.
+    // endGlobalVm now sets both state and endedAt.
     await prisma().vmRelationship.update({
       where: { id: globalRelId },
-      data: { endedAt: new Date() },
+      data: { state: VmRelationshipState.ENDED, endedAt: new Date() },
     });
 
     const res = await viewJourney(globalVmSession);
@@ -117,10 +116,10 @@ describe('Access after a vratmitra relationship ends — integration', () => {
   });
 
   it('a journey vratmitra whose assignment ended CANNOT read the journey', async () => {
-    // Exactly what endJourneyAssignment does.
+    // endJourneyAssignment now sets both state and endedAt.
     await prisma().journeyVmAssignment.update({
       where: { id: journeyAssignmentId },
-      data: { endedAt: new Date() },
+      data: { state: VmRelationshipState.ENDED, endedAt: new Date() },
     });
 
     const res = await viewJourney(journeyVmSession);

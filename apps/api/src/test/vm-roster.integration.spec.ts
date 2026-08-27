@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { VmRelationshipState } from '@prisma/client';
 import {
   createTestApp,
   closeTestApp,
@@ -54,8 +55,6 @@ describe('GET /vm-relationships/my-vratarthis — integration', () => {
     vaAToken = vaA.token;
 
     // Active global relationship, plus one that has ended — the ended one must not appear.
-    // There is no ENDED state in the enum: a relationship ends by having `endedAt` set while
-    // its state stays ACTIVE, which is exactly why the query filters on both.
     await prisma.vmRelationship.create({
       data: {
         vmId: globalVm.user.id,
@@ -68,7 +67,7 @@ describe('GET /vm-relationships/my-vratarthis — integration', () => {
       data: {
         vmId: globalVm.user.id,
         vratarthiId: vaEnded.user.id,
-        state: 'ACTIVE',
+        state: VmRelationshipState.ENDED,
         acceptedAt: new Date('2026-01-01'),
         endedAt: new Date('2026-06-01'),
       },

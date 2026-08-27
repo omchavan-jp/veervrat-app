@@ -26,6 +26,10 @@ export class DataExportService {
       chatMessages,
       blogs,
       blogComments,
+      contentSuggestions,
+      follows,
+      invitations,
+      feedbackItems,
     ] = await Promise.all([
       this.repo.identity(userId),
       this.repo.authAccounts(userId),
@@ -36,6 +40,10 @@ export class DataExportService {
       this.repo.chatMessages(userId),
       this.repo.blogs(userId),
       this.repo.blogComments(userId),
+      this.repo.contentSuggestions(userId),
+      this.repo.follows(userId),
+      this.repo.invitations(userId),
+      this.repo.feedbackItems(userId),
     ]);
 
     return {
@@ -49,6 +57,10 @@ export class DataExportService {
       chatMessages,
       blogs,
       blogComments,
+      contentSuggestions,
+      follows,
+      invitations,
+      feedbackItems,
     };
   }
 }

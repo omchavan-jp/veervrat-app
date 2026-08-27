@@ -117,6 +117,7 @@ enum InvitationChannel {
 enum VmRelationshipState {
   PENDING @map("pending")
   ACTIVE  @map("active")
+  ENDED   @map("ended")
 
   @@map("vm_relationship_state")
 }

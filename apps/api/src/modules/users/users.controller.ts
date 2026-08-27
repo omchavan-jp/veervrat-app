@@ -16,8 +16,15 @@ import type { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { AuthProvider } from '@prisma/client';
 import { Throttle } from '@nestjs/throttler';
+import { createElement } from 'react';
 import { UsersService } from './users.service';
 import { DataExportService } from '../data-export/data-export.service';
+import { createExportToken, verifyExportToken } from '../data-export/export-token';
+import { EmailService } from '../email/email.service';
+import {
+  DataExportEmail,
+  getSubject as getDataExportSubject,
+} from '../email/templates/DataExportEmail';
 import { AuthService } from '../auth/auth.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateVisibilityDto } from './dto/update-visibility.dto';
@@ -37,9 +44,13 @@ export class UsersController {
   private readonly cookieMaxAgeMs: number;
   private readonly isProduction: boolean;
 
+  private readonly sessionSecret: string;
+  private readonly frontendUrl: string;
+
   constructor(
     private readonly usersService: UsersService,
     private readonly dataExportService: DataExportService,
+    private readonly emailService: EmailService,
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
   ) {
@@ -47,6 +58,8 @@ export class UsersController {
     this.cookieName = this.configService.get<string>('SESSION_COOKIE_NAME', 'veervrat_session');
     this.cookieMaxAgeMs = ttlDays * 24 * 60 * 60 * 1000;
     this.isProduction = this.configService.get<string>('NODE_ENV') === 'production';
+    this.sessionSecret = this.configService.getOrThrow<string>('SESSION_SECRET');
+    this.frontendUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
   }
 
   // Must be before /:username to avoid param swallowing
@@ -147,6 +160,62 @@ export class UsersController {
   })
   async exportMyData(@CurrentUser() user: SessionUser) {
     return this.dataExportService.exportFor(user.id);
+  }
+
+  /**
+   * Email a 24-hour download link to the requester.
+   *
+   * The link contains an HMAC-signed token — no database row, no cleanup. The recipient
+   * clicks it and gets the same JSON as `GET /users/me/data-export`, but without needing
+   * a session (they may be reading the email on a phone that is not logged in).
+   */
+  @Post('me/data-export/email')
+  @UseGuards(SessionGuard)
+  @Throttle({ default: { ttl: 3600000, limit: 3 } })
+  @HttpCode(HttpStatus.OK)
+  @Audited({
+    action: 'user.data_export_email',
+    resourceType: 'user',
+    resourceId: (c) => (c.req.user as SessionUser)?.id,
+  })
+  async emailExportLink(@CurrentUser() user: SessionUser) {
+    const token = createExportToken(user.id, this.sessionSecret);
+    const downloadUrl = `${this.frontendUrl}/settings/data-export/${token}`;
+    const lang = user.language === 'MR' ? 'MR' : 'EN';
+    const { html, text } = await this.emailService.renderTemplate(
+      createElement(DataExportEmail, {
+        displayName: user.displayName,
+        downloadUrl,
+        language: lang,
+      }),
+    );
+    await this.emailService.sendTransactional(user.email, getDataExportSubject(lang), html, text);
+    return { sent: true };
+  }
+
+  /**
+   * Token-based data export download — no session required.
+   *
+   * The token is self-contained (HMAC-signed userId + expiry). The response is the JSON
+   * export as a file download, so clicking the emailed link starts a browser download.
+   */
+  @Get('data-export/:token')
+  @Throttle({ default: { ttl: 3600000, limit: 10 } })
+  async downloadExportByToken(@Param('token') token: string, @Res() res: Response) {
+    const userId = verifyExportToken(token, this.sessionSecret);
+    if (!userId) {
+      res.status(HttpStatus.NOT_FOUND).json({
+        statusCode: 404,
+        error: 'NOT_FOUND',
+        message: 'Invalid or expired download link.',
+      });
+      return;
+    }
+    const data = await this.dataExportService.exportFor(userId);
+    const filename = `veervrat-export-${new Date().toISOString().slice(0, 10)}.json`;
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.json(data);
   }
 
   @Get('me/connected-accounts')
