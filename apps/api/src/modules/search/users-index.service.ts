@@ -1,5 +1,6 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { MeiliService, errMessage } from './meili.service';
+import { Injectable, Logger } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from '../../prisma/prisma.service';
 
 export const USERS_INDEX = 'users';
 
@@ -12,68 +13,60 @@ export type UserIndexDoc = {
   isPublic: boolean;
 };
 
-// Owns the Meilisearch `users` index: settings, sync (upsert/remove), and search.
-// All operations are best-effort — failures are logged, never thrown into the caller's
-// write path (search is eventually consistent; a Meili hiccup must not fail a profile
-// save). Search returns [] when Meili is disabled/unreachable.
+// Trigram-ranked fuzzy user search using Postgres pg_trgm — replaces the earlier
+// Meilisearch-backed implementation. The index maintenance methods (upsert/remove)
+// are now no-ops: there is no secondary index to sync, the users table IS the index.
+// Callers that call upsert/remove continue to compile; removing those call sites is
+// a follow-up scope item (#194 item 4).
 @Injectable()
-export class UsersIndexService implements OnModuleInit {
+export class UsersIndexService {
   private readonly logger = new Logger('UsersIndexService');
 
-  constructor(private readonly meili: MeiliService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  async onModuleInit(): Promise<void> {
-    if (!this.meili.enabled) return;
-    await this.meili.ensureIndex(USERS_INDEX);
-    const index = this.meili.index(USERS_INDEX);
-    if (!index) return;
-    try {
-      await index.updateSettings({
-        searchableAttributes: ['username', 'displayName'],
-        filterableAttributes: ['isPublic'],
-      });
-    } catch (error) {
-      this.logger.warn({ msg: 'users index settings failed', error: errMessage(error) });
-    }
+  // No-op: with Postgres search, there is no secondary index to maintain.
+  // Kept so existing call sites (auth.service, users.service) do not break.
+  async upsert(_doc: UserIndexDoc): Promise<void> {
+    // Intentional no-op — the users table is the source of truth for search.
   }
 
-  async upsert(doc: UserIndexDoc): Promise<void> {
-    const index = this.meili.index(USERS_INDEX);
-    if (!index) return;
-    try {
-      await index.addDocuments([doc]);
-    } catch (error) {
-      this.logger.warn({ msg: 'users index upsert failed', id: doc.id, error: errMessage(error) });
-    }
+  // No-op: same reason as upsert.
+  async remove(_id: string): Promise<void> {
+    // Intentional no-op.
   }
 
-  async remove(id: string): Promise<void> {
-    const index = this.meili.index(USERS_INDEX);
-    if (!index) return;
-    try {
-      await index.deleteDocument(id);
-    } catch (error) {
-      this.logger.warn({ msg: 'users index remove failed', id, error: errMessage(error) });
-    }
-  }
-
-  // Typo-tolerant name/username search. Excludes private profiles (filter) and the
-  // requester (post-filter). Returns matched ids in relevance order — the service
-  // re-hydrates full user data + presence from the DB.
+  // Typo-tolerant name/username search using pg_trgm similarity. Excludes private
+  // profiles, soft-deleted users, and the requester. Returns matched user IDs in
+  // relevance order — the consuming service re-hydrates full user data from the DB.
   async search(query: string, requesterId: string, limit = 10): Promise<string[]> {
-    const index = this.meili.index(USERS_INDEX);
-    if (!index) return [];
+    if (!query.trim()) return [];
+
     try {
-      const res = await index.search<UserIndexDoc>(query, {
-        filter: 'isPublic = true',
-        limit: limit + 1, // headroom to drop self without shrinking the page
-      });
-      return res.hits
-        .map((h) => h.id)
-        .filter((id) => id !== requesterId)
-        .slice(0, limit);
+      const like = `%${query}%`;
+      const hits = await this.prisma.$queryRaw<{ id: string }[]>(Prisma.sql`
+        SELECT id
+        FROM users
+        WHERE deleted_at IS NULL
+          AND profile_private = false
+          AND id != ${requesterId}::uuid
+          AND (
+            display_name ILIKE ${like}
+            OR username ILIKE ${like}
+            OR similarity(display_name, ${query}) > 0.2
+            OR similarity(username, ${query}) > 0.2
+          )
+        ORDER BY GREATEST(
+          similarity(display_name, ${query}),
+          similarity(username, ${query})
+        ) DESC
+        LIMIT ${limit}
+      `);
+      return hits.map((h) => h.id);
     } catch (error) {
-      this.logger.warn({ msg: 'users search failed', error: errMessage(error) });
+      this.logger.warn({
+        msg: 'users search failed',
+        error: error instanceof Error ? error.message : String(error),
+      });
       return [];
     }
   }
