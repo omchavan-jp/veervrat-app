@@ -3,15 +3,16 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import {
-  Sparkles,
-  ScrollText,
   BookOpen,
-  Library,
+  ChevronRight,
+  ClipboardList,
   FileText,
+  Library,
+  MessageSquareText,
+  ScrollText,
+  Sparkles,
   Star,
   Users,
-  ClipboardList,
-  ChevronRight,
 } from 'lucide-react';
 import { useAdminGuard } from '@/hooks/use-admin-guard';
 import { Spinner } from '@/components/ui/spinner';
@@ -25,6 +26,12 @@ const CARDS = [
   { href: '/admin/cms', labelKey: 'cmsTitle', descKey: 'cmsDesc', icon: FileText },
   { href: '/admin/featured', labelKey: 'featuredTitle', descKey: 'featuredDesc', icon: Star },
   { href: '/admin/audit', labelKey: 'auditTitle', descKey: 'auditDesc', icon: ClipboardList },
+  {
+    href: '/admin/suggestions',
+    labelKey: 'suggestionsTitle',
+    descKey: 'suggestionsDesc',
+    icon: MessageSquareText,
+  },
 ] as const;
 
 export default function AdminDashboardPage() {
