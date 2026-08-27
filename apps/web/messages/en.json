@@ -1317,7 +1317,8 @@
     "grantedOn": "Granted on {date}",
     "capability": {
       "FEEDBACK_WIDGET": "Feedback widget",
-      "CONTENT_EDIT": "Content editor"
+      "CONTENT_EDIT": "Content editor",
+      "CONTENT_SUGGEST": "Content suggestions"
     }
   },
   "audit": {
@@ -1504,5 +1505,56 @@
       "terms": "Terms of Use",
       "privacy": "Privacy Policy"
     }
+  },
+  "launcher": {
+    "buttonLabel": "Actions",
+    "closeMenu": "Close menu",
+    "reportProblem": "Report a problem",
+    "suggestContent": "Suggest content"
+  },
+  "suggestions": {
+    "panelTitle": "Suggest content",
+    "pickerHint": "Click to place a suggestion here",
+    "pickerPrompt": "Click anything on the page to suggest content for it · Esc to cancel",
+    "pickerAria": "Choose a part of the page to suggest content for",
+    "kindLabel": "What kind of change",
+    "kind": {
+      "ADD_SECTION": "Add a section",
+      "EDIT_COPY": "Change this wording",
+      "ADD_FIELD": "Show more here",
+      "REMOVE": "Remove this",
+      "NOTE": "A note"
+    },
+    "currentLabel": "What is there now",
+    "titleLabel": "In one line",
+    "titlePlaceholder": "This weakness needs a description",
+    "bodyLabel": "The content you propose",
+    "bodyPlaceholder": "Write it as you would want it to appear.",
+    "english": "English",
+    "marathi": "मराठी",
+    "cancel": "Cancel",
+    "close": "Close",
+    "submit": "Save suggestion",
+    "saved": "Suggestion saved",
+    "saveError": "Couldn't save the suggestion",
+    "status": {
+      "NEW": "New",
+      "TRIAGED": "Being looked at",
+      "ACCEPTED": "Accepted",
+      "DECLINED": "Declined",
+      "SHIPPED": "Live"
+    },
+    "mineTitle": "My suggestions",
+    "mineEmpty": "You haven't suggested anything yet",
+    "mineEmptyHint": "Open any page, choose Suggest content, and click the part you want to talk about.",
+    "adminTitle": "Content suggestions",
+    "adminEmpty": "Nothing suggested yet",
+    "by": "by {name}",
+    "on": "on {route}",
+    "triage": "Triage",
+    "allStatuses": "All",
+    "cmsKeyPlaceholder": "Became a CMS key (e.g. weakness.description)",
+    "issuePlaceholder": "Became an issue (number)",
+    "resolutionPlaceholder": "A note the author will read"
   }
 }
