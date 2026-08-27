@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { NotificationEventType } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { notificationLinkPath } from './notification-link';
 
 export type NotificationActor = {
   id: string;
@@ -25,7 +26,11 @@ export type NotificationPage = {
   nextCursor: string | null;
 };
 
-const actorSelect = { select: { id: true, displayName: true, avatarUrl: true } } as const;
+// `username` is here so a notification can link to the actor's profile: `/u/[username]`
+// cannot be built from a user id, which is why NEW_FOLLOWER had no destination at all.
+const actorSelect = {
+  select: { id: true, username: true, displayName: true, avatarUrl: true },
+} as const;
 
 function buildCursor(n: NotificationRecord): string {
   return `${n.createdAt.toISOString()}:${n.id}`;
@@ -111,8 +116,21 @@ export class NotificationsRepository {
         archivedAt: r.archivedAt,
         createdAt: r.createdAt,
         actor: r.actor
-          ? { id: r.actor.id, displayName: r.actor.displayName, avatarUrl: r.actor.avatarUrl }
+          ? {
+              id: r.actor.id,
+              username: r.actor.username,
+              displayName: r.actor.displayName,
+              avatarUrl: r.actor.avatarUrl,
+            }
           : null,
+        // Computed here so the bell and the email agree by construction. The web app used to
+        // keep its own map and it drifted: 10 event types had no destination at all.
+        link: notificationLinkPath(
+          r.eventType,
+          r.resourceType,
+          r.resourceId,
+          r.actor?.username ?? null,
+        ),
       })),
       nextCursor: hasMore ? buildCursor(items[items.length - 1]) : null,
     };

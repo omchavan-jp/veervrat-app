@@ -4,6 +4,7 @@ type Wrapped<T> = { data: T };
 
 export type NotificationActor = {
   id: string;
+  username: string;
   displayName: string;
   avatarUrl: string | null;
 };
@@ -18,6 +19,10 @@ export type NotificationItem = {
   archivedAt: string | null;
   createdAt: string;
   actor: NotificationActor | null;
+  // Where this notification goes, decided by the API. There used to be a second map here in the
+  // web app and it drifted: 10 of 22 event types had no destination, so the notification rendered
+  // and clicking it did nothing while the same notification's email link worked.
+  link: string;
 };
 
 export type NotificationsListResponse = {

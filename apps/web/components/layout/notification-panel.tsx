@@ -33,31 +33,6 @@ const KNOWN_EVENT_TYPES = new Set<string>([
   'VM_WITHDREW',
 ]);
 
-function eventTypeToPath(eventType: string, resourceId: string | null): string | null {
-  if (!resourceId) return null;
-  switch (eventType) {
-    // Matches notification-link.ts (the email deep-link map) on the backend — this map
-    // had drifted to '/dashboard', which isn't where a pending invitation is visible.
-    case 'VM_INVITATION_RECEIVED':
-    case 'VM_INVITATION_ACCEPTED':
-    case 'VM_INVITATION_DECLINED':
-    case 'VM_INVITATION_EXPIRED':
-    case 'INVITEE_JOINED_PLATFORM':
-      return '/invitations';
-    case 'ERC_CLOSURE_SUBMITTED':
-    case 'ERC_CLOSURE_APPROVED':
-    case 'ERC_RETURNED_FOR_REVISIT':
-    case 'NEW_ERC_AVAILABLE':
-      return `/journeys`;
-    case 'JOURNEY_COMPLETION_SUBMITTED':
-    case 'JOURNEY_COMPLETION_APPROVED':
-    case 'JOURNEY_DORMANT':
-      return `/journeys/${resourceId}`;
-    default:
-      return null;
-  }
-}
-
 function NotificationRow({
   item,
   onRead,
@@ -70,7 +45,7 @@ function NotificationRow({
   const label = KNOWN_EVENT_TYPES.has(item.eventType)
     ? t(`event_${item.eventType}` as never)
     : item.eventType;
-  const path = eventTypeToPath(item.eventType, item.resourceId);
+  const path = item.link;
   const isUnread = item.readAt === null;
   const relativeTime = format.relativeTime(new Date(item.createdAt));
 
