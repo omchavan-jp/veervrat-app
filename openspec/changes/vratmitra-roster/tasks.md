@@ -40,11 +40,10 @@
 - [x] 4.1 Show the item only to someone who mentors, using `hasAnyVmAssignment` — the gate that
   already exists for exactly this. Reached through `actions.hasAssignments`, which the shell
   already read; the item sits behind the same condition as VM Guidance.
-- [ ] 4.2 Confirm what a person who is BOTH sees: their own items and the vratmitra ones, in one
+- [x] 4.2 Confirm what a person who is BOTH sees: their own items and the vratmitra ones, in one
   navigation. That is the whole point of the role decision, and it is the case most likely to
-  look wrong. — **Not confirmed.** Structurally the two lists are built independently and
-  concatenated, so both should appear; that is a reading of the code, not an observation. Folded
-  into 5.3.
+  look wrong. — **Confirmed on UAT 2026-08-27 via 5.3**, by observation rather than by reading
+  the code.
 
 ## 5. Verify like a person
 
@@ -55,11 +54,17 @@
   global one, so `listVratarthisForVm`'s global branch is exercised end to end against a real
   database. This could not be run until the same day — accepting a vratmitra invitation returned
   403 to every user (#214) and an invitation to a non-member never linked to their account (#215).
-- [ ] 5.2 As someone who mentors nobody: the item does not appear at all.
-- [ ] 5.3 As someone who is both: both sets of navigation are present and neither is duplicated.
+- [x] 5.2 As someone who mentors nobody: the item does not appear at all. **Confirmed on UAT
+  2026-08-27** — absent from the navigation, not merely empty.
+- [x] 5.3 As someone who is both: both sets of navigation are present and neither is duplicated.
+  **Confirmed on UAT 2026-08-27.** This was the case no test of mine could reach and the one the
+  role-not-mode decision rides on: a person who is both a vratarthi and a vratmitra sees their own
+  navigation *and* the vratmitra items, in one sidebar, with nothing repeated.
 
 ⚠️ 5.1–5.3 need two accounts with a real relationship between them. A test that only ever runs as
 one account cannot see the case this change exists for.
 
-**Nothing in section 5 has been done.** A local `next build` emitted the route and the rendering
-tests pass against mocked data — neither is evidence that a real vratmitra sees a real roster.
+**Section 5 complete, 2026-08-27.** A real vratmitra, invited and accepted through the product on
+UAT, sees a real roster. It could not be attempted until that day: accepting an invitation
+returned 403 to every user (#214), and an invitation to someone not yet registered never linked to
+their account (#215). Both were found by this change's own verification step refusing to pass.
