@@ -4,7 +4,7 @@ import { EntityNotFoundException } from '../../common/exceptions/app.exceptions'
 
 function make(repo: Record<string, any>, index: Record<string, any> = {}) {
   const idx = { upsert: vi.fn(), remove: vi.fn(), search: vi.fn().mockResolvedValue([]), ...index };
-  return { service: new ContentService(repo as never, idx as never), idx };
+  return { service: new ContentService(repo as never, idx), idx };
 }
 
 describe('ContentService', () => {
