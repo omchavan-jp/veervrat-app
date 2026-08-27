@@ -35,7 +35,11 @@ function makeItem(overrides: Record<string, unknown> = {}) {
     dismissedAt: null,
     archivedAt: null,
     createdAt: new Date(2026, 0, 1, 10, 0, 0).toISOString(),
-    actor: { id: 'u-1', displayName: 'Mentor One', avatarUrl: null },
+    actor: { id: 'u-1', username: 'mentor_one', displayName: 'Mentor One', avatarUrl: null },
+    // The destination now comes from the API. The panel used to decide it with its own map,
+    // which drifted until 10 of 22 event types had no destination at all — so the panel's job
+    // is to follow this, and a fixture that omits it is not a notification the API would send.
+    link: '/actions',
     ...overrides,
   };
 }
@@ -123,7 +127,13 @@ describe('NotificationPanel', () => {
 
   it('routes a VM invitation notification to /invitations, not /dashboard', async () => {
     mockNotificationsApi.list.mockResolvedValue({
-      items: [makeItem({ eventType: 'VM_INVITATION_RECEIVED', resourceType: 'invitation' })],
+      items: [
+        makeItem({
+          eventType: 'VM_INVITATION_RECEIVED',
+          resourceType: 'invitation',
+          link: '/invitations',
+        }),
+      ],
       nextCursor: null,
     });
     mockNotificationsApi.markRead.mockResolvedValue({ id: 'n-1' });
