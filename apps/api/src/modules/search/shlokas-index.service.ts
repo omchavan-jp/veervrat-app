@@ -25,7 +25,7 @@ export class ShlokasIndexService {
     // No-op.
   }
 
-  async search(_query: string, _limit = 30): Promise<string[]> {
-    throw new SearchUnavailableException('shlokas');
+  search(_query: string, _limit = 30): Promise<string[]> {
+    return Promise.reject(new SearchUnavailableException('shlokas'));
   }
 }

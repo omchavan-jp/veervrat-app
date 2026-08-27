@@ -18,7 +18,6 @@ export type BlogIndexDoc = {
 // the Postgres migration lands (#194 item 2).
 @Injectable()
 export class BlogsIndexService {
-
   async upsert(_doc: BlogIndexDoc): Promise<void> {
     // No-op until blog search migrates to Postgres (#194 item 2).
   }
@@ -27,7 +26,7 @@ export class BlogsIndexService {
     // No-op.
   }
 
-  async search(_query: string, _limit = 20): Promise<string[]> {
-    throw new SearchUnavailableException('blogs');
+  search(_query: string, _limit = 20): Promise<string[]> {
+    return Promise.reject(new SearchUnavailableException('blogs'));
   }
 }

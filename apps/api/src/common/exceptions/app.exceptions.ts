@@ -276,7 +276,8 @@ export class NoPasswordSetException extends UnprocessableEntityException {
   constructor() {
     super({
       error: 'NO_PASSWORD_SET',
-      message: 'This account has no password. Set a password first using forgot-password or the settings page.',
+      message:
+        'This account has no password. Set a password first using forgot-password or the settings page.',
     });
   }
 }

@@ -2,9 +2,10 @@ import { describe, it, expect, vi } from 'vitest';
 import { UsersIndexService } from './users-index.service';
 
 function makeService(queryRawResult: unknown[] | Error = []) {
-  const $queryRaw = queryRawResult instanceof Error
-    ? vi.fn().mockRejectedValue(queryRawResult)
-    : vi.fn().mockResolvedValue(queryRawResult);
+  const $queryRaw =
+    queryRawResult instanceof Error
+      ? vi.fn().mockRejectedValue(queryRawResult)
+      : vi.fn().mockResolvedValue(queryRawResult);
   const prisma = { $queryRaw };
   const service = new UsersIndexService(prisma as never);
   return { service, prisma };

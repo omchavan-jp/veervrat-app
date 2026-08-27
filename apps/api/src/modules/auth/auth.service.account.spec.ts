@@ -14,7 +14,6 @@ import {
   InvalidCredentialsException,
   DuplicateEntityException,
   EntityInUseException,
-  EntityNotFoundException,
   NoPasswordSetException,
   TokenInvalidException,
 } from '../../common/exceptions/app.exceptions';
