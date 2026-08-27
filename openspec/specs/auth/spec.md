@@ -117,6 +117,22 @@ Follows Controller → Service → Repository → Prisma layering. Prisma only i
 
 All pages use React Hook Form + Zod for validation, TanStack Query for server state, shadcn/ui components, and `next-intl` (`useTranslations('auth')`) for all strings — zero hardcoded text in JSX.
 
+### Auth state: seeded, not fetched
+
+The current user is resolved **server-side** in the root layout's server component (`layout.tsx`
+calls `getSessionUser()`, which reads the session cookie and queries the database) and passed to
+`Providers` as `initialUser`. The provider seeds it into the TanStack Query cache via
+`setQueryData` before any client component renders.
+
+This means:
+- **No client-side `/auth/me` fetch on page load.** The first render already has the user.
+- **No auth flash.** A logged-in user never briefly sees logged-out UI.
+- **`null` is never seeded.** If the server can't resolve a user, it passes nothing — the
+  query starts in "unknown" state and fetches on its own, which is safe. Seeding `null` would
+  suppress that fetch and lock in a false "logged out" conclusion.
+- **Invalidation still works.** Login, logout, and 403 responses invalidate the query, which
+  triggers a fresh fetch — the seed is initial state only.
+
 ### Route Groups
 
 | Group | Guard | Behavior |

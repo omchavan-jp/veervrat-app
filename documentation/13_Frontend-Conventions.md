@@ -75,13 +75,19 @@ mentee, lacuna or statement.
 | Lists with filtering/pagination | TanStack Query |
 | Form submissions | `useMutation` |
 | Data that updates frequently | TanStack Query with short stale time |
-| Auth state (current user) | TanStack Query, hydrated from server |
+| Auth state (current user) | TanStack Query, **seeded** from server (not fetched — see below) |
 
 ## 5. State management
 
 ### No global state library
 - **server state**: TanStack Query
-- **auth state**: TanStack Query (current user query, invalidated on login/logout)
+- **auth state**: TanStack Query — the current user is **seeded** from the server-side session
+  in `providers.tsx` (via `initialUser` prop from the root layout's server component), not
+  fetched client-side on page load. This eliminates the auth flash (logged-in user briefly
+  sees a logged-out state) and removes one API round-trip from every page load. The query is
+  invalidated on login/logout and on 403 responses (capability revocation). Seeding `null` is
+  deliberately avoided — absence of a seed means "unknown, go and find out", which is safe;
+  `null` would suppress the fetch and lock in a false "logged out" state
 - **local UI state**: `useState` in the component that needs it
 - **shared UI state** (e.g., sidebar open/closed, theme): React Context, scoped to the relevant subtree
 

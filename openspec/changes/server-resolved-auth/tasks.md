@@ -56,9 +56,12 @@
 ## 5. Ship and document
 
 - [x] 5.1 Merge; verify on UAT with §4 against the deployed build.
-- [ ] 5.2 Update `documentation/13_Frontend-Conventions.md` — auth is seeded, not fetched, on
+- [x] 5.2 Update `documentation/13_Frontend-Conventions.md` — auth is seeded, not fetched, on
   first render; `useAuth` is for changes.
-- [ ] 5.3 Update `openspec/specs/auth` with the seeded-initial-state requirement.
+  Done 2026-08-27: §4 "What goes where" table and §5 "State management" updated with seeding
+  explanation, null-seed danger, and invalidation behaviour.
+- [x] 5.3 Update `openspec/specs/auth` with the seeded-initial-state requirement.
+  Done 2026-08-27: "Auth state: seeded, not fetched" section added to `openspec/specs/auth/spec.md`.
 - [x] 5.4 Note in #92 that cold-start latency now affects signed-in page loads too — it makes the
   always-on replica trade-off more favourable than when it was declined.
 - [x] 5.5 CHANGELOG: user-visible (pages no longer flash a spinner before showing content).
