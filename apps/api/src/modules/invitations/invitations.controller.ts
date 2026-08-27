@@ -10,6 +10,22 @@ import { SendInvitationDto } from './dto/send-invitation.dto';
 export class InvitationsController {
   constructor(private readonly invitationsService: InvitationsService) {}
 
+  /**
+   * ⚠️ ORDERING. Both static GETs below are declared BEFORE `:token`, and must stay that way.
+   *
+   * Nest matches routes in registration order, and `GET :token` lives in
+   * `PublicInvitationsController`. If that controller is listed FIRST in the module's
+   * `controllers` array, "received" is read as an invitation token: the endpoint 404s on a URL
+   * that looks entirely correct, with nothing in the logs to suggest why.
+   *
+   * Pinned by a test in `invitations-received.integration.spec.ts` rather than by this comment,
+   * because reordering an array is the most innocent-looking edit there is.
+   */
+  @Get('received')
+  async received(@CurrentUser() user: SessionUser) {
+    return this.invitationsService.listReceived(user);
+  }
+
   @Post()
   @HttpCode(201)
   sendVmInvitation(@CurrentUser() user: SessionUser, @Body() dto: SendInvitationDto) {
