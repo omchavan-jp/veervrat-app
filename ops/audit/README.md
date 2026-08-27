@@ -42,19 +42,20 @@ been **"the API can do it."**
 
 ## The five things worth acting on
 
-1. 🔴 **O18 — a real password is in git history.** `e2e/auth-and-nav.spec.ts` hardcoded a personal
-   account and its plaintext password from `258395a` until 2026-08-27. Removing the line does not
-   remove it from history. **Rotate it.** The only finding here that cannot be fixed in code.
-2. 🔴 **#217 — data export has no UI.** #135, titled *"the access and portability obligation has no
-   mechanism"*, was closed with an endpoint no user can call. `ops/legal-briefing-pack.md` goes to
-   a lawyer partly on the strength of this.
+1. ✅ ~~**O18 — a real password is in git history.**~~ Rotated. O24 (renumbered from duplicate
+   O18) closed 2026-08-27. The password is no longer valid; git history retains the old value
+   but it is useless.
+2. ✅ ~~**#217 — data export has no UI.**~~ Implemented via PR #233 (ENDED enum + data export
+   UI). Settings page has download + email buttons, email lands a token-authenticated download
+   page. #217 closed 2026-08-27.
 3. **Ratify or overrule the vratmitra policy** (audit 00 §3). Accepting an invitation now grants
    the role, which makes becoming a vratmitra **self-service**. If JP intends vratmitras to be
    appointed, the fix is the opposite and reverting is three lines.
 4. **Decide the notification destinations** (#218) and whether the two deep-link maps should
    agree. They have drifted twice.
-5. **Decide whether `ENDED` joins the enum** (audit 04 §4). The queries are fixed; the shape that
-   produced them is not.
+5. ✅ ~~**Decide whether `ENDED` joins the enum**~~ (audit 04 §4). Implemented via PR #233.
+   `VmRelationshipState` now has `ENDED`; migration backfills rows where `ended_at IS NOT NULL`.
+   Queries no longer need the `endedAt: null` guard.
 
 ---
 
