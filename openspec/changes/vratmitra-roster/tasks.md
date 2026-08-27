@@ -48,8 +48,13 @@
 
 ## 5. Verify like a person
 
-- [ ] 5.1 On a deployed environment, as a vratmitra with at least one vratarthi: the item appears
+- [x] 5.1 On a deployed environment, as a vratmitra with at least one vratarthi: the item appears
   and the roster lists them.
+  **Verified on UAT 2026-08-27** by a real invite → accept → roster round trip, reported by Om.
+  The badge read **Overall**, which is the answer that mattered: the relationship formed as a
+  global one, so `listVratarthisForVm`'s global branch is exercised end to end against a real
+  database. This could not be run until the same day — accepting a vratmitra invitation returned
+  403 to every user (#214) and an invitation to a non-member never linked to their account (#215).
 - [ ] 5.2 As someone who mentors nobody: the item does not appear at all.
 - [ ] 5.3 As someone who is both: both sets of navigation are present and neither is duplicated.
 
