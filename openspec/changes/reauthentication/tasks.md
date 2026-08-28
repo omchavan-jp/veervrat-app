@@ -44,9 +44,13 @@
 - [x] 4.2 Frontend: forgot-password reflects all three, including offering the set-password path.
 - [x] 4.3 Settings: an account with no password sees the warning that **Google is the only way
   in**, then the action. Warning first — see design decision 3.
-- [ ] 4.4 Replace `EntityNotFoundException('AuthAccount')` wherever it reaches a user. It names a
+- [x] 4.4 Replace `EntityNotFoundException('AuthAccount')` wherever it reaches a user. It names a
   database table to somebody changing their password, and it is wrong in substance: nothing is
   missing, the operation does not apply.
+  Done 2026-08-27: `changePassword` → `NoPasswordSetException` (HTTP 422, error code
+  `NO_PASSWORD_SET`). `disconnectAccount` → `EntityNotFoundException('Login method', ...)`.
+  Comment on line 833 (requestEmailChange) left as historical context — the throw was already
+  replaced by `assertRecentlyAuthenticated` in a prior change.
 
 ## 5. Verify like a person
 
@@ -63,9 +67,10 @@
 
 - [x] 6.1 **Done.** Delete and email change now accept either proof. `reauthenticated_at` on the
   session, stamped by the OAuth callback, consumed on use.
-- [ ] 6.2 `changePassword` still throws `EntityNotFoundException('AuthAccount')` for an account
+- [x] 6.2 `changePassword` still throws `EntityNotFoundException('AuthAccount')` for an account
   with no password. Unreachable from the UI now (settings shows the set-password panel instead),
   but the API still answers that way to a direct caller. Task 4.4.
+  Done 2026-08-27: resolved by task 4.4 — now throws `NoPasswordSetException`.
 - [ ] 6.3 **The new Marathi strings are unreviewed.** Written by a non-speaker, same caveat as
   #154 — and #154's pack covers policy documents, not interface copy. Worth adding to whatever
   review that becomes.

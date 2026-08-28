@@ -1,5 +1,5 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { MeiliService, errMessage } from './meili.service';
+import { Injectable } from '@nestjs/common';
+import { SearchUnavailableException } from './search-unavailable.exception';
 
 export const BLOGS_INDEX = 'blogs';
 
@@ -9,56 +9,24 @@ export type BlogIndexDoc = {
   bodyText: string;
 };
 
-// Owns the Meilisearch `blogs` index: only published, non-deleted blogs (title +
-// plain-text body). Best-effort sync — failures logged, never thrown. Search returns
-// [] when Meili is disabled/unreachable. Independent of the users index.
+// Blog full-text search is not yet migrated to Postgres. The previous Meilisearch
+// backend was never provisioned, so search silently returned empty results — which
+// looked like missing content rather than a broken feature. This version throws a
+// typed exception so callers can render "search unavailable" instead of "no results".
+//
+// Index maintenance (upsert/remove) remains a no-op: there is nothing to sync until
+// the Postgres migration lands (#194 item 2).
 @Injectable()
-export class BlogsIndexService implements OnModuleInit {
-  private readonly logger = new Logger('BlogsIndexService');
-
-  constructor(private readonly meili: MeiliService) {}
-
-  async onModuleInit(): Promise<void> {
-    if (!this.meili.enabled) return;
-    await this.meili.ensureIndex(BLOGS_INDEX);
-    const index = this.meili.index(BLOGS_INDEX);
-    if (!index) return;
-    try {
-      await index.updateSettings({ searchableAttributes: ['title', 'bodyText'] });
-    } catch (error) {
-      this.logger.warn({ msg: 'blogs index settings failed', error: errMessage(error) });
-    }
+export class BlogsIndexService {
+  async upsert(_doc: BlogIndexDoc): Promise<void> {
+    // No-op until blog search migrates to Postgres (#194 item 2).
   }
 
-  async upsert(doc: BlogIndexDoc): Promise<void> {
-    const index = this.meili.index(BLOGS_INDEX);
-    if (!index) return;
-    try {
-      await index.addDocuments([doc]);
-    } catch (error) {
-      this.logger.warn({ msg: 'blogs index upsert failed', id: doc.id, error: errMessage(error) });
-    }
+  async remove(_id: string): Promise<void> {
+    // No-op.
   }
 
-  async remove(id: string): Promise<void> {
-    const index = this.meili.index(BLOGS_INDEX);
-    if (!index) return;
-    try {
-      await index.deleteDocument(id);
-    } catch (error) {
-      this.logger.warn({ msg: 'blogs index remove failed', id, error: errMessage(error) });
-    }
-  }
-
-  async search(query: string, limit = 20): Promise<string[]> {
-    const index = this.meili.index(BLOGS_INDEX);
-    if (!index) return [];
-    try {
-      const res = await index.search<BlogIndexDoc>(query, { limit });
-      return res.hits.map((h) => h.id);
-    } catch (error) {
-      this.logger.warn({ msg: 'blogs search failed', error: errMessage(error) });
-      return [];
-    }
+  search(_query: string, _limit = 20): Promise<string[]> {
+    return Promise.reject(new SearchUnavailableException('blogs'));
   }
 }
