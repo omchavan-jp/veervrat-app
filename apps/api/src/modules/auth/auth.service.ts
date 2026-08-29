@@ -885,6 +885,16 @@ export class AuthService {
     if (await this.authRepository.emailInUse(normalized))
       throw new DuplicateEntityException('User', 'email');
 
+    // A live account can hold the address through its EMAIL `AuthAccount` without holding it
+    // through `User.email` — see `confirmEmailChange`. Checked here too so the refusal arrives
+    // on the form, rather than after a round trip through somebody's inbox. A claim held by a
+    // *deleted* account is deliberately not refused here: it is released at confirm time, so
+    // stopping the person now would be refusing on behalf of an account nobody is behind.
+    const liveClaim = await this.authRepository.findEmailAccountByAddress(normalized);
+    if (liveClaim && liveClaim.userId !== userId && !liveClaim.user.deletedAt) {
+      throw new DuplicateEntityException('User', 'email');
+    }
+
     await this.authRepository.setPendingEmail(userId, normalized);
     await this.authRepository.invalidateTokensByUserAndType(userId, VerificationType.EMAIL_CHANGE);
     const token = this.generateToken();
@@ -926,6 +936,30 @@ export class AuthService {
     // Guard against the address being taken between request and confirm.
     if (await this.authRepository.emailInUse(pending))
       throw new DuplicateEntityException('User', 'email');
+
+    // `emailInUse` reads `User.email`, and that is not the only place an address is spoken for.
+    // The EMAIL `AuthAccount` holds it too, inside `@@unique([provider, providerAccountId])`, and
+    // the two drift apart in two ways:
+    //
+    //   - anonymising rewrites `User.email` to the anon form but leaves the row standing, so a
+    //     deleted account goes on holding a real address that nothing can see;
+    //   - an account whose email changed before the row was kept in step still points at the
+    //     address it used to have.
+    //
+    // Either way the guard above says "free" and the write below then fails on the index. That
+    // reached a person as "this confirmation link is invalid", about a link that was fine.
+    const claim = await this.authRepository.findEmailAccountByAddress(pending);
+    if (claim && claim.userId !== verificationToken.userId) {
+      if (claim.user.deletedAt) {
+        // Nobody is behind it. Release it rather than refuse a live person on behalf of a
+        // deleted account — the same call `register` makes for the same reason.
+        await this.authRepository.releaseIdentityClaims(claim.userId);
+      } else {
+        // Somebody live holds it, even if their `User.email` has since moved on. Refusing is
+        // correct; refusing *legibly* is the part that was missing.
+        throw new DuplicateEntityException('User', 'email');
+      }
+    }
 
     const user = await this.authRepository.applyEmailChange(verificationToken.userId, pending);
     await this.authRepository.markTokenUsed(verificationToken.id);

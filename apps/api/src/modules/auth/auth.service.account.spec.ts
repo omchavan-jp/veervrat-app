@@ -133,6 +133,9 @@ describe('AuthService — requestEmailChange', () => {
       // `false` is "and there isn't one either", which is what makes the refusal correct.
       consumeSessionReauthentication: vi.fn().mockResolvedValue(false),
       emailInUse: vi.fn().mockResolvedValue(false),
+      // Nobody holds the address through an EMAIL AuthAccount either — the second place an
+      // address is spoken for, and the one `emailInUse` cannot see.
+      findEmailAccountByAddress: vi.fn().mockResolvedValue(null),
       setPendingEmail: vi.fn().mockResolvedValue({ id: 'u1' }),
       invalidateTokensByUserAndType: vi.fn().mockResolvedValue({}),
       createVerificationToken: vi.fn().mockResolvedValue({}),
@@ -157,6 +160,95 @@ describe('AuthService — requestEmailChange', () => {
   });
 });
 
+describe('AuthService — email change onto a claimed address', () => {
+  const TOKEN = {
+    id: 't1',
+    userId: 'u1',
+    expiresAt: new Date(Date.now() + 60000),
+    metadata: { newEmail: 'new@x.com' },
+  };
+
+  function base(extra: Record<string, unknown>) {
+    return {
+      findVerificationToken: vi.fn().mockResolvedValue(TOKEN),
+      getPendingEmail: vi.fn().mockResolvedValue('new@x.com'),
+      emailInUse: vi.fn().mockResolvedValue(false),
+      markTokenUsed: vi.fn().mockResolvedValue({}),
+      ...extra,
+    };
+  }
+
+  it('releases a claim held by a deleted account, then applies the change', async () => {
+    const releaseIdentityClaims = vi.fn().mockResolvedValue({ count: 1 });
+    const applyEmailChange = vi.fn().mockResolvedValue({
+      id: 'u1',
+      email: 'new@x.com',
+      displayName: 'U',
+      username: 'u',
+      roles: [],
+      emailVerifiedAt: new Date(),
+    });
+    const repo = base({
+      findEmailAccountByAddress: vi
+        .fn()
+        .mockResolvedValue({ userId: 'u-dead', user: { id: 'u-dead', deletedAt: new Date() } }),
+      releaseIdentityClaims,
+      applyEmailChange,
+    });
+    const service = makeService(repo);
+
+    await service.confirmEmailChange('tok');
+
+    expect(releaseIdentityClaims).toHaveBeenCalledWith('u-dead');
+    expect(applyEmailChange).toHaveBeenCalledWith('u1', 'new@x.com');
+  });
+
+  it('refuses a claim held by a LIVE account, and does not write', async () => {
+    const releaseIdentityClaims = vi.fn();
+    const applyEmailChange = vi.fn();
+    const repo = base({
+      findEmailAccountByAddress: vi
+        .fn()
+        .mockResolvedValue({ userId: 'u-live', user: { id: 'u-live', deletedAt: null } }),
+      releaseIdentityClaims,
+      applyEmailChange,
+    });
+    const service = makeService(repo);
+
+    await expect(service.confirmEmailChange('tok')).rejects.toBeInstanceOf(
+      DuplicateEntityException,
+    );
+    // Neither released nor written: the live holder keeps a working sign-in.
+    expect(releaseIdentityClaims).not.toHaveBeenCalled();
+    expect(applyEmailChange).not.toHaveBeenCalled();
+  });
+
+  it('does not treat the mover own row as somebody else claim', async () => {
+    const applyEmailChange = vi.fn().mockResolvedValue({
+      id: 'u1',
+      email: 'new@x.com',
+      displayName: 'U',
+      username: 'u',
+      roles: [],
+      emailVerifiedAt: new Date(),
+    });
+    const releaseIdentityClaims = vi.fn();
+    const repo = base({
+      findEmailAccountByAddress: vi
+        .fn()
+        .mockResolvedValue({ userId: 'u1', user: { id: 'u1', deletedAt: null } }),
+      releaseIdentityClaims,
+      applyEmailChange,
+    });
+    const service = makeService(repo);
+
+    await service.confirmEmailChange('tok');
+
+    expect(releaseIdentityClaims).not.toHaveBeenCalled();
+    expect(applyEmailChange).toHaveBeenCalled();
+  });
+});
+
 describe('AuthService — confirmEmailChange', () => {
   it('applies the change when token + pending email match', async () => {
     const repo = {
@@ -168,6 +260,8 @@ describe('AuthService — confirmEmailChange', () => {
       }),
       getPendingEmail: vi.fn().mockResolvedValue('new@x.com'),
       emailInUse: vi.fn().mockResolvedValue(false),
+      findEmailAccountByAddress: vi.fn().mockResolvedValue(null),
+      releaseIdentityClaims: vi.fn().mockResolvedValue({ count: 0 }),
       applyEmailChange: vi.fn().mockResolvedValue({
         id: 'u1',
         email: 'new@x.com',
