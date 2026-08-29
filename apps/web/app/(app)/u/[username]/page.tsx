@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations, useFormatter } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -254,7 +255,16 @@ export default function PublicProfilePage() {
                       day: 'numeric',
                     })}
                   </div>
-                  <p className="text-[14px] leading-relaxed">{excerptFromDoc(e.body)}</p>
+                  {/* The same link the public pool already carries. Without it this section was
+                      the one place a person meets somebody else's writing and cannot open it —
+                      the dead end `experience-log-view` task 2.3 asks about. The pool was fixed
+                      when the log finally had a page (#190); the profile was not. */}
+                  <Link
+                    href={`/community/experiences/${e.id}`}
+                    className="block text-[14px] leading-relaxed hover:text-accent"
+                  >
+                    {excerptFromDoc(e.body)}
+                  </Link>
                 </article>
               ))}
             </div>
