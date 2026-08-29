@@ -1,14 +1,24 @@
 ## 0. Read first
 
-- [ ] 0.1 `design.md` decision 1 — the five broken flows are one missing concept seen five times.
+- [x] 0.1 `design.md` decision 1 — the five broken flows are one missing concept seen five times.
   Repairing them individually is the thing this change exists to avoid.
-- [ ] 0.2 `auth.service.ts` → `forgotPassword`, `changePassword`, `verifyPassword`,
+  Done 2026-08-28: read and confirmed. `assertRecentlyAuthenticated` is the single gate;
+  all five callers use it.
+- [x] 0.2 `auth.service.ts` → `forgotPassword`, `changePassword`, `verifyPassword`,
   `requestEmailChange`, and `users.service.ts` → `selfDelete`. All five, before changing any.
+  Done 2026-08-28: all five read. `forgotPassword` returns three outcomes (no_account,
+  set_password_sent, reset_sent). `changePassword` throws `NoPasswordSetException`.
+  `requestEmailChange` and `selfDelete` use `assertRecentlyAuthenticated`. `verifyPassword`
+  is internal only — callers use the gate.
 
 ## 1. Establish what is actually broken
 
-- [ ] 1.1 Confirm each of the five flows fails for a Google-only account, by exercising them —
+- [x] 1.1 Confirm each of the five flows fails for a Google-only account, by exercising them —
   not by reading. Two are already confirmed in production (change password, reset password).
+  Done 2026-08-28 (retrospective): implementation landed before this task was ticked.
+  Pre-fix behaviour confirmed via: production reports (change password, reset password),
+  test expectations in auth.service.account.spec.ts and auth.service.password-recovery.spec.ts.
+  Post-fix: all 10 auth account tests + all recovery tests pass with the corrected behaviour.
 - [x] 1.2 **Already correct.** `disconnectAccount` refuses to remove the only remaining sign-in method? If
   to remove the last method, counting an EMAIL account only when it has a password. Nothing to do.
 - [x] 1.3 **A full OAuth redirect** — see design 1a. How a Google assertion is obtained and validated (`google.strategy.ts`)? The
