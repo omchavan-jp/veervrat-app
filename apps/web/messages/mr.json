@@ -260,7 +260,11 @@
       "rateLimitExceededIn": "खूप जास्त प्रयत्न. कृपया {seconds} सेकंदांनी पुन्हा प्रयत्न करा.",
       "rateLimitExceededInMinutes": "खूप जास्त प्रयत्न. कृपया सुमारे {minutes} मिनिटांनी पुन्हा प्रयत्न करा.",
       "resendVerificationWait": "आणखी एक विनंती {seconds} सेकंदांनी करता येईल.",
-      "resendVerificationLimited": "या नेटवर्कवरून खूप जास्त विनंत्या. कृपया सुमारे {minutes} मिनिटांनी पुन्हा प्रयत्न करा."
+      "resendVerificationLimited": "या नेटवर्कवरून खूप जास्त विनंत्या. कृपया सुमारे {minutes} मिनिटांनी पुन्हा प्रयत्न करा.",
+      "accountDeleted": "हे खाते हटवले गेले आहे.",
+      "accountDeletedOn": "हे खाते {date} रोजी हटवले गेले.",
+      "accountDeletedPermanent": "हटवणे कायमस्वरूपी आहे, त्यामुळे खाते पुन्हा मिळवता येत नाही. तुम्ही या Google पत्त्याने नवीन खाते तयार करू शकता.",
+      "accountDeletedSignUp": "नवीन खाते तयार करा"
     },
     "linkAccount": {
       "title": "तुमचे Google खाते जोडा",

@@ -5,8 +5,20 @@ import type { SessionUser } from '@/lib/session-user';
 // Read per request, never at module scope. Middleware modules are bundled, and a
 // module-scope `process.env` read can be frozen into that bundle — the same build-time
 // baking that pointed prod's web tier at UAT's api (21_Infrastructure-Conventions §17).
-function apiBase(): string {
-  return process.env.API_BASE_URL || 'http://localhost:3001/api/v1';
+//
+// `API_INTERNAL_URL` is preferred because this is the one call the *server* makes to the api,
+// and both run in the same environment. Sent to the public origin it leaves the network and
+// comes back, adding latency to every server-rendered page and making a cold api something the
+// proxy waits on — and a proxy that times out reports no user, which the layout reads as
+// "signed out". The browser is unaffected: it keeps using the public origin, so nothing about
+// cookie scope or CORS changes.
+//
+// Optional by design. Unset — local development, and any environment that has not defined one —
+// it falls back to the public URL and behaves exactly as before.
+export function apiBase(): string {
+  return (
+    process.env.API_INTERNAL_URL || process.env.API_BASE_URL || 'http://localhost:3001/api/v1'
+  );
 }
 
 function parseAcceptLanguage(header: string | null): Locale {
