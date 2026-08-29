@@ -26,6 +26,10 @@ export default function LoginPage() {
   const locale = useLocale();
   const searchParams = useSearchParams();
   const oauthError = searchParams.get('error');
+  // Deleting an account ends by landing here. Without a word, a destructive action the person
+  // was warned "cannot be undone" completes in silence, and the only way to find out whether it
+  // worked is to try signing in again.
+  const justDeleted = searchParams.get('notice') === 'account_deleted';
   const login = useLogin();
 
   const {
@@ -94,6 +98,14 @@ export default function LoginPage() {
       {oauthErrorMsg && (
         <Alert variant="destructive" className="mb-4 border-destructive/40 bg-destructive/10">
           <AlertDescription className="text-destructive">{oauthErrorMsg}</AlertDescription>
+        </Alert>
+      )}
+
+      {justDeleted && (
+        <Alert className="mb-4 border-border bg-surface-2" data-testid="account-deleted-confirmed">
+          <AlertDescription className="text-foreground">
+            {tErrors('accountDeletedConfirmed')}
+          </AlertDescription>
         </Alert>
       )}
 
