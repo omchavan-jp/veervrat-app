@@ -838,7 +838,10 @@
     "goToVratmitras": "माझे व्रतमित्र वर जा",
     "goToDashboard": "डॅशबोर्डवर जा",
     "bodyFrom": "<name></name> यांनी तुम्हाला त्यांचे व्रतमित्र होण्यासाठी आमंत्रित केले आहे.",
-    "goToInvitations": "आमंत्रणांकडे जा"
+    "goToInvitations": "आमंत्रणांकडे जा",
+    "signInToRespond": "स्वीकारण्यासाठी साइन इन करा — किंवा खाते तयार करा, हे निमंत्रण तुमची वाट पाहत असेल.",
+    "createAccountToAccept": "खाते तयार करा",
+    "signIn": "साइन इन करा"
   },
   "publicProfile": {
     "memberSince": "{date} पासून सदस्य",

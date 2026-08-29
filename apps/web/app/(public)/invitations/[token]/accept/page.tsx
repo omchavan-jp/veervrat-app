@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { UserPlus, Check, X } from 'lucide-react';
 import { invitationsApi } from '@/lib/api/invitations';
+import { useAuth } from '@/hooks/use-auth';
 import { errorMessage } from '@/lib/api/error-message';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Spinner } from '@/components/ui/spinner';
@@ -16,6 +17,7 @@ type Outcome = 'pending' | 'accepted' | 'declined' | 'error';
 export default function InvitationAcceptPage() {
   const { token } = useParams<{ token: string }>();
   const t = useTranslations('invitation');
+  const { isAuthenticated } = useAuth();
   const [outcome, setOutcome] = useState<Outcome>('pending');
   // An invitation fails for reasons the person can act on — it expired, it was already accepted,
   // it belongs to a different account. The API names which; showing a generic sentence instead
@@ -113,22 +115,49 @@ export default function InvitationAcceptPage() {
           ) : (
             <p className="mt-2 text-[14px] text-muted">{t('body')}</p>
           )}
-          <div className="mt-7 flex w-full flex-col gap-2.5 sm:flex-row sm:justify-center">
-            <button
-              onClick={() => accept.mutate()}
-              disabled={pending}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-6 py-3 text-[14px] font-medium text-bg transition-transform hover:bg-accent-hover active:scale-95 disabled:opacity-50"
-            >
-              {accept.isPending ? t('accepting') : t('accept')}
-            </button>
-            <button
-              onClick={() => decline.mutate()}
-              disabled={pending}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-border-strong px-6 py-3 text-[14px] transition-colors hover:border-accent disabled:opacity-50"
-            >
-              {decline.isPending ? t('declining') : t('decline')}
-            </button>
-          </div>
+          {/* Accepting is what needs a session; reading who invited you is not. Somebody without
+              an account is sent to sign up and returned here, rather than being shown two buttons
+              that cannot work — or, as before, a login form with no idea what it was for. */}
+          {isAuthenticated ? (
+            <div className="mt-7 flex w-full flex-col gap-2.5 sm:flex-row sm:justify-center">
+              <button
+                onClick={() => accept.mutate()}
+                disabled={pending}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-6 py-3 text-[14px] font-medium text-bg transition-transform hover:bg-accent-hover active:scale-95 disabled:opacity-50"
+              >
+                {accept.isPending ? t('accepting') : t('accept')}
+              </button>
+              <button
+                onClick={() => decline.mutate()}
+                disabled={pending}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-border-strong px-6 py-3 text-[14px] transition-colors hover:border-accent disabled:opacity-50"
+              >
+                {decline.isPending ? t('declining') : t('decline')}
+              </button>
+            </div>
+          ) : (
+            <div className="mt-7 flex w-full flex-col items-center gap-2.5">
+              {/* Says what will actually happen. `?next=` is not honoured by login or signup, so
+                  promising a return here would be a promise the app does not keep — and the
+                  invitation genuinely does wait in "Invitations for you", which is the path
+                  received-invitations task 5.1 verified. */}
+              <p className="text-[13px] text-muted">{t('signInToRespond')}</p>
+              <div className="flex w-full flex-col gap-2.5 sm:flex-row sm:justify-center">
+                <Link
+                  href="/signup"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-6 py-3 text-[14px] font-medium text-bg hover:bg-accent-hover"
+                >
+                  {t('createAccountToAccept')}
+                </Link>
+                <Link
+                  href="/login"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-border-strong px-6 py-3 text-[14px] hover:border-accent"
+                >
+                  {t('signIn')}
+                </Link>
+              </div>
+            </div>
+          )}
         </>
       )}
 
