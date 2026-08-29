@@ -85,13 +85,25 @@
   deleted account still claimed failed on the unique index, and deleting an account reported
   "your session has expired" for a deletion that had succeeded.
 
-- [ ] 5.2 Ask for a reset on an address that does not exist, and confirm it says so.
-  Partially verified 2026-08-29: the deployed API answers `{"status":"no_account"}` for an
-  address with no account. **What a person sees has not been checked** — nobody has loaded the
-  forgot-password page for a non-existent address, and this section is "verify like a person".
-  Task 4.2 covers the rendering; that it renders on the deployed build is the remaining gap.
+- [x] 5.2 Ask for a reset on an address that does not exist, and confirm it says so.
+  Done 2026-08-29, in a browser on UAT. The page reads "No account for that address — we could
+  not find an account for that email address. Check it for a typo, or create an account", and
+  offers *Create an account* alongside *Back to login*.
+
+  Both halves of what #196 asked for: it names the outcome instead of the old unconditional
+  "sent", and it offers the next step rather than leaving someone to guess. A typo and a
+  delivery failure are no longer the same experience.
+
 - [ ] 5.3 Confirm a stale Google assertion is refused (task 2.2). If it is accepted, the step is
   decoration.
+  **Single-use half verified** 2026-08-29, in a browser on UAT: after verifying with Google and
+  spending the proof on an email change, the next action asked for Google again rather than
+  accepting the spent stamp. `consumeSessionReauthentication` clears the stamp in the same
+  conditional UPDATE that checks it (§7), and that is what this exercises.
+
+  **Expiry half still open.** Obtain the stamp, let it pass the 10-minute window without using
+  it, then attempt a gated action. If it proceeds, the window is not enforced and the step is
+  decoration for the case that matters most — a proof minted at sign-in and replayed later.
 
 ⚠️ 5.1 needs a throwaway Google account, not a real one — it ends by deleting the account. Two
 are needed, not one, for the reason recorded above.
