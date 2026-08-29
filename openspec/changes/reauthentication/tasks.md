@@ -54,6 +54,9 @@
 - [x] 4.2 Frontend: forgot-password reflects all three, including offering the set-password path.
 - [x] 4.3 Settings: an account with no password sees the warning that **Google is the only way
   in**, then the action. Warning first — see design decision 3.
+  Confirmed in a browser on UAT 2026-08-29: the heading, the consequence ("if you lose access to
+  that Google account, you lose access here too"), then *Set a password*. Warning above action,
+  as the decision requires.
 - [x] 4.4 Replace `EntityNotFoundException('AuthAccount')` wherever it reaches a user. It names a
   database table to somebody changing their password, and it is wrong in substance: nothing is
   missing, the operation does not apply.
