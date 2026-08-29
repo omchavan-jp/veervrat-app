@@ -838,7 +838,10 @@
     "goToVratmitras": "Go to My Vratmitras",
     "goToDashboard": "Go to dashboard",
     "bodyFrom": "<name></name> has invited you to be their vratmitra. Accept to begin guiding their practice.",
-    "goToInvitations": "Go to invitations"
+    "goToInvitations": "Go to invitations",
+    "signInToRespond": "Sign in to accept — or create an account, and this invitation will be waiting for you.",
+    "createAccountToAccept": "Create an account",
+    "signIn": "Sign in"
   },
   "publicProfile": {
     "memberSince": "Member since {date}",

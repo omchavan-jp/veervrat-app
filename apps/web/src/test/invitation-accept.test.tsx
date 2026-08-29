@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from './helpers/render';
-import InvitationAcceptPage from '@/app/(app)/invitations/[token]/accept/page';
+import InvitationAcceptPage from '@/app/(public)/invitations/[token]/accept/page';
 import { invitationsApi } from '@/lib/api/invitations';
 import { ApiError } from '@/lib/api/client';
 import enMessages from '../../messages/en.json';
@@ -13,6 +13,14 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('@/lib/api/invitations', () => ({
   invitationsApi: { accept: vi.fn(), decline: vi.fn(), byToken: vi.fn() },
+}));
+
+// These cases are about somebody who HAS an account deciding on an invitation, so they are
+// signed in. The page now renders a sign-up path instead when nobody is — the page moved out of
+// the auth-guarded route group so that an invitee without an account can at least read who
+// invited them (#252), which is what `received-invitations` task 5.4 asks for.
+vi.mock('@/hooks/use-auth', () => ({
+  useAuth: () => ({ user: { id: 'u1' }, isLoading: false, isAuthenticated: true }),
 }));
 
 const accept = vi.mocked(invitationsApi.accept);
