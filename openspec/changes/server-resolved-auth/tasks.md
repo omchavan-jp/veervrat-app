@@ -46,8 +46,18 @@
 - [x] 4.2 Anonymous: `/login` still renders fast, and DevTools shows **no** `/auth/me` call.
 - [ ] 4.3 Sign out in one tab, act in another — the second tab redirects rather than acting as a
   ghost session.
+  **Attempted 2026-08-29 and it failed.** `/journeys` redirected, so it looks like a pass if that
+  is what you click. `/study` — also in this route group, also guarded — kept rendering. The
+  difference was not the guard: journeys fetches data and got a 401, study renders from cache and
+  asked nothing. Filed as #251, fixed in #254 by revalidating on navigation. Re-test against a
+  build carrying that, and click something that does **not** fetch.
+
 - [ ] 4.4 Expire a session server-side mid-session; confirm the next action redirects to login
   rather than silently failing.
+  **Attempted 2026-08-29 and it failed**, the same way as 4.3: browsing continued and only a
+  reload redirected. Reload behaved because the proxy resolves the session server-side. Same fix,
+  #254; same instruction — the next *action* has to be one that would otherwise render from cache.
+
 - [x] 4.5 Re-run the #101 guard: `e2e/auth-no-request-storm.spec.ts` must still pass.
 - [x] 4.6 Measure the added latency on a warm api and record the number. If it is materially worse
   than the ~40ms observed, say so rather than shipping it quietly — the whole decision rests on

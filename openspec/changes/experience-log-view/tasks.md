@@ -47,9 +47,21 @@
 ## 5. Verify like a person, not only a runner
 
 - [ ] 5.1 Open one from "my experiences", and one from the public pool.
-- [ ] 5.2 Open a published PUBLIC log **logged out** — including one containing an image, which
+  **Half done 2026-08-29.** "My experiences" opens. The public pool could not be reached: it is
+  not linked from anywhere, and the profile — the one place a person meets somebody else's
+  writing — rendered entries that were not clickable. Filed as #253; the profile half is fixed in
+  #256. Reaching the pool is a navigation question left to #24/#116, so this task stays open
+  until there is a route to it a person would find.
+
+- [x] 5.2 Open a published PUBLIC log **logged out** — including one containing an image, which
+  Done 2026-08-29, in a private window on UAT. The page rendered and the image loaded — the case
+  this task warns no automated check covers, for the same reason `curl` could not catch the CORP
+  header: a 200 and the right bytes are not the same as a browser agreeing to display it.
   is the case #178/#188 made work and which has never had a page to be seen on.
-- [ ] 5.3 Open an `ONLY_ME` log as another user and confirm it is indistinguishable from missing.
+- [x] 5.3 Open an `ONLY_ME` log as another user and confirm it is indistinguishable from missing.
+  Done 2026-08-29: "Experience not found", both signed in as a different account and signed out.
+  The same answer a genuinely absent log gives, which is the point — anything else would confirm
+  it exists.
 
 ⚠️ Item 5.2 is the one no automated check will cover, for the same reason curl could not catch
 the CORP header: a claim about what a person sees needs a person to look.

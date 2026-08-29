@@ -52,13 +52,27 @@
 
 ## 5. Verify like a person
 
-- [ ] 5.1 On a deployed environment, with two accounts: invite, then as the invitee **follow the
+- [x] 5.1 On a deployed environment, with two accounts: invite, then as the invitee **follow the
+  Done 2026-08-29, in a browser on UAT. The invitation was found through the in-app route, not the
+  email, and accepted from where it landed — "accepted, you are now their vratmitra", and the
+  vratarthi then appeared under My Vratarthis. This is the one the change exists for.
   in-app notification** — not the email — and accept from where it lands.
-- [ ] 5.2 As the invitee, confirm the invitation names the inviter before you accept.
-- [ ] 5.3 Open an expired or already-used invitation and confirm you are told before pressing
+- [x] 5.2 As the invitee, confirm the invitation names the inviter before you accept.
+  Done 2026-08-29: the card shows the inviter's display name, username and scope above the
+  Accept and Decline buttons. Nobody is asked to grant access to their journeys and reflections
+  by an unnamed person (#222).
+- [x] 5.3 Open an expired or already-used invitation and confirm you are told before pressing
+  Done 2026-08-29: a re-opened, already-accepted invitation shows "couldn't process this
+  invitation — it may have expired or already been used", with a route back to Invitations.
+  Told on arrival, not on click.
   anything.
 - [ ] 5.4 As someone with no account, open an invitation link and confirm it still names the
   inviter.
+  **Attempted 2026-08-29 and it failed**: redirect to /login, no inviter, no mention of an
+  invitation. The page sat in the auth-guarded route group, so the guard fired before it could
+  render — while its own comment said it was "readable without a session". The api was already
+  public. Filed as #252, fixed in #255 by moving the page to `(public)`.
+
 
 ⚠️ 5.1 is the one this change exists for, and it is the one no test can stand in for: the whole
 defect is that a person following a notification arrives somewhere useless.
