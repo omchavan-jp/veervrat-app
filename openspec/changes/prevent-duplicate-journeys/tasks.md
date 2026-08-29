@@ -38,5 +38,10 @@
   Done 2026-08-27: 28/28 tests pass (2 files, journeys.service.spec.ts + dormant-journeys.cron.spec.ts).
 - [x] 4.2 `pnpm --filter api typecheck` / build clean.
   Done 2026-08-27: `tsc --noEmit` clean (0 errors).
-- [ ] 4.3 Manual: two rapid create requests for the same sentence yield one journey + one
+- [x] 4.3 Manual: two rapid create requests for the same sentence yield one journey + one
+  Done 2026-08-29 against UAT: two genuinely concurrent `POST /journeys` for the same
+  `(sentence, weakness)` returned **201 and 409**. The 409 was `JOURNEY_ALREADY_EXISTS`, carrying
+  the winning journey's id, and exactly one row existed afterwards. Not a 500, which is the
+  outcome this task exists to rule out — the partial unique index rejected the second insert and
+  `createJourney` mapped P2002 to the same conflict the application-level check returns.
   conflict (not a 500).

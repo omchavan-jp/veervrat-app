@@ -239,12 +239,12 @@ enough to mislead — `reauthentication` read 13/22 while it was at 21, and
 | `ui-ux-remediation` | 37/39 | 2 remaining — E2E suite, browser re-walk |
 | `age-gate-and-consent` | 39/42 | 3 remaining — the first deletes all users, needs Om |
 | `content-suggestions` | 24/28 | 4 — deploy verification |
-| `received-invitations` | 19/23 | 4 — deploy verification, needs two accounts |
+| `received-invitations` | 22/23 | 4 — deploy verification, needs two accounts |
 | `server-resolved-auth` | 21/24 | 3 — 4.3/4.4 verify, then 5.6 archive |
-| `experience-log-view` | 14/18 | 4 — routing + deploy verification |
+| `experience-log-view` | 16/18 | 4 — routing + deploy verification |
 | `reauthentication` | 21/22 | **1 — 6.3, the Marathi strings.** 5.1–5.3 all verified in a browser on UAT 2026-08-29; the walk found five auth defects, all fixed and deployed (#238, #242, #244, #246, #248) |
 | `my-vratmitras-chat` | 49/62 | the remainder is O8 — chat has never run in production |
-| `prevent-duplicate-journeys` | 10/11 | 1 — 4.3, a manual rapid-request test. Implementation was already complete |
+| `prevent-duplicate-journeys` | 11/11 | 1 — 4.3, a manual rapid-request test. Implementation was already complete |
 | `offsite-backup` | 0/19 | **proposal only**, added 2026-08-29 (#131). Nothing implemented: the destination had to be decided first, and #131's recommendation conflicts with the India residency requirement |
 
 ---
