@@ -91,13 +91,17 @@ export class AccountSuspendedException extends ForbiddenException {
  *
  * Only ever raised once control of the identity has been proven — a completed Google round
  * trip. Never in response to a typed address, which anyone can supply for anyone.
+ *
+ * The date goes in `details` because that is the only structured field `GlobalExceptionFilter`
+ * carries through to the response body; a sibling of `error` would be dropped on the way out
+ * and the exception would promise something the API never returns.
  */
 export class AccountDeletedException extends GoneException {
   constructor(deletedAt: Date) {
     super({
       error: 'ACCOUNT_DELETED',
       message: 'This account was deleted. Deletion is permanent and it cannot be restored.',
-      deletedAt: deletedAt.toISOString(),
+      details: { deletedAt: deletedAt.toISOString() },
     });
   }
 }

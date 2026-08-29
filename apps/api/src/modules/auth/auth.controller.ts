@@ -326,7 +326,7 @@ export class AuthController {
     } catch (error) {
       const response =
         error instanceof Error
-          ? (error as { response?: { error?: string; deletedAt?: string } }).response
+          ? (error as { response?: { error?: string; details?: { deletedAt?: string } } }).response
           : undefined;
       const errorCode = response?.error ?? 'AUTH_ERROR';
       // Someone using Google sign-in without an account has not made a mistake — they simply
@@ -340,8 +340,8 @@ export class AuthController {
       // A deleted account carries its date through, because "deleted" without "when" leaves the
       // person unable to tell their own action from somebody else's. Safe to disclose here and
       // nowhere else: a completed Google round trip has just proven they hold the identity.
-      if (errorCode === 'ACCOUNT_DELETED' && response?.deletedAt) {
-        const at = encodeURIComponent(response.deletedAt);
+      if (errorCode === 'ACCOUNT_DELETED' && response?.details?.deletedAt) {
+        const at = encodeURIComponent(response.details.deletedAt);
         res.redirect(`${this.frontendUrl}/login?error=ACCOUNT_DELETED&deletedAt=${at}`);
         return;
       }

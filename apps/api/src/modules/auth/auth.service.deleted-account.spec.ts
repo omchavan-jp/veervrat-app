@@ -5,6 +5,7 @@ import {
   AccountDeletedException,
   AccountSuspendedException,
 } from '../../common/exceptions/app.exceptions';
+import { GlobalExceptionFilter } from '../../common/filters/http-exception.filter';
 
 /**
  * A deleted account could sign in with Google, be given a session, and have it thrown away by
@@ -69,10 +70,35 @@ describe('handleGoogleLogin — a deleted account', () => {
 
     const body = (raised as AccountDeletedException).getResponse() as {
       error: string;
-      deletedAt: string;
+      details: { deletedAt: string };
     };
     expect(body.error).toBe('ACCOUNT_DELETED');
-    expect(body.deletedAt).toBe(DELETED_AT.toISOString());
+    expect(body.details.deletedAt).toBe(DELETED_AT.toISOString());
+  });
+
+  it('the date survives the response filter and reaches the client', () => {
+    // The assertion that matters. GlobalExceptionFilter builds the body from `error`, `message`
+    // and `details` only — a sibling of `error` is dropped silently, so the exception would
+    // promise a field the API never returns. Asserting the shape alone would not have caught
+    // that; running it through the filter does.
+    const json = vi.fn();
+    const host = {
+      switchToHttp: () => ({
+        getResponse: () => ({ status: vi.fn().mockReturnValue({ json }), json }),
+        getRequest: () => ({ method: 'GET', url: '/auth/google/callback' }),
+      }),
+    };
+
+    new GlobalExceptionFilter().catch(new AccountDeletedException(DELETED_AT), host as never);
+
+    const body = json.mock.calls[0][0] as {
+      statusCode: number;
+      error: string;
+      details: { deletedAt: string };
+    };
+    expect(body.statusCode).toBe(410);
+    expect(body.error).toBe('ACCOUNT_DELETED');
+    expect(body.details.deletedAt).toBe(DELETED_AT.toISOString());
   });
 
   it('answers 410 Gone — the address is right and the account is not coming back', async () => {
