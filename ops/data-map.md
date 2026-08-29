@@ -97,7 +97,7 @@ nothing left to authenticate.
 
 | Retained | Reason |
 |---|---|
-| `auth_accounts.providerAccountId` | The **Google identity link survives**, by choice: it is what stops an account someone deleted being silently recreated and reattached. Must be disclosed in the privacy policy — see below |
+| `auth_accounts.providerAccountId` | The **Google identity link survives anonymisation**, by choice — but no longer indefinitely. **Changed 2026-08-29, see below.** Must be disclosed in the privacy policy |
 | Content under the pseudonym | `spec/06`. A vratmitra's record of their guidance should not develop holes |
 | `audit_events` | A security record legitimately outlives the account it describes |
 | `sessions` IP address + user agent | Now swept nightly once expired (#77). Live sessions end at anonymisation |
@@ -109,6 +109,31 @@ The privacy policy was republished at **version 2**, disclosing the retained Goo
 consent re-prompt mechanism (deferred item 3.3) shipped alongside it — publishing without it would
 have broken the promise the documents themselves make about being asked again on a material
 change. Both are now live on UAT; prod follows once the re-prompt is confirmed working there.
+
+### Changed 2026-08-29 — the link is released when somebody registers again
+
+The reason recorded above for keeping the link — *"it is what stops an account someone deleted
+being silently recreated and reattached"* — turned out to have a cost nobody had measured.
+
+Keeping the row also kept the **address** and the **googleId** claimed inside
+`@@unique([provider, providerAccountId])`, and nothing ever removed them. So a person who deleted
+their account could never register again with either. Google sign-in found the dead row and looped
+with no message; registering by email passed the duplicate check and then failed on a constraint
+naming an account they could not see. Both reproduced on UAT (#238, #242).
+
+**What happens now.** The rows still survive anonymisation, which is what lets a returning person
+be *told* their account was deleted and on what date, rather than being dropped into a signup form
+with no explanation. They are released — `AuthRepository.releaseIdentityClaims` — at the moment
+somebody actually registers again, which is the first point at which holding them costs something.
+
+Silent recreation is still prevented, by a better mechanism than a permanent claim: re-registration
+goes through the signup flow, so the age gate and consent are answered again.
+
+⚠️ **This narrows what version 2 of the privacy policy describes.** "The Google identity link is
+retained" remains true of anonymisation itself, and is no longer true indefinitely — the link is
+removed if that person returns. Whether the published wording needs revising is a question for the
+policy review (#154), not one to settle by editing this file. Recorded on #140, which is where the
+original decision was flagged as needing to be stated rather than assumed.
 
 ---
 
