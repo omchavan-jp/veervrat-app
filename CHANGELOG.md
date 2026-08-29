@@ -10,6 +10,33 @@ testers only once a `prod-*` tag has been deployed.
 
 ## Unreleased
 
+### Deleting your account, and coming back
+
+- **Deleting your account no longer says your session expired.** The deletion had worked; the
+  only message on screen said otherwise. It now confirms the account was deleted.
+- **If you deleted an account and sign in again, the app says so** — and on what date — instead of
+  returning you to the login page with no explanation, over and over. Before this it was a silent
+  loop with no way to tell what was wrong.
+- **You can create a new account with the same Google address, or the same email address, after
+  deleting.** Previously neither was possible: the address stayed claimed by the deleted account
+  and nothing ever released it, so that address could never be used again.
+- **Changing your email works when the address once belonged to a deleted account.** It failed,
+  and reported that the confirmation link was invalid — about a link that was fine.
+- **The email-change confirmation page says what actually went wrong.** Every failure used to read
+  "this link is invalid or has expired", including cases where the link was perfectly good and
+  retrying could never have helped.
+
+### Confirming it is you
+
+- **Being asked to confirm it is you no longer signs you out.** When the confirmation had expired —
+  it lasts a few minutes, and covers one action — the app ended your session instead of asking
+  again. It now asks again, and says why.
+- **Mistyping your password no longer signs you out** either, whether you are changing your
+  password, changing your email, or deleting your account. It says the password is not correct.
+- **Signing in with an address stored in a different case now works.** Whether it did depended on
+  which part of the app had last written your address, and the refusal was indistinguishable from
+  a wrong password.
+
 ### Attaching images
 - **Attaching an image now works at all.** Any photo larger than roughly 75KB — which is nearly
   every photo — failed with "an unexpected error occurred". Images were accepted in principle and
