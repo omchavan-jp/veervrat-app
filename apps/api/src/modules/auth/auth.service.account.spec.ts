@@ -11,7 +11,7 @@ const mockedCompare = vi.mocked(bcrypt.compare);
 const mockedHash = vi.mocked(bcrypt.hash);
 import { AuthService } from './auth.service';
 import {
-  InvalidCredentialsException,
+  PasswordIncorrectException,
   DuplicateEntityException,
   EntityInUseException,
   NoPasswordSetException,
@@ -50,8 +50,9 @@ describe('AuthService — changePassword', () => {
       consumeSessionReauthentication: vi.fn().mockResolvedValue(false),
     };
     const service = makeService(repo);
+    // 403 now, not 401 — mistyping your own password while changing it used to sign you out.
     await expect(service.changePassword('u1', 'wrong', 'newpassword1')).rejects.toBeInstanceOf(
-      InvalidCredentialsException,
+      PasswordIncorrectException,
     );
   });
 
@@ -119,7 +120,7 @@ describe('AuthService — requestEmailChange', () => {
     const service = makeService(repo);
     await expect(
       service.requestEmailChange('u1', 'sess-1', 'new@x.com', 'wrong'),
-    ).rejects.toBeInstanceOf(InvalidCredentialsException);
+    ).rejects.toBeInstanceOf(PasswordIncorrectException);
   });
 
   it('stores pendingEmail + issues a token + emails the new address', async () => {

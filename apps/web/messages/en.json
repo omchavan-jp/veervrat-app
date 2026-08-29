@@ -1462,7 +1462,10 @@
     "verifyWithGoogle": "Verify with Google",
     "deleteReauthGooglePrompt": "This account signs in with Google. Verify with Google to confirm it is you, then return here.",
     "reauthDone": "You've verified with Google. You can confirm below.",
-    "emailReauthGooglePrompt": "This account signs in with Google. Verify with Google to confirm it is you, then return here."
+    "emailReauthGooglePrompt": "This account signs in with Google. Verify with Google to confirm it is you, then return here.",
+    "reauthExpired": "That confirmation has expired — it is only good for a few minutes, and for one action. Please verify again.",
+    "emailChangeError": "We couldn't start the email change. Please try again.",
+    "deleteError": "We couldn't delete the account. Please try again."
   },
   "confirmEmailChange": {
     "title": "Confirm email change",

@@ -37,9 +37,53 @@ export class ValidationException extends UnprocessableEntityException {
   }
 }
 
+/**
+ * Signing in failed. **401, and only for signing in** — the caller has no session yet, so saying
+ * "you are not authenticated" is exactly true.
+ *
+ * Not for a refusal *during* a session. `apps/web/lib/api/client.ts` treats any 401 outside
+ * `/auth/me` as the session having ended and signs the person out, which is right for a dead
+ * session and wrong for "that password was not correct". See `ReauthenticationRequiredException`
+ * and `PasswordIncorrectException` below, which are the mid-session forms.
+ */
 export class InvalidCredentialsException extends UnauthorizedException {
   constructor() {
     super({ error: 'INVALID_CREDENTIALS', message: 'Invalid email or password' });
+  }
+}
+
+/**
+ * The action needs proof the person is present *now*, and none was given — or the proof has gone
+ * stale, or was already spent.
+ *
+ * **403, not 401.** The session is perfectly valid; one operation is refused. Sent as 401 this
+ * destroyed the session instead: the client cannot tell "your session is dead" from "this needs
+ * more proof", so waiting past the ten-minute window and then changing an email signed the
+ * person out. Confirmed on UAT 2026-08-29 — the refusal itself was correct, its shape was not.
+ *
+ * The same reasoning `client.ts` already applies to 403: a permission decision is not a dead
+ * session.
+ */
+export class ReauthenticationRequiredException extends ForbiddenException {
+  constructor() {
+    super({
+      error: 'REAUTHENTICATION_REQUIRED',
+      message: 'Please confirm it is you before continuing.',
+    });
+  }
+}
+
+/**
+ * A password was supplied mid-session and was not correct.
+ *
+ * Separate from `InvalidCredentialsException` for the status, and separate from
+ * `ReauthenticationRequiredException` for the message: "that password was not correct" and
+ * "confirm it is you" ask for different things, and a person who has just mistyped needs to be
+ * told which one they did.
+ */
+export class PasswordIncorrectException extends ForbiddenException {
+  constructor() {
+    super({ error: 'PASSWORD_INCORRECT', message: 'That password is not correct.' });
   }
 }
 

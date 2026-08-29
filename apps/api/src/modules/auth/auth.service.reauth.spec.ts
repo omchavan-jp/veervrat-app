@@ -1,7 +1,12 @@
 import { describe, it, expect, vi } from 'vitest';
+import type { HttpException } from '@nestjs/common';
 import { AuthProvider } from '@prisma/client';
 import { AuthService } from './auth.service';
-import { InvalidCredentialsException } from '../../common/exceptions/app.exceptions';
+import {
+  ReauthenticationRequiredException,
+  PasswordIncorrectException,
+  InvalidCredentialsException,
+} from '../../common/exceptions/app.exceptions';
 
 vi.mock('bcrypt', () => ({ compare: vi.fn(), hash: vi.fn() }));
 import * as bcrypt from 'bcrypt';
@@ -54,7 +59,7 @@ describe('assertRecentlyAuthenticated — either proof, and only once (#196)', (
 
     await expect(service.assertRecentlyAuthenticated(USER, SESSION)).resolves.toBeUndefined();
     await expect(service.assertRecentlyAuthenticated(USER, SESSION)).rejects.toBeInstanceOf(
-      InvalidCredentialsException,
+      ReauthenticationRequiredException,
     );
   });
 
@@ -66,7 +71,7 @@ describe('assertRecentlyAuthenticated — either proof, and only once (#196)', (
 
     await expect(
       makeService(repo).assertRecentlyAuthenticated(USER, SESSION),
-    ).rejects.toBeInstanceOf(InvalidCredentialsException);
+    ).rejects.toBeInstanceOf(ReauthenticationRequiredException);
   });
 
   it('falls back to the Google proof when the password is wrong, and still refuses without one', async () => {
@@ -76,9 +81,10 @@ describe('assertRecentlyAuthenticated — either proof, and only once (#196)', (
       consumeSessionReauthentication: vi.fn().mockResolvedValue(false),
     };
 
+    // A password was typed and was wrong — say that, rather than "confirm it is you".
     await expect(
       makeService(repo).assertRecentlyAuthenticated(USER, SESSION, 'wrong'),
-    ).rejects.toBeInstanceOf(InvalidCredentialsException);
+    ).rejects.toBeInstanceOf(PasswordIncorrectException);
   });
 
   it('asks only for a proof no older than the window', async () => {
@@ -136,5 +142,61 @@ describe('reauthenticateWithGoogle — proves this account, not just some accoun
       makeService(repo).reauthenticateWithGoogle(USER, SESSION, 'unknown'),
     ).resolves.toBe(false);
     expect(repo.markSessionReauthenticated).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * The status code is the whole point, so it gets its own assertions.
+ *
+ * `apps/web/lib/api/client.ts` signs the person out on any 401 outside `/auth/me`. Sent as 401,
+ * a refusal for want of fresh proof therefore ended the session instead of asking again —
+ * confirmed on UAT 2026-08-29 by waiting past the ten-minute window and then changing an email.
+ * Asserting the exception class alone would not have caught it: the class was right, the family
+ * was wrong.
+ */
+describe('the re-authentication gate refuses without ending the session', () => {
+  async function raisedBy(fn: () => Promise<void>): Promise<HttpException | undefined> {
+    try {
+      await fn();
+      return undefined;
+    } catch (e) {
+      return e as HttpException;
+    }
+  }
+
+  it('a missing or stale proof answers 403, not 401', async () => {
+    const repo = {
+      findEmailAccountByUserId: vi.fn().mockResolvedValue(null),
+      consumeSessionReauthentication: vi.fn().mockResolvedValue(false),
+    };
+    const raised = await raisedBy(() =>
+      makeService(repo).assertRecentlyAuthenticated(USER, SESSION),
+    );
+
+    expect(raised).toBeInstanceOf(ReauthenticationRequiredException);
+    expect(raised?.getStatus()).toBe(403);
+    expect((raised?.getResponse() as { error: string }).error).toBe('REAUTHENTICATION_REQUIRED');
+  });
+
+  it('a wrong password answers 403 too, and names the password', async () => {
+    vi.mocked(bcrypt.compare).mockResolvedValue(false as never);
+    const repo = {
+      findEmailAccountByUserId: vi.fn().mockResolvedValue({ passwordHash: '$2b$12$h' }),
+      consumeSessionReauthentication: vi.fn().mockResolvedValue(false),
+    };
+    const raised = await raisedBy(() =>
+      makeService(repo).assertRecentlyAuthenticated(USER, SESSION, 'wrong'),
+    );
+
+    // 401 here signed someone out for mistyping their own password.
+    expect(raised).toBeInstanceOf(PasswordIncorrectException);
+    expect(raised?.getStatus()).toBe(403);
+    expect((raised?.getResponse() as { error: string }).error).toBe('PASSWORD_INCORRECT');
+  });
+
+  it('signing in is still 401 — that one really is "not authenticated"', () => {
+    // Positive control for the two above: 403 there is a deliberate distinction, not a blanket
+    // change of every authentication failure.
+    expect(new InvalidCredentialsException().getStatus()).toBe(401);
   });
 });
