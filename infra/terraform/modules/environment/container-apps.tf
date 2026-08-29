@@ -391,6 +391,29 @@ resource "azurerm_container_app" "web" {
         name  = "API_BASE_URL"
         value = "${local.api_origin}/api/v1"
       }
+      # The one call the *server* makes to the api, for `/auth/me` on every document request
+      # (#240). Both apps run in this environment, so addressing the api by a name the
+      # environment resolves keeps that traffic inside it — "when you call another container app
+      # in the same environment by using the FQDN or app name, network traffic never leaves the
+      # environment" (Microsoft, "Communicate between container apps").
+      #
+      # The **platform FQDN over https**, not the short app name, for two reasons that only show
+      # up in practice:
+      #   - `allowInsecure = false` on the api's ingress, so `http://<app-name>` is answered with
+      #     a redirect to the public hostname — leaving the environment while looking like it
+      #     worked.
+      #   - the served certificate covers the platform FQDN, so `https://<app-name>` fails name
+      #     validation.
+      # Not the custom domain either: that resolves through public DNS.
+      #
+      # Safe to be wrong. `apps/web/proxy.ts` treats a redirect, a 5xx or an unreachable address
+      # as "did not answer" and falls back to `API_BASE_URL`, so a bad value here costs one
+      # attempt per cooldown rather than making every signed-in person look signed out. A 401 is
+      # deliberately NOT a fallback trigger — that is the api answering.
+      env {
+        name  = "API_INTERNAL_URL"
+        value = "https://${local.api_fqdn}/api/v1"
+      }
       env {
         name  = "SITE_URL"
         value = local.web_origin
