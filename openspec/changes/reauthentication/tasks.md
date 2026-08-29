@@ -94,16 +94,31 @@
   "sent", and it offers the next step rather than leaving someone to guess. A typo and a
   delivery failure are no longer the same experience.
 
-- [ ] 5.3 Confirm a stale Google assertion is refused (task 2.2). If it is accepted, the step is
+- [x] 5.3 Confirm a stale Google assertion is refused (task 2.2). If it is accepted, the step is
   decoration.
-  **Single-use half verified** 2026-08-29, in a browser on UAT: after verifying with Google and
-  spending the proof on an email change, the next action asked for Google again rather than
-  accepting the spent stamp. `consumeSessionReauthentication` clears the stamp in the same
-  conditional UPDATE that checks it (§7), and that is what this exercises.
+  Done 2026-08-29, in a browser on UAT, both halves.
 
-  **Expiry half still open.** Obtain the stamp, let it pass the 10-minute window without using
-  it, then attempt a gated action. If it proceeds, the window is not enforced and the step is
-  decoration for the case that matters most — a proof minted at sign-in and replayed later.
+  **Single-use.** After verifying with Google and spending the proof on an email change, the next
+  action asked for Google again rather than accepting the spent stamp.
+  `consumeSessionReauthentication` clears it in the same conditional UPDATE that checks it (§7),
+  which is what makes two concurrent requests unable to both spend one.
+
+  **Expiry.** The stamp was obtained and left unused past the ten-minute window, then a gated
+  action attempted. Refused, with "that confirmation has expired — it is only good for a few
+  minutes, and for one action. Please verify again."
+
+  So the step is not decoration: a proof minted earlier and replayed later buys nothing.
+
+  ⚠️ **The first attempt at this test found a defect rather than passing.** The refusal was
+  correct but arrived as a 401, which `apps/web/lib/api/client.ts` reads as the session having
+  ended — so the person was signed out instead of asked to verify again, and the settings page
+  went on claiming they were verified because `reauthed` came from a query parameter that never
+  expired. Fixed and deployed (PR #246) before this task was ticked; the same defect signed
+  people out for mistyping their own password, which was also confirmed fixed.
+
+  Worth keeping in view: for ten minutes this looked like a working gate. What it was doing to
+  the session only showed up because somebody waited out the window and watched what happened
+  next, rather than checking that the action was refused.
 
 ⚠️ 5.1 needs a throwaway Google account, not a real one — it ends by deleting the account. Two
 are needed, not one, for the reason recorded above.
