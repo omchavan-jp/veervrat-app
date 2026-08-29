@@ -20,6 +20,8 @@ import {
   AccountLockedException,
   NoPasswordSetException,
   AccountDeletedException,
+  ReauthenticationRequiredException,
+  PasswordIncorrectException,
 } from '../../common/exceptions/app.exceptions';
 import { meetsMinimumAge } from '../../common/age/age';
 import { outstandingConsents } from './consent/outstanding-consents';
@@ -737,8 +739,10 @@ export class AuthService {
       // simply does not apply to their account type.
       throw new NoPasswordSetException();
     }
+    // Mid-session, so 403 — a 401 here signed the person out for mistyping their own password
+    // while changing it.
     const valid = await bcrypt.compare(currentPassword, emailAccount.passwordHash);
-    if (!valid) throw new InvalidCredentialsException();
+    if (!valid) throw new PasswordIncorrectException();
 
     const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
     await this.authRepository.updatePasswordHash(emailAccount.id, passwordHash);
@@ -789,7 +793,16 @@ export class AuthService {
     const notBefore = new Date(Date.now() - REAUTH_WINDOW_MINUTES * 60_000);
     if (await this.authRepository.consumeSessionReauthentication(sessionId, notBefore)) return;
 
-    throw new InvalidCredentialsException();
+    // 403, never 401. The session is valid — one action is refused for want of present-tense
+    // proof. As a 401 this signed the person out, because the client cannot distinguish that
+    // from a dead session: waiting past the window and then changing an email ended the session
+    // instead of asking again (confirmed on UAT 2026-08-29).
+    //
+    // Which of the two is thrown says what to do next. A password was typed and was wrong →
+    // say so. No password, or none was asked for → the Google proof is missing or stale, and
+    // the answer is to verify again.
+    if (password) throw new PasswordIncorrectException();
+    throw new ReauthenticationRequiredException();
   }
 
   /**

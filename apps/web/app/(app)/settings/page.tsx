@@ -680,9 +680,28 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
   // round trip returns here with ?reauth=ok, and the server holds the proof — single-use, and
   // only for a few minutes.
   const hasPassword = connected.data?.hasPassword ?? true;
-  const reauthed =
-    typeof window !== 'undefined' &&
-    new URLSearchParams(window.location.search).get('reauth') === 'ok';
+  // Read once into state rather than off the URL on every render, because the server can tell us
+  // it is no longer true and we have to be able to act on that.
+  //
+  // The proof is single-use and expires in minutes; the query parameter does neither. So this
+  // page could sit showing "verified" with the button enabled long after the server had dropped
+  // the stamp — and clicking then failed for a reason the page was actively contradicting.
+  // Confirmed on UAT 2026-08-29 by waiting out the window without reloading.
+  const [reauthed, setReauthed] = useState(
+    () =>
+      typeof window !== 'undefined' &&
+      new URLSearchParams(window.location.search).get('reauth') === 'ok',
+  );
+
+  // The server is the only party that knows whether the proof is still good. When it says it is
+  // not, drop back to offering the round trip again rather than leaving a dead button.
+  const clearReauthOnStaleProof = (err: unknown): boolean => {
+    if (err instanceof ApiError && err.error === 'REAUTHENTICATION_REQUIRED') {
+      setReauthed(false);
+      return true;
+    }
+    return false;
+  };
   // Adding a first password goes through the emailed link rather than straight from this page:
   // the credential outlives the session, so creating it should cost proof of the mailbox.
   const setPassword = useMutation({
@@ -709,7 +728,10 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
       setEmailMsg(t('emailChangeSent'));
       setEmailForm({ newEmail: '', password: '' });
     },
-    onError: (e: Error) => setEmailMsg(e.message),
+    onError: (e: Error) => {
+      const stale = clearReauthOnStaleProof(e);
+      setEmailMsg(stale ? t('reauthExpired') : errorMessage(e, t('emailChangeError')));
+    },
   });
   const disconnect = useMutation({
     mutationFn: (provider: string) => usersApi.disconnectAccount(provider),
@@ -732,7 +754,10 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
       qc.clear();
       router.replace('/login?notice=account_deleted');
     },
-    onError: (e: Error) => setDeleteMsg(e.message),
+    onError: (e: Error) => {
+      const stale = clearReauthOnStaleProof(e);
+      setDeleteMsg(stale ? t('reauthExpired') : errorMessage(e, t('deleteError')));
+    },
   });
 
   return (
