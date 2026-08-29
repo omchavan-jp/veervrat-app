@@ -4,6 +4,7 @@ import {
   ConflictException,
   UnprocessableEntityException,
   UnauthorizedException,
+  GoneException,
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
@@ -76,6 +77,31 @@ export class AccountSuspendedException extends ForbiddenException {
     super({
       error: 'ACCOUNT_SUSPENDED',
       message: 'This account has been suspended. Please contact an administrator.',
+    });
+  }
+}
+
+/**
+ * Carries the deletion date because "this account was deleted" invites the question "when?",
+ * and the answer decides what the person does next — recognising their own action, or
+ * discovering one they did not make.
+ *
+ * `Gone` rather than `NotFound`: the account existed and the address is still the right one.
+ * Saying "not found" would suggest a typo and send them round the loop again.
+ *
+ * Only ever raised once control of the identity has been proven — a completed Google round
+ * trip. Never in response to a typed address, which anyone can supply for anyone.
+ *
+ * The date goes in `details` because that is the only structured field `GlobalExceptionFilter`
+ * carries through to the response body; a sibling of `error` would be dropped on the way out
+ * and the exception would promise something the API never returns.
+ */
+export class AccountDeletedException extends GoneException {
+  constructor(deletedAt: Date) {
+    super({
+      error: 'ACCOUNT_DELETED',
+      message: 'This account was deleted. Deletion is permanent and it cannot be restored.',
+      details: { deletedAt: deletedAt.toISOString() },
     });
   }
 }

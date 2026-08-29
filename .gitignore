@@ -56,3 +56,7 @@ yarn-error.log*
 e2e/results/
 playwright-report/
 test-results/
+
+# unlazy gate ledgers — machine-local working state
+.unlazy/
+.unlazy-hook-state.json

@@ -4,7 +4,7 @@ import { useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -23,6 +23,7 @@ const FIELD_LABEL = 'mb-2 block font-mono text-[11px] uppercase tracking-[0.1em]
 export default function LoginPage() {
   const t = useTranslations('auth.login');
   const tErrors = useTranslations('auth.errors');
+  const locale = useLocale();
   const searchParams = useSearchParams();
   const oauthError = searchParams.get('error');
   const login = useLogin();
@@ -40,10 +41,20 @@ export default function LoginPage() {
     login.mutate(data);
   };
 
+  // A deleted account is not a failed sign-in and must not be reported as one. Google confirmed
+  // the identity; what is gone is the account. The generic "something went wrong" would send
+  // someone to retry the one thing guaranteed never to work.
+  const isDeleted = oauthError === 'ACCOUNT_DELETED';
+  const deletedAtParam = searchParams.get('deletedAt');
+  const deletedAt = deletedAtParam ? new Date(deletedAtParam) : null;
+  const deletedAtValid = deletedAt !== null && !Number.isNaN(deletedAt.getTime());
+
   // OAUTH_ACCOUNT_CONFLICT no longer lands here — it redirects to /link-account instead.
   // Only show a generic error for other OAuth failures (e.g. Google sign-in cancelled).
   const oauthErrorMsg =
-    oauthError && oauthError !== 'OAUTH_ACCOUNT_CONFLICT' ? tErrors('authError') : null;
+    oauthError && oauthError !== 'OAUTH_ACCOUNT_CONFLICT' && !isDeleted
+      ? tErrors('authError')
+      : null;
 
   // Rate limiting is the one API failure with copy of its own. Everything else falls back to
   // the server's message, which is English-only — acceptable for the unexpected, not for a
@@ -83,6 +94,33 @@ export default function LoginPage() {
       {oauthErrorMsg && (
         <Alert variant="destructive" className="mb-4 border-destructive/40 bg-destructive/10">
           <AlertDescription className="text-destructive">{oauthErrorMsg}</AlertDescription>
+        </Alert>
+      )}
+
+      {isDeleted && (
+        <Alert className="mb-4 border-border bg-surface-2" data-testid="account-deleted-notice">
+          <AlertDescription className="text-foreground">
+            <span className="block font-medium">
+              {deletedAtValid
+                ? tErrors('accountDeletedOn', {
+                    date: deletedAt.toLocaleDateString(locale, {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                    }),
+                  })
+                : tErrors('accountDeleted')}
+            </span>
+            <span className="mt-1 block text-[13px] text-muted">
+              {tErrors('accountDeletedPermanent')}
+            </span>
+            <Link
+              href="/signup"
+              className="mt-3 inline-block text-[13px] underline underline-offset-4"
+            >
+              {tErrors('accountDeletedSignUp')}
+            </Link>
+          </AlertDescription>
         </Alert>
       )}
 

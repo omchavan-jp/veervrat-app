@@ -260,7 +260,11 @@
       "rateLimitExceededIn": "Too many attempts. Please try again in {seconds} seconds.",
       "rateLimitExceededInMinutes": "Too many attempts. Please try again in about {minutes} minutes.",
       "resendVerificationWait": "You can request another in {seconds}s.",
-      "resendVerificationLimited": "Too many requests from this network. Please try again in about {minutes} minutes."
+      "resendVerificationLimited": "Too many requests from this network. Please try again in about {minutes} minutes.",
+      "accountDeleted": "This account was deleted.",
+      "accountDeletedOn": "This account was deleted on {date}.",
+      "accountDeletedPermanent": "Deletion is permanent, so the account cannot be restored. You can create a new account with this Google address.",
+      "accountDeletedSignUp": "Create a new account"
     },
     "linkAccount": {
       "title": "Link your Google account",

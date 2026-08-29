@@ -324,16 +324,25 @@ export class AuthController {
       const redirectPath = authResult.user.onboardingCompletedAt ? '/dashboard' : '/onboarding';
       res.redirect(`${this.frontendUrl}${redirectPath}`);
     } catch (error) {
-      const errorCode =
+      const response =
         error instanceof Error
-          ? ((error as { response?: { error?: string } }).response?.error ?? 'AUTH_ERROR')
-          : 'AUTH_ERROR';
+          ? (error as { response?: { error?: string; details?: { deletedAt?: string } } }).response
+          : undefined;
+      const errorCode = response?.error ?? 'AUTH_ERROR';
       // Someone using Google sign-in without an account has not made a mistake — they simply
       // have no account yet. Sending them to /login would be a dead end, and labelling it
       // `error=` in the address bar tells them they did something wrong when the flow is working
       // exactly as designed. It gets a `notice`, not an error.
       if (errorCode === 'SIGNUP_REQUIRED') {
         res.redirect(`${this.frontendUrl}/signup?notice=google_signup_required`);
+        return;
+      }
+      // A deleted account carries its date through, because "deleted" without "when" leaves the
+      // person unable to tell their own action from somebody else's. Safe to disclose here and
+      // nowhere else: a completed Google round trip has just proven they hold the identity.
+      if (errorCode === 'ACCOUNT_DELETED' && response?.details?.deletedAt) {
+        const at = encodeURIComponent(response.details.deletedAt);
+        res.redirect(`${this.frontendUrl}/login?error=ACCOUNT_DELETED&deletedAt=${at}`);
         return;
       }
       // Being under the minimum age IS a refusal, so it keeps the error framing.

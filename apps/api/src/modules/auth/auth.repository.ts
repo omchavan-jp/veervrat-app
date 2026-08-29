@@ -24,9 +24,23 @@ const userSelect = {
 export class AuthRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  /**
+   * Case-insensitive, because an address is not case-sensitive to the person typing it.
+   *
+   * `requestEmailChange` has always lowercased before storing while `register` did not, so the
+   * table holds both forms. An exact match therefore refused a correct address depending on
+   * which path had last written it — and the refusal is `InvalidCredentialsException`, the same
+   * answer as a wrong password, so nothing distinguished the two from outside.
+   *
+   * Matching insensitively rather than lowercasing the input keeps every address that works
+   * today working: normalising input alone would have broken exactly the accounts stored in
+   * mixed case. Writers now normalise (see `login`, `register`), so the mixed form stops
+   * accumulating; lowercasing the rows already stored is a migration, and a migration needs a
+   * collision check against real data first.
+   */
   async findUserByEmail(email: string) {
-    return this.prisma.user.findUnique({
-      where: { email, deletedAt: null },
+    return this.prisma.user.findFirst({
+      where: { email: { equals: email, mode: 'insensitive' }, deletedAt: null },
       select: userSelect,
     });
   }
@@ -273,11 +287,64 @@ export class AuthRepository {
     return u?.pendingEmail ?? null;
   }
 
+  /**
+   * The EMAIL account moves with the address, in one transaction.
+   *
+   * `AuthAccount.providerAccountId` holds the address for an EMAIL account and the pair
+   * `(provider, providerAccountId)` is unique. Updating only `User.email` left the old address
+   * claimed by a row nothing reads — `findEmailAccountByUserId` looks accounts up by user, so
+   * sign-in kept working and the drift stayed invisible until someone tried to register with
+   * the freed-looking address and hit a unique-constraint failure on an account they could not
+   * see.
+   *
+   * A Google-only account has no EMAIL row; `updateMany` matches zero and that is correct,
+   * where `update` would throw.
+   */
   async applyEmailChange(userId: string, newEmail: string) {
-    return this.prisma.user.update({
-      where: { id: userId },
-      data: { email: newEmail, pendingEmail: null },
-      select: userSelect,
+    const [user] = await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: userId },
+        data: { email: newEmail, pendingEmail: null },
+        select: userSelect,
+      }),
+      this.prisma.authAccount.updateMany({
+        where: { userId, provider: AuthProvider.EMAIL },
+        data: { providerAccountId: newEmail },
+      }),
+    ]);
+    return user;
+  }
+
+  /**
+   * Releases the sign-in identities an anonymised account still holds, so the person can
+   * register again with the same Google account or the same address.
+   *
+   * Anonymisation rewrites `User.email` and `User.username` but leaves `AuthAccount` rows
+   * standing, and those rows carry the real googleId and the real address in a unique index.
+   * The identity therefore stayed claimed by an account that no longer exists to anyone —
+   * permanently, since nothing else ever removes them.
+   *
+   * Deliberately not folded into anonymisation itself: keeping the rows is what lets a
+   * returning person be *told* their account was deleted and when. They are released at the
+   * moment somebody actually re-registers, which is the first point where holding them costs
+   * something.
+   */
+  async releaseIdentityClaims(userId: string) {
+    return this.prisma.authAccount.deleteMany({ where: { userId } });
+  }
+
+  /**
+   * The EMAIL account holding an address, whoever it belongs to — including a deleted account.
+   *
+   * `findUserByEmail` filters `deletedAt: null` and an anonymised account's address has been
+   * rewritten anyway, so neither can see the stale claim that blocks registration.
+   */
+  async findEmailAccountByAddress(email: string) {
+    return this.prisma.authAccount.findUnique({
+      where: {
+        provider_providerAccountId: { provider: AuthProvider.EMAIL, providerAccountId: email },
+      },
+      include: { user: { select: { id: true, deletedAt: true } } },
     });
   }
 

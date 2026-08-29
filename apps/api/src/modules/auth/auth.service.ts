@@ -19,6 +19,7 @@ import {
   EntityInUseException,
   AccountLockedException,
   NoPasswordSetException,
+  AccountDeletedException,
 } from '../../common/exceptions/app.exceptions';
 import { meetsMinimumAge } from '../../common/age/age';
 import { outstandingConsents } from './consent/outstanding-consents';
@@ -153,7 +154,7 @@ export class AuthService {
   }
 
   async register(
-    email: string,
+    rawEmail: string,
     password: string,
     displayName: string,
     username: string,
@@ -161,6 +162,10 @@ export class AuthService {
     consents: { documentKey: string; version: number }[],
     language?: string,
   ): Promise<{ user: SessionUser }> {
+    // Stored lowercase so the address has one canonical form. `requestEmailChange` already did
+    // this; signup did not, which is how the table came to hold both.
+    const email = rawEmail.trim().toLowerCase();
+
     // The age check runs before anything else, and before the duplicate-email check: someone
     // under the minimum age should not learn whether an address is registered.
     const dateOfBirth = new Date(dob);
@@ -171,6 +176,19 @@ export class AuthService {
     const existingUser = await this.authRepository.findUserByEmail(email);
     if (existingUser) {
       throw new DuplicateEntityException('User', 'email');
+    }
+
+    // No live user holds the address, but a deleted one may still hold the *claim*: anonymising
+    // rewrites `User.email` and leaves the EMAIL `AuthAccount` pointing at the real address,
+    // inside a unique index. Registration would pass the check above and then fail creating the
+    // account row, on a conflict with something the person cannot see and did not do.
+    //
+    // Released silently, with no mention of the earlier account. Unlike the Google path there is
+    // no proof of identity here — anyone can type any address — so saying "an account here was
+    // deleted" would answer a question about someone else.
+    const staleClaim = await this.authRepository.findEmailAccountByAddress(email);
+    if (staleClaim?.user.deletedAt) {
+      await this.authRepository.releaseIdentityClaims(staleClaim.userId);
     }
 
     const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
@@ -209,11 +227,16 @@ export class AuthService {
   }
 
   async login(
-    email: string,
+    rawEmail: string,
     password: string,
     ipAddress: string | null,
     userAgent: string | null,
   ): Promise<AuthResult> {
+    // Normalised before the lockout check, not after: keyed on what was typed, `Me@x.com` and
+    // `me@x.com` counted their failures separately, so the attempt limit could be spent twice
+    // over on one address just by shifting the shift key.
+    const email = rawEmail.trim().toLowerCase();
+
     const lockout = await this.checkLockout(email);
     if (lockout.locked) {
       this.auditService.record({
@@ -323,16 +346,38 @@ export class AuthService {
     );
 
     if (existingAccount) {
-      const sessionToken = await this.createSession({
-        userId: existingAccount.userId,
-        ipAddress,
-        userAgent,
-        ttlDays: this.sessionTtlDays,
-      });
-      return {
-        user: this.toSessionUser(existingAccount.user),
-        sessionToken,
-      };
+      // Anonymisation soft-deletes the user but leaves this row, so a deleted account is still
+      // found here. Without the guard a session was issued for it and `validateSession` threw
+      // it away on the very next request — the person was returned to /login with no error
+      // parameter and no explanation, on a loop, every time they tried.
+      //
+      // `suspendedAt` is checked in the same breath because `validateSession` rejects it the
+      // same way, and so produced the same silent loop for a different reason.
+      const { deletedAt, suspendedAt } = existingAccount.user;
+
+      if (deletedAt) {
+        // Arriving with a pending signup means they have just been through the age gate and
+        // consent to make a *new* account. Release the identity this dead account is still
+        // holding and let them, rather than refusing on behalf of an account they deleted.
+        if (pendingSignupId) {
+          await this.authRepository.releaseIdentityClaims(existingAccount.userId);
+        } else {
+          throw new AccountDeletedException(deletedAt);
+        }
+      } else if (suspendedAt) {
+        throw new AccountSuspendedException();
+      } else {
+        const sessionToken = await this.createSession({
+          userId: existingAccount.userId,
+          ipAddress,
+          userAgent,
+          ttlDays: this.sessionTtlDays,
+        });
+        return {
+          user: this.toSessionUser(existingAccount.user),
+          sessionToken,
+        };
+      }
     }
 
     const existingUser = await this.authRepository.findUserByEmail(profile.email);

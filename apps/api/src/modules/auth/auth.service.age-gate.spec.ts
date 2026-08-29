@@ -17,6 +17,10 @@ function makeRepo(overrides: Record<string, unknown> = {}) {
     findUserByEmail: vi.fn().mockResolvedValue(null),
     findUserByUsername: vi.fn().mockResolvedValue(null),
     findAuthAccount: vi.fn().mockResolvedValue(null),
+    // No deleted account is holding this address. Registration checks, because anonymising
+    // leaves the EMAIL AuthAccount claiming the real address inside a unique index.
+    findEmailAccountByAddress: vi.fn().mockResolvedValue(null),
+    releaseIdentityClaims: vi.fn().mockResolvedValue({ count: 0 }),
     createUserWithEmailAccount: vi.fn().mockResolvedValue({ id: 'u1', roles: [] }),
     createUserWithOAuthAccount: vi.fn().mockResolvedValue({ id: 'u2', roles: [] }),
     createVerificationToken: vi.fn().mockResolvedValue({}),
