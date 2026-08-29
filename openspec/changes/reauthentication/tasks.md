@@ -64,13 +64,34 @@
 
 ## 5. Verify like a person
 
-- [ ] 5.1 On a deployed environment, with a Google-only account: set a password, then delete the
+- [x] 5.1 On a deployed environment, with a Google-only account: set a password, then delete the
   account, then change an email. All three are impossible today.
+  Done 2026-08-29, in a browser, on UAT, across two throwaway Google accounts.
+
+  **Account A** — set a password via the forgot-password link (`set_password_sent`, not
+  `reset_sent`, so the three outcomes of task 4.1 are distinguished on a deployed environment);
+  changed the email; deleted the account.
+
+  **Account B** — kept Google-only, no password. Both *change email* and *delete account* offered
+  **Verify with Google**. This is the half that matters and the order above cannot reach: setting
+  a password first converts the account, after which those two flows exercise the password path
+  instead. Task 4.3's either/or branch is what makes the written order misleading — recorded here
+  rather than silently reinterpreted.
+
+  Two defects found in the process, both fixed and deployed: an email change onto an address a
+  deleted account still claimed failed on the unique index, and deleting an account reported
+  "your session has expired" for a deletion that had succeeded.
+
 - [ ] 5.2 Ask for a reset on an address that does not exist, and confirm it says so.
+  Partially verified 2026-08-29: the deployed API answers `{"status":"no_account"}` for an
+  address with no account. **What a person sees has not been checked** — nobody has loaded the
+  forgot-password page for a non-existent address, and this section is "verify like a person".
+  Task 4.2 covers the rendering; that it renders on the deployed build is the remaining gap.
 - [ ] 5.3 Confirm a stale Google assertion is refused (task 2.2). If it is accepted, the step is
   decoration.
 
-⚠️ 5.1 needs a throwaway Google account, not a real one — it ends by deleting the account.
+⚠️ 5.1 needs a throwaway Google account, not a real one — it ends by deleting the account. Two
+are needed, not one, for the reason recorded above.
 
 
 ## 6. Carried forward, not done here
@@ -84,6 +105,9 @@
 - [ ] 6.3 **The new Marathi strings are unreviewed.** Written by a non-speaker, same caveat as
   #154 — and #154's pack covers policy documents, not interface copy. Worth adding to whatever
   review that becomes.
+  Grew on 2026-08-29. The deleted-account and error-reporting fixes added nine more strings in
+  both locales, Marathi again by a non-speaker: `auth.errors.accountDeleted*` (five) and
+  `confirmEmailChange.error_*` (four). Same caveat, larger pack.
 
 
 ## 7. Freshness, as actually implemented

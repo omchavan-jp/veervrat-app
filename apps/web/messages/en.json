@@ -264,7 +264,8 @@
       "accountDeleted": "This account was deleted.",
       "accountDeletedOn": "This account was deleted on {date}.",
       "accountDeletedPermanent": "Deletion is permanent, so the account cannot be restored. You can create a new account with this Google address.",
-      "accountDeletedSignUp": "Create a new account"
+      "accountDeletedSignUp": "Create a new account",
+      "accountDeletedConfirmed": "Your account has been deleted."
     },
     "linkAccount": {
       "title": "Link your Google account",
@@ -1467,9 +1468,12 @@
     "title": "Confirm email change",
     "verifying": "Verifying your new email address…",
     "success": "Your email address has been updated.",
-    "error": "This confirmation link is invalid or has expired.",
     "goToDashboard": "Go to dashboard",
-    "backToSettings": "Back to settings"
+    "backToSettings": "Back to settings",
+    "error_invalid": "This confirmation link is invalid, or it has already been used.",
+    "error_expired": "This confirmation link has expired. Request the change again from settings.",
+    "error_taken": "That address now belongs to another account, so the change was not applied.",
+    "error_unknown": "Something went wrong and the change was not applied. Please try again."
   },
   "entityType": {
     "weakness": "Weakness",

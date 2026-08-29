@@ -21,7 +21,7 @@ import { authApi } from '@/lib/api/auth';
 import { queryKeys } from '@/lib/api/query-keys';
 import { ApiError } from '@/lib/api/client';
 import { setLocaleCookie } from '@/lib/locale';
-import { useAuth, useLogout } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -660,7 +660,7 @@ function DataExportSection() {
 function AccountSection({ profile }: { profile: OwnProfile }) {
   const t = useTranslations('settings');
   const router = useRouter();
-  const logout = useLogout();
+  const qc = useQueryClient();
   const { toast } = useToast();
   const [pw, setPw] = useState({ current: '', next: '' });
   const [pwMsg, setPwMsg] = useState<string | null>(null);
@@ -721,8 +721,16 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
     mutationFn: (password?: string) => usersApi.deleteAccount(password),
     onSuccess: () => {
       setDeleteOpen(false);
-      logout.mutate();
-      router.replace('/login');
+      // Deliberately NOT calling logout. Deleting an account destroys every session server-side
+      // (`anonymiseAccount` → `forceLogout`), so POST /auth/logout runs against a session that no
+      // longer exists and can only answer SESSION_EXPIRED. The global mutation handler then
+      // raised "Your session has expired" at somebody who had just deleted their account —
+      // reading as though the deletion had failed, when it had succeeded.
+      //
+      // Clearing the cache is what logout did that still applies; there is nothing left to tell
+      // the server.
+      qc.clear();
+      router.replace('/login?notice=account_deleted');
     },
     onError: (e: Error) => setDeleteMsg(e.message),
   });
