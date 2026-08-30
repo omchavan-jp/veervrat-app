@@ -1,9 +1,34 @@
 ## 0. Read first
 
 - [ ] 0.1 `design.md` decision 1 — everything else depends on storing a key rather than a URL.
-- [ ] 0.2 `openspec/changes/upload-visibility/proposal.md` "Why this is urgent now" — the whole
+  ⚠️ **Read this before starting: the decision may already be implemented.** Checked 2026-08-30
+  against the restored dumps — `uploads` has a `storage_key` column, and every row holds a bare
+  key, not a URL:
+
+  ```
+  keys: 11   urls: 0        sample: db0eb4d5-…-d56c2ccdc8ab.png
+  ```
+
+  That is the shape decision 1 asks for. It does not follow that the change is done — the decision
+  is about what the *rest* of the design depends on, and the surrounding work (visibility derived
+  from the containing document) shipped separately as #178. But whoever picks this up should
+  establish what actually remains before planning to build it, rather than assuming the task list
+  describes unbuilt work.
+- [x] 0.2 `openspec/changes/upload-visibility/proposal.md` "Why this is urgent now" — the whole
   change is cheap only while the uploads table is effectively empty. **Confirm that is still
   true before starting** (task 1.1), rather than trusting a claim written on 2026-08-24.
+  Done 2026-08-30, and the claim has moved. Measured against real data — the nightly dumps for
+  both environments, restored locally, rather than the deployed databases, which no laptop can
+  reach:
+
+  | | uploads rows |
+  |---|---|
+  | UAT | **11** |
+  | prod | **1** |
+
+  The premise still holds: 12 rows is trivial to migrate. But "effectively empty" was written when
+  it was near zero, and it is no longer literally true. The direction is one-way and there is no
+  mechanism that would slow it — so this is cheap *now* in a way it will not stay.
 
 ## 1. Establish the facts the plan assumes — DONE 2026-08-24
 

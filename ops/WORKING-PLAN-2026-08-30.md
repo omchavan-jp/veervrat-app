@@ -87,6 +87,18 @@ image on prod and look at the result.
 It was previously blocked by #75 (no way to delete a prod test account). `prod-2026-08-30` carries
 self-delete, so that blocker is gone — a tester can now remove their own account afterwards.
 
+⚠️ **Revised 2026-08-30: the write half has already run on prod, and nobody recorded it.** Prod's
+`uploads` table holds one row — `purpose=experience`, a `.jpg`, created **2026-08-25 11:00**, the
+day after the plan that lists this as pending. So what remains is narrower than "exercise the
+upload path": it is the **read-back**.
+
+And that half resists checking from here in a way worth writing down. Fetching that image as a
+guest returns 404 — but so does a **deliberately invented key**, because a guest is not permitted
+to see it either way. `data-map.md` records this as the designed behaviour ("uploader 200,
+anonymous 404"). So the guest-level check cannot distinguish a present blob from an absent one,
+and reporting its 404 as evidence either way would be wrong. Proving it needs a signed-in session
+that owns the containing log, or a blob data-plane role nobody currently holds.
+
 ### 4. #136 — breach and lawful-request procedure
 
 The last of the 08-25 must-fixes that is still code-adjacent work. Draftable here, reviewed by Om.
