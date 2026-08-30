@@ -32,5 +32,19 @@ t "cd infra/terraform/envs/prod && $A plan"                                allow
 t "cd infra/terraform/envs/shared && $A $B"                                allow "shared has no container apps"
 t "cd infra/terraform/envs/prod && VEERVRAT_ALLOW_APP_DESTROY=yes-i-have-read-the-plan $A $B" allow "explicit override"
 t "npm run build"                                                          allow "unrelated command"
+
+# The false positive that prompted heredoc stripping: a git commit whose MESSAGE describes the
+# tool is not an infrastructure command. This case is why the strings above are assembled from
+# variables — and now it does not need to be, which is the point.
+PROSE="git commit -F- <<'EOF'
+fix: refuse a $A $B that deletes the app
+
+Running $A $B locally against envs/prod destroys api and web.
+EOF"
+t "$PROSE" allow "git commit whose message describes the tool"
+
+# ...while still catching the real thing written the same way it is really typed.
+t "cd infra/terraform/envs/prod
+$A $B" deny "real invocation on its own line"
 echo ""
 [ $fail -eq 0 ] && echo "  ALL CASES CORRECT" || echo "  ⚠️ SOME CASES WRONG"

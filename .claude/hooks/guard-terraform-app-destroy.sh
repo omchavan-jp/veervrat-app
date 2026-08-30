@@ -30,11 +30,34 @@
 # production.
 set -uo pipefail
 
+# Strip heredoc bodies before deciding whether this command runs Terraform.
+#
+# Both guards read the command TEXT, which cannot by itself tell an invocation from a mention. A
+# `git commit -F-` whose message *describes* the tool — as the commit adding these very guards did
+# — was refused as though it were an infrastructure command. Twice.
+#
+# Heredoc bodies are where prose lives, so removing them leaves the actual commands. Then require
+# the invocation to begin a command (start of string, or after a newline, `;`, `&&`, `||`, `|`)
+# rather than merely appear somewhere.
+strip_heredocs() {
+  awk '
+    /<<-?[\047"]?[A-Za-z_][A-Za-z0-9_]*[\047"]?[[:space:]]*$/ && !inbody {
+      match($0, /<<-?[\047"]?[A-Za-z_][A-Za-z0-9_]*/)
+      tag = substr($0, RSTART, RLENGTH)
+      gsub(/^<<-?[\047"]?/, "", tag)
+      inbody = 1; marker = tag; print; next
+    }
+    inbody { if ($0 == marker) { inbody = 0 }; next }
+    { print }
+  '
+}
+
 INPUT="$(cat)"
 CMD="$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null)"
 [[ -z "$CMD" ]] && exit 0
 
-grep -Eq 'terraform[[:space:]]+apply' <<<"$CMD" || exit 0
+EFFECTIVE="$(strip_heredocs <<<"$CMD")"
+grep -Eq '(^|[;&|]|&&|\|\|)[[:space:]]*([A-Z_]+=[^[:space:]]+[[:space:]]+)*terraform[[:space:]]+apply' <<<"$EFFECTIVE" || exit 0
 grep -q 'VEERVRAT_ALLOW_APP_DESTROY=yes-i-have-read-the-plan' <<<"$CMD" && exit 0
 
 # Which environment? Named in the command, or already the shell's cwd — the Bash tool's directory
