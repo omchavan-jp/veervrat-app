@@ -101,7 +101,7 @@ nothing left to authenticate.
 | Content under the pseudonym | `spec/06`. A vratmitra's record of their guidance should not develop holes |
 | `audit_events` | A security record legitimately outlives the account it describes |
 | `sessions` IP address + user agent | Now swept nightly once expired (#77). Live sessions end at anonymisation |
-| avatar **file** in object storage | The reference is cleared; **no stored file is ever deleted** — still true, and now slightly more pressing: uploads that are composed but never saved stay in storage as orphans (readable only by their uploader). Currently moot in a stronger sense than it looks — **nothing sets `avatarUrl` at all**, so no avatar files exist. Deletion must land together with avatar upload, and is a blocking criterion on #139 |
+| avatar **file** in object storage | The reference is cleared; **no stored file is ever deleted** — still true, and now slightly more pressing: uploads that are composed but never saved stay in storage as orphans (readable only by their uploader). Currently moot in a stronger sense than it looks — **nothing sets `avatarUrl` at all**, so no avatar files exist. Deletion must land together with avatar upload. ⚠️ This said "a blocking criterion on #139" until 2026-08-30; **#139 is closed** — it was about keeping object storage swappable, not about avatars. There is no avatar-upload issue to point at, and no way to upload one: `avatarUrl` appears only in read paths and output DTOs, with no field on any update DTO. So this row is **moot until that feature exists**, and the requirement is recorded on #140 so it is not lost in the gap |
 
 ### Resolved 2026-08-23
 
