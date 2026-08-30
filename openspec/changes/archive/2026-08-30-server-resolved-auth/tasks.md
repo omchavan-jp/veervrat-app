@@ -44,19 +44,21 @@
 
 - [x] 4.1 Signed in: full page load shows content immediately — **no spinner flash**.
 - [x] 4.2 Anonymous: `/login` still renders fast, and DevTools shows **no** `/auth/me` call.
-- [ ] 4.3 Sign out in one tab, act in another — the second tab redirects rather than acting as a
+- [x] 4.3 Sign out in one tab, act in another — the second tab redirects rather than acting as a
   ghost session.
   **Attempted 2026-08-29 and it failed.** `/journeys` redirected, so it looks like a pass if that
   is what you click. `/study` — also in this route group, also guarded — kept rendering. The
   difference was not the guard: journeys fetches data and got a 401, study renders from cache and
-  asked nothing. Filed as #251, fixed in #254 by revalidating on navigation. Re-test against a
-  build carrying that, and click something that does **not** fetch.
+  asked nothing. Filed as #251, fixed in #254 by revalidating on navigation.
+  **Re-tested 2026-08-29 against that build: `/study` now redirects.** Verified with the page that
+  used to render, not the one that always redirected — journeys would have passed either way,
+  which is how this got through the first time.
 
-- [ ] 4.4 Expire a session server-side mid-session; confirm the next action redirects to login
+- [x] 4.4 Expire a session server-side mid-session; confirm the next action redirects to login
   rather than silently failing.
   **Attempted 2026-08-29 and it failed**, the same way as 4.3: browsing continued and only a
   reload redirected. Reload behaved because the proxy resolves the session server-side. Same fix,
-  #254; same instruction — the next *action* has to be one that would otherwise render from cache.
+  #254. **Re-tested 2026-08-29: redirects on the next action, not only on reload.**
 
 - [x] 4.5 Re-run the #101 guard: `e2e/auth-no-request-storm.spec.ts` must still pass.
 - [x] 4.6 Measure the added latency on a warm api and record the number. If it is materially worse
@@ -75,7 +77,11 @@
 - [x] 5.4 Note in #92 that cold-start latency now affects signed-in page loads too — it makes the
   always-on replica trade-off more favourable than when it was declined.
 - [x] 5.5 CHANGELOG: user-visible (pages no longer flash a spinner before showing content).
-- [ ] 5.6 Archive this change.
+- [x] 5.6 Archive this change.
+  Done 2026-08-30. Every task verified, including 4.3 and 4.4 — which failed on first attempt and
+  found the ghost session (#251, fixed in #254), then passed on re-test against that build.
+  No spec deltas to merge: this change carries none, which is why 5.3 was closed with a note
+  rather than a file.
 
 
 ---

@@ -66,12 +66,16 @@
   invitation — it may have expired or already been used", with a route back to Invitations.
   Told on arrival, not on click.
   anything.
-- [ ] 5.4 As someone with no account, open an invitation link and confirm it still names the
+- [x] 5.4 As someone with no account, open an invitation link and confirm it still names the
   inviter.
   **Attempted 2026-08-29 and it failed**: redirect to /login, no inviter, no mention of an
   invitation. The page sat in the auth-guarded route group, so the guard fired before it could
   render — while its own comment said it was "readable without a session". The api was already
   public. Filed as #252, fixed in #255 by moving the page to `(public)`.
+  **Re-tested 2026-08-29 in a private window: the page names the inviter** and offers *Create an
+  account* / *Sign in*, with copy saying the invitation will be waiting — which is true, and is
+  the path 5.1 verified. Deliberately not a `?next=` return: nothing honours that parameter, so
+  promising one would have been a promise the app does not keep.
 
 
 ⚠️ 5.1 is the one this change exists for, and it is the one no test can stand in for: the whole

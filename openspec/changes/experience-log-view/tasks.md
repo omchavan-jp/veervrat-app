@@ -27,7 +27,12 @@
 - [x] 2.1 "My experiences" list links each entry to its view.
 - [x] 2.2 The public pool links each entry to the log, **in addition to** the existing author
   link, not instead of it.
-- [ ] 2.3 Check nothing else dead-ends into `/experiences/<id>` expecting a 404 today.
+- [x] 2.3 Check nothing else dead-ends into `/experiences/<id>` expecting a 404 today.
+  Checked 2026-08-29, and something did: a public profile rendered its experience entries as
+  plain text, so the one place a person meets somebody else's writing went nowhere. The public
+  pool already carried the link, added when the log got a page (#190) — the profile was never
+  given the same treatment and nothing connected the two files. Filed as #253, fixed in #256,
+  re-tested: the entry opens.
 
 ## 3. Guests — RESOLVED IN DESIGN
 
