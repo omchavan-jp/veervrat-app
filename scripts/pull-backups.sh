@@ -19,7 +19,12 @@
 set -Eeuo pipefail
 
 DEST="${VEERVRAT_BACKUP_DIR:-$HOME/veervrat-backups}"
-KEY_FILE="${VEERVRAT_BACKUP_KEY_FILE:-$HOME/.secrets/veervrat/backup-encryption-key}"
+# One key per environment, because there IS one per environment — Terraform generates them
+# separately and a prod dump will not open with the UAT key. A single shared path would have
+# verified prod copies against the wrong key and deleted them as corrupt, which is a worse
+# outcome than not checking at all.
+KEY_DIR="${VEERVRAT_BACKUP_KEY_DIR:-$HOME/.secrets/veervrat}"
+key_file_for() { echo "${KEY_DIR}/${1}-backup-encryption-key"; }
 RETENTION_DAYS="${VEERVRAT_BACKUP_RETENTION_DAYS:-30}"
 # Louder than the retention window on purpose: a pull that has not run for a week is a problem
 # well before the oldest copy expires.
@@ -93,7 +98,10 @@ if $STATUS_ONLY; then
   exit $?
 fi
 
-[ -f "$KEY_FILE" ] || die "no decryption key at ${KEY_FILE} — a copy you cannot open is not a backup"
+for env in $ENVIRONMENTS; do
+  kf=$(key_file_for "$env")
+  [ -f "$kf" ] || die "no decryption key at ${kf} — a copy you cannot open is not a backup"
+done
 
 # ── pull ────────────────────────────────────────────────────────────────────────────────────
 TOTAL_NEW=0
@@ -122,7 +130,7 @@ for env in $ENVIRONMENTS; do
     # Verify before it counts. A pulled file that will not decrypt is worse than no file: it
     # occupies the place a real answer would, and only fails when it is the last thing left.
     if ! openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 \
-           -in "$local_path" -pass "file:$KEY_FILE" 2>/dev/null \
+           -in "$local_path" -pass "file:$(key_file_for "$env")" 2>/dev/null \
          | head -c 5 | grep -q PGDMP; then
       rm -f "$local_path"
       die "${blob} did not decrypt to a Postgres dump — removed it rather than keep an unopenable copy"
