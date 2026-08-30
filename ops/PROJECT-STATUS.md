@@ -357,10 +357,30 @@ History of already-triaged items: `triage-archive.md`.
     thing before inviting a real beta tester
 18. ✅ Blob storage (O15) — SDK swap shipped as #139, exercised UAT 2026-08-24. Decommission
     Neon/Upstash/R2 and #84 (budget proposal) remain
-19. Not urgent, but do not lose: #89 (backups have never been restored — untested is not a
-    backup), #93 (no hard spending cap; grant expiry silently bills a personal card), #90
-    (Terraform state RBAC is broader than it should be), #91 (VNet/private endpoints, deferred
-    with a trigger rather than a date)
+19. Not urgent, but do not lose: ✅ **#89 closed** — backups are now restored end to end, not
+    merely taken (dump → encrypt → upload → pull out of Azure → decrypt → restore → row counts
+    matching an independently taken count). ✅ **#93's hard stop shipped 2026-08-26** — budget →
+    action group → webhook → `stop-veervrat` runbook, on a custom least-privilege role, proven by
+    running it for real. Only the personal-card swap remains there, which is an organisational
+    action. Still open and unchanged: #90 (Terraform state RBAC broader than it should be), #91
+    (VNet/private endpoints, deferred with a trigger rather than a date)
+
+20. **Where the sequence actually stands, 2026-08-30.** Items 1–19 are done, so this list no
+    longer says what happens next — the next step is a judgement call among open issues rather
+    than a queue position. The three that gate a beta invitation, in the order they depend on
+    each other:
+
+    a. **#92 is half done, and not the half you would expect.** UAT runs `min_replicas = 1` on
+       both tiers; **prod runs 0**, so production is the environment paying two cold starts in
+       series (5–20s) while UAT is warm. The remaining change is two lines in
+       `envs/prod/main.tf` — but it is a spend decision, not a config change.
+    b. **The figure that decision needs does not exist yet.** UAT has been always-on for weeks,
+       so prod's delta can be measured from real spend rather than estimated. The same number is
+       the evidence #84 (budget proposal for JP finance) has been waiting on.
+    c. **#267 is a standing fact, now labelled `deferred`** — the only off-Azure copy lives on one
+       laptop, and **prod has none at all**, because the backup job ships with a `prod-*` tag.
+       Not neglected work; a known position with a trigger (go-live, or prod carrying data
+       anyone would miss).
 
 Rationale for 5-before-6: CD automates a deploy you understand. Written first, every
 first-time deployment surprise surfaces as a red CI log instead of in front of you.
