@@ -61,3 +61,25 @@ resource "azurerm_role_assignment" "backup_storage_blob" {
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = azurerm_user_assigned_identity.api.principal_id
 }
+
+# And the humans who have to pull the dumps out.
+#
+# Without this the whole change does not work: `scripts/pull-backups.sh` authenticates as the
+# person running it, not as the job's identity, so it could list nothing and download nothing.
+# Confirmed the hard way on 2026-08-30 — "you do not have the required permissions" against a
+# container this same Terraform had just created.
+#
+# **Reader, not Contributor.** The pull only reads; the job does the deleting, on a schedule, with
+# the retention window in one place. A human able to delete from here could remove the only copy
+# outside Azure by mistake, and there is no version history behind it to undo that.
+#
+# Reuses `key_vault_administrators` rather than introducing a second list of people. The two sets
+# are the same by nature — whoever can read the decryption key is whoever can usefully read the
+# dumps — and two lists would eventually disagree, silently, in whichever direction is worse.
+resource "azurerm_role_assignment" "backup_storage_admins" {
+  for_each = var.key_vault_administrators
+
+  scope                = azurerm_storage_account.backups.id
+  role_definition_name = "Storage Blob Data Reader"
+  principal_id         = each.value
+}
