@@ -92,8 +92,22 @@ echo "[backup] verified: decrypts byte-identical to the dump"
 
 # ── upload ──────────────────────────────────────────────────────────────────────────────────
 echo "[backup] uploading…"
-azcopy login --login-type=MSI --identity-client-id "${AZURE_CLIENT_ID:?AZURE_CLIENT_ID is required}" >/dev/null
-azcopy copy "$CIPHER" "${ENDPOINT}/${NAME}" --from-to=LocalBlob --overwrite=false
+
+# Lowercase `msi`. azcopy's own help lists the accepted values as device, spn, msi, azcli,
+# pscred, workload — and the first attempt at this passed `MSI`.
+#
+# The output is NOT discarded. It was, and the job then failed with nothing but a line number
+# while the one command that could explain itself had been silenced. A command that can fail is
+# a command whose stderr is worth keeping, especially the one doing authentication.
+#
+# ⚠️ Not testable outside Azure: `azcopy login --login-type=msi` reaches for the instance metadata
+# endpoint at 169.254.169.254, which does not exist elsewhere, so an attempt on a laptop hangs
+# until the network times out rather than failing usefully.
+azcopy login --login-type=msi --identity-client-id "${AZURE_CLIENT_ID:?AZURE_CLIENT_ID is required}" \
+  || fail "azcopy could not authenticate with the managed identity (client id ${AZURE_CLIENT_ID})"
+
+azcopy copy "$CIPHER" "${ENDPOINT}/${NAME}" --from-to=LocalBlob --overwrite=false \
+  || fail "azcopy copy failed uploading ${NAME}"
 
 # azcopy reports success for a transfer of zero files, so ask the destination rather than trust
 # the exit code — the same class of green-signal-without-evidence that conventions §21 is about.
