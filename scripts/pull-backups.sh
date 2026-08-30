@@ -129,12 +129,18 @@ for env in $ENVIRONMENTS; do
 
     # Verify before it counts. A pulled file that will not decrypt is worse than no file: it
     # occupies the place a real answer would, and only fails when it is the last thing left.
+    # To a file, not into `head` — see apps/backup/backup.sh. Piping openssl into a command
+    # that closes the pipe early makes it die on SIGPIPE, and `set -o pipefail` then reports a
+    # good file as corrupt. Here that would DELETE the copy, so the same mistake is worse on
+    # this side than on the job's.
+    rt=$(mktemp)
     if ! openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 \
-           -in "$local_path" -pass "file:$(key_file_for "$env")" 2>/dev/null \
-         | head -c 5 | grep -q PGDMP; then
-      rm -f "$local_path"
+           -in "$local_path" -pass "file:$(key_file_for "$env")" -out "$rt" 2>/dev/null \
+       || ! head -c 5 "$rt" | grep -q PGDMP; then
+      rm -f "$rt" "$local_path"
       die "${blob} did not decrypt to a Postgres dump — removed it rather than keep an unopenable copy"
     fi
+    rm -f "$rt"
 
     size=$(wc -c < "$local_path" | tr -d ' ')
     sha=$(shasum -a 256 "$local_path" | cut -d' ' -f1)
