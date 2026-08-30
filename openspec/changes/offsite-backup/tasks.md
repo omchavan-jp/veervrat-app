@@ -20,8 +20,12 @@
 
 - [ ] 2.1 Generate and store the encryption key in Key Vault.
 - [ ] 2.2 **And outside Azure.** If the subscription is what was lost, a key that lives only in
-  Key Vault makes every surviving dump unopenable. Record where the second copy is, without
-  recording the key itself anywhere in the repository.
+  Key Vault makes every surviving dump unopenable.
+  Decided 2026-08-30: **Bitwarden**, shared with a second maintainer, plus a working copy in
+  `~/.secrets/veervrat/` (mode 600). The second holder is the point — a key only one person can
+  produce is the bus-factor problem #137 is about, and a backup only one person can decrypt is
+  not a backup for the organisation. Reasoning in `design.md` §2.
+  ⚠️ Record *where* the copies are. Never the key itself, anywhere in this repository.
 
 ## 3. The pull
 

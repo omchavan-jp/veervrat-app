@@ -22,6 +22,30 @@ the restore procedure names both.
 
 This is the one part of the design where getting it wrong is invisible until the day it matters.
 
+**Decided 2026-08-30 — two copies, doing different jobs.**
+
+*Bitwarden* holds the copy that survives: off the laptop, off Azure, and shared with a second
+maintainer. Chosen over 1Password because `21_Infrastructure-Conventions.md` §24 asks for a named
+replacement before adopting a provider, and Bitwarden has one — Vaultwarden runs the same clients
+against our own server. 1Password has no exit. KeePassXC has no dependency at all, which is
+purer, but sharing means passing a file by hand, and that reintroduces exactly the single-holder
+problem the second copy exists to remove. The free tier covers this: a personal vault plus a
+two-person organisation.
+
+*`~/.secrets/veervrat/`* (mode 600, the pattern already used for SMTP and OAuth credentials)
+holds the working copy. **It is a convenience, not a surviving copy** — the dumps land on that
+same laptop, so alone it fails the only test that matters: one theft yields both the ciphertext
+and the key.
+
+⚠️ The rehearsal must not read the local copy. See task 5.2: restoring with only what survives
+losing the subscription is the whole assertion, and a rehearsal that quietly reaches for
+`~/.secrets/` proves the opposite of what it claims.
+
+**Residency, flagged rather than assumed.** Bitwarden hosts in the US or EU. §8 governs
+*application data*; an encryption key is not user data, and the vault is end-to-end encrypted so
+the server never holds plaintext. That reasoning looks sound and it is not mine to ratify — the
+Sentry exception had to be argued explicitly, and this should be too if anyone disagrees.
+
 ## 3. Retention needs a number
 
 An unbounded pile of full personal-data exports is a liability that grows on its own, and "we
