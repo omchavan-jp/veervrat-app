@@ -31,7 +31,7 @@ PLAIN="/tmp/dump.bin"
 CIPHER="/tmp/${NAME}"
 ENDPOINT="https://${BACKUP_STORAGE_ACCOUNT}.blob.core.windows.net/${BACKUP_CONTAINER}"
 
-cleanup() { rm -f "$PLAIN" "$CIPHER"; }
+cleanup() { rm -f "$PLAIN" "$CIPHER" /tmp/roundtrip.bin; }
 trap cleanup EXIT
 
 echo "[backup] ${ENVIRONMENT} ${STAMP}"
@@ -66,11 +66,29 @@ printf '%s' "$BACKUP_ENCRYPTION_KEY" \
 # Prove it round-trips before this dump is treated as one. An unopenable backup is worse than a
 # missing one: it occupies the place where a real answer would be, and only fails when it is the
 # only thing left.
+# Decrypt to a FILE, then inspect it. Never pipe openssl into `head`: `head` closes the pipe
+# after its bytes, openssl dies on SIGPIPE printing "error writing output file", and under
+# `set -o pipefail` that fails the pipeline — so a perfectly good dump is rejected.
+#
+# That is not hypothetical. It is exactly how the first real run of this job failed, twice,
+# having produced a 259KB dump that was byte-identical to the original after decryption. The
+# check was broken; what it was checking never was. Without pipefail the same pipeline passes,
+# which is why it survived local testing — the bug needed both halves to show itself.
+ROUNDTRIP="/tmp/roundtrip.bin"
 printf '%s' "$BACKUP_ENCRYPTION_KEY" \
-  | openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -in "$CIPHER" -pass stdin \
-  | head -c 5 | grep -q 'PGDMP' \
-  || fail "encrypted dump did not decrypt back to a Postgres dump — refusing to upload it"
-echo "[backup] verified it decrypts to a Postgres dump"
+  | openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -in "$CIPHER" -pass stdin -out "$ROUNDTRIP" \
+  || fail "encrypted dump would not decrypt — refusing to upload it"
+
+head -c 5 "$ROUNDTRIP" | grep -q 'PGDMP' \
+  || fail "decrypted output is not a Postgres dump — refusing to upload it"
+
+# Stronger than the magic bytes: the whole file must come back identical, so a truncated or
+# partially-written cipher is caught rather than passing on its first five bytes.
+cmp -s "$PLAIN" "$ROUNDTRIP" \
+  || fail "decrypted dump differs from the original — refusing to upload it"
+
+rm -f "$ROUNDTRIP"
+echo "[backup] verified: decrypts byte-identical to the dump"
 
 # ── upload ──────────────────────────────────────────────────────────────────────────────────
 echo "[backup] uploading…"
