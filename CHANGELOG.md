@@ -10,6 +10,17 @@ testers only once a `prod-*` tag has been deployed.
 
 ## Unreleased
 
+### Staying signed in, and being told when you are not
+
+- **Signing out in one tab now takes effect in the others.** A second tab could keep showing your
+  pages for up to a minute — some of them would redirect and some would not, depending on whether
+  the page happened to load anything. Only a reload put it right.
+- **An invitation link now tells you who invited you, even if you have no account.** It used to
+  send you to the login page with no name, no mention of an invitation, and no reason for being
+  there — which is the one situation where the person opening the link is most likely to be new.
+- **Someone else's public reflections can be opened from their profile.** They were listed but not
+  clickable, so the one place you meet another person's writing led nowhere.
+
 ### Deleting your account, and coming back
 
 - **Deleting your account no longer says your session expired.** The deletion had worked; the
