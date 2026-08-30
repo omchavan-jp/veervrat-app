@@ -40,7 +40,11 @@ say() { echo "[pull] $*"; }
 command -v az >/dev/null || die "az is not installed — see documentation/02_Local-Development-Setup.md"
 az account show >/dev/null 2>&1 || die "not signed in to Azure — run: az login"
 
+# 700, not the default 755. What lands here is a complete export of every personal record the
+# platform holds — encrypted, but there is no reason for another account on this machine to be
+# able to enumerate or copy them.
 mkdir -p "$DEST"
+chmod 700 "$DEST"
 MANIFEST="$DEST/manifest.json"
 [ -f "$MANIFEST" ] || echo '{"copies":[]}' > "$MANIFEST"
 
@@ -98,10 +102,10 @@ if $STATUS_ONLY; then
   exit $?
 fi
 
-for env in $ENVIRONMENTS; do
-  kf=$(key_file_for "$env")
-  [ -f "$kf" ] || die "no decryption key at ${kf} — a copy you cannot open is not a backup"
-done
+# Deliberately NOT checked up front for every environment. Doing that blocked pulling UAT
+# because prod — which has not been deployed and therefore has no key — was in the list. The
+# check belongs where the environment is actually processed, after we know there is something
+# there to pull.
 
 # ── pull ────────────────────────────────────────────────────────────────────────────────────
 TOTAL_NEW=0
@@ -118,6 +122,12 @@ for env in $ENVIRONMENTS; do
             --auth-mode login --query '[].name' -o tsv 2>/dev/null || true)
   [ -n "$BLOBS" ] || { say "  container is empty"; continue; }
 
+  # Only now, when there is something to pull for THIS environment. Downloading a dump we cannot
+  # verify would mean either keeping an unopenable file or deleting a good one — both worse than
+  # declining to fetch it.
+  KF=$(key_file_for "$env")
+  [ -f "$KF" ] || die "dumps exist for ${env} but there is no key at ${KF} — a copy you cannot open is not a backup"
+
   while read -r blob; do
     [ -n "$blob" ] || continue
     local_path="$DEST/$blob"
@@ -126,6 +136,10 @@ for env in $ENVIRONMENTS; do
     say "  pulling ${blob}…"
     az storage blob download --account-name "$ACCOUNT" --container-name database-dumps \
       --name "$blob" --file "$local_path" --auth-mode login --no-progress >/dev/null
+    # `az` writes with the default umask, which left these 644 — world-readable. Encrypted, but
+    # a complete personal-data export should not be casually copyable by anything else on the
+    # machine, and the key lives on the same machine.
+    chmod 600 "$local_path"
 
     # Verify before it counts. A pulled file that will not decrypt is worse than no file: it
     # occupies the place a real answer would, and only fails when it is the last thing left.
@@ -135,7 +149,7 @@ for env in $ENVIRONMENTS; do
     # this side than on the job's.
     rt=$(mktemp)
     if ! openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 \
-           -in "$local_path" -pass "file:$(key_file_for "$env")" -out "$rt" 2>/dev/null \
+           -in "$local_path" -pass "file:$KF" -out "$rt" 2>/dev/null \
        || ! head -c 5 "$rt" | grep -q PGDMP; then
       rm -f "$rt" "$local_path"
       die "${blob} did not decrypt to a Postgres dump — removed it rather than keep an unopenable copy"
