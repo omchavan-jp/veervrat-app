@@ -1,7 +1,21 @@
-# Marathi policy review — terms of use and privacy policy
+# Marathi review — policy documents, and the interface copy that goes with them
 
-**For a native Marathi speaker.** Prepared 2026-08-25. Nachiket Nitsure is the natural reviewer,
-having reviewed the उणीव terminology sweep.
+**For a native Marathi speaker.** Prepared 2026-08-25, extended 2026-08-30. Nachiket Nitsure is
+the natural reviewer, having reviewed the उणीव terminology sweep.
+
+**Two parts, and they ask for different judgements:**
+
+| | What | How much there is | The test |
+|---|---|---|---|
+| **Part 1** | Terms of use and privacy policy | 64 blocks | Does the Marathi mean the same as the English? A reader is *agreeing* to this text |
+| **Part 2** | Interface messages shown when something has gone wrong | 9 strings | Does it say what happened, and whether anything can be done about it? |
+
+Part 1 is the longer and more consequential half. Part 2 was added later — the strings did not
+exist when this was first written — and is included here rather than sent separately, because
+asking twice for the same kind of judgement is a good way to get the second ask ignored.
+
+Everything in both parts was translated by someone who does not speak Marathi. That is the whole
+reason for this document.
 
 ---
 
@@ -449,3 +463,109 @@ documents, so nothing is present in one language and missing from the other.
 
 **MR** महत्त्वाचा बदल केल्यास आम्ही तुम्हाला नवीन आवृत्ती स्वीकारण्यास सांगू, आणि तुम्ही कोणती आवृत्ती व कधी स्वीकारली याची नोंद ठेवू.
 
+
+---
+
+# Part 2 — interface copy (added 2026-08-30)
+
+**Nine strings, and they are not policy text.** They are messages the application shows at the
+moment something has gone wrong or an account has been deleted. Added between 2026-08-27 and
+2026-08-29, after Part 1 was written, and Marathi again by a non-speaker.
+
+They are here rather than in a separate pack for one reason: asking a reviewer twice for the same
+kind of judgement is a good way to get the second ask ignored.
+
+## What is different about these
+
+Policy text is read once, deliberately, by someone deciding whether to agree. **These are read by
+someone who is stuck** — their account is gone, or a link did not work — and usually only once,
+quickly, while annoyed. So the test is different:
+
+- Does it say **what happened**, without hedging?
+- Does it say whether the person can **do anything about it**, or that they cannot?
+- Does it avoid sounding like an apology when it is really a refusal? A deleted account is not
+  coming back, and language that leaves room for hope is worse than language that does not.
+
+The blunt one is deliberate: *"Deletion is permanent, so the account cannot be restored."* If the
+Marathi is gentler than that, it is wrong.
+
+## One thing already worth a second look
+
+Two adjacent strings treat the word **दुवा** differently — `error_invalid` has **ही दुवा** while
+`error_expired` has **या दुव्याची**. One of the two must be wrong, since it is the same noun in
+both. We cannot tell which; that is exactly why this pack exists. Flagged rather than guessed at.
+
+---
+
+### ui — block 1  ·  `auth.errors.accountDeleted`
+
+**EN** This account was deleted.
+
+**MR** हे खाते हटवले गेले आहे.
+
+### ui — block 2  ·  `auth.errors.accountDeletedOn`
+
+**EN** This account was deleted on {date}.
+
+**MR** हे खाते {date} रोजी हटवले गेले.
+
+> `{date}` is replaced by a real date at runtime and must stay exactly as written, braces included.
+> It may move within the sentence if Marathi word order needs it to.
+
+### ui — block 3  ·  `auth.errors.accountDeletedPermanent`
+
+**EN** Deletion is permanent, so the account cannot be restored. You can create a new account with this Google address.
+
+**MR** हटवणे कायमस्वरूपी आहे, त्यामुळे खाते पुन्हा मिळवता येत नाही. तुम्ही या Google पत्त्याने नवीन खाते तयार करू शकता.
+
+> The one that matters most in Part 2. Both halves have to survive: it is permanent, **and** the
+> same Google address may be used again for a new account. Dropping the second half leaves someone
+> believing they are locked out for good.
+
+### ui — block 4  ·  `auth.errors.accountDeletedSignUp`
+
+**EN** Create a new account
+
+**MR** नवीन खाते तयार करा
+
+> A button. Short enough to fit a button in Marathi too.
+
+### ui — block 5  ·  `auth.errors.accountDeletedConfirmed`
+
+**EN** Your account has been deleted.
+
+**MR** तुमचे खाते हटवले गेले आहे.
+
+> Shown to the person who just deleted their own account — a confirmation, not a refusal. Block 1
+> is the same event told to someone trying to sign in. If the two should read differently in
+> Marathi, say so.
+
+### ui — block 6  ·  `confirmEmailChange.error_invalid`
+
+**EN** This confirmation link is invalid, or it has already been used.
+
+**MR** ही दुवा अवैध आहे, किंवा ती आधीच वापरली गेली आहे.
+
+### ui — block 7  ·  `confirmEmailChange.error_expired`
+
+**EN** This confirmation link has expired. Request the change again from settings.
+
+**MR** या दुव्याची मुदत संपली आहे. सेटिंग्जमधून बदल पुन्हा मागवा.
+
+> Has to leave the reader knowing the next step is *settings*, not their email.
+
+### ui — block 8  ·  `confirmEmailChange.error_taken`
+
+**EN** That address now belongs to another account, so the change was not applied.
+
+**MR** तो पत्ता आता दुसऱ्या खात्याचा आहे, त्यामुळे बदल लागू झाला नाही.
+
+> States a fact about someone else's account without implying the reader did anything wrong.
+
+### ui — block 9  ·  `confirmEmailChange.error_unknown`
+
+**EN** Something went wrong and the change was not applied. Please try again.
+
+**MR** काहीतरी चुकले आणि बदल लागू झाला नाही. कृपया पुन्हा प्रयत्न करा.
+
+> The only one here that should sound apologetic — it is genuinely our fault.
