@@ -35,13 +35,20 @@
 - [x] 2.1 Generate and store the encryption key in Key Vault.
   Done 2026-08-30: `random_password` into `backup-encryption-key`, the same generate-and-vault
   pattern as the Postgres admin password — never written to a file.
-- [ ] 2.2 **And outside Azure.** If the subscription is what was lost, a key that lives only in
+- [x] 2.2 **And outside Azure.** If the subscription is what was lost, a key that lives only in
   Key Vault makes every surviving dump unopenable.
   Decided 2026-08-30: **Bitwarden**, shared with a second maintainer, plus a working copy in
   `~/.secrets/veervrat/` (mode 600). The second holder is the point — a key only one person can
   produce is the bus-factor problem #137 is about, and a backup only one person can decrypt is
   not a backup for the organisation. Reasoning in `design.md` §2.
   ⚠️ Record *where* the copies are. Never the key itself, anywhere in this repository.
+  Done 2026-08-30: a Bitwarden secure note under `veervrat@jnanaprabodhini.org`, shared with a
+  second maintainer, plus a working copy at `~/.secrets/veervrat/uat-backup-encryption-key`
+  (mode 600). The second holder is the half that matters — the local copy sits on the same
+  machine as the dumps, so alone it fails the one test this exists for.
+
+  Exercised, not merely stored: the rehearsal (5.2) decrypted a real dump using only the local
+  file, with no Azure involved.
 
 ## 3. The pull
 
@@ -101,13 +108,30 @@
 
 ## 5. Verify like a person
 
-- [ ] 5.1 **Restore a real dump into a scratch database and confirm the data is there.** Not the
+- [x] 5.1 **Restore a real dump into a scratch database and confirm the data is there.** Not the
   job's exit code — the restored rows.
-- [ ] 5.2 Restore using **only** what would survive losing the subscription: the pulled dump and
+  Done 2026-08-30. A 259,264-byte UAT dump restored into a scratch database: 54 tables, 10 users,
+  226 sentences, 176 audit events, 35 weaknesses. `pg_restore` exit 0, no errors, and rows that
+  were real rather than empty shells — a user created 2026-08-22, a genuine sentence.
+
+  The 10 users is what makes it evidence: the same count had been measured directly against UAT
+  hours earlier by an entirely different route. A restore that merely completes proves less than
+  one whose contents match something already known.
+- [x] 5.2 Restore using **only** what would survive losing the subscription: the pulled dump and
   the off-Azure key copy. If the rehearsal quietly reaches for Key Vault, it has proven the
   wrong thing.
-- [ ] 5.3 Write the procedure down afterwards, describing what was done rather than what was
+  Done 2026-08-30, and enforced rather than intended. After naming the two artefacts — the pulled
+  `.dump.enc` and `~/.secrets/veervrat/uat-backup-encryption-key` — the only commands used were
+  `openssl enc -d`, `psql` and `pg_restore`. No `az`, no Key Vault, no network dependency at all.
+
+  This is the assertion the whole change turns on. A procedure that reads the key from Key Vault
+  works perfectly right up until the day Key Vault is the thing that is gone.
+- [x] 5.3 Write the procedure down afterwards, describing what was done rather than what was
   planned — the standard `DEPLOYMENT.md` already sets for the point-in-time restore.
+  Done 2026-08-30: `DEPLOYMENT.md` → "Restoring from an off-site dump". Written after the fact,
+  with the real numbers, and with three limits stated rather than left to be discovered — it does
+  not cover object storage, does not cover restoring *into* Azure, and does not cover prod, which
+  has no dump because it has no job yet.
 
 ## 6. Records
 
@@ -115,11 +139,11 @@
   Done 2026-08-30. Listed as two places rather than one, because the distinction is the whole
   change: Blob is staging inside the same subscription, and only the pulled copy satisfies #131.
   A single row would have implied the first was enough.
-- [ ] 6.2 Note in the change and in `#131` that this is an **interim**: one device, single point
+- [x] 6.2 Note in the change and in `#131` that this is an **interim**: one device, single point
   of failure, to be revisited before go-live.
-  ⚠️ Half done: `proposal.md` says it, `#131` does not yet. Left open until the issue says so too
-  — the proposal is read by whoever works on this, and #131 is read by whoever wonders whether it
-  is handled.
+  Done 2026-08-30. `proposal.md` said it; `#131` now says it too, with the trigger named
+  (go-live) and the three things this does not cover stated rather than implied — object storage,
+  restoring into Azure, and prod.
 
 ## 7. Carried forward, not done here
 

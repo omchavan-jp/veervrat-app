@@ -1015,6 +1015,79 @@ procedure. That is a deliberate beta trade-off, not an oversight — but it shou
 
 ---
 
+## Restoring from an off-site dump
+
+Different from the point-in-time restore above, and needed in a different situation. PITR
+reaches back through Azure's own managed backups, which live in the same subscription as the
+database — so it answers deletion, corruption and operator error, and answers nothing if the
+subscription itself is gone. That is what the nightly dump exists for (#131,
+`openspec/changes/offsite-backup`).
+
+**Performed 2026-08-30, and this describes what was actually done.** Restoring from a logical
+dump inherits none of PITR's assurance — it is a different operation, so it was rehearsed rather
+than assumed.
+
+### What you need, and what you deliberately do not
+
+Two artefacts, both outside Azure:
+
+1. **The dump** — `~/veervrat-backups/veervrat-<env>-<timestamp>.dump.enc`, put there by
+   `scripts/pull-backups.sh`.
+2. **The key** — `~/.secrets/veervrat/<env>-backup-encryption-key`, and a second copy in
+   Bitwarden shared with another maintainer.
+
+⚠️ **No `az`, no Key Vault, no Azure at all.** That is the point of the exercise, not an
+incidental detail. If the subscription is what was lost then Key Vault went with it, so a
+procedure that quietly reads the key from there proves the opposite of what it claims. The
+rehearsal was done with the network irrelevant.
+
+Note there is **one key per environment**. A prod dump will not open with the UAT key.
+
+### The procedure
+
+```bash
+# 1 — decrypt. Nothing here reaches the network.
+openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 \
+  -in ~/veervrat-backups/veervrat-uat-<timestamp>.dump.enc \
+  -pass file:$HOME/.secrets/veervrat/uat-backup-encryption-key \
+  -out /tmp/dump.bin
+
+# 2 — a scratch database. Never restore over a live one to "check" a backup.
+createdb rehearsal            # or: psql -c 'CREATE DATABASE rehearsal;'
+
+# 3 — restore
+pg_restore -d rehearsal --no-owner --no-privileges /tmp/dump.bin
+
+# 4 — check the DATA, not the exit code
+psql -d rehearsal -c "SELECT count(*) FROM users;"
+
+# 5 — clean up, including the decrypted plaintext
+dropdb rehearsal && rm -f /tmp/dump.bin
+```
+
+`--no-owner --no-privileges` because the dump was taken with them: it restores into whatever
+role you are using rather than demanding `veervrat_admin` exist on the target.
+
+### What the rehearsal actually found
+
+A 259,264-byte UAT dump restored into a scratch database: **54 tables, 10 users, 226 sentences,
+176 audit events, 35 weaknesses**, `pg_restore` exit 0 with no errors, and spot-checked rows that
+were real — a user created 2026-08-22, a genuine sentence.
+
+The 10 users is the number that makes this evidence rather than a green tick: the same count had
+been measured directly against UAT hours earlier, by an entirely different route. A restore that
+merely completes proves less than one whose contents match something known independently.
+
+### What this does NOT cover
+
+- **Object storage.** The dump is the database only. Uploaded images in
+  `veervrat<env>uploads` have their own copy problem and no answer yet.
+- **Restoring into Azure.** This rehearsal restored locally. Putting a dump back into a fresh
+  Azure Postgres adds provisioning, firewall and connection-string steps that have not been
+  exercised.
+- **Prod.** Prod has no backup job yet — it deploys only on a `prod-YYYY-MM-DD` tag — so it has
+  no dump and no key. Everything above is UAT.
+
 ## Rollback
 
 Deploy the previous `prod-*` tag's image. Because prod ships a promoted image rather than
