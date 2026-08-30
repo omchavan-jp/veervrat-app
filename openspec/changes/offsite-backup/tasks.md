@@ -9,16 +9,27 @@
 
 ## 1. The dump job
 
-- [ ] 1.1 A job that runs `pg_dump` against the environment's database and writes an encrypted
+- [x] 1.1 A job that runs `pg_dump` against the environment's database and writes an encrypted
   artifact to Blob. Encryption happens **before** the artifact leaves the job.
-- [ ] 1.2 Schedule it. Follow the existing convention of choosing the hour in IST and writing the
+  Done 2026-08-30. Its own image (`apps/backup/`), because pg_dump refuses to dump a server newer
+  than itself and Debian ships client 15 against a server on 18 — and because the migrate image
+  is on the critical deploy path and not worth risking for this.
+- [x] 1.2 Schedule it. Follow the existing convention of choosing the hour in IST and writing the
   UTC cron with the conversion stated, rather than leaving a bare number.
-- [ ] 1.3 Fail loudly. A dump job that exits zero having written nothing is the worst outcome
+  Done 2026-08-30: `30 21 * * *` UTC, which is 03:00 IST — an hour after cleanup-expired, so the
+  dump is taken after the nightly sweep rather than capturing rows about to disappear.
+- [x] 1.3 Fail loudly. A dump job that exits zero having written nothing is the worst outcome
   available, because it looks like the good one.
+  Done 2026-08-30. Refuses an empty dump, a dump under 1KB, an upload azcopy calls successful but
+  which is absent from the container, and — before uploading — a file that does not decrypt back
+  to a Postgres dump. The 1KB floor is not theoretical: a first test run had pg_dump fail, write
+  0 bytes, and openssl cheerfully encrypt the empty file into 32 bytes.
 
 ## 2. The key
 
-- [ ] 2.1 Generate and store the encryption key in Key Vault.
+- [x] 2.1 Generate and store the encryption key in Key Vault.
+  Done 2026-08-30: `random_password` into `backup-encryption-key`, the same generate-and-vault
+  pattern as the Postgres admin password — never written to a file.
 - [ ] 2.2 **And outside Azure.** If the subscription is what was lost, a key that lives only in
   Key Vault makes every surviving dump unopenable.
   Decided 2026-08-30: **Bitwarden**, shared with a second maintainer, plus a working copy in
@@ -37,8 +48,11 @@
 
 ## 4. Retention
 
-- [ ] 4.1 Delete dumps older than the retention window, in **both** locations. Part of the job,
+- [x] 4.1 Delete dumps older than the retention window, in **both** locations. Part of the job,
   not a chore.
+  Blob half done 2026-08-30 — 30 days, pruned by the same job that writes. ⚠️ The pulled copies
+  are **not** yet pruned; that belongs with the pull (task 3) and this task is not finished until
+  it is, because the off-Azure pile is the one that grows unattended.
 - [ ] 4.2 Record the number and its reasoning in `ops/data-map.md`, since it is an answer the
   privacy policy will have to give.
 
