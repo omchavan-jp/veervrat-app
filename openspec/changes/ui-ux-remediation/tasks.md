@@ -25,6 +25,9 @@
 > **Correction (2026-08-21).** Three claims above did not survive checking, found when a real
 > admin action gave no feedback and the operator had to ask whether it had worked:
 > - **1.15 was never implemented** and has been un-ticked. It is not in `query-client.ts`.
+>   **Superseded 2026-08-27 — it was built, and is on `main`.** See task 1.15 below for what
+>   landed. Left in place rather than deleted so this correction still reads as a record of what
+>   was found on 2026-08-21, but it is no longer a statement about the code.
 > - **3.1 is true but thin**: `QueryBoundary` is used in 1 route file, not adopted broadly.
 > - **3.2 covered errors only.** Success confirmation was never in scope, anywhere.
 >
@@ -54,11 +57,23 @@
 - [x] 1.15 Add default mutation `onError` toast at the QueryClient level (RC04). Test.
   Done 2026-08-27: `setMutationErrorToast` bridge in `query-client.ts`, wired in `providers.tsx`.
   Skips mutations with their own `onError` (avoids double toast). Uses `errorMessage()` for 4xx.
-  ⚠️ **Un-ticked 2026-08-21 — this was never implemented.** `apps/web/lib/query-client.ts` has no
-  `MutationCache` and no global `onError`; the whole file is `staleTime` + `refetchOnWindowFocus`.
-  The session-1 note says it was "folded into RC04/Tier 2", but RC04 (3.2) delivered *per-call*
-  error handling, so the global default it was folded into does not exist either. Without it,
-  every new mutation is silent-on-failure by default rather than safe by default.
+  To suppress the global toast where a mutation has its own `onError`, set `meta: { silent: true }`.
+  Confirmed present on `main` 2026-08-30: `MutationCache` and the `setMutationErrorToast` bridge
+  are both in `apps/web/lib/query-client.ts`.
+
+  ⚠️ **This task was un-ticked once, on 2026-08-21, as never implemented — and that was true at
+  the time.** It was then built on 2026-08-27 and re-ticked. The 2026-08-21 finding is kept below
+  as history because the way it was found is worth remembering, but it no longer describes the
+  code, and it sat here contradicting the line above it for three days:
+
+  > `apps/web/lib/query-client.ts` has no `MutationCache` and no global `onError`; the whole file
+  > is `staleTime` + `refetchOnWindowFocus`. The session-1 note says it was "folded into RC04/Tier
+  > 2", but RC04 (3.2) delivered *per-call* error handling, so the global default it was folded
+  > into does not exist either. Without it, every new mutation is silent-on-failure by default
+  > rather than safe by default.
+
+  Found because a real admin action gave no feedback and the operator had to ask whether it had
+  worked — not by re-reading the task list.
 
 ## 2. Tier 1 — Mechanical adoption sweeps (parallelizable per route-group)
 

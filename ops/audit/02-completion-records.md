@@ -133,7 +133,7 @@ section exists to *record* things, and a record that silently updates itself is 
 | | Status |
 |---|---|
 | `O16` | Corrected 2026-08-21 with a full account of how a "Succeeded" job migrated nothing for five days. **Exemplary** — it explains the mechanism, not just the outcome |
-| `ui-ux` 1.15 | Un-ticked, with the reason and the file that proves it |
+| `ui-ux` 1.15 | Un-ticked 2026-08-21, with the reason and the file that proves it. **Then built on 2026-08-27 and correctly re-ticked** — `MutationCache` and the `setMutationErrorToast` bridge are in `apps/web/lib/query-client.ts` on `main`, confirmed 2026-08-30. The un-ticking did its job: the task went back on the list and got done |
 | #40 | Closed 2026-08-21 |
 
 ---
