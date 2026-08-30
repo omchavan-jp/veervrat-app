@@ -186,7 +186,7 @@ First successful Azure deploy 2026-08-16. `/ready` returns `database: up, redis:
 | Postgres | `veervrat-uat-psql` | Flexible Server, Burstable `Standard_B1ms`, **v18** (matches the Neon source data — no version conversion at migration), 32GB, **auto-grow ON**, 7-day backups, zone 2 pinned, `lifecycle.prevent_destroy` |
 | ⤷ extensions | `azure.extensions = PG_TRGM` | ⚠️ Azure gates `CREATE EXTENSION` behind a **server-level allow-list** — being DB admin is not enough. Keep in sync with `grep -rhoiE "CREATE EXTENSION[^;]*" apps/api/prisma/migrations/` |
 | Redis | `veervrat-uat-redis` | **Azure Managed Redis** `Balanced_B0`, TLS-only, eviction `AllKeysLRU`, no HA (beta tradeoff) |
-| Key Vault | `veervrat-uat-kv` | RBAC auth, 90-day soft-delete. Secrets: `database-url`, `redis-url`, `postgres-admin-password`, `session-secret` — all Terraform-generated, never typed by a human |
+| Key Vault | `veervrat-uat-kv` | RBAC auth, 90-day soft-delete. Secrets, as listed by `az keyvault secret list` on 2026-08-30: `database-url`, `redis-url`, `postgres-admin-password`, `session-secret`, `backup-encryption-key`, `google-client-secret`, `sentry-dsn`, `smtp-password`. The first five are Terraform-generated and never typed by a human; the last three are third-party credentials placed there. This doc listed only four until 2026-08-30. ⚠️ `backup-encryption-key` **must also exist outside Azure** (Bitwarden, shared with a second maintainer): if the subscription is what was lost, a key held only here makes every surviving dump unopenable |
 | Container Apps env | `veervrat-uat-cae` | + Log Analytics `veervrat-uat-logs` (30-day retention) |
 | api | `veervrat-uat-api` | scale-to-zero → 2 replicas, `DATABASE_POOL_MAX=5`, liveness `/health`, readiness `/ready` |
 | web | `veervrat-uat-web` | scale-to-zero → 2 replicas |
@@ -194,9 +194,11 @@ First successful Azure deploy 2026-08-16. `/ready` returns `database: up, redis:
 | Seed job | `veervrat-uat-seed` | manual trigger only; reference content, idempotent upserts |
 | Grant-admin job | `veervrat-uat-grant-admin` | manual trigger only. ⚠️ **Can mint an administrator** — targets `bootstrap_admin_email`, empty by default. Refuses unverified addresses unless deliberately overridden. Kept on purpose: it is the only way back in if admin access is lost. See conventions §22 |
 | Wipe-users job | `veervrat-uat-wipe-users` | manual trigger only; deletes all user accounts (age-gate compliance) |
-| Cleanup-expired job | `veervrat-uat-cleanup-expired` | manual trigger only; cleans expired sessions and tokens |
+| Cleanup-expired job | `veervrat-uat-cleanup-expired` | **scheduled** `30 20 * * *` UTC = 02:00 IST; cleans expired sessions and tokens. This doc said "manual trigger only" until 2026-08-30 — it has been on a schedule since it was written |
 | Publish-policies job | `veervrat-uat-publish-policies` | manual trigger only; publishes terms/privacy policy content |
+| **Backup job** | `veervrat-uat-backup` | **scheduled** `30 21 * * *` UTC = 03:00 IST, an hour after cleanup-expired so the dump follows the sweep. Runs its own image (`veervrat-backup`), dumps with `pg_dump -Fc`, encrypts before anything leaves the process, uploads to `veervratuatbackups`, prunes past 30 days. Refuses to upload anything that will not decrypt back byte-identical (#131) |
 | Blob storage | `veervratuatuploads` | StorageV2 account, container for file uploads; api identity has Storage Blob Data Contributor + Reader |
+| **Backup storage** | `veervratuatbackups` | Separate account, container `database-dumps`, **never public at any level**. Encrypted database dumps, 30-day retention. Job identity has Storage Blob Data **Contributor**; humans in `key_vault_administrators` have **Reader** — needed because `scripts/pull-backups.sh` runs as a person, not as the job. ⚠️ Staging only: this is in the same subscription as the database it protects, so it does NOT satisfy #131 on its own |
 | Identities | `veervrat-uat-api-id`, `veervrat-uat-web-id` | user-assigned; AcrPull on the registry, api additionally Key Vault Secrets User. **No registry password or connection string anywhere** |
 | Alerting | `veervrat-uat-ops` + `veervrat-uat-psql-storage` | storage > 80%, hourly → `om.chavan@jnanaprabodhini.org` |
 
@@ -248,8 +250,9 @@ no schema at all, while `/health` and `/ready` both returned 200. See the traps 
 | `veervrat-api` | the api runtime image |
 | `veervrat-api-migrate` | **build**-stage image — carries the `prisma` CLI, which is pruned out of the runtime image. Only this one can apply migrations. |
 | `veervrat-web` | Next.js standalone server |
+| `veervrat-backup` | database dump job. Built from `postgres:18-bookworm` rather than a stage of the api image, because `pg_dump` refuses to dump a server newer than itself and Debian ships client 15 against a server on 18. Keeping it separate also leaves `veervrat-api-migrate` — which is on the critical deploy path — untouched |
 
-All three tagged with the release git SHA (currently `6ead179`) plus `latest`.
+All four tagged with the release git SHA (currently `86c14e2`) plus `latest`.
 ⚠️ **No purge policy.** Automatic retention is **Premium-tier only**; on Basic the path is a
 scheduled `acr purge` task. Nothing to purge yet, but this is the line item that grows
 unattended once CD pushes an image per merge. Basic includes 10 GB.

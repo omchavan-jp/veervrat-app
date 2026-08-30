@@ -101,6 +101,19 @@ Still not true of prod, and tracked as issues rather than assumed:
 - **#75** — break-glass data access. The admin-surface half is answered by #114; fixing an
   arbitrary row still has no supported path, and override jobs are now ruled out as unobservable.
 
+**Backup, as of 2026-08-30 (#131).** A copy of the UAT database now exists **outside Azure**, and
+has been restored from — 54 tables, 10 users, 226 sentences, matching what UAT held when measured
+independently. A nightly job dumps and encrypts into `veervrat<env>backups`; a laptop pulls it out
+hourly and verifies each file decrypts before counting it.
+
+⚠️ Two things this is not. The Blob copy is **staging** — same subscription as the database it
+protects, so it answers deletion and operator error, not the loss of the subscription. And the
+off-Azure copy lives on **one laptop**: an interim, recorded as one, with go-live as the trigger to
+replace it. Prod has no backup at all yet, because prod deploys only on a `prod-YYYY-MM-DD` tag.
+
+Procedure: `DEPLOYMENT.md` → "Restoring from an off-site dump". It does not cover object storage,
+restoring *into* Azure, or prod.
+
 **Backlog lives in GitHub Issues** (`gh issue list`), not in this file — see below.
 
 **Age and personal attributes:** `spec/decisions/21_age-and-personal-attributes.md` — the platform
