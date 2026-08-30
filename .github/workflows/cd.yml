@@ -116,6 +116,14 @@ jobs:
           - image: veervrat-web
             dockerfile: apps/web/Dockerfile
             target: runtime
+          # Its own image, not a stage of the api's. `pg_dump` must be at least the server's
+          # major version or it refuses outright, and basing on the official postgres image gets
+          # that by construction. Keeping it separate also leaves `veervrat-api-migrate` alone —
+          # that one is on the critical deploy path, and a once-a-day backup is no reason to risk
+          # it. See apps/backup/Dockerfile.
+          - image: veervrat-backup
+            dockerfile: apps/backup/Dockerfile
+            target: ""
     steps:
       - uses: actions/checkout@v4
 

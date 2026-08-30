@@ -139,7 +139,15 @@ original decision was flagged as needing to be stated rather than assumed.
 
 ## 3. Retention
 
-**There is no retention policy.** Nothing expires except by explicit action.
+**There is no retention policy** for application data. Nothing expires except by explicit action.
+
+**One exception, added 2026-08-30: database dumps are kept 30 days**, in Azure Blob and on the
+machine they are pulled to, and deleted past that by the same jobs that write them rather than by
+anyone remembering. The number is above UAT's 7-day managed backup window and below prod's 35.
+
+It has a number because it needs one: a dump is a complete copy of every personal record the
+platform holds, so an unbounded pile of them is a liability that grows on its own, and "how long
+do you keep backups" is a question the privacy policy has to answer rather than avoid.
 
 The machinery exists — `ScheduleModule` is wired and two crons already run
 (`dormant-journeys.cron.ts`, `notifications.cron.ts`) — so adding retention is small work, not
@@ -159,6 +167,7 @@ Decisions needed, none of them technical:
 | Data | Location |
 |---|---|
 | All application data | Azure Postgres Flexible Server, **Central India (Pune)** |
+| **Database dumps** | Two places, and the difference matters. **(a)** `veervrat<env>backups`, Azure Blob, Central India — staging, private, encrypted. **(b)** A maintainer's machine, in India, holding the copy pulled out of Azure. Only (b) satisfies #131: (a) is in the same subscription as the database it protects. Each dump is a complete copy of every personal record the platform holds, AES-256 encrypted before it leaves the job, retained **30 days** in both places. See `openspec/changes/offsite-backup` |
 | Sessions / cache | Azure Managed Redis, same region |
 | Secrets | Azure Key Vault, per environment |
 | Object storage | Azure Blob, **Central India** — same region as everything else, so this does not affect the residency claim the way Sentry does. Both environments (`veervratuatuploads`, `veervratproduploads` — the latter created by `prod-2026-08-24.1`). ⚠️ **Prod's has never had a file written through it**, and prod still runs the pre-#178 single-container layout until the next prod tag. ✅ **Exercised end-to-end on UAT.** Uploaded 2026-08-24; made private 2026-08-25 (#178). An image is now served by the api, which decides per request whether the viewer may see it — **visibility derives from the document containing the image**, so a chat image follows room membership and an experience image follows that log's own visibility (including guest access to a published one). Verified on UAT: uploader 200, anonymous 404, blob unreachable directly 404. Blog images stay public and cacheable, deliberately. See `documentation/22_Platform-Requirements.md` |
