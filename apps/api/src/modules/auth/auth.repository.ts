@@ -25,22 +25,22 @@ export class AuthRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * Case-insensitive, because an address is not case-sensitive to the person typing it.
+   * An exact match on an address the caller has already normalised.
    *
-   * `requestEmailChange` has always lowercased before storing while `register` did not, so the
-   * table holds both forms. An exact match therefore refused a correct address depending on
-   * which path had last written it — and the refusal is `InvalidCredentialsException`, the same
-   * answer as a wrong password, so nothing distinguished the two from outside.
+   * Callers MUST lowercase before calling. That is not a convention hoping to be followed: every
+   * writer normalises, `20260830080000_lowercase_email_storage` lowercased the rows that predate
+   * that, and `auth.service.email-normalisation.spec.ts` fails if a writer stops.
    *
-   * Matching insensitively rather than lowercasing the input keeps every address that works
-   * today working: normalising input alone would have broken exactly the accounts stored in
-   * mixed case. Writers now normalise (see `login`, `register`), so the mixed form stops
-   * accumulating; lowercasing the rows already stored is a migration, and a migration needs a
-   * collision check against real data first.
+   * This was briefly `mode: 'insensitive'`, which fixed a real defect — the table held both
+   * forms, so an exact match refused a correct address depending on which path had last written
+   * it, and the refusal was `InvalidCredentialsException`, indistinguishable from a wrong
+   * password. That fix is why the read is safe to narrow now rather than the reason to keep it:
+   * Prisma compiles `insensitive` to ILIKE, which cannot use the btree index on `email`, so
+   * every sign-in and every registration became a sequential scan over the users table.
    */
   async findUserByEmail(email: string) {
     return this.prisma.user.findFirst({
-      where: { email: { equals: email, mode: 'insensitive' }, deletedAt: null },
+      where: { email, deletedAt: null },
       select: userSelect,
     });
   }

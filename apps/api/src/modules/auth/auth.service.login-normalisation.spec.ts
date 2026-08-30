@@ -126,3 +126,102 @@ describe('register — address normalisation', () => {
     expect(findUserByEmail).toHaveBeenCalledWith('me@example.com');
   });
 });
+
+/**
+ * The Google paths, which are the ones the migration to canonical storage actually depended on.
+ *
+ * `profile.email` is the only address in the system that never passed through a form of ours —
+ * it is whatever the person typed when they created their Google account, years ago, somewhere
+ * else. So `handleGoogleLogin` was both the last writer that could still add a mixed-case row and
+ * the last reader that could still miss one, and neither showed up while the lookup was ILIKE.
+ *
+ * Both failures below are silent in the worst way: no error, no log, a plausible-looking success.
+ */
+describe('Google — address normalisation', () => {
+  const PROFILE = {
+    googleId: 'g-123',
+    email: '  Me@Example.COM ',
+    name: 'Me',
+    emailVerified: true,
+  };
+
+  it('looks an existing credentials account up in the canonical form, so Google sign-in offers to link rather than creating a second account', async () => {
+    const findUserByEmail = vi.fn().mockResolvedValue({ id: 'u1', email: 'me@example.com' });
+    const createUserWithOAuthAccount = vi.fn();
+    const repo = {
+      findAuthAccount: vi.fn().mockResolvedValue(null),
+      findUserByEmail,
+      invalidateTokensByUserAndType: vi.fn().mockResolvedValue(undefined),
+      createVerificationToken: vi.fn().mockResolvedValue(undefined),
+      createUserWithOAuthAccount,
+    };
+    const { service } = makeService(repo);
+
+    const result = await service.handleGoogleLogin(PROFILE, null, null);
+
+    expect(findUserByEmail).toHaveBeenCalledWith('me@example.com');
+    // The half that matters. Missing the existing user does not fail — it falls through to the
+    // branch that creates one, so the person quietly ends up with two accounts and no way to
+    // tell which holds their data.
+    expect(createUserWithOAuthAccount).not.toHaveBeenCalled();
+    expect(result).toMatchObject({ action: 'link_pending' });
+  });
+
+  it('stores the canonical form on Google signup, so a mixed-case Google address cannot create an account nobody can sign in to', async () => {
+    const createUserWithOAuthAccount = vi.fn().mockResolvedValue({
+      id: 'u2',
+      email: 'me@example.com',
+      displayName: 'Me',
+      username: 'me',
+      roles: [],
+      emailVerifiedAt: new Date(),
+    });
+    const repo = {
+      findAuthAccount: vi.fn().mockResolvedValue(null),
+      findUserByEmail: vi.fn().mockResolvedValue(null),
+      consumePendingSignup: vi.fn().mockResolvedValue({
+        dob: new Date('1990-01-01'),
+        username: 'me',
+        consents: [],
+        language: 'en',
+      }),
+      createUserWithOAuthAccount,
+    };
+    const { service } = makeService(repo, {
+      claimUsername: vi.fn().mockResolvedValue('me'),
+      toSessionUser: (u: unknown) => u,
+    });
+
+    await service.handleGoogleLogin(PROFILE, null, null, 'pending-1');
+
+    expect(createUserWithOAuthAccount).toHaveBeenCalledWith(
+      expect.objectContaining({ email: 'me@example.com' }),
+    );
+  });
+});
+
+/**
+ * The two readers that take an address straight from a request body. Both were unnormalised, and
+ * both fail in a way that looks like a correct answer.
+ */
+describe('recovery endpoints — address normalisation', () => {
+  it('forgotPassword finds the account regardless of casing, instead of telling a real user no account exists', async () => {
+    const findUserByEmail = vi.fn().mockResolvedValue(null);
+    const { service } = makeService({ findUserByEmail });
+
+    // #196 made this endpoint report `no_account` out loud rather than an unconditional "sent".
+    // Unnormalised, that improvement turns into a confident lie for anyone who capitalises.
+    await service.forgotPassword(' ME@Example.com ');
+
+    expect(findUserByEmail).toHaveBeenCalledWith('me@example.com');
+  });
+
+  it('resendVerification finds the account regardless of casing, instead of reporting sent and sending nothing', async () => {
+    const findUserByEmail = vi.fn().mockResolvedValue(null);
+    const { service } = makeService({ findUserByEmail });
+
+    await service.resendVerification('Me@EXAMPLE.com');
+
+    expect(findUserByEmail).toHaveBeenCalledWith('me@example.com');
+  });
+});
