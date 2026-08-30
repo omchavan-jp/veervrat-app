@@ -74,17 +74,26 @@ describe('applyEmailChange', () => {
 });
 
 describe('findUserByEmail', () => {
-  it('matches case-insensitively, so a stored-lowercase address accepts typed capitals', async () => {
+  // This read was briefly case-insensitive, and this test asserted that. It matches exactly
+  // again (#241): every writer normalises, `20260830080000_lowercase_email_storage` converted the
+  // rows that predate them, and `mode: 'insensitive'` compiles to ILIKE, which cannot use the
+  // btree index on `email` — so every sign-in was a sequential scan over the users table.
+  //
+  // The case-insensitivity people actually experience did not go away, it moved: it now lives in
+  // the callers, which lowercase before calling. `auth.service.login-normalisation.spec.ts` is
+  // what holds them to it, and this test would pass just as happily if they all stopped — so the
+  // pair matters, not this half alone.
+  it('matches exactly, so the email index is usable', async () => {
     const findFirst = vi.fn().mockResolvedValue({ id: 'u1' });
     const prisma = { user: { findFirst }, authAccount: {} };
     const repo = new AuthRepository(prisma as never);
 
-    await repo.findUserByEmail('Me@Example.COM');
+    await repo.findUserByEmail('me@example.com');
 
     expect(findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
-          email: { equals: 'Me@Example.COM', mode: 'insensitive' },
+          email: 'me@example.com',
           deletedAt: null,
         }),
       }),

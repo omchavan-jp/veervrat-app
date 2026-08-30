@@ -342,6 +342,12 @@ export class AuthService {
     userAgent: string | null,
     pendingSignupId?: string,
   ): Promise<AuthResult | LinkPendingResult> {
+    // Normalised once, here, because this method both reads by address and writes one, and the
+    // two must agree. `profile.email` is whatever Google holds — the one address in the system
+    // that never passed through a form of ours — so it is the last place a mixed-case row could
+    // still enter, and the last place a lookup could still miss one.
+    const googleEmail = profile.email.trim().toLowerCase();
+
     const existingAccount = await this.authRepository.findAuthAccount(
       AuthProvider.GOOGLE,
       profile.googleId,
@@ -382,7 +388,12 @@ export class AuthService {
       }
     }
 
-    const existingUser = await this.authRepository.findUserByEmail(profile.email);
+    // Normalised: Google returns the address as the person typed it when they created their
+    // Google account, so this is the one reader whose input never passed through a form we
+    // control. Left raw, an exact-match lookup would miss a credentials account stored in the
+    // canonical form and fall through to the branch below — creating a SECOND account for
+    // somebody who already has one, rather than offering to link the two.
+    const existingUser = await this.authRepository.findUserByEmail(googleEmail);
     if (existingUser) {
       // Existing credentials account — issue a short-lived link token instead of erroring.
       // The frontend /link-account page will prompt for the password to confirm ownership.
@@ -436,7 +447,7 @@ export class AuthService {
     const username = await this.claimUsername(pending.username);
 
     const user = await this.authRepository.createUserWithOAuthAccount({
-      email: profile.email,
+      email: googleEmail,
       displayName: profile.name ?? profile.email.split('@')[0],
       username,
       provider: AuthProvider.GOOGLE,
@@ -578,7 +589,8 @@ export class AuthService {
    * The route is under the strict auth throttle: it sends mail to a caller-chosen address, so
    * without a limit it is a way to deliver repeated mail to someone else's inbox.
    */
-  async resendVerification(email: string): Promise<'sent'> {
+  async resendVerification(rawEmail: string): Promise<'sent'> {
+    const email = rawEmail.trim().toLowerCase();
     const user = await this.authRepository.findUserByEmail(email);
     if (!user) {
       return 'sent';
@@ -635,7 +647,12 @@ export class AuthService {
    * What actually prevents an address list being checked in bulk is the throttle on this route
    * (20 per email + IP per 15 minutes), and that is unchanged.
    */
-  async forgotPassword(email: string): Promise<ForgotPasswordOutcome> {
+  async forgotPassword(rawEmail: string): Promise<ForgotPasswordOutcome> {
+    // Normalised before the lookup, like every other reader. #196 made this endpoint say
+    // `no_account` out loud instead of an unconditional "sent", so an unnormalised lookup here
+    // would not fail quietly — it would tell somebody with a real account, in as many words, that
+    // no account exists for their address, purely because they capitalised it.
+    const email = rawEmail.trim().toLowerCase();
     const user = await this.authRepository.findUserByEmail(email);
     if (!user) {
       return 'no_account';
