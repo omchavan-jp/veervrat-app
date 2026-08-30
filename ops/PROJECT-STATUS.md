@@ -378,9 +378,12 @@ History of already-triaged items: `triage-archive.md`.
        so prod's delta can be measured from real spend rather than estimated. The same number is
        the evidence #84 (budget proposal for JP finance) has been waiting on.
     c. **#267 is a standing fact, now labelled `deferred`** — the only off-Azure copy lives on one
-       laptop, and **prod has none at all**, because the backup job ships with a `prod-*` tag.
-       Not neglected work; a known position with a trigger (go-live, or prod carrying data
+       laptop. Not neglected work; a known position with a trigger (go-live, or prod carrying data
        anyone would miss).
+       ✅ **Prod's half closed the same day.** `prod-2026-08-30` created `veervratprodbackups` and
+       the `veervrat-prod-backup` job; the first run was pulled, decrypted and verified, and
+       `pull-backups.sh` exited 0 — "every environment has a recent copy outside Azure" — for the
+       first time. What remains is the single-machine failure domain, which is the actual issue.
 
 Rationale for 5-before-6: CD automates a deploy you understand. Written first, every
 first-time deployment surprise surfaces as a red CI log instead of in front of you.

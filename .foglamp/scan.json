@@ -1,0 +1,160 @@
+{
+  "version": 1,
+  "project": {
+    "name": "Veervrat",
+    "slug": "veervrat-app",
+    "tagline": "Self-reliance journeys, guided by vratmitras",
+    "iconDomain": "jnanaprabodhini.org",
+    "date": "2026-08-26"
+  },
+  "stats": { "agents": 0, "models": 0, "tools": 0, "integrations": 5 },
+  "topModels": [],
+  "topTools": [],
+  "topIntegrations": [
+    { "id": "google", "label": "Google OAuth", "domain": "google.com" },
+    { "id": "smtp", "label": "JP IT SMTP relay", "domain": "jnanaprabodhini.org" },
+    { "id": "azure", "label": "Azure Blob Storage", "domain": "azure.microsoft.com" },
+    { "id": "glitchtip", "label": "GlitchTip", "domain": "glitchtip.com" },
+    { "id": "meili", "label": "Meilisearch", "domain": "meilisearch.com" }
+  ],
+  "graph": {
+    "nodes": [
+      { "id": "web", "label": "Next.js web app", "kind": "entry", "sub": "apps/web — App Router", "sourceRef": "apps/web/app", "detail": "Role-based route groups: vratarthi, vratmitra, moderation, admin, content, public. Server components by default, TanStack Query for server state." },
+      { "id": "api", "label": "REST API", "kind": "entry", "sub": "/api/v1 — NestJS controllers", "sourceRef": "apps/api/src/app.module.ts", "detail": "Cookie-session REST API. Every route enforces a guard for identity plus a service-layer ABAC check." },
+      { "id": "ws", "label": "Chat WebSocket", "kind": "entry", "sub": "Socket.IO gateway", "sourceRef": "apps/api/src/modules/chats/chats.gateway.ts", "detail": "Authenticates the socket from the session cookie and only joins rooms the vratmitra relationship allows." },
+
+      { "id": "cron-dormant", "label": "Dormant journeys", "kind": "cron", "sub": "daily 02:00", "sourceRef": "apps/api/src/modules/journeys/dormant-journeys.cron.ts:21", "detail": "Marks ACTIVE journeys with 30 days of no activity as DORMANT and nudges the vratarthi and each assigned vratmitra." },
+      { "id": "cron-archive", "label": "Notification archive", "kind": "cron", "sub": "daily 03:07", "sourceRef": "apps/api/src/modules/notifications/notifications.cron.ts:13", "detail": "Archives notifications older than 90 days." },
+      { "id": "cron-signups", "label": "Purge pending signups", "kind": "cron", "sub": "daily 03:15", "sourceRef": "apps/api/src/modules/auth/pending-signups.cron.ts:22", "detail": "Deletes abandoned pending signups — each holds a date of birth across the Google round trip, and data with no purpose is a liability." },
+
+      { "id": "auth", "label": "Auth & sessions", "kind": "service", "sub": "password, Google, lockout", "sourceRef": "apps/api/src/modules/auth/auth.service.ts", "detail": "Signup, email verification, password recovery, Google account linking, age gate, reauth and brute-force lockout." },
+      { "id": "perms", "label": "Permission engine", "kind": "service", "sub": "hasPermission(user, resource)", "sourceRef": "apps/api/src/common/permissions/has-permission.ts", "detail": "ABAC check every service calls; the role is never compared directly. The matrix lives in spec/decisions/05_permissions.md." },
+
+      { "id": "assessments", "label": "Assessments", "kind": "service", "sub": "tests module", "group": "Journey work", "sourceRef": "apps/api/src/modules/tests/tests.service.ts", "detail": "Vratarthis take assessments that surface which weaknesses to work on." },
+      { "id": "weaknesses", "label": "Weaknesses", "kind": "service", "group": "Journey work", "sourceRef": "apps/api/src/modules/weaknesses/weaknesses.service.ts" },
+      { "id": "journeys", "label": "Journeys", "kind": "service", "sub": "active / dormant lifecycle", "group": "Journey work", "sourceRef": "apps/api/src/modules/journeys/journeys.service.ts", "detail": "A journey is a vratarthi working a specific weakness towards a virtue, with vratmitras assigned to it." },
+      { "id": "erc", "label": "Explore–Resolve–Checkin", "kind": "service", "sub": "forward-only status machine", "group": "Journey work", "sourceRef": "apps/api/src/modules/erc/erc.service.ts:18", "detail": "The core work loop. NOT_STARTED → IN_PROGRESS → SUBMITTED → APPROVED or REVISIT, with custom ERC proposals reviewed before use." },
+      { "id": "actions", "label": "Actions", "kind": "service", "group": "Journey work", "sourceRef": "apps/api/src/modules/actions/actions.service.ts" },
+      { "id": "logs", "label": "Experience logs", "kind": "service", "group": "Journey work", "sourceRef": "apps/api/src/modules/experience-logs/experience-logs.service.ts" },
+
+      { "id": "vmrel", "label": "Vratmitra relationships", "kind": "service", "sub": "who may see whose journey", "group": "Mentorship", "sourceRef": "apps/api/src/modules/vm-relationships/vm-relationships.service.ts", "detail": "The relationship that scopes almost every access check — a vratmitra sees only their own vratarthis." },
+      { "id": "invites", "label": "Invitations", "kind": "service", "group": "Mentorship", "sourceRef": "apps/api/src/modules/invitations/invitations.service.ts" },
+      { "id": "chats", "label": "Chats", "kind": "service", "sub": "vratarthi ↔ vratmitra", "group": "Mentorship", "sourceRef": "apps/api/src/modules/chats/chats.service.ts" },
+      { "id": "notifs", "label": "Notifications", "kind": "service", "sub": "in-app + emailable events", "group": "Mentorship", "sourceRef": "apps/api/src/modules/notifications/notifications.service.ts", "detail": "Fans an event out to in-app notifications and, for emailable event types, to email for recipients who have not opted out." },
+
+      { "id": "cms", "label": "CMS & content", "kind": "service", "sub": "pothi, shlokas, resources", "group": "Content & moderation", "sourceRef": "apps/api/src/modules/cms/cms.service.ts" },
+      { "id": "blogs", "label": "Blogs", "kind": "service", "group": "Content & moderation", "sourceRef": "apps/api/src/modules/blogs/blogs.service.ts" },
+      { "id": "moderation", "label": "Moderation", "kind": "service", "sub": "queue + display content", "group": "Content & moderation", "sourceRef": "apps/api/src/modules/moderation/moderation.service.ts" },
+      { "id": "uploads", "label": "Uploads", "kind": "service", "sub": "presign, reference counting", "group": "Content & moderation", "sourceRef": "apps/api/src/modules/uploads/uploads.service.ts" },
+      { "id": "imgpipe", "label": "Image pipeline", "kind": "service", "sub": "sharp — decode, de-locate", "group": "Content & moderation", "sourceRef": "apps/api/src/modules/uploads/image-pipeline.ts", "detail": "Decodes to learn the real format, applies EXIF orientation, then strips GPS and timestamps, and downscales — before anything is stored." },
+      { "id": "searchidx", "label": "Search indexing", "kind": "service", "sub": "blogs, shlokas, users", "group": "Content & moderation", "sourceRef": "apps/api/src/modules/search/meili.service.ts", "detail": "Per-entity index services on a thin Meilisearch wrapper. Degrades to a no-op when Meilisearch is not configured — writes still succeed, search returns empty." },
+
+      { "id": "email", "label": "Email service", "kind": "service", "sub": "React Email → SMTP", "sourceRef": "apps/api/src/modules/email/email.service.ts", "detail": "Renders bilingual React Email templates to HTML and text, then sends over SMTP. Logs to console instead when no host is configured." },
+      { "id": "audit", "label": "Audit log", "kind": "service", "sub": "@Audited interceptor", "sourceRef": "apps/api/src/modules/audit/audit.interceptor.ts", "detail": "Global interceptor recording every admin and moderator action against the audit contract." },
+      { "id": "stats", "label": "Platform stats", "kind": "service", "sub": "Redis-cached counts", "sourceRef": "apps/api/src/modules/stats/stats.service.ts" },
+      { "id": "export", "label": "Data export", "kind": "service", "sub": "vratarthi data download", "sourceRef": "apps/api/src/modules/data-export/data-export.service.ts" },
+      { "id": "adminusers", "label": "Admin & users", "kind": "service", "sub": "roles, capabilities", "sourceRef": "apps/api/src/modules/admin-users/admin-users.service.ts" },
+      { "id": "throttle", "label": "Rate limiting & CSRF", "kind": "service", "sub": "global guards", "sourceRef": "apps/api/src/common/throttler/app-throttler.guard.ts", "detail": "Throttler backed by Redis so limits hold across replicas, plus a double-submit-cookie CSRF guard." },
+
+      { "id": "pg", "label": "PostgreSQL", "kind": "store", "sub": "Prisma, repository layer only", "domain": "postgresql.org" },
+      { "id": "redis", "label": "Redis", "kind": "store", "sub": "sessions, throttle, socket bus", "domain": "redis.io" },
+      { "id": "meilistore", "label": "Meilisearch", "kind": "store", "domain": "meilisearch.com" },
+      { "id": "blob", "label": "Object storage", "kind": "store", "sub": "Azure Blob / MinIO / S3", "domain": "min.io", "sourceRef": "apps/api/src/modules/uploads/storage/storage-provider.factory.ts", "detail": "One StorageProvider interface with Azure Blob and S3 implementations, plus an explicit refuse-everything provider when storage is unconfigured." },
+
+      { "id": "google", "label": "Google OAuth", "kind": "external", "domain": "google.com" },
+      { "id": "smtp", "label": "JP IT SMTP relay", "kind": "external", "sub": "STARTTLS on 587", "domain": "jnanaprabodhini.org" },
+      { "id": "azure", "label": "Azure", "kind": "external", "sub": "Container Apps + Terraform", "domain": "azure.microsoft.com", "sourceRef": "infra/terraform" },
+      { "id": "glitchtip", "label": "GlitchTip", "kind": "external", "sub": "Sentry SDK errors", "domain": "glitchtip.com", "sourceRef": "apps/api/src/instrument.ts" }
+    ],
+    "edges": [
+      { "from": "web", "to": "api", "kind": "calls", "label": "typed API client" },
+      { "from": "web", "to": "ws", "kind": "calls" },
+      { "from": "web", "to": "glitchtip", "kind": "writes" },
+
+      { "from": "api", "to": "throttle", "kind": "triggers", "label": "every request" },
+      { "from": "api", "to": "auth", "kind": "calls" },
+      { "from": "api", "to": "assessments", "kind": "calls" },
+      { "from": "api", "to": "journeys", "kind": "calls" },
+      { "from": "api", "to": "erc", "kind": "calls" },
+      { "from": "api", "to": "actions", "kind": "calls" },
+      { "from": "api", "to": "logs", "kind": "calls" },
+      { "from": "api", "to": "vmrel", "kind": "calls" },
+      { "from": "api", "to": "invites", "kind": "calls" },
+      { "from": "api", "to": "cms", "kind": "calls" },
+      { "from": "api", "to": "blogs", "kind": "calls" },
+      { "from": "api", "to": "moderation", "kind": "calls" },
+      { "from": "api", "to": "uploads", "kind": "calls" },
+      { "from": "api", "to": "stats", "kind": "calls" },
+      { "from": "api", "to": "export", "kind": "calls" },
+      { "from": "api", "to": "adminusers", "kind": "calls" },
+      { "from": "api", "to": "audit", "kind": "triggers", "label": "@Audited routes" },
+      { "from": "api", "to": "glitchtip", "kind": "writes", "label": "unhandled errors" },
+
+      { "from": "ws", "to": "chats", "kind": "calls" },
+      { "from": "ws", "to": "auth", "kind": "calls", "label": "session from cookie" },
+      { "from": "ws", "to": "vmrel", "kind": "reads", "label": "may they join?" },
+
+      { "from": "auth", "to": "google", "kind": "calls", "label": "OAuth round trip" },
+      { "from": "auth", "to": "redis", "kind": "writes", "label": "sessions, lockout" },
+      { "from": "auth", "to": "email", "kind": "triggers", "label": "verify, reset" },
+      { "from": "auth", "to": "pg", "kind": "writes" },
+      { "from": "throttle", "to": "redis", "kind": "writes", "label": "shared across replicas" },
+
+      { "from": "assessments", "to": "weaknesses", "kind": "reads", "label": "surfaces weaknesses" },
+      { "from": "weaknesses", "to": "journeys", "kind": "triggers", "label": "start a journey" },
+      { "from": "journeys", "to": "erc", "kind": "triggers" },
+      { "from": "erc", "to": "actions", "kind": "triggers", "label": "resolution actions" },
+      { "from": "erc", "to": "notifs", "kind": "triggers", "label": "submitted for review" },
+      { "from": "actions", "to": "logs", "kind": "writes" },
+      { "from": "logs", "to": "pg", "kind": "writes" },
+      { "from": "assessments", "to": "pg", "kind": "writes" },
+      { "from": "journeys", "to": "pg", "kind": "writes" },
+      { "from": "erc", "to": "pg", "kind": "writes" },
+
+      { "from": "erc", "to": "vmrel", "kind": "reads", "label": "scoped access" },
+      { "from": "journeys", "to": "vmrel", "kind": "reads" },
+      { "from": "vmrel", "to": "perms", "kind": "calls" },
+      { "from": "erc", "to": "perms", "kind": "calls" },
+      { "from": "moderation", "to": "perms", "kind": "calls" },
+      { "from": "adminusers", "to": "perms", "kind": "calls" },
+      { "from": "perms", "to": "pg", "kind": "reads" },
+
+      { "from": "invites", "to": "vmrel", "kind": "writes", "label": "accepted invite pairs" },
+      { "from": "invites", "to": "email", "kind": "triggers" },
+      { "from": "chats", "to": "redis", "kind": "writes", "label": "socket.io adapter" },
+      { "from": "chats", "to": "pg", "kind": "writes" },
+      { "from": "notifs", "to": "email", "kind": "triggers", "label": "emailable events only" },
+      { "from": "notifs", "to": "pg", "kind": "writes" },
+      { "from": "email", "to": "smtp", "kind": "calls" },
+
+      { "from": "blogs", "to": "moderation", "kind": "triggers", "label": "queued on publish" },
+      { "from": "logs", "to": "moderation", "kind": "triggers" },
+      { "from": "moderation", "to": "audit", "kind": "writes" },
+      { "from": "moderation", "to": "pg", "kind": "writes" },
+      { "from": "cms", "to": "pg", "kind": "writes" },
+      { "from": "blogs", "to": "searchidx", "kind": "writes", "label": "reindex on change" },
+      { "from": "cms", "to": "searchidx", "kind": "writes" },
+      { "from": "searchidx", "to": "meilistore", "kind": "writes" },
+      { "from": "api", "to": "meilistore", "kind": "reads", "label": "search queries" },
+
+      { "from": "uploads", "to": "imgpipe", "kind": "calls", "label": "before storing" },
+      { "from": "imgpipe", "to": "blob", "kind": "writes" },
+      { "from": "uploads", "to": "pg", "kind": "writes", "label": "reference counts" },
+      { "from": "blob", "to": "azure", "kind": "writes", "label": "Blob in deployed envs" },
+
+      { "from": "audit", "to": "pg", "kind": "writes" },
+      { "from": "stats", "to": "redis", "kind": "writes", "label": "cached counts" },
+      { "from": "stats", "to": "pg", "kind": "reads" },
+      { "from": "export", "to": "pg", "kind": "reads" },
+      { "from": "adminusers", "to": "pg", "kind": "writes" },
+      { "from": "adminusers", "to": "searchidx", "kind": "writes" },
+
+      { "from": "cron-dormant", "to": "journeys", "kind": "writes", "label": "30 days idle → dormant" },
+      { "from": "cron-dormant", "to": "notifs", "kind": "triggers", "label": "nudge VA and VMs" },
+      { "from": "cron-archive", "to": "notifs", "kind": "writes", "label": "archive after 90 days" },
+      { "from": "cron-signups", "to": "auth", "kind": "writes", "label": "drop abandoned DOBs" },
+
+      { "from": "api", "to": "azure", "kind": "reads", "label": "runs on Container Apps" }
+    ]
+  }
+}

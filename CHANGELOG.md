@@ -8,6 +8,23 @@ line here (see `documentation/20_Solo-Dev-Operations.md`).
 Note: merging to `main` ships to **UAT**, not to users. A line here is live for beta
 testers only once a `prod-*` tag has been deployed.
 
+## prod-2026-08-30
+
+Everything listed under *Unreleased* below this heading up to and including the previous release
+went live for beta testers with this tag — 61 commits since `prod-2026-08-25`, and the first prod
+release since the re-authentication and deleted-account work.
+
+The three that change what a person can do:
+
+- **You can delete your own account, on production.** Until this tag that flow existed only on UAT.
+- **A Google-only account can set a password**, and can confirm a deletion or an email change by
+  verifying with Google rather than with a password it never had.
+- **Signing in is no longer case-sensitive to how you typed your address**, and the account you
+  reach is the same one every time.
+
+Behind those, and invisible unless it fails: production now takes an encrypted nightly database
+dump that is stored outside its own subscription. It had none before this tag.
+
 ## Unreleased
 
 ### Staying signed in, and being told when you are not

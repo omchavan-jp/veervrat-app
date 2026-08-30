@@ -912,8 +912,17 @@ setting, not a demonstrated recovery. Never rehearse on prod.
 subscription and the same region as the database they protect, and geo-redundant backup is
 disabled in both environments. They therefore protect against **deletion, corruption and
 operator error** — not against losing the region, and not against losing the subscription
-itself. There is currently **no copy of the data outside Azure**, so this procedure is not a
-complete answer to "what if we lose the account". Tracked separately.
+itself.
+
+A separate, encrypted nightly dump now exists for that case, and is pulled off Azure by
+`scripts/pull-backups.sh` — **UAT since 2026-08-27, prod since `prod-2026-08-30`**, which is the
+tag that created `veervratprodbackups` and the `veervrat-prod-backup` job. Restoring from one is
+"Restoring from an off-site dump" below.
+
+⚠️ That copy still lives on **one laptop**, so it does not yet answer "what if we lose the
+account" in a way anyone should rely on — losing the machine loses both environments' copies.
+#267 tracks replacing it, and `pull-backups.sh --status` reports the position rather than assuming
+it.
 
 ### The number that matters
 

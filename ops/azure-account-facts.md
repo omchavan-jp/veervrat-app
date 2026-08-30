@@ -226,8 +226,16 @@ ones that matter under pressure.
 | Cleanup-expired job | `veervrat-prod-cleanup-expired` | manual trigger only; cleans expired sessions and tokens |
 | Publish-policies job | `veervrat-prod-publish-policies` | manual trigger only; publishes terms/privacy policy content |
 | Blob storage | `veervratproduploads` | StorageV2 account, container for file uploads; api identity has Storage Blob Data Contributor + Reader |
+| **Backup job** | `veervrat-prod-backup` | Created by `prod-2026-08-30`, not before — the job ships with the environment, so prod had no dump of any kind until that tag. Same schedule and refusals as UAT |
+| **Backup storage** | `veervratprodbackups` | Created by the same tag. Container `database-dumps`, never public at any level, 30-day retention. First dump taken, pulled and verified 2026-08-30 |
 | Identities | `veervrat-prod-api-id`, `veervrat-prod-web-id` | user-assigned; same grants as UAT |
 | Alerting | `veervrat-prod-ops` + `veervrat-prod-psql-storage` | storage > 80% |
+
+⚠️ **`veervrat-prod-kv/backup-encryption-key` must also exist outside Azure**, for the same reason
+as UAT's and with the same trap: **the two keys are different**, and a prod dump will not open with
+the UAT key. A single shared path would verify prod copies against the wrong key and delete them as
+corrupt — worse than not checking. `scripts/pull-backups.sh` reads
+`~/.secrets/veervrat/<env>-backup-encryption-key` per environment for exactly this reason.
 
 **Differences from UAT that have bitten or could:**
 
