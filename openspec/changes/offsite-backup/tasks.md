@@ -65,6 +65,13 @@
   The distinction is structural rather than a field: **the manifest only ever records a pulled
   copy**, and each entry is written after that file has been decrypted back to a Postgres dump.
   A blob sitting in Azure has no entry, so it cannot be mistaken for one that is safe.
+- [x] 3.2b Schedule the pull so it survives the machine being off.
+  Done 2026-08-30: `scripts/install-backup-pull-agent.sh`, a launchd agent on `StartInterval`.
+  Not cron — on macOS cron silently skips a run whose time passed while asleep and never catches
+  up, so a laptop closed overnight would take no backup while appearing scheduled.
+  The pull itself needs no catch-up logic: it fetches whatever is in Azure and not here, so five
+  missed days are five dumps on the next run.
+
 - [x] 3.3 Decide what notices when no pull has succeeded for too long, and who it tells.
   Decided 2026-08-30, and deliberately smaller than the task implies.
 

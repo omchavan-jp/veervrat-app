@@ -79,3 +79,42 @@ proposal says so. Replacing it with a hosted store in India is a variable and a 
 **What watches the watcher.** If the laptop is off for a fortnight, nothing currently notices. The
 manifest makes that answerable; deciding what raises the alarm, and to whom, is left to the
 implementation rather than guessed at here.
+
+
+## 7. A laptop that is off, and how much all this costs
+
+Two questions asked on 2026-08-30 that the design had not answered.
+
+### The machine is asleep at 03:00
+
+**Catching up is free; scheduling was the gap.** The pull fetches every blob it does not already
+hold, so a machine off for five days pulls five dumps on its next run. Nothing tracks which days
+were missed — "what is in Azure but not here" answers that on every run, and cannot drift.
+
+What was missing was anything to run it. `cron` is the wrong tool on macOS: it silently skips a
+run whose time passed while the machine was asleep, and never catches up. A laptop closed
+overnight would take no backup at all while appearing to be scheduled — the failure this change
+exists to prevent, dressed as a working schedule.
+
+`scripts/install-backup-pull-agent.sh` installs a launchd agent using `StartInterval`, which is
+measured against elapsed time rather than a wall-clock instant, so a missed window fires shortly
+after wake. Hourly, because the interval is the gap between the machine coming online and a copy
+existing.
+
+⚠️ The agent runs only while that machine is on. It shortens the window; it does not remove it.
+That is the single-device limitation the proposal already records, showing up in a second place.
+
+### 30 dailies is not a storage question
+
+Measured from a real dump — the dev database, 288,404 bytes, compressed by `pg_dump -Fc`:
+
+| Scale | Per dump | 30 days | Blob, per month |
+|---|---|---|---|
+| today | 0.3 MB | 9 MB | $0.0002 |
+| 100 vratarthis | 5.8 MB | 173 MB | $0.004 |
+| 1000 vratarthis | 58 MB | 1.7 GB | $0.035 |
+
+Against roughly $56/month total spend, this does not register at any scale this platform will
+reach before the grant expires. Keeping fewer, or moving to weekly, would buy nothing and cost
+restore granularity — the reason to hold 30 is being able to go back to a specific day, not
+storage.
