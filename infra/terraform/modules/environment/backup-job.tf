@@ -83,11 +83,25 @@ resource "azurerm_container_app_job" "backup" {
         value = azurerm_storage_container.backups.name
       }
 
-      # azcopy needs to be told WHICH identity, because the container app has a user-assigned one
-      # rather than a system-assigned one — with a user-assigned identity, IMDS cannot infer the
-      # answer and returns an error naming none of this.
+      # azcopy authenticates from these rather than from `azcopy login`.
+      #
+      # `login` caches its token in the OS keyring, and a container has none — it failed with
+      # "failed to get keyring during saving token, operation not permitted", which is the
+      # credential store failing rather than the credential. Auto-login authenticates per
+      # invocation and persists nothing, which is what a container wants.
+      #
+      # ⚠️ Uppercase here. The `--login-type` flag takes lowercase `msi`; this variable takes
+      # `MSI`. They genuinely differ, and passing the flag's case to the flag was one of the
+      # earlier failures.
       env {
-        name  = "AZURE_CLIENT_ID"
+        name  = "AZCOPY_AUTO_LOGIN_TYPE"
+        value = "MSI"
+      }
+
+      # Which identity. A user-assigned identity has to be named — with more than one available,
+      # the metadata endpoint cannot infer which is meant and refuses rather than guessing.
+      env {
+        name  = "AZCOPY_MSI_CLIENT_ID"
         value = azurerm_user_assigned_identity.api.client_id
       }
 

@@ -93,18 +93,23 @@ echo "[backup] verified: decrypts byte-identical to the dump"
 # ── upload ──────────────────────────────────────────────────────────────────────────────────
 echo "[backup] uploading…"
 
-# Lowercase `msi`. azcopy's own help lists the accepted values as device, spn, msi, azcli,
-# pscred, workload — and the first attempt at this passed `MSI`.
+# No `azcopy login`. It caches the token in the OS keyring, and a container has none — it failed
+# with "failed to get keyring during saving token, operation not permitted", which is a storage
+# problem for the credential rather than anything wrong with the credential itself.
 #
-# The output is NOT discarded. It was, and the job then failed with nothing but a line number
-# while the one command that could explain itself had been silenced. A command that can fail is
-# a command whose stderr is worth keeping, especially the one doing authentication.
+# `AZCOPY_AUTO_LOGIN_TYPE` authenticates per invocation and persists nothing, which is what a
+# container wants. Set on the job in Terraform rather than here, so the client id lives beside the
+# identity that owns it.
 #
-# ⚠️ Not testable outside Azure: `azcopy login --login-type=msi` reaches for the instance metadata
-# endpoint at 169.254.169.254, which does not exist elsewhere, so an attempt on a laptop hangs
-# until the network times out rather than failing usefully.
-azcopy login --login-type=msi --identity-client-id "${AZURE_CLIENT_ID:?AZURE_CLIENT_ID is required}" \
-  || fail "azcopy could not authenticate with the managed identity (client id ${AZURE_CLIENT_ID})"
+# ⚠️ Uppercase MSI in the environment variable, lowercase msi on the `--login-type` flag. They
+# genuinely differ, and the flag form silently accepting the wrong case was one of the earlier
+# failures here.
+#
+# ⚠️ Not testable outside Azure: this reaches the instance metadata endpoint at 169.254.169.254,
+# which exists only inside it. An attempt on a laptop hangs until the network times out rather
+# than failing usefully.
+: "${AZCOPY_AUTO_LOGIN_TYPE:?AZCOPY_AUTO_LOGIN_TYPE is required}"
+: "${AZCOPY_MSI_CLIENT_ID:?AZCOPY_MSI_CLIENT_ID is required}"
 
 azcopy copy "$CIPHER" "${ENDPOINT}/${NAME}" --from-to=LocalBlob --overwrite=false \
   || fail "azcopy copy failed uploading ${NAME}"
