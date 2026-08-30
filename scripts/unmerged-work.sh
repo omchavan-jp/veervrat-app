@@ -68,8 +68,39 @@ while IFS= read -r branch; do
   [[ "$branch" == "$TRUNK" ]] && continue
   [[ "$HAVE_GH" == "1" ]] || continue
 
-  state=$(gh pr list --head "$branch" --state all --limit 1 --json state -q '.[0].state' 2>/dev/null || echo "")
+  # Every PR for this head, not just the newest. A branch can carry more than one: open a PR,
+  # close it, open another, and `--limit 1` returns whichever is most recent — so a closed
+  # duplicate of a PR that DID merge reports as "work left behind" and sends the next reader
+  # digging through a branch that shipped weeks ago. `chore/batch1-housekeeping` carries exactly
+  # that pair: #236 closed, #235 merged.
+  #
+  # ⚠️ A merged PR is NOT treated as proof and does not silence the branch. It says GitHub merged
+  # *something* from this head; after a squash, only the content answers whether a given commit
+  # survived — which is the whole reason this script exists rather than `git branch --no-merged`.
+  # So the mixed case drops from an alarm to a note: still printed, still names what to check, no
+  # longer claims work was abandoned when it probably was not.
+  prs=$(gh pr list --head "$branch" --state all --limit 20 --json number,state \
+          -q '.[]|"\(.state):\(.number)"' 2>/dev/null || echo "")
+  merged_pr=$(grep '^MERGED:' <<<"$prs" | head -1 | cut -d: -f2)
+  closed_pr=$(grep '^CLOSED:' <<<"$prs" | head -1 | cut -d: -f2)
+  open_pr=$(grep '^OPEN:' <<<"$prs" | head -1 | cut -d: -f2)
+
+  if [[ -n "$closed_pr" && -n "$merged_pr" ]]; then
+    state=MIXED
+  elif [[ -n "$open_pr" ]]; then
+    state=OPEN
+  elif [[ -n "$merged_pr" ]]; then
+    state=MERGED
+  elif [[ -n "$closed_pr" ]]; then
+    state=CLOSED
+  else
+    state=""
+  fi
   case "$state" in
+    MIXED)
+      echo "?   $branch — PR #$closed_pr closed, but #$merged_pr merged the same head."
+      echo "       Probably landed via #$merged_pr. Confirm by content, not by ancestry:"
+      echo "       git show $TRUNK:<a file the branch changed> — a squash leaves no ancestry to follow." ;;
     CLOSED)
       echo "⚠️  $branch — PR closed WITHOUT merging; $ahead commit(s) left behind"
       problems=$((problems+1)) ;;
