@@ -41,6 +41,26 @@ rows; UAT holds 1** — the probe from #178's verification, which returned 201.
 any row it cannot convert; that guard runs where database access exists and is what this
 derivation is trusted against, rather than instead of.
 
+**The `SELECT count(*)` finally exists — 2026-08-30, and it broadly vindicates the derivation.**
+Neither database became reachable; instead the nightly encrypted dumps were pulled out of Azure,
+decrypted and restored locally, which answers row-count questions without opening a firewall to
+production. That route is now the normal way to ask this kind of question — see
+`DEPLOYMENT.md` → "Restoring from an off-site dump".
+
+| | derived 2026-08-24 | measured 2026-08-30 |
+|---|---|---|
+| UAT | 1 | **11** |
+| prod | 0 | **1** |
+
+Both grew rather than contradicting: prod's single row is dated **2026-08-25**, the day after the
+derivation, so "prod holds 0 rows" was true when written. The reasoning held; it was simply
+describing a moment.
+
+The premise it supports — that this change is cheap while the table is near-empty — still holds at
+12 rows. But it is no longer *literally* empty, nothing slows the growth, and the difference
+between 0 and 12 is the difference between "no migration" and "a migration that must not lose
+anyone's image".
+
 **1.2 — Where the URL is stored.** See decision 5, which this finding revised.
 
 **1.3 — Whether `signedUrl` can work.** Both implementations read correctly: Azure mints a user

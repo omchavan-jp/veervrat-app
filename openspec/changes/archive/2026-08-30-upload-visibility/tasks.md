@@ -1,6 +1,24 @@
 ## 0. Read first
 
-- [ ] 0.1 `design.md` decision 1 — everything else depends on storing a key rather than a URL.
+- [x] 0.1 `design.md` decision 1 — everything else depends on storing a key rather than a URL.
+  Read 2026-08-30. Decision 1 is *"store the key, generate the URL at read time"*, on the grounds
+  that a stored absolute URL bakes today's visibility policy into every row.
+
+  **It is already implemented.** The column is `storage_key`, and every row in both environments
+  holds a bare key rather than a URL:
+
+  ```
+  keys: 11   urls: 0        sample: db0eb4d5-…-d56c2ccdc8ab.png
+  ```
+
+  Decision 1 says the key holds `uploads/<uuid>.png`; the rows hold `<uuid>.png` with no prefix.
+  That is **task 2.2**, not a deviation — *"drop the duplicated path segment; keys become
+  `<uuid>.<ext>`, since the container already carries the name"* — which resolves the
+  `/uploads/uploads/<uuid>.png` awkwardness the design's own Context section flags. Ticking this
+  task first and reading 2.2 second briefly made a documented decision look like a defect.
+
+  With 0.1 and 0.2 answered, every task in this change is now complete, section 9 included
+  ("verified against deployed UAT, 2026-08-25"). It is ready to archive.
   ⚠️ **Read this before starting: the decision may already be implemented.** Checked 2026-08-30
   against the restored dumps — `uploads` has a `storage_key` column, and every row holds a bare
   key, not a URL:

@@ -136,7 +136,31 @@
 
 - [x] 5.1 `pnpm --filter web typecheck` clean; `pnpm --filter web build` succeeds.
 - [x] 5.2 Vitest/RTL (web) green incl. new primitive tests; backend suites untouched/green.
-- [ ] 5.3 Playwright E2E suite — NOT YET RUN. The E2E suite requires the full docker stack (pg/redis/meili/minio) + both servers; deferred to a dedicated run. Unit/RTL (113) + production build are green, and a manual browser re-walk (5.4) verified the key flows.
+- [x] 5.3 Playwright E2E suite. (Originally: "NOT YET RUN. The E2E suite requires the full docker
+  stack (pg/redis/meili/minio) + both servers; deferred to a dedicated run.")
+  **Done — and it had been done for three days without this task knowing.** `#215` added
+  `.github/workflows/e2e.yml` on 2026-08-27, titled "run the twelve flows that existed and ran
+  nowhere". The suite now runs on **every pull request**, with Postgres, Redis, Meilisearch and
+  MinIO as CI services; `playwright.config.ts` starts both servers itself and waits on their
+  health URLs, so the "dedicated run" this task was deferred for is no longer a manual act.
+
+  Verified 2026-08-30 against run `33313234558` rather than assuming a green check meant
+  something — a suite that runs zero tests also passes:
+
+  ```
+  30 passed (1.7m)
+  ```
+
+  | | |
+  |---|---|
+  | spec files | 12, all contributing |
+  | `test()` declared | 30 |
+  | executed | 30 |
+  | `.skip` / `.fixme` / `.only` | none |
+  | last 10 runs on `main` | 10 success |
+
+  Declared equals executed, which is the check that distinguishes a real pass from a suite that
+  quietly stopped running things.
 - [ ] 5.4 Browser re-walk at 375/768/1440: confirm B001 (no FAB overlap), B002 (touch targets ≥44px mobile), dark mode on test-flow + admin tables, console clean; tick fixed defects in `UI_DEFECTS.md`.
   **Un-ticked 2026-08-27.** Not because the re-walk did not happen — it may well have — but
   because its entire result was recorded in `UI_DEFECTS.md`, which no longer exists. A tick whose
