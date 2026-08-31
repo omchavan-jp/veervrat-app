@@ -7,6 +7,7 @@ import { VmRelationshipsService } from '../vm-relationships/vm-relationships.ser
 import { UsersService } from '../users/users.service';
 import { JourneysRepository } from '../journeys/journeys.repository';
 import { EmailService } from '../email/email.service';
+import { EmailQueueService } from '../email/email-queue.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { hasPermission } from '../../common/permissions/has-permission';
 import {
@@ -44,6 +45,7 @@ export class InvitationsService {
     private readonly usersService: UsersService,
     private readonly journeysRepository: JourneysRepository,
     private readonly emailService: EmailService,
+    private readonly emailQueue: EmailQueueService,
     private readonly notificationsService: NotificationsService,
     private readonly configService: ConfigService,
   ) {
@@ -154,7 +156,7 @@ export class InvitationsService {
       const { html, text } = await this.emailService.renderTemplate(
         createElement(PlatformInvitationEmail, { inviterDisplayName, signupUrl, language: lang }),
       );
-      this.emailService.sendNotification(
+      this.emailQueue.sendNotification(
         invitation.inviteeEmail,
         getPlatformInviteSubject(lang),
         html,
@@ -171,12 +173,7 @@ export class InvitationsService {
         language: lang,
       }),
     );
-    this.emailService.sendNotification(
-      invitation.inviteeEmail,
-      getVmInviteSubject(lang),
-      html,
-      text,
-    );
+    this.emailQueue.sendNotification(invitation.inviteeEmail, getVmInviteSubject(lang), html, text);
   }
 
   // Auto-generated, copy/paste shareable message (spec/13) — editable client-side.
@@ -280,7 +277,7 @@ export class InvitationsService {
           language: lang,
         }),
       );
-      this.emailService.sendNotification(inviter.email, getDeclinedSubject(lang), html, text);
+      this.emailQueue.sendNotification(inviter.email, getDeclinedSubject(lang), html, text);
     }
 
     // skipEmail: the bespoke VmInvitationDeclinedEmail was already sent above.

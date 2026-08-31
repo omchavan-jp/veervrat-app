@@ -16,3 +16,12 @@ allowBuilds:
   # CLI (no source-map upload step exists yet), so there's no reason to execute even a trusted
   # binary-fetch script for a feature that isn't wired up.
   '@sentry/cli': false
+  # Pulled in by bullmq (#141). Its install script is `node-gyp-build-optional-packages`, which
+  # downloads a prebuilt binary if one matches this platform and otherwise compiles with node-gyp.
+  # It is an OPTIONAL native accelerator: msgpackr encodes and decodes perfectly well in pure JS
+  # without it, and this queue moves a handful of emails a day.
+  #
+  # Declined because the cost is real and the benefit is not: the compile would run in CI and
+  # inside the Docker build, on a base image carrying no toolchain — so the likely outcome is a
+  # slower build or a broken one, in exchange for speeding up an encoding step nothing waits on.
+  msgpackr-extract: false

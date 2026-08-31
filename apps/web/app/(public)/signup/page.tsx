@@ -144,17 +144,29 @@ export default function SignupPage() {
   };
 
   if (signup.isSuccess) {
+    // The account exists either way. Whether the person can act on it right now does not — so
+    // these are two different outcomes and they are told which one happened.
+    //
+    // Before #141 the second case did not reach here at all: a failed send propagated as a 500,
+    // the person was told signup had failed, and the account existed anyway — taken address,
+    // unverified, unreachable. Saying "check your email" for a mail that was never sent would be
+    // the same failure wearing a friendlier face.
+    const mailSent = signup.data?.verificationEmailSent !== false;
     return (
       <AuthShell hero={hero}>
-        <h2 className="mb-2 font-display text-[32px] tracking-tight">{t('successTitle')}</h2>
-        <p className="mb-8 text-[15px] text-muted">{t('successBody')}</p>
+        <h2 className="mb-2 font-display text-[32px] tracking-tight">
+          {mailSent ? t('successTitle') : t('successNoEmailTitle')}
+        </h2>
+        <p className="mb-8 text-[15px] text-muted">
+          {mailSent ? t('successBody') : t('successNoEmailBody')}
+        </p>
         <Button
           size="lg"
           className="min-h-12 w-full text-[15px]"
           nativeButton={false}
-          render={<Link href="/login" />}
+          render={<Link href={mailSent ? '/login' : '/verify-email'} />}
         >
-          {t('backToLogin')}
+          {mailSent ? t('backToLogin') : t('successNoEmailAction')}
         </Button>
       </AuthShell>
     );

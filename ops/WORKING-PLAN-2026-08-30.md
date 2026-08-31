@@ -115,6 +115,27 @@ matter more than the procedure text:
 - **The Operator and the Data owner are the same person today**, so a breach involving that access
   has nobody to escalate to. Recorded in the procedure rather than left to be discovered.
 
+### 4b. #141 — email delivery ✅ 2026-08-31
+
+Two changes, shipped together and separable on purpose.
+
+**The stranding fix, which is the part that was costing people access.** `register` commits the
+account before sending the verification mail, so a propagated send failure never prevented an
+account existing — it hid one from the person who had just created it: address taken, unverified,
+unable to sign in or register again. #141 lists "a lost send actually costs someone access" as its
+trigger; that trigger had already fired, structurally, on every signup. Registration now reports
+`verificationEmailSent` and the signup page says which of the two things happened.
+
+**The BullMQ queue**, as #141 recorded. Redis was already a dependency, so no new infrastructure.
+Email leaves the request path; three attempts with exponential backoff; failed jobs retained,
+because a failed job is the only record that somebody did not receive something.
+
+⚠️ **This creates a dependency on #92 that did not exist before.** The worker runs inside the API
+process, which is right at this volume — but on `min_replicas = 0`, a *retry* does not run until
+something wakes the container. The first attempt is unaffected. So retries are reliable on UAT and
+best-effort on prod until prod goes always-on. Recorded on #92 as well, so the two are not read
+apart.
+
 ### 5. Only then
 
 `my-vratmitras-chat` is the largest remaining block (13 open) and is **not** a beta blocker — O8

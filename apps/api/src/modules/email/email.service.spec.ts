@@ -43,7 +43,7 @@ describe('EmailService', () => {
       const service = new EmailService();
       const logSpy = vi.spyOn(service['logger'], 'log').mockImplementation(() => {});
 
-      await service.sendTransactional('to@example.com', 'Subject', '<p>html</p>', 'text');
+      await service.deliver('to@example.com', 'Subject', '<p>html</p>', 'text');
 
       expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('[EMAIL DEV]'));
       // The absence of a transport is the point: local dev must need no credentials.
@@ -59,7 +59,7 @@ describe('EmailService', () => {
       const logSpy = vi.spyOn(service['logger'], 'log').mockImplementation(() => {});
 
       expect(() =>
-        service.sendNotification('to@example.com', 'Subject', '<p>html</p>', 'text'),
+        service.deliver('to@example.com', 'Subject', '<p>html</p>', 'text'),
       ).not.toThrow();
       expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('[EMAIL DEV]'));
     });
@@ -82,7 +82,7 @@ describe('EmailService', () => {
       withEnv(PROD_SMTP);
 
       const service = new EmailService();
-      await service.sendTransactional('to@example.com', 'Subject', '<p>html</p>', 'text');
+      await service.deliver('to@example.com', 'Subject', '<p>html</p>', 'text');
 
       expect(sendMail).toHaveBeenCalledWith(expect.objectContaining({ to: 'to@example.com' }));
     });
@@ -109,40 +109,31 @@ describe('EmailService', () => {
       );
     });
 
-    it('propagates transactional failure — a verification email that never sent is not a success', async () => {
+    // Renamed from "propagates transactional failure — a verification email that never sent is
+    // not a success". That framing was wrong: `register` commits the account before sending, so a
+    // propagated failure never prevented an account existing — it hid one from the person who had
+    // just created it (#141). EmailService is now the transport and simply reports what happened;
+    // whether that is worth retrying belongs to EmailQueueService.
+    it('propagates a send failure to its caller, which is now the queue worker', async () => {
       withEnv(PROD_SMTP);
       sendMail.mockRejectedValueOnce(new Error('relay rejected'));
 
       const service = new EmailService();
 
-      await expect(
-        service.sendTransactional('to@example.com', 'Subject', '<p>h</p>', 't'),
-      ).rejects.toThrow('relay rejected');
-    });
-
-    it('swallows and logs notification failure so the triggering action is undisturbed', async () => {
-      withEnv(PROD_SMTP);
-      sendMail.mockRejectedValueOnce(new Error('relay rejected'));
-
-      const service = new EmailService();
-      const warnSpy = vi.spyOn(service['logger'], 'warn').mockImplementation(() => {});
-
-      expect(() =>
-        service.sendNotification('to@example.com', 'Subject', '<p>h</p>', 't'),
-      ).not.toThrow();
-
-      await vi.waitFor(() =>
-        expect(warnSpy).toHaveBeenCalledWith(
-          expect.objectContaining({ msg: 'Notification email failed' }),
-        ),
+      await expect(service.deliver('to@example.com', 'Subject', '<p>h</p>', 't')).rejects.toThrow(
+        'relay rejected',
       );
     });
+
+    // The "swallow a notification failure" behaviour moved with the policy: it is
+    // EmailQueueService.sendNotification that must not disturb its caller, and that is asserted in
+    // email-queue.spec.ts. A transport that hid failures would leave the worker unable to retry.
 
     it('sends from the configured identity', async () => {
       withEnv({ ...PROD_SMTP, EMAIL_FROM: 'Veervrat <do-not-reply@example.org>' });
 
       const service = new EmailService();
-      await service.sendTransactional('to@example.com', 'Subject', '<p>h</p>', 't');
+      await service.deliver('to@example.com', 'Subject', '<p>h</p>', 't');
 
       expect(sendMail).toHaveBeenCalledWith(
         expect.objectContaining({ from: 'Veervrat <do-not-reply@example.org>' }),

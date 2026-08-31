@@ -68,7 +68,12 @@ export class AuthController {
     );
     return {
       ...result.user,
-      message: 'Registration successful. Please check your email to verify your account.',
+      verificationEmailSent: result.verificationEmailSent,
+      // Two different things happened, and the person needs to be told which. The account exists
+      // either way; whether they can act on it right now does not.
+      message: result.verificationEmailSent
+        ? 'Registration successful. Please check your email to verify your account.'
+        : 'Your account was created, but we could not send the verification email. Ask for it again from the link below.',
     };
   }
 

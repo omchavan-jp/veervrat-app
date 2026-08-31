@@ -169,7 +169,10 @@
       "googleNoAccount": "That Google account isn't registered yet. Add your date of birth and accept the terms below, then choose Continue with Google.",
       "emailCta": "Sign up with email instead",
       "or": "or",
-      "acceptTermsLinked": "I accept the <terms>Terms of Use</terms> and <privacy>Privacy Policy</privacy>."
+      "acceptTermsLinked": "I accept the <terms>Terms of Use</terms> and <privacy>Privacy Policy</privacy>.",
+      "successNoEmailTitle": "Account created — but the email did not send",
+      "successNoEmailBody": "Your account exists and your address is registered. We could not send the verification email just now, so ask for it again and sign in once it arrives.",
+      "successNoEmailAction": "Send the email again"
     },
     "forgotPassword": {
       "title": "Reset your password",

@@ -50,26 +50,24 @@ export class EmailService {
   }
 
   /**
-   * Awaits delivery and lets failure propagate: a verification email that never sent must not
-   * look like a successful registration, since the account cannot be logged into without it.
+   * The transport, and nothing else: put this message on the wire, or throw.
+   *
+   * There is deliberately no retry, no swallowing and no policy here. Whether a failure is worth
+   * retrying, and what happens when it stops being worth it, belongs to `EmailQueueService` —
+   * which is the only thing that should call this in a deployed environment.
+   *
+   * ⚠️ This used to be two methods carrying that policy. `sendTransactional` awaited and let
+   * failure propagate, reasoning that "a verification email that never sent must not look like a
+   * successful registration". The ordering in `register` inverted that: the account was already
+   * committed, so the throw did not prevent an account existing — it only hid one from the person
+   * who had just created it, whose address was now taken. See #141.
    */
-  async sendTransactional(to: string, subject: string, html: string, text: string): Promise<void> {
+  async deliver(to: string, subject: string, html: string, text: string): Promise<void> {
     if (this.isDev) {
       this.logger.log(`[EMAIL DEV] To: ${to} | Subject: ${subject}\n${text}`);
       return;
     }
     await this.transporter!.sendMail({ from: this.from, to, subject, html, text });
-  }
-
-  /** Fire-and-forget: a failed notification must not disturb the action that triggered it. */
-  sendNotification(to: string, subject: string, html: string, text: string): void {
-    if (this.isDev) {
-      this.logger.log(`[EMAIL DEV] To: ${to} | Subject: ${subject}\n${text}`);
-      return;
-    }
-    this.transporter!.sendMail({ from: this.from, to, subject, html, text }).catch((err: Error) => {
-      this.logger.warn({ msg: 'Notification email failed', error: err.message, to, subject });
-    });
   }
 
   async renderTemplate(component: ReactElement): Promise<{ html: string; text: string }> {
