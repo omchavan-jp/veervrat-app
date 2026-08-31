@@ -39,6 +39,7 @@ stop them reading your journeys.
 | GitHub Issues | live | **The backlog.** `gh issue list`. Priority by `p0`–`p3` label; sequence lives in Working order here |
 | `ops/azure-account-facts.md` | durable | **What actually exists in Azure** — tenant/subscription IDs, deployed resources, access, guardrails, deployment traps |
 | `ops/infra-budget-log.md` | durable | Running evidence base for the budget proposal owed to JP finance (#84) — *not* transient |
+| `ops/breach-and-lawful-request.md` | durable | **What to do if personal data is exposed, or an authority demands a user's data** (#136). Roles, decisions, and what must be recorded. Read it before you need it |
 | `ops/triage-archive.md` | archive | Already-triaged history. Append-only, never actionable |
 
 Merged on 2026-08-16: `backlog.md` folded into this file. Two registers had produced three

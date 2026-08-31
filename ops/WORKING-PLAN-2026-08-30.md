@@ -101,7 +101,19 @@ that owns the containing log, or a blob data-plane role nobody currently holds.
 
 ### 4. #136 — breach and lawful-request procedure
 
-The last of the 08-25 must-fixes that is still code-adjacent work. Draftable here, reviewed by Om.
+✅ **Written 2026-08-31 — `ops/breach-and-lawful-request.md`.** Two procedures, roles rather than
+names, with every legally determined value marked TO CONFIRM against legal-pack questions 6 and 7
+and an interim position stated for each. Writing it surfaced three things about the system that
+matter more than the procedure text:
+
+- **Reads are not audited.** Only writes are. So the most likely High-severity breach — somebody
+  with legitimate access reading what they should not — is unreconstructable, and the record of a
+  lawful disclosure has to be written by hand or it does not exist.
+- **Error tracking cannot detect a breach.** Sentry is wired on both environments (#79 is closed,
+  `SENTRY_DSN` is set on prod), and a successful unauthorised read produces no error at all. ⚠️
+  #143's body still says error tracking is not wired; that is stale.
+- **The Operator and the Data owner are the same person today**, so a breach involving that access
+  has nobody to escalate to. Recorded in the procedure rather than left to be discovered.
 
 ### 5. Only then
 
