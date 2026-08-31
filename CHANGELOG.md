@@ -27,6 +27,17 @@ dump that is stored outside its own subscription. It had none before this tag.
 
 ## Unreleased
 
+### Signing up when our email is having a bad day
+
+- **Creating an account no longer fails because we could not send you the verification email.**
+  Your account was being created and then hidden from you: the page said signup had failed, but
+  the address was taken, so you could not try again — and could not sign in either, because the
+  account was unverified. It now says your account exists and the email did not go out, and takes
+  you to the page that will send it again.
+- **Emails are no longer sent while you wait.** Signing up, asking for a password reset and
+  changing your address no longer wait on the mail server before the page responds.
+- **A message that fails is tried again**, a few times, instead of being lost.
+
 ### Staying signed in, and being told when you are not
 
 - **Signing out in one tab now takes effect in the others.** A second tab could keep showing your

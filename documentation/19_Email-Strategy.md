@@ -39,23 +39,55 @@ The server also **rejects pipelined commands** (`554 5.5.0 Error: SMTP protocol
 synchronization`) — it expects each command to await its reply. Standard SMTP clients handle
 this correctly; it only bites hand-rolled connection testing.
 
-### EmailService pattern
+### Two collaborators, since 2026-08-31 (#141)
+
 ```
-EmailService
-  .sendTransactional(to, template, data)   // blocks, awaits delivery
-  .sendNotification(to, template, data)    // fire-and-forget, non-blocking
+EmailQueueService                          // policy: what is retried, and for how long
+  .sendTransactional(to, subject, html, text)   // queued; resolves when QUEUED, not when sent
+  .sendNotification(to, subject, html, text)    // queued; never throws at its caller
+
+EmailService                               // transport: put it on the wire, or throw
+  .deliver(to, subject, html, text)             // called by the worker, not by features
+  .renderTemplate(component)
 ```
 
-In local dev (`NODE_ENV !== 'production'`): both methods log the rendered content to console
-instead of sending. No credentials needed for dev.
+**Callers want `EmailQueueService`.** A direct `deliver()` from a request path is the behaviour
+#141 removed.
+
+⚠️ **`sendTransactional` no longer means "sent".** It means durably queued. `register` depends on
+that distinction: it reports `verificationEmailSent` separately, because the account is committed
+before the mail is attempted and the two facts diverge.
+
+**Retries:** 3 attempts, exponential backoff from 5s. Failed jobs are retained (500) rather than
+discarded — a failed job is the only record that somebody did not receive something, and losing
+those is what #141 was filed about.
+
+⚠️ **The worker runs inside the API process, not a separate one.** Right for the current volume,
+with one consequence that must not be discovered later: on an environment with `min_replicas = 0`
+— production today — a retry scheduled for later does not run until something wakes the container.
+The *first* attempt is unaffected, because the container is necessarily alive when the job is
+enqueued. So retries are reliable on UAT (`min_replicas = 1`) and best-effort on prod until #92 is
+revisited. A dedicated worker container with a Redis queue-depth scale rule is the answer when
+volume justifies it — not before.
+
+In local dev (`NODE_ENV !== 'production'`) `deliver` logs the rendered content to console instead
+of sending, and with no `REDIS_URL` the queue is skipped entirely and delivery happens inline —
+so nothing is silently dropped on a machine without Redis.
 
 ---
 
 ## Email Categories
 
-### 1. Transactional (sent immediately, synchronously, auth-critical)
+### 1. Transactional (auth-critical — the person is waiting on it)
 
-These block the user flow — must succeed reliably. Never queued.
+⚠️ **"Never queued" was true until 2026-08-31 and is no longer.** These are queued now, and the
+request no longer blocks on SMTP.
+
+The reasoning that made them synchronous — a verification mail that never sent must not look like
+a successful registration — was inverted by the ordering in `register`: the account is committed
+*before* the send, so a propagated failure never prevented an account existing. It only hid one
+from the person who had just created it, whose address was now taken and who could neither sign in
+nor register again (#141).
 
 | Event | Trigger | Subject |
 |---|---|---|
@@ -66,7 +98,9 @@ These block the user flow — must succeed reliably. Never queued.
 
 ### 2. Notification emails (fire-and-forget, non-blocking)
 
-These are secondary — failure does not affect the user's action. Sent asynchronously.
+These are secondary — failure does not affect the user's action. Queued, like transactional
+mail; the difference is that a queueing failure here is logged and swallowed rather than
+reported to the caller, because an invitation notice failing must not fail the invitation.
 
 Per `spec/decisions/25_notifications.md`, these events send email by default (user can opt out per-event):
 

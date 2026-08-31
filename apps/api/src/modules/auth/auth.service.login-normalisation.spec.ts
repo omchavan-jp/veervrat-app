@@ -25,6 +25,12 @@ function makeService(repo: Record<string, unknown>, extra: Record<string, unknow
   internals['logger'] = { warn: vi.fn() };
   internals['configService'] = { get: vi.fn().mockReturnValue('http://localhost:3000') };
   internals['auditService'] = { record: vi.fn() };
+  // Sends moved to EmailQueueService (#141) — EmailService is transport only now.
+  internals['emailQueue'] = {
+    sendTransactional: vi.fn().mockResolvedValue(undefined),
+    sendNotification: vi.fn(),
+    ...(extra ?? {}),
+  };
   internals['emailService'] = {
     renderTemplate: vi.fn().mockResolvedValue({ html: '<p/>', text: 't' }),
     sendTransactional: vi.fn().mockResolvedValue(undefined),

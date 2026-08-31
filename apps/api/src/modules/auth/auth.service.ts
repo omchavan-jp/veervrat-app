@@ -35,6 +35,7 @@ import {
   CreateSessionParams,
 } from './types/auth.types';
 import { EmailService } from '../email/email.service';
+import { EmailQueueService } from '../email/email-queue.service';
 import { UsersIndexService } from '../search/users-index.service';
 import { AuditService } from '../audit/audit.service';
 import {
@@ -85,6 +86,7 @@ export class AuthService {
     private readonly authRepository: AuthRepository,
     private readonly configService: ConfigService,
     private readonly emailService: EmailService,
+    private readonly emailQueue: EmailQueueService,
     private readonly usersIndex: UsersIndexService,
     private readonly auditService: AuditService,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
@@ -163,7 +165,7 @@ export class AuthService {
     dob: string,
     consents: { documentKey: string; version: number }[],
     language?: string,
-  ): Promise<{ user: SessionUser }> {
+  ): Promise<{ user: SessionUser; verificationEmailSent: boolean }> {
     // Stored lowercase so the address has one canonical form. `requestEmailChange` already did
     // this; signup did not, which is how the table came to hold both.
     const email = rawEmail.trim().toLowerCase();
@@ -218,14 +220,39 @@ export class AuthService {
     const { html: verifyHtml, text: verifyText } = await this.emailService.renderTemplate(
       createElement(VerifyEmailEmail, { displayName, verifyUrl, language: lang }),
     );
-    await this.emailService.sendTransactional(
-      email,
-      getVerifySubject(lang),
-      verifyHtml,
-      verifyText,
-    );
+    // ⚠️ The account is ALREADY COMMITTED at this point, so letting a send failure propagate does
+    // not undo it — it only hides it from the person who just created it. They were told signup
+    // failed; the address is now taken, so registering again is refused as a duplicate; and they
+    // cannot sign in, because the account is unverified. Resending the verification would fix it,
+    // and they have no reason to try, having been told there is no account.
+    //
+    // So one SMTP hiccup permanently cost somebody that address. #141 lists "a lost send actually
+    // costs someone access" as the trigger for taking this seriously; that trigger was already
+    // met, structurally, on every signup.
+    //
+    // Reporting the truth instead: the account exists, and the mail did not go out. The caller
+    // decides what to say about it.
+    let verificationEmailSent = true;
+    try {
+      await this.emailQueue.sendTransactional(
+        email,
+        getVerifySubject(lang),
+        verifyHtml,
+        verifyText,
+      );
+    } catch (error) {
+      verificationEmailSent = false;
+      // Recorded rather than swallowed. Without this the only evidence is a person who never
+      // arrives, which is not evidence anyone can act on.
+      this.logger.error({
+        msg: 'Verification email failed to send; the account exists and is unverified',
+        userId: user.id,
+        email,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
 
-    return { user: this.toSessionUser(user) };
+    return { user: this.toSessionUser(user), verificationEmailSent };
   }
 
   async login(
@@ -630,7 +657,7 @@ export class AuthService {
         language: lang,
       }),
     );
-    await this.emailService.sendTransactional(email, getVerifySubject(lang), html, text);
+    await this.emailQueue.sendTransactional(email, getVerifySubject(lang), html, text);
 
     return 'sent';
   }
@@ -690,7 +717,7 @@ export class AuthService {
         isFirstPassword,
       }),
     );
-    await this.emailService.sendTransactional(
+    await this.emailQueue.sendTransactional(
       email,
       getResetSubject(lang, isFirstPassword),
       resetHtml,
@@ -945,7 +972,7 @@ export class AuthService {
         language: lang,
       }),
     );
-    await this.emailService.sendTransactional(normalized, getEmailChangeSubject(lang), html, text);
+    await this.emailQueue.sendTransactional(normalized, getEmailChangeSubject(lang), html, text);
     return 'sent';
   }
 

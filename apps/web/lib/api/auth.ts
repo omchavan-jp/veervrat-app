@@ -19,6 +19,16 @@ export type User = {
 };
 
 type AuthResponse = User & { message: string };
+
+/**
+ * Registration reports two things, because two things can happen. The account is created either
+ * way; whether the verification mail reached the person is separate, and used to be reported as a
+ * failed request — which hid an account that existed (#141).
+ *
+ * Optional rather than required: only `/auth/register` returns it, and only after that change
+ * shipped. Absent is read as sent, which is the safe default for every other caller of this type.
+ */
+type RegisterResponse = AuthResponse & { verificationEmailSent?: boolean };
 type Wrapped<T> = { data: T };
 
 /**
@@ -37,7 +47,7 @@ export const authApi = {
     dob: string;
     consents: { documentKey: string; version: number }[];
     language?: string;
-  }) => api.post<Wrapped<AuthResponse>>('/auth/register', data).then((r) => r.data),
+  }) => api.post<Wrapped<RegisterResponse>>('/auth/register', data).then((r) => r.data),
 
   /**
    * Starts Google SIGNUP — deliberately distinct from Google sign-in.

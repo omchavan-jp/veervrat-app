@@ -42,6 +42,11 @@ function makeService(repo: ReturnType<typeof makeRepo>) {
   const set = (k: string, v: unknown) => ((service as unknown as Record<string, unknown>)[k] = v);
   set('authRepository', repo);
   set('configService', { get: vi.fn((_k: string, d?: unknown) => d) });
+  // Sends moved to EmailQueueService (#141) — EmailService is transport only now.
+  set('emailQueue', {
+    sendTransactional: vi.fn().mockResolvedValue(undefined),
+    sendNotification: vi.fn(),
+  });
   set('emailService', {
     renderTemplate: vi.fn().mockResolvedValue({ html: '', text: '' }),
     sendTransactional: vi.fn().mockResolvedValue(undefined),

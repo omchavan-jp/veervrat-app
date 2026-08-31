@@ -38,8 +38,9 @@ function makeService(repo: ReturnType<typeof makeRepo>, email = { sendTransactio
   i['sessionTtlDays'] = 30;
   i['logger'] = { warn: vi.fn(), log: vi.fn() };
   i['configService'] = { get: vi.fn().mockReturnValue('http://localhost:3000') };
+  // The send spy now belongs to EmailQueueService (#141); EmailService only renders.
+  i['emailQueue'] = { sendNotification: vi.fn(), ...email };
   i['emailService'] = {
-    ...email,
     renderTemplate: vi.fn().mockResolvedValue({ html: '<p/>', text: 't' }),
   };
   return service;

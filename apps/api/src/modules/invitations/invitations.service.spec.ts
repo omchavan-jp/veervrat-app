@@ -131,10 +131,18 @@ function makeJourneysRepo(overrides: Record<string, unknown> = {}) {
   };
 }
 
+// Rendering and sending are two collaborators now: EmailService renders, EmailQueueService
+// queues (#141). The spy tests assert on lives on the queue.
 function makeEmailService() {
   return {
     renderTemplate: vi.fn().mockResolvedValue({ html: '<html/>', text: 'text' }),
+  };
+}
+
+function makeEmailQueue() {
+  return {
     sendNotification: vi.fn(),
+    sendTransactional: vi.fn().mockResolvedValue(undefined),
   };
 }
 
@@ -159,6 +167,7 @@ function makeService(
   s['usersService'] = usersSvc;
   s['journeysRepository'] = journeysRepo;
   s['emailService'] = makeEmailService();
+  s['emailQueue'] = makeEmailQueue();
   s['notificationsService'] = makeNotificationsService();
   s['configService'] = makeConfigService();
   s['frontendUrl'] = 'http://localhost:3000';

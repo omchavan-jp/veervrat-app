@@ -59,6 +59,9 @@ function makeService(
   const service = Object.create(NotificationsService.prototype) as NotificationsService;
   (service as unknown as Record<string, unknown>)['notificationsRepository'] = repo;
   (service as unknown as Record<string, unknown>)['emailService'] = email;
+  // Sending moved to EmailQueueService (#141); the same double serves both so existing
+  // assertions on `email.sendNotification` keep pointing at the spy that is actually called.
+  (service as unknown as Record<string, unknown>)['emailQueue'] = email;
   (service as unknown as Record<string, unknown>)['frontendUrl'] = 'http://localhost:3000';
   (service as unknown as Record<string, unknown>)['logger'] = { warn: vi.fn(), log: vi.fn() };
   return { service, repo, email };

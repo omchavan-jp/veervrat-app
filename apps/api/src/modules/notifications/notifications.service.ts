@@ -8,6 +8,7 @@ import {
   EntityNotFoundException,
 } from '../../common/exceptions/app.exceptions';
 import { EmailService } from '../email/email.service';
+import { EmailQueueService } from '../email/email-queue.service';
 import { NotificationEmail, getNotificationSubject } from '../email/templates/NotificationEmail';
 import { notificationLinkPath } from './notification-link';
 import {
@@ -33,6 +34,7 @@ export class NotificationsService {
   constructor(
     private readonly notificationsRepository: NotificationsRepository,
     private readonly emailService: EmailService,
+    private readonly emailQueue: EmailQueueService,
     private readonly configService: ConfigService,
   ) {
     this.frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:3000');
@@ -80,7 +82,7 @@ export class NotificationsService {
       const { html, text } = await this.emailService.renderTemplate(
         createElement(NotificationEmail, { event, language, link }),
       );
-      this.emailService.sendNotification(
+      this.emailQueue.sendNotification(
         recipient.email,
         getNotificationSubject(event, language),
         html,

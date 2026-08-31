@@ -21,6 +21,7 @@ import { UsersService } from './users.service';
 import { DataExportService } from '../data-export/data-export.service';
 import { createExportToken, verifyExportToken } from '../data-export/export-token';
 import { EmailService } from '../email/email.service';
+import { EmailQueueService } from '../email/email-queue.service';
 import {
   DataExportEmail,
   getSubject as getDataExportSubject,
@@ -51,6 +52,7 @@ export class UsersController {
     private readonly usersService: UsersService,
     private readonly dataExportService: DataExportService,
     private readonly emailService: EmailService,
+    private readonly emailQueue: EmailQueueService,
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
   ) {
@@ -189,7 +191,7 @@ export class UsersController {
         language: lang,
       }),
     );
-    await this.emailService.sendTransactional(user.email, getDataExportSubject(lang), html, text);
+    await this.emailQueue.sendTransactional(user.email, getDataExportSubject(lang), html, text);
     return { sent: true };
   }
 
