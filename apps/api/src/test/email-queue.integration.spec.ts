@@ -129,24 +129,24 @@ describe('EmailQueueService — queue construction and job options', () => {
   it('builds a queue, so the request stops waiting on SMTP', async () => {
     const deliver = vi.fn().mockResolvedValue(undefined);
     service = makeService(deliver);
-    service!.onModuleInit();
+    service.onModuleInit();
 
-    expect(service!.getQueue()).toBeDefined();
+    expect(service.getQueue()).toBeDefined();
 
     // The point of the change: enqueueing does not call the transport. Whoever is waiting on the
     // HTTP response is no longer waiting on a mail relay.
-    await service!.sendTransactional('me@example.com', 'Subject', '<p/>', 'text');
+    await service.sendTransactional('me@example.com', 'Subject', '<p/>', 'text');
     expect(deliver).not.toHaveBeenCalled();
   });
 
   it('marks which kind of email a job is, because the two are treated differently', async () => {
     service = makeService(vi.fn().mockResolvedValue(undefined));
-    service!.onModuleInit();
-    const queue = service!.getQueue()!;
+    service.onModuleInit();
+    const queue = service.getQueue()!;
     const add = vi.spyOn(queue, 'add');
 
-    await service!.sendTransactional('a@example.com', 'S', '<p/>', 't');
-    service!.sendNotification('b@example.com', 'S', '<p/>', 't');
+    await service.sendTransactional('a@example.com', 'S', '<p/>', 't');
+    service.sendNotification('b@example.com', 'S', '<p/>', 't');
     await new Promise((r) => setImmediate(r));
 
     expect(add).toHaveBeenCalledTimes(2);
@@ -156,11 +156,11 @@ describe('EmailQueueService — queue construction and job options', () => {
 
   it('asks for retries with backoff, and keeps failures', async () => {
     service = makeService(vi.fn().mockResolvedValue(undefined));
-    service!.onModuleInit();
-    const queue = service!.getQueue()!;
+    service.onModuleInit();
+    const queue = service.getQueue()!;
     const add = vi.spyOn(queue, 'add');
 
-    await service!.sendTransactional('a@example.com', 'S', '<p/>', 't');
+    await service.sendTransactional('a@example.com', 'S', '<p/>', 't');
 
     const opts = add.mock.calls[0]?.[2];
     expect(opts?.attempts).toBeGreaterThan(1);
