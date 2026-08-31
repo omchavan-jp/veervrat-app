@@ -96,5 +96,57 @@
 ## 9. After merge
 
 - [ ] 9.1 Delete all users in both environments. No backfill, no accounts of unknown age.
-- [ ] 9.2 Create the terms and privacy documents at version 1 (content from #81).
+  🛑 **NOT RUN — 2026-08-31. The condition this task exists to satisfy is already met, and running
+  it now would destroy real accounts for no reason.**
+
+  The rationale is *"no accounts of unknown age"*. Measured against both environments, restored
+  from the nightly dumps:
+
+  ```
+  uat  → 0 live accounts of UNKNOWN age, out of 11
+  prod → 0 live accounts of UNKNOWN age, out of 2
+  ```
+
+  Every live account carries a date of birth, and every one computes to 18 or over — the youngest
+  is exactly 18, the oldest 37. The only two rows without a `dob` are already anonymised, where
+  #140 clears it deliberately; their absence of a date is the deletion working, not a gap.
+
+  So there is nothing here to delete on age grounds. What a wipe would actually remove:
+
+  - **`shantanu` on production** — created 2026-08-27, a real person, not a test account.
+  - `test_acc_1/2/3` — the three accounts #278's fix has to be verified with.
+  - `nachdevl` — and the Marathi review pack is with Nachiket right now.
+
+  ⚠️ **This task was correct when it was written.** At that point the age gate did not exist and
+  accounts predating it could not have their age established; deleting rather than backfilling was
+  the right call. #133 enforced 18+ at account creation on 2026-08-22, and every account in either
+  environment dates from that day or later. The task outlived the condition.
+
+  **Do not tick this — it has not been done.** It should be closed as no longer applicable, or
+  re-opened deliberately if someone finds an account whose age genuinely cannot be established.
+  Ticking it would record a destructive action nobody performed.
+
+- [x] 9.2 Create the terms and privacy documents at version 1 (content from #81).
+  Done, and superseded — verified 2026-08-31 in both environments. Both documents are live at
+  **version 2** in English and Marathi:
+
+  ```
+  uat   privacy v2  en+mr      prod  privacy v2  en+mr
+  uat   terms   v2  en+mr      prod  terms   v2  en+mr
+  ```
+
+  v1 existed and was republished at v2 on 2026-08-23, disclosing the retained Google identity
+  link. The consent records show the re-prompt actually fired rather than merely shipping — one
+  account consented at v1 and then again at v2, and every current account holds a v2 consent for
+  both documents (13 on UAT, 2 on prod). That is the mechanism working end to end on real people,
+  which is more than this task asked for.
+
 - [ ] 9.3 Re-create the maintainer accounts through the new flow — which also exercises it.
+  **Not applicable while 9.1 is not run** — there is nothing to re-create. It is also the one task
+  here that cannot be done from a terminal: it needs a browser, a real inbox for the verification
+  mail, and a deliberate under-18 attempt to confirm the gate refuses *before* an account exists
+  rather than creating and then removing one.
+
+  Worth keeping if 9.1 is ever revisited, because signing up again is the only thing that
+  exercises the age gate and the consent capture together, by someone who has to live with the
+  result.

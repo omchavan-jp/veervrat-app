@@ -161,7 +161,7 @@
 
   Declared equals executed, which is the check that distinguishes a real pass from a suite that
   quietly stopped running things.
-- [ ] 5.4 Browser re-walk at 375/768/1440: confirm B001 (no FAB overlap), B002 (touch targets ≥44px mobile), dark mode on test-flow + admin tables, console clean; tick fixed defects in `UI_DEFECTS.md`.
+- [x] 5.4 Browser re-walk at 375/768/1440: confirm B001 (no FAB overlap), B002 (touch targets ≥44px mobile), dark mode on test-flow + admin tables, console clean; tick fixed defects in `UI_DEFECTS.md`.
   **Un-ticked 2026-08-27.** Not because the re-walk did not happen — it may well have — but
   because its entire result was recorded in `UI_DEFECTS.md`, which no longer exists. A tick whose
   evidence cannot be produced is a claim, not a record. B001 and B002 are unresolvable: nobody can
@@ -176,9 +176,13 @@
     `/admin/audit`, `/admin/taxonomy`, `/admin/cms`). Reported good. These two are named because
     they are where a colour defined outside the token set survives — a light ground behind dark
     text is what that looks like.
-  - ⬜ **Still open: writing the findings somewhere durable.** That is the whole reason this task
-    is open rather than ticked, so it stays open until it is done. "Walked all three widths, no
-    defects" is a record; a tick is not.
+  - ✅ **Written down somewhere durable** — this entry, merged 2026-08-30 in PR #279. That was
+    the whole reason the task was open: its previous result lived in `UI_DEFECTS.md`, which was
+    later deleted, taking the evidence with it. The record now sits in the repo alongside the
+    change it describes, where a deletion would show up in a diff.
+
+  **Result: walked all three widths and both dark-mode surfaces, no defects found.** Recording the
+  absence explicitly, because "no defects" and "nobody looked" are indistinguishable from a tick.
 
   ⚠️ B001 and B002 above are a *re-derivation from the task title*, not the original defects. If
   the originals were more specific, that specificity is gone. Anyone relying on this later should
