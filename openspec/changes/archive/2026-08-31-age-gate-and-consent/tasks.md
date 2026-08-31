@@ -95,7 +95,10 @@
 
 ## 9. After merge
 
-- [ ] 9.1 Delete all users in both environments. No backfill, no accounts of unknown age.
+- [x] 9.1 Delete all users in both environments. No backfill, no accounts of unknown age.
+  **CLOSED AS NO LONGER APPLICABLE — 2026-08-31, by Om. NOT PERFORMED.** Nobody deleted anything;
+  the tick records a decision, not an action. The condition the task exists to satisfy was already
+  met, so carrying it out would have destroyed real accounts to no purpose.
   🛑 **NOT RUN — 2026-08-31. The condition this task exists to satisfy is already met, and running
   it now would destroy real accounts for no reason.**
 
@@ -141,12 +144,30 @@
   both documents (13 on UAT, 2 on prod). That is the mechanism working end to end on real people,
   which is more than this task asked for.
 
-- [ ] 9.3 Re-create the maintainer accounts through the new flow — which also exercises it.
-  **Not applicable while 9.1 is not run** — there is nothing to re-create. It is also the one task
-  here that cannot be done from a terminal: it needs a browser, a real inbox for the verification
-  mail, and a deliberate under-18 attempt to confirm the gate refuses *before* an account exists
-  rather than creating and then removing one.
+- [x] 9.3 Re-create the maintainer accounts through the new flow — which also exercises it.
+  **Nothing to re-create — 9.1 was closed without deleting anyone.** But the half of this task
+  that had value independent of that was done: proving the age gate actually refuses.
 
-  Worth keeping if 9.1 is ever revisited, because signing up again is the only thing that
-  exercises the age gate and the consent capture together, by someone who has to live with the
-  result.
+  **The browser cannot make the attempt.** The signup date picker will not offer an under-18 date,
+  which is correct as interface design and useless as a test — the frontend is never a security
+  boundary, so the check that matters is what the API does when the picker is bypassed. Verified
+  2026-08-31 against deployed UAT:
+
+  | dob | result |
+  |---|---|
+  | 17 years old | **403 `UNDERAGE`** — *"Veervrat is for adults aged 18 and over."* No account created |
+  | 30 years old *(control)* | **201** — account created |
+
+  The control is what makes the refusal mean anything. Reaching the age check at all requires
+  getting past CORS, CSRF and validation first, and each of those fails with a status that
+  resembles a refusal: the first attempt returned **403 `CSRF_INVALID`**, which is the same status
+  code as the expected answer for an entirely different reason. Recorded as a pass, it would have
+  proved nothing.
+
+  ⚠️ **The control created a real account on UAT that needs removing** —
+  `age_probe_adult_1788173033`, unverified, no session. It cannot be cleaned up from a terminal:
+  the admin `POST /admin/users/:id/anonymise` endpoint exists but needs a signed-in admin, and
+  self-delete needs a verified address. Remove it from `/admin/users` → anonymise.
+
+  That inability is #75 in miniature — creating a row in a deployed environment is easy and
+  removing one takes a person with a browser.
