@@ -166,4 +166,21 @@
   because its entire result was recorded in `UI_DEFECTS.md`, which no longer exists. A tick whose
   evidence cannot be produced is a claim, not a record. B001 and B002 are unresolvable: nobody can
   now say what they were. Re-doing this means re-deriving the checks, not finding the old file.
+
+  **Partly re-done 2026-08-30, on UAT, by Om.**
+  - ✅ The three widths (375 / 768 / 1440), with B001 and B002 re-derived from this task's own
+    text rather than recovered: no floating-action-button overlap, and mobile tap targets at or
+    above 44px. Reported working.
+  - ✅ Dark mode on the two places named — the test flow (`/study/[id]/test`, `…/test/[testId]`,
+    `…/preview`, `…/report`) and the admin tables (`/admin/users`, `/admin/suggestions`,
+    `/admin/audit`, `/admin/taxonomy`, `/admin/cms`). Reported good. These two are named because
+    they are where a colour defined outside the token set survives — a light ground behind dark
+    text is what that looks like.
+  - ⬜ **Still open: writing the findings somewhere durable.** That is the whole reason this task
+    is open rather than ticked, so it stays open until it is done. "Walked all three widths, no
+    defects" is a record; a tick is not.
+
+  ⚠️ B001 and B002 above are a *re-derivation from the task title*, not the original defects. If
+  the originals were more specific, that specificity is gone. Anyone relying on this later should
+  read it as "these two checks passed", not "the two original defects are confirmed fixed".
 - [x] 5.5 en/mr message-key parity check passes.

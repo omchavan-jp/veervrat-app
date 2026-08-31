@@ -85,11 +85,63 @@
 - [ ] 7.1 On a deployed environment, as a granted author: place suggestions on **at least four
   different kinds of page** — an entity page, a list page, a profile, and a static page — and
   confirm each records the right route and entity.
-- [ ] 7.2 As an admin: see all four in the triage view, including the ones made by someone else.
-- [ ] 7.3 As a user **without** the capability: no button, and the API refuses a direct call.
+  **Attempted 2026-08-30 on UAT. Blocked, and the block is the finding — #278.** Of the four kinds
+  this task names, only the profile was possible. The *Suggest content* button is absent from
+  every `(content)` page: `/virtues`, `/virtues/[id]`, `/weaknesses/[id]`, `/subvirtues/[id]`,
+  `/sentences/[id]`, `/pothi`, `/resources`, `/shlokas`, `/community/*`.
+
+  `ActionLauncher` is rendered only in `(app)/layout-client.tsx`; `(content)/layout-client.tsx`
+  renders no launcher at all. So a content-suggestion feature is available on the dashboard and
+  not on a virtue page — the coverage is inverted, and it is silent: no error, no disabled state,
+  nothing to distinguish a missing grant from a missing button.
+
+  This task is exactly what found it. A check that could only be run on one kind of page would
+  have passed.
+- [x] 7.2 As an admin: see all four in the triage view, including the ones made by someone else.
+  Done 2026-08-30 on UAT, across three separate accounts. A suggestion authored by the granted
+  account appeared in `/admin/suggestions` for the admin account, carrying its author and its
+  route: *"Add a section · on /profile · by Test Acc 2"*.
+
+  ⚠️ **One suggestion, not four** — see 7.1. The half this task is really about is proved (triage
+  shows another person's work, so the capability resolves to `triage` and not `read_own`), but the
+  breadth across page kinds is not, and cannot be until #278.
+- [x] 7.3 As a user **without** the capability: no button, and the API refuses a direct call.
+  Done 2026-08-30 on UAT as a third account holding no grants. No *Suggest content* item in the
+  launcher, and a direct `POST /content-suggestions` from the browser console returned **403**.
+
+  ⚠️ **The first attempt returned 404 and proved nothing.** It was aimed at
+  `uat.veervrat.jnanaprabodhini.org/api/v1/…` — the *web* host. The `/api/v1` rewrite proxy was
+  removed on 2026-08-17, so the browser must call `api.uat.veervrat…` directly. The same attempt
+  also sent `locale: 'en'` where the DTO requires `@IsIn(['EN','MR'])`, and omitted the CSRF
+  header, either of which would have produced a 400.
+
+  Worth keeping: **a 404 reads like a refusal.** Recorded as "the API refused", that first attempt
+  would have been a passing check that tested nothing — the endpoint was never reached. The
+  request that actually exercises the capability has to succeed at everything else first:
+
+  ```js
+  const API = 'https://api.uat.veervrat.jnanaprabodhini.org/api/v1';
+  const { csrfToken } = await fetch(`${API}/auth/csrf`, { credentials: 'include' }).then(r => r.json());
+  await fetch(`${API}/content-suggestions`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken },
+    body: JSON.stringify({ kind: 'EDIT_COPY', route: '/virtues',
+      url: 'https://uat.veervrat.jnanaprabodhini.org/virtues', locale: 'EN', titleEn: 'probe' })
+  }).then(r => r.status)
+  ```
 - [ ] 7.4 Place a suggestion, then change the page it was placed on, and confirm the suggestion is
   still readable and still identifies its entity. **This is the test that says whether the anchor
   design works**; it cannot be done in a unit test.
+  **Blocked by #278, and worth not faking.** Every suggestion this run could produce is anchored to
+  `/profile`, because that is the only page kind in 7.1's list that has the button. Anchoring is
+  only interesting on a page with real prose and a real entity — a virtue or a weakness — which is
+  precisely the set that cannot carry a suggestion today.
+
+  Also: the change this task should apply is a **code** change that restructures the page, not an
+  edit through an admin tool. That is how these pages actually move, and it is the case the four
+  anchor signals are ordered against. Rewriting a catalogue string through `/admin/taxonomy` would
+  exercise a gentler failure than the one the design is defending against.
 
 ⚠️ 7.1–7.4 need a granted account and an admin account on a deployed environment. A check run as
 one account, locally, proves nothing about either the capability or the anchors.
