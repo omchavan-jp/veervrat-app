@@ -28,10 +28,27 @@ import { queryKeys } from '@/lib/api/query-keys';
 import { useAuth, useLogout } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { Logo } from '@/components/auth/logo';
+import dynamic from 'next/dynamic';
+import { useRuntimeConfig } from '@/lib/runtime-config-provider';
+import { ActionLauncher } from '@/components/shared/launcher/action-launcher';
+import { ConsentGate } from '@/components/shared/consent-gate';
+
 import { LanguageToggle } from '@/components/shared/language-toggle';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
 import { NotificationBell } from '@/components/layout/notification-bell';
 import { errorMessage } from '@/lib/api/error-message';
+
+// In-context content editor. Lazily imported, and rendered only when the ENVIRONMENT allows it
+// AND this person holds the CONTENT_EDIT grant.
+//
+// ⚠️ This was once gated on `NEXT_PUBLIC_CONTENT_EDIT`, a BUILD-time flag, which meant it was
+// compiled out of every deployed build because CD never passed it — so granting CONTENT_EDIT did
+// nothing anywhere. It could not be fixed by setting the flag either: `NEXT_PUBLIC_*` is baked at
+// build time and one image is promoted UAT -> prod (conventions §17). `dynamic()` keeps the
+// original intent — its own chunk, fetched only when it actually renders.
+const ContentEditor = dynamic(() =>
+  import('@/components/shared/content-editor/content-editor').then((m) => m.ContentEditor),
+);
 
 export type ShellUser = { displayName: string | null; email: string };
 
@@ -427,6 +444,11 @@ export function AppShell({
   children: React.ReactNode;
 }) {
   const t = useTranslations('common.nav');
+  const { contentEditEnabled } = useRuntimeConfig();
+  // Grants come from the auth query rather than the `user` prop: `ShellUser` is deliberately
+  // narrow (display name and email — what the chrome needs to draw itself) and adding a
+  // capability list to it would widen a layout type into an authorisation one.
+  const { user: authUser } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
 
   // Restore the collapse preference after mount so it survives reloads/navigation
@@ -495,6 +517,27 @@ export function AppShell({
 
       {/* Mobile floating pill nav */}
       <PillNav />
+
+      {/* The three widgets every signed-in person should have, wherever they are.
+
+          These used to live in `AppLayoutClient`, whose comment said they mounted "once here" and
+          covered "all four authenticated route groups". That was true of four of the five:
+          (vratmitra), (moderation) and (admin) import `AppLayoutClient`, so they inherited it —
+          but (content) has its own client, because it is the one group that must also render for
+          guests, and so it inherited nothing.
+
+          The effect was precisely inverted in each case. A CONTENT_SUGGEST grantee could not
+          suggest anything on a virtue, a weakness, a sentence or the pothi (#278). A CONTENT_EDIT
+          grantee could not edit the content pages. And a signed-in person reading the catalogue
+          was never re-prompted when a policy was republished — a consent mechanism with a hole in
+          it exactly where somebody sits and reads.
+
+          `AppShell` is the component all five groups genuinely share, and it renders only for a
+          signed-in user, so mounting here makes the original comment's claim true instead of
+          nearly true. A sixth route group gets them by construction rather than by remembering. */}
+      <ActionLauncher />
+      <ConsentGate enabled />
+      {contentEditEnabled && authUser?.grants?.includes('CONTENT_EDIT') && <ContentEditor />}
     </div>
   );
 }
