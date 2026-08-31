@@ -111,3 +111,63 @@ describe('email queue, against a real Redis', () => {
     expect(job?.data.to).toBe('lost@example.com');
   }, 60_000);
 });
+
+describe('EmailQueueService — queue construction and job options', () => {
+  // Its own handle and teardown: this is a separate top-level describe, so it cannot see the one
+  // above, and a worker left running here would consume the other block's jobs on a re-run.
+  let service: EmailQueueService | undefined;
+
+  beforeAll(() => {
+    process.env.REDIS_URL = REDIS_URL;
+  });
+
+  afterEach(async () => {
+    await service?.onModuleDestroy();
+    service = undefined;
+  });
+
+  it('builds a queue, so the request stops waiting on SMTP', async () => {
+    const deliver = vi.fn().mockResolvedValue(undefined);
+    service = makeService(deliver);
+    service!.onModuleInit();
+
+    expect(service!.getQueue()).toBeDefined();
+
+    // The point of the change: enqueueing does not call the transport. Whoever is waiting on the
+    // HTTP response is no longer waiting on a mail relay.
+    await service!.sendTransactional('me@example.com', 'Subject', '<p/>', 'text');
+    expect(deliver).not.toHaveBeenCalled();
+  });
+
+  it('marks which kind of email a job is, because the two are treated differently', async () => {
+    service = makeService(vi.fn().mockResolvedValue(undefined));
+    service!.onModuleInit();
+    const queue = service!.getQueue()!;
+    const add = vi.spyOn(queue, 'add');
+
+    await service!.sendTransactional('a@example.com', 'S', '<p/>', 't');
+    service!.sendNotification('b@example.com', 'S', '<p/>', 't');
+    await new Promise((r) => setImmediate(r));
+
+    expect(add).toHaveBeenCalledTimes(2);
+    expect(add.mock.calls[0]?.[0]).toBe('transactional');
+    expect(add.mock.calls[1]?.[0]).toBe('notification');
+  });
+
+  it('asks for retries with backoff, and keeps failures', async () => {
+    service = makeService(vi.fn().mockResolvedValue(undefined));
+    service!.onModuleInit();
+    const queue = service!.getQueue()!;
+    const add = vi.spyOn(queue, 'add');
+
+    await service!.sendTransactional('a@example.com', 'S', '<p/>', 't');
+
+    const opts = add.mock.calls[0]?.[2];
+    expect(opts?.attempts).toBeGreaterThan(1);
+    expect(opts?.backoff).toMatchObject({ type: 'exponential' });
+    // A failed job is the only record that somebody did not receive something. Discarding them
+    // would restore exactly the gap #141 describes.
+    expect(opts?.removeOnFail).toBeTruthy();
+    expect(opts?.removeOnFail).not.toBe(true);
+  });
+});

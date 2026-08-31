@@ -8,9 +8,13 @@ import type { EmailService } from './email.service';
  * Sends used to be awaited inside the request that triggered them: a slow relay slowed signup, and
  * a failed send had no retry and, for registration, cost the person their account.
  *
- * These cover the shape without Redis. Retry, backoff and what survives a failure are the queue's
- * own behaviour and are asserted against a real Redis in `email-queue.integration.spec.ts` —
- * mocking BullMQ and then asserting BullMQ's retry semantics would be asserting the mock.
+ * ⚠️ These run in the `unit` project, which has NO Redis. Anything that constructs a BullMQ
+ * Queue or Worker belongs in `email-queue.integration.spec.ts` instead — a Worker connects
+ * eagerly, so a test that merely builds one fails in CI while passing on a machine with the
+ * docker stack running. That is exactly how this file was wrong on its first push.
+ *
+ * So what is left here is the no-Redis path, which is a real configuration: local development
+ * without Redis must still deliver rather than silently dropping every email.
  */
 function makeService(deliver = vi.fn().mockResolvedValue(undefined)) {
   const emailService = { deliver } as unknown as EmailService;
@@ -57,61 +61,5 @@ describe('EmailQueueService — without Redis', () => {
     expect(() => service.sendNotification('me@example.com', 'S', '<p/>', 't')).not.toThrow();
     await new Promise((r) => setImmediate(r));
     expect(deliver).toHaveBeenCalledOnce();
-  });
-});
-
-describe('EmailQueueService — with Redis configured', () => {
-  beforeEach(() => {
-    process.env.REDIS_URL = 'redis://localhost:6380/1';
-  });
-
-  it('builds a queue, so the request stops waiting on SMTP', async () => {
-    const { service, deliver } = makeService();
-    service.onModuleInit();
-
-    expect(service.getQueue()).toBeDefined();
-
-    // The point of the change: enqueueing does not call the transport. Whoever is waiting on the
-    // HTTP response is no longer waiting on a mail relay.
-    await service.sendTransactional('me@example.com', 'Subject', '<p/>', 'text');
-    expect(deliver).not.toHaveBeenCalled();
-
-    await service.onModuleDestroy();
-  });
-
-  it('marks which kind of email a job is, because the two are treated differently', async () => {
-    const { service } = makeService();
-    service.onModuleInit();
-    const queue = service.getQueue()!;
-    const add = vi.spyOn(queue, 'add');
-
-    await service.sendTransactional('a@example.com', 'S', '<p/>', 't');
-    service.sendNotification('b@example.com', 'S', '<p/>', 't');
-    await new Promise((r) => setImmediate(r));
-
-    expect(add).toHaveBeenCalledTimes(2);
-    expect(add.mock.calls[0]?.[0]).toBe('transactional');
-    expect(add.mock.calls[1]?.[0]).toBe('notification');
-
-    await service.onModuleDestroy();
-  });
-
-  it('asks for retries with backoff, and keeps failures', async () => {
-    const { service } = makeService();
-    service.onModuleInit();
-    const queue = service.getQueue()!;
-    const add = vi.spyOn(queue, 'add');
-
-    await service.sendTransactional('a@example.com', 'S', '<p/>', 't');
-
-    const opts = add.mock.calls[0]?.[2];
-    expect(opts?.attempts).toBeGreaterThan(1);
-    expect(opts?.backoff).toMatchObject({ type: 'exponential' });
-    // A failed job is the only record that somebody did not receive something. Discarding them
-    // would restore exactly the gap #141 describes.
-    expect(opts?.removeOnFail).toBeTruthy();
-    expect(opts?.removeOnFail).not.toBe(true);
-
-    await service.onModuleDestroy();
   });
 });
