@@ -136,6 +136,17 @@ something wakes the container. The first attempt is unaffected. So retries are r
 best-effort on prod until prod goes always-on. Recorded on #92 as well, so the two are not read
 apart.
 
+### 2b. #278 — the launcher was missing from every content page ✅ 2026-08-31
+
+Found by running step 2 rather than by reading code, which is the point of that step. Three widgets
+— `ActionLauncher`, `ConsentGate`, `ContentEditor` — were mounted in `(app)`'s layout; `(content)`
+has its own client because it must also render for guests, so it inherited none. Each consequence
+was inverted: no suggestions on the content, no editing of the content, and no consent re-prompt
+where somebody sits and reads. All three now mount on `AppShell`, with a structural test.
+
+**7.1 and 7.4 are unblocked and still need a browser.** Every anchor the last run could produce
+sits on `/profile`; anchoring only matters on a page with real prose and a real entity.
+
 ### 5. Only then
 
 `my-vratmitras-chat` is the largest remaining block (13 open) and is **not** a beta blocker — O8

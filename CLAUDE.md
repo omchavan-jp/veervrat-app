@@ -114,6 +114,31 @@ environment at runtime, so a value that was wrongly baked still looks correct th
   distinguish "absent" from "could not look". This has caused two false conclusions already.
 - **Assert positively.** Check that the expected thing is present, not that a feared thing is
   absent.
+- **Ask what else could have produced this answer.** The dangerous result is not the empty one —
+  that rule is above, and an empty result at least looks like nothing. The dangerous one is a
+  result that *matches what you were hoping for*, produced by something unrelated to what you were
+  testing. Six on 2026-08-31 alone:
+
+  | The check | What it returned | What it actually meant |
+  |---|---|---|
+  | "an account without the grant is refused by the API" | **404** | the request went to the *web* host; the API never saw it |
+  | "the age gate refuses an under-18 signup" | **403** | `CSRF_INVALID` — the same status code as the real answer, for a different reason |
+  | "this task's content is absent from `main`" | 0 grep matches | the path was wrong; the file was elsewhere |
+  | "the migration left google ids untouched" | `count(*) = 0` | no google id contained a letter, so lowercasing them was a no-op either way |
+  | "the migration is not mentioned in the job logs" | 0 rows | the log query itself failed against an intercepting proxy |
+  | "the queue's unit tests pass" | green | a Redis was running locally that CI does not have |
+
+  The practical form: **pair the check with a control that must come out differently.** A real key
+  and an invented key. A failing send and a succeeding one. The query with the fix and the query
+  without it. If both produce the same answer, the check is not measuring what its name says —
+  and you will not notice, because the answer looked right.
+- **A task can outlive its condition.** `age-gate-and-consent` 9.1 said "delete all users in both
+  environments — no accounts of unknown age", and was correct when written, before the age gate
+  existed. By the time anyone ran it every account had a verified date of birth, so it would have
+  destroyed a colleague's production account to satisfy a condition already met. Before carrying
+  out an instruction written earlier, check that the thing it was written about is still true.
+  Completion records get audited here; *applicability* records do not, and they go stale the same
+  way.
 - **Claim only what you actually tested.** `curl` ignores `SameSite` and does not enforce CORS.
   A 2xx does not prove a downstream side effect. A green `/ready` does not prove the tiers are
   wired to each other. Say plainly what remains unverified.
