@@ -63,7 +63,7 @@ a design the app now implements.
 
 ---
 
-## Current state (2026-08-27)
+## Current state (2026-09-01)
 
 **Both environments are live, correctly wired, signed into, and — as of today — actually
 usable.** Prod was none of those last things until 2026-08-21, while appearing to be all of
@@ -94,13 +94,22 @@ were all the same shape. **A green signal standing in for evidence.** The fixes 
 the ones that demanded the artifact itself: prisma's output, the merge base, the seed counts.
 Written up as conventions §21.
 
+**Prod caught up on 2026-08-30.** `prod-2026-08-30` shipped 61 commits and six migrations —
+self-delete, the re-authentication work, canonical email storage — and created prod's backup job
+and storage, which is why the paragraph below can say what it says.
+
 Still not true of prod, and tracked as issues rather than assumed:
 
-- **#92** — `min_replicas = 0`, so the first tester after an idle period pays a 5–20s cold start.
-  Declined at ~$14/mo while there were no users; revisit **before** testers arrive.
-- **#40** — per-user capability grants. The genuine gate before beta testers.
+- **#92** — `min_replicas = 0`. **Measured on production 2026-08-31: a 59.2-second cold start**,
+  not the 5–20s recorded from UAT — UAT runs `min_replicas = 1` and was never genuinely cold, so
+  that figure never measured what this issue is about. Deferred deliberately (nobody is on prod);
+  the trigger is the beta invitation. #141 added a second reason: the email worker runs in-process,
+  so retries wait for something to wake the container.
 - **#75** — break-glass data access. The admin-surface half is answered by #114; fixing an
-  arbitrary row still has no supported path, and override jobs are now ruled out as unobservable.
+  arbitrary row still has no supported path, and override jobs are ruled out as unobservable.
+  Demonstrated in miniature on 2026-08-31: a probe account created through the API in one command
+  needed a person with a browser to remove.
+- ~~**#40**~~ — closed 2026-08-21. Per-user capability grants shipped.
 
 **Backup, as of 2026-08-30 (#131).** A copy of the UAT database now exists **outside Azure**, and
 has been restored from — 54 tables, 10 users, 226 sentences, matching what UAT held when measured
@@ -109,8 +118,13 @@ hourly and verifies each file decrypts before counting it.
 
 ⚠️ Two things this is not. The Blob copy is **staging** — same subscription as the database it
 protects, so it answers deletion and operator error, not the loss of the subscription. And the
-off-Azure copy lives on **one laptop**: an interim, recorded as one, with go-live as the trigger to
-replace it. Prod has no backup at all yet, because prod deploys only on a `prod-YYYY-MM-DD` tag.
+off-Azure copy lives on **one laptop**: an interim, recorded as one (#267, labelled `deferred`),
+with go-live as the trigger to replace it.
+
+✅ **Prod is covered too, since `prod-2026-08-30`** — the tag created `veervratprodbackups` and the
+`veervrat-prod-backup` job, which is why it could not be true before. First dump taken, pulled and
+verified the same day; `pull-backups.sh` exited 0 for the first time. (An earlier version of this
+paragraph said prod had no backup at all. True when written, wrong four hours later.)
 
 Procedure: `DEPLOYMENT.md` → "Restoring from an off-site dump". It does not cover object storage,
 restoring *into* Azure, or prod.
@@ -385,6 +399,34 @@ History of already-triaged items: `triage-archive.md`.
        the `veervrat-prod-backup` job; the first run was pulled, decrypted and verified, and
        `pull-backups.sh` exited 0 — "every environment has a recent copy outside Azure" — for the
        first time. What remains is the single-machine failure domain, which is the actual issue.
+
+21. **2026-08-30 / 31 — the verification batch, and what it found.** Five OpenSpec changes were
+    blocked on manual verification. Three are now closed and archived (`upload-visibility`,
+    `age-gate-and-consent`, `ui-ux-remediation`, alongside `prevent-duplicate-journeys` and
+    `received-invitations`). Two remain, both for reasons worth knowing:
+
+    - **`content-suggestions` 7.1 and 7.4** — blocked by #278, now fixed. The task asked for a
+      suggestion on four kinds of page and only the profile was possible: `ActionLauncher` was
+      mounted in `(app)`'s layout, and `(content)` has its own client. So `ConsentGate` and
+      `ContentEditor` were missing there too — a consent re-prompt that never fired where people
+      read, and a CONTENT_EDIT grantee who could not edit content. All three now mount on
+      `AppShell`. Ready to re-run.
+    - **`experience-log-view` 5.1** — blocked on #253, which is a navigation question deferred to
+      #24/#116.
+
+    **#136 shipped** (`ops/breach-and-lawful-request.md`) and **#141 shipped** — a failed
+    verification email no longer strands an account, and delivery is queued. Both are described
+    where they live rather than here.
+
+    ⚠️ **9.1 was closed without being performed**, deliberately: "delete all users, no accounts of
+    unknown age" was correct when written and had stopped being so — every account carries a
+    verified date of birth. See `CLAUDE.md` → *a task can outlive its condition*.
+
+22. **What is left is mostly not code.** The remaining beta blockers wait on people: the Marathi
+    review (#154, with Nachiket), the `content-suggestions` browser run, and naming the Data owner
+    and Spokesperson that `breach-and-lawful-request.md` needs. On the code side the largest
+    coherent piece is `my-vratmitras-chat` (13 open), which O8 defers until >1 replica and which
+    has never run in production.
 
 Rationale for 5-before-6: CD automates a deploy you understand. Written first, every
 first-time deployment surprise surfaces as a red CI log instead of in front of you.
