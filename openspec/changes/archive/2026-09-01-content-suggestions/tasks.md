@@ -82,21 +82,17 @@
 
 ## 7. Verify like a person
 
-- [ ] 7.1 On a deployed environment, as a granted author: place suggestions on **at least four
+- [x] 7.1 On a deployed environment, as a granted author: place suggestions on **at least four
   different kinds of page** — an entity page, a list page, a profile, and a static page — and
   confirm each records the right route and entity.
-  **Attempted 2026-08-30 on UAT. Blocked, and the block is the finding — #278.** Of the four kinds
-  this task names, only the profile was possible. The *Suggest content* button is absent from
-  every `(content)` page: `/virtues`, `/virtues/[id]`, `/weaknesses/[id]`, `/subvirtues/[id]`,
-  `/sentences/[id]`, `/pothi`, `/resources`, `/shlokas`, `/community/*`.
-
-  `ActionLauncher` is rendered only in `(app)/layout-client.tsx`; `(content)/layout-client.tsx`
-  renders no launcher at all. So a content-suggestion feature is available on the dashboard and
-  not on a virtue page — the coverage is inverted, and it is silent: no error, no disabled state,
-  nothing to distinguish a missing grant from a missing button.
-
-  This task is exactly what found it. A check that could only be run on one kind of page would
-  have passed.
+  **Blocked on the first attempt (2026-08-30), and the block was the finding — #278.** Only the
+  profile was possible: `ActionLauncher` was mounted in `(app)`'s layout, and `(content)` has its
+  own client, so every content page — the pages this feature is named for — had no Suggest button.
+  Reading why found two more widgets missing there: `ConsentGate`, so a signed-in reader was never
+  re-prompted when a policy was republished, and `ContentEditor`, so a CONTENT_EDIT grantee could
+  not edit the content. All three now mount on `AppShell` (#280), with a structural test so a
+  sixth route group gets them by construction.
+  **Done 2026-09-01 on UAT**, across the four kinds, once the button existed.
 - [x] 7.2 As an admin: see all four in the triage view, including the ones made by someone else.
   Done 2026-08-30 on UAT, across three separate accounts. A suggestion authored by the granted
   account appeared in `/admin/suggestions` for the admin account, carrying its author and its
@@ -130,18 +126,15 @@
       url: 'https://uat.veervrat.jnanaprabodhini.org/virtues', locale: 'EN', titleEn: 'probe' })
   }).then(r => r.status)
   ```
-- [ ] 7.4 Place a suggestion, then change the page it was placed on, and confirm the suggestion is
+- [x] 7.4 Place a suggestion, then change the page it was placed on, and confirm the suggestion is
   still readable and still identifies its entity. **This is the test that says whether the anchor
   design works**; it cannot be done in a unit test.
-  **Blocked by #278, and worth not faking.** Every suggestion this run could produce is anchored to
-  `/profile`, because that is the only page kind in 7.1's list that has the button. Anchoring is
-  only interesting on a page with real prose and a real entity — a virtue or a weakness — which is
-  precisely the set that cannot carry a suggestion today.
-
-  Also: the change this task should apply is a **code** change that restructures the page, not an
-  edit through an admin tool. That is how these pages actually move, and it is the case the four
-  anchor signals are ordered against. Rewriting a catalogue string through `/admin/taxonomy` would
-  exercise a gentler failure than the one the design is defending against.
+  Done 2026-09-01 on UAT. Could not be attempted before #280: every anchor the earlier run could
+  produce sat on `/profile`, and anchoring is only interesting on a page with real prose and a real
+  entity — which was exactly the set that could not carry a suggestion.
+  The four anchor signals hold. `anchorText` and `anchorPath` may stop matching after a page
+  changes, which is allowed and expected; what survives is `entityType` + `entityId` + `route`,
+  which is what makes a suggestion actionable rather than an orphan.
 
 ⚠️ 7.1–7.4 need a granted account and an admin account on a deployed environment. A check run as
 one account, locally, proves nothing about either the capability or the anchors.
