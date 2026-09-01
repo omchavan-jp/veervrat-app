@@ -42,15 +42,32 @@ which is itself the largest weakness in both procedures.
 | Role | What it decides | Held today |
 |---|---|---|
 | **Operator** | Technical containment: revoking credentials, stopping compute, reading logs, restoring. Holds Azure subscription access, which in practice means the ability to read every secret and every record. | Om Chavan |
-| **Data owner** | Whether an event is a breach, what is disclosed, and what is handed to an authority. Answers for the organisation. | Jnana Prabodhini — **specific post TO CONFIRM** |
-| **Spokesperson** | The only person who speaks publicly or to a regulator. May be the data owner. | **TO CONFIRM** |
+| **Data owner** | Whether an event is a breach, what is disclosed, and what is handed to an authority. Answers for the organisation. | **Ashutosh Barmukh**, सहकार्यवाह (Sahakaryavaha), Jnana Prabodhini |
+| **Spokesperson** | The only person who speaks publicly or to a regulator. May be the data owner. | **Om Chavan** — interim, see below |
 | **Reviewer** | The data-protection adviser. Consulted on threshold and notification, not on containment. | Not yet appointed (#154, legal pack) |
 
-⚠️ **The Operator and the Data owner must not be the same person for a decision about their own
-access.** Today they are effectively one, and the legal pack already records this concentration as
-a risk to the organisation. Until a second person holds independent authority, any breach
-involving the operator's own credentials has nobody to escalate to — write that limitation into
-whatever is told to a regulator rather than discovering it mid-incident.
+**Filled 2026-09-01.** Both posts were unnamed until then, and the procedure could not be followed
+without them.
+
+⚠️ **`Sahakaryavaha` is recorded in Marathi because that is the authoritative form.** It means
+joint or associate *karyavaha* — secretary — and is ordinarily rendered **Joint General Secretary**
+in English. That rendering is the general meaning of the term, **not a title confirmed with Jnana
+Prabodhini**: the organisation publishes no office-bearer roster, and the one title on its site is
+a different word (कार्याध्यक्ष, Karyadhyaksha, "Executive Head"). Confirm the English form with JP
+before it appears in anything sent outside — getting a named person's title wrong in a
+notification to a regulator is its own small harm.
+
+⚠️ **The Operator and the Data owner must not be the same person for a decision about that
+person's own access.** They are now different people, which is the improvement. But the
+Spokesperson and the Operator **are** the same person — Om holds Azure access and would also be
+the one speaking. That is workable for a breach originating anywhere else, and it is not workable
+for one involving Om's own credentials: the person explaining what happened would be the person it
+happened through.
+
+So this is better than it was and not yet right. The interim position is that a breach touching
+the operator's own access is escalated to the Data owner **before** anything is said publicly, and
+the Spokesperson role passes to them for that incident. Recorded rather than assumed, because it
+is the case where improvising is most likely and least defensible.
 
 ---
 
@@ -258,8 +275,9 @@ incident go badly, and each is a decision rather than a bug.
    not an error.
 4. **No monitored contact address** for someone outside to report a vulnerability or a leak. Today
    a well-intentioned report might reach a general inbox and sit there.
-5. **The Data owner and Spokesperson posts are unfilled.** Both need naming before this document
-   can be followed.
+5. ✅ **The Data owner and Spokesperson posts are filled** (2026-09-01). What remains is that
+   the Spokesperson and the Operator are the same person — see the note under Roles for the
+   interim position when a breach involves the operator's own access.
 
 ## To confirm in the legal review
 
