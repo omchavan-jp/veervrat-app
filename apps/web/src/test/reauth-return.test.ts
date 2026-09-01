@@ -44,6 +44,29 @@ describe('returning to the flow you were in', () => {
     expect(PAGE).toMatch(/wrong_account/);
   });
 
+  // ⚠️ Found on UAT 2026-09-01, after the first version shipped. The message was set correctly
+  // and reported as absent — because the account section is the LAST of seven, the redirect lands
+  // at the top of the page, and it was styled as a muted hint. Rendering a message is not the
+  // same as somebody seeing it.
+  it('shows a refusal as a refusal, not as a muted hint', () => {
+    expect(PAGE).toMatch(/tone: 'error'/);
+    expect(PAGE).toMatch(/emailMsg\.tone === 'error' \? 'text-danger' : 'text-muted'/);
+  });
+
+  it('brings the email section into view, because it sits below the fold', () => {
+    expect(PAGE).toMatch(/emailSectionRef/);
+    expect(PAGE).toMatch(/scrollIntoView/);
+    // No `behavior` specified, so a reduced-motion preference is the browser's to honour rather
+    // than something overridden here.
+    expect(PAGE).not.toMatch(/behavior: 'smooth'/);
+  });
+
+  it('still distinguishes the success message, which is not an error', () => {
+    // The tone exists so one line can carry both. If everything became an error, "we have sent a
+    // confirmation" would read as a failure.
+    expect(PAGE).toMatch(/text: t\('emailChangeSent'\), tone: 'info'/);
+  });
+
   it('carries the flow out on both verification links', () => {
     // Matched as literals: the call contains `getRuntimeConfig()`, so a `[^)]*` character class
     // stops at the wrong bracket — which is how this assertion was wrong on its first run.

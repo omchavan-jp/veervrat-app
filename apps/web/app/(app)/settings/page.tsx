@@ -672,7 +672,13 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
   const [pw, setPw] = useState({ current: '', next: '' });
   const [pwMsg, setPwMsg] = useState<string | null>(null);
   const [emailForm, setEmailForm] = useState({ newEmail: '', password: '' });
-  const [emailMsg, setEmailMsg] = useState<string | null>(null);
+  // Carries a tone, because this one line reports both "we have sent a confirmation" and "that
+  // did not work". Styled as a muted hint for both, a refusal read as a note — which is how the
+  // wrong-account message shipped invisible on 2026-09-01 despite being rendered correctly.
+  const [emailMsg, setEmailMsg] = useState<{ text: string; tone: 'info' | 'error' } | null>(null);
+  // The account section is the last of seven, so a redirect lands the reader at the top of the
+  // page with this message far below the fold. Bring it to them.
+  const emailSectionRef = useRef<HTMLDivElement>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteMsg, setDeleteMsg] = useState<string | null>(null);
@@ -729,7 +735,22 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
     if (reauthReturn.outcome === 'wrong_account') {
       const message = t('reauthWrongAccount');
       if (reauthReturn.flow === 'delete') setDeleteMsg(message);
-      else setEmailMsg(message);
+      else setEmailMsg({ text: message, tone: 'error' });
+    }
+
+    // ⚠️ Rendering the message is not the same as the person seeing it. The account section is the
+    // LAST of seven, and a redirect lands the reader at the top of the page — so on 2026-09-01
+    // the wrong-account message was set correctly, styled as a muted hint, and sat entirely below
+    // the fold. It was reported as "no message at all", which is what it amounted to.
+    //
+    // The delete flow never had this problem: a dialog is prominent and focus-trapped by
+    // construction. An inline form is not.
+    if (reauthReturn.flow === 'email') {
+      // After paint, so the element exists and has a position to scroll to. No `behavior`, so a
+      // reduced-motion preference is honoured by the browser rather than overridden here.
+      requestAnimationFrame(() => {
+        emailSectionRef.current?.scrollIntoView({ block: 'center' });
+      });
     }
   }, [reauthReturn, t]);
 
@@ -765,7 +786,7 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
         currentPassword: hasPassword ? emailForm.password : undefined,
       }),
     onSuccess: () => {
-      setEmailMsg(t('emailChangeSent'));
+      setEmailMsg({ text: t('emailChangeSent'), tone: 'info' });
       setEmailForm({ newEmail: '', password: '' });
       // The change went through, so any saved draft is spent. Left behind it would be
       // restored into a later flow — an address the person had already finished with.
@@ -773,7 +794,10 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
     },
     onError: (e: Error) => {
       const stale = clearReauthOnStaleProof(e);
-      setEmailMsg(stale ? t('reauthExpired') : errorMessage(e, t('emailChangeError')));
+      setEmailMsg({
+        text: stale ? t('reauthExpired') : errorMessage(e, t('emailChangeError')),
+        tone: 'error',
+      });
     },
   });
   const disconnect = useMutation({
@@ -878,7 +902,7 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
       )}
 
       {/* Change email */}
-      <div className="mb-5 border-t border-border pt-4">
+      <div ref={emailSectionRef} className="mb-5 border-t border-border pt-4">
         <h3 className="mb-2 text-[13px] font-medium">{t('changeEmail')}</h3>
         <div className="grid gap-2">
           <div>
@@ -934,8 +958,11 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
             </div>
           )}
           {emailMsg && (
-            <p role="alert" className="text-[12px] text-muted">
-              {emailMsg}
+            <p
+              role="alert"
+              className={`text-[12px] ${emailMsg.tone === 'error' ? 'text-danger' : 'text-muted'}`}
+            >
+              {emailMsg.text}
             </p>
           )}
           <div>

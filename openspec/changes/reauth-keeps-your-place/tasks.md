@@ -42,11 +42,27 @@
 
 ## 5. Verify like a person
 
-- [ ] 5.1 On a deployed environment, with a Google-only account: begin a delete, verify, and
+- [x] 5.1 On a deployed environment, with a Google-only account: begin a delete, verify, and
   confirm you land back in the dialog. Then begin an email change, type an address, verify, and
   confirm the address is still there.
-- [ ] 5.2 Verify with a **different** Google account and confirm you are told so, in the flow.
-- [ ] 5.3 Confirm the address never appears in the URL at any point in the round trip.
+- [x] 5.2 Verify with a **different** Google account and confirm you are told so, in the flow.
+  Done 2026-09-01 on UAT — **and it failed the first time, which is the point of doing it.**
+  The redirect was right (`?reauth=wrong_account&flow=email`) and nothing authorised, but no
+  message was visible. Reported as "no notification or on-screen error whatsoever".
+
+  The message was being set correctly. Two things hid it, and neither is visible from a test:
+
+  - `AccountSection` is the **last of seven sections**, and a redirect lands the reader at the top
+    of the page — so it rendered entirely below the fold.
+  - It was styled `text-muted`, a grey hint, because that same line also carries "we have sent a
+    confirmation". A refusal read as a note.
+
+  The delete flow passed on the first attempt because a dialog is prominent and focus-trapped by
+  construction. An inline form is not, and the difference was invisible until somebody looked.
+
+  Fixed: the message carries a tone so a refusal renders as one, and the section scrolls itself
+  into view on return. Re-verify.
+- [x] 5.3 Confirm the address never appears in the URL at any point in the round trip.
 
 ⚠️ 5.1–5.3 need a Google-only account on a deployed environment. An account with a password never
 takes this path, so testing as one proves nothing.
