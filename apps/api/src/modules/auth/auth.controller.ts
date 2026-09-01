@@ -25,7 +25,7 @@ import { VerifyEmailDto } from './dto/verify-email.dto';
 import { CompleteOnboardingDto } from './dto/complete-onboarding.dto';
 import { RequestEmailChangeDto, ConfirmEmailChangeDto } from './dto/email-change.dto';
 import { SessionGuard } from './guards/session.guard';
-import { GoogleOAuthGuard, REAUTH_STATE } from './guards/google-oauth.guard';
+import { GoogleOAuthGuard, parseReauthState } from './guards/google-oauth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { CurrentSessionId } from './decorators/current-session-id.decorator';
 import { SkipCsrf } from '../../common/guards/csrf.guard';
@@ -291,7 +291,8 @@ export class AuthController {
       // still the account holder. This must NOT fall through to handleGoogleLogin — that issues
       // a session for whoever signed in, so signing in as somebody else would hand over their
       // account. Nothing here creates or replaces a session; it only stamps the one already held.
-      if (state === REAUTH_STATE) {
+      const reauth = parseReauthState(state);
+      if (reauth.isReauth) {
         const token = (req.cookies as Record<string, string> | undefined)?.[this.cookieName];
         const session = token ? await this.authService.validateSession(token) : null;
         if (!session) {
@@ -306,7 +307,11 @@ export class AuthController {
         );
         // A mismatch means a DIFFERENT Google account was used. Not an error the person made in
         // the system's terms, but it proves nothing about this account, so it authorises nothing.
-        res.redirect(`${this.frontendUrl}/settings?reauth=${ok ? 'ok' : 'wrong_account'}`);
+        // Carry the flow back so the page can reopen what the person was in, rather than
+        // leaving them on a settings page that looks untouched (#208). Absent when the
+        // flow was unrecognised, which degrades to exactly today's behaviour.
+        const flow = reauth.flow ? `&flow=${reauth.flow}` : '';
+        res.redirect(`${this.frontendUrl}/settings?reauth=${ok ? 'ok' : 'wrong_account'}${flow}`);
         return;
       }
 

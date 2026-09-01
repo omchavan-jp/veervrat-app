@@ -25,7 +25,17 @@ export default function GlobalError({
 
   return (
     <html lang="en">
-      <body style={{ display: 'flex', minHeight: '100dvh', alignItems: 'center', justifyContent: 'center', fontFamily: 'sans-serif', textAlign: 'center', padding: '2rem' }}>
+      <body
+        style={{
+          display: 'flex',
+          minHeight: '100dvh',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontFamily: 'sans-serif',
+          textAlign: 'center',
+          padding: '2rem',
+        }}
+      >
         <div>
           <p style={{ marginBottom: '0.5rem', fontSize: '18px' }}>Something went wrong.</p>
           <p style={{ color: '#888' }}>The problem has been reported. Please reload the page.</p>

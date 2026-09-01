@@ -1471,7 +1471,8 @@
     "emailReauthGooglePrompt": "This account signs in with Google. Verify with Google to confirm it is you, then return here.",
     "reauthExpired": "That confirmation has expired — it is only good for a few minutes, and for one action. Please verify again.",
     "emailChangeError": "We couldn't start the email change. Please try again.",
-    "deleteError": "We couldn't delete the account. Please try again."
+    "deleteError": "We couldn't delete the account. Please try again.",
+    "reauthWrongAccount": "That was a different Google account, so it does not verify this one. Try again with the account you signed up with."
   },
   "confirmEmailChange": {
     "title": "Confirm email change",

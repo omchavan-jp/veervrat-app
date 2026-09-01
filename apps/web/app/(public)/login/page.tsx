@@ -74,8 +74,7 @@ export default function LoginPage() {
           : tErrors('rateLimitExceededIn', { seconds: retryAfter });
 
   const apiError =
-    rateLimitMsg ??
-    (login.error instanceof ApiError ? login.error.message : login.error?.message);
+    rateLimitMsg ?? (login.error instanceof ApiError ? login.error.message : login.error?.message);
 
   // An unverified address is recoverable, but only if we say so. Left as a bare refusal it is a
   // dead end: nothing else in the product ever tells the user a remedy exists, and they cannot

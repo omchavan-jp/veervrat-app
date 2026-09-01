@@ -569,3 +569,13 @@ both. We cannot tell which; that is exactly why this pack exists. Flagged rather
 **MR** काहीतरी चुकले आणि बदल लागू झाला नाही. कृपया पुन्हा प्रयत्न करा.
 
 > The only one here that should sound apologetic — it is genuinely our fault.
+
+### ui — block 10  ·  `settings.reauthWrongAccount`
+
+**EN** That was a different Google account, so it does not verify this one. Try again with the account you signed up with.
+
+**MR** ते वेगळे Google खाते होते, त्यामुळे या खात्याची पडताळणी होत नाही. तुम्ही ज्या खात्याने नोंदणी केली त्याच खात्याने पुन्हा प्रयत्न करा.
+
+> Added 2026-09-01 (#208). Shown when somebody verifies with the wrong Google account — common for
+> anyone with two, and not a mistake in the system's terms. It has to say *which* account was
+> wrong without implying they did something incorrect, and has to leave them able to try again.
