@@ -215,7 +215,11 @@ export default function SignupPage() {
             type="text"
             variant="underline"
             placeholder={t('usernamePlaceholder')}
-            aria-invalid={errors.username || usernameStatus === 'taken' || usernameStatus === 'invalid' ? true : undefined}
+            aria-invalid={
+              errors.username || usernameStatus === 'taken' || usernameStatus === 'invalid'
+                ? true
+                : undefined
+            }
             aria-describedby="signup-username-status"
             {...register('username')}
           />

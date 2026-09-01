@@ -33,6 +33,13 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { useToast } from '@/hooks/use-toast';
 import { EMAILABLE_EVENTS } from '@/lib/notification-events';
 import { getRuntimeConfig } from '@/lib/runtime-config';
+import {
+  readReauthReturn,
+  saveEmailDraft,
+  takeEmailDraft,
+  clearEmailDraft,
+  verifyWithGoogleUrl,
+} from '@/lib/reauth-return';
 import { errorMessage } from '@/lib/api/error-message';
 
 function Section({
@@ -687,11 +694,44 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
   // page could sit showing "verified" with the button enabled long after the server had dropped
   // the stamp — and clicking then failed for a reason the page was actively contradicting.
   // Confirmed on UAT 2026-08-29 by waiting out the window without reloading.
-  const [reauthed, setReauthed] = useState(
-    () =>
-      typeof window !== 'undefined' &&
-      new URLSearchParams(window.location.search).get('reauth') === 'ok',
+  // What the callback told us on the way back: whether the proof was obtained, and which flow it
+  // was obtained for (#208). Read once, for the reason recorded above.
+  const [reauthReturn] = useState(() =>
+    typeof window === 'undefined'
+      ? { outcome: null, flow: null }
+      : readReauthReturn(window.location.search),
   );
+  const [reauthed, setReauthed] = useState(() => reauthReturn.outcome === 'ok');
+
+  // Come back to what you were doing (#208). The round trip is a full page load, so the open
+  // dialog and the typed address are gone unless they are deliberately carried.
+  //
+  // Runs once. Re-running would reopen a dialog somebody had deliberately closed, and the URL
+  // that triggers it does not go away on its own.
+  const restoredRef = useRef(false);
+  useEffect(() => {
+    if (restoredRef.current) return;
+    restoredRef.current = true;
+    if (!reauthReturn.outcome) return;
+
+    if (reauthReturn.flow === 'delete') {
+      setDeleteOpen(true);
+    } else if (reauthReturn.flow === 'email') {
+      const draft = takeEmailDraft();
+      // Only when there is something to restore, and only into an untouched field — never
+      // overwrite something the person has since typed.
+      if (draft) setEmailForm((f) => (f.newEmail ? f : { ...f, newEmail: draft }));
+    }
+
+    // Verifying as a DIFFERENT Google account proves nothing about this one, so it authorises
+    // nothing — and used to say nothing either. Reported inside the flow, not on the page behind
+    // it, because "the page looks untouched" is the defect being fixed.
+    if (reauthReturn.outcome === 'wrong_account') {
+      const message = t('reauthWrongAccount');
+      if (reauthReturn.flow === 'delete') setDeleteMsg(message);
+      else setEmailMsg(message);
+    }
+  }, [reauthReturn, t]);
 
   // The server is the only party that knows whether the proof is still good. When it says it is
   // not, drop back to offering the round trip again rather than leaving a dead button.
@@ -727,6 +767,9 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
     onSuccess: () => {
       setEmailMsg(t('emailChangeSent'));
       setEmailForm({ newEmail: '', password: '' });
+      // The change went through, so any saved draft is spent. Left behind it would be
+      // restored into a later flow — an address the person had already finished with.
+      clearEmailDraft();
     },
     onError: (e: Error) => {
       const stale = clearReauthOnStaleProof(e);
@@ -877,7 +920,14 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
                 variant="outline"
                 size="sm"
                 nativeButton={false}
-                render={<a href={`${getRuntimeConfig().apiBaseUrl}/auth/google?intent=reauth`} />}
+                render={
+                  <a
+                    href={verifyWithGoogleUrl(getRuntimeConfig().apiBaseUrl, 'email')}
+                    // Saved before the browser leaves, restored on return. The address
+                    // never travels in the URL — see lib/reauth-return.ts.
+                    onClick={() => saveEmailDraft(emailForm.newEmail)}
+                  />
+                }
               >
                 {t('verifyWithGoogle')}
               </Button>
@@ -1016,7 +1066,7 @@ function AccountSection({ profile }: { profile: OwnProfile }) {
             <Button
               variant="outline"
               nativeButton={false}
-              render={<a href={`${getRuntimeConfig().apiBaseUrl}/auth/google?intent=reauth`} />}
+              render={<a href={verifyWithGoogleUrl(getRuntimeConfig().apiBaseUrl, 'delete')} />}
             >
               {t('verifyWithGoogle')}
             </Button>
