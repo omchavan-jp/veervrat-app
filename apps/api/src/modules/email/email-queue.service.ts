@@ -4,6 +4,32 @@ import { EmailService } from './email.service';
 
 export const EMAIL_QUEUE_NAME = 'email';
 
+/**
+ * ⚠️ The braces are load-bearing. Azure Managed Redis is a CLUSTER.
+ *
+ * BullMQ runs Lua scripts that touch several of its keys at once — `bull:email:wait` and
+ * `bull:email:active` in the same call. In a clustered Redis every key in one command must live in
+ * the same hash slot, and the slot is computed from the key unless part of it is wrapped in
+ * braces. Without a hash tag those two keys land on different nodes and every single operation
+ * fails with:
+ *
+ *   CROSSSLOT Keys in request don't hash to the same slot
+ *
+ * Wrapping the prefix forces them together: `{email}:wait` and `{email}:active` hash identically.
+ *
+ * **What this cost.** Shipped without it on 2026-08-31, the worker failed on every poll — several
+ * hundred times a second — and `worker.on('error')` logged each failure. 3.3 million log lines an
+ * hour, ~2.2 GB, roughly 53 GB a day into Log Analytics. About ₹13,000 in twelve hours against a
+ * ₹13,000 MONTHLY budget, which the cost guard then stopped the platform over. The queue had never
+ * worked in a deployed environment for a moment.
+ *
+ * **Why no test caught it.** The unit tests use no Redis and the integration tests use the docker
+ * one, which is a single node. Neither shares the deployed Redis's defining constraint. That is
+ * `CLAUDE.md`'s rule about verifying with something that behaves like the thing being claimed
+ * about, and this is now its most expensive instance.
+ */
+const QUEUE_PREFIX = '{email}';
+
 export type EmailJob = {
   to: string;
   subject: string;
@@ -21,6 +47,9 @@ export type EmailJob = {
  */
 const ATTEMPTS = 3;
 const BACKOFF_MS = 5_000;
+
+/** How often a repeating worker error may be logged. See `logWorkerError`. */
+const WORKER_ERROR_LOG_INTERVAL_MS = 60_000;
 
 const JOB_OPTIONS: JobsOptions = {
   attempts: ATTEMPTS,
@@ -75,14 +104,14 @@ export class EmailQueueService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
-    this.queue = new Queue<EmailJob>(EMAIL_QUEUE_NAME, opts);
+    this.queue = new Queue<EmailJob>(EMAIL_QUEUE_NAME, { ...opts, prefix: QUEUE_PREFIX });
     this.worker = new Worker<EmailJob>(
       EMAIL_QUEUE_NAME,
       async (job) => {
         const { to, subject, html, text } = job.data;
         await this.emailService.deliver(to, subject, html, text);
       },
-      { ...opts, concurrency: 5 },
+      { ...opts, prefix: QUEUE_PREFIX, concurrency: 5 },
     );
 
     // The last line of defence. After the final attempt this is the only trace that a person did
@@ -103,9 +132,40 @@ export class EmailQueueService implements OnModuleInit, OnModuleDestroy {
       else this.logger.warn(entry);
     });
 
-    this.worker.on('error', (err) => {
-      this.logger.error({ msg: 'Email worker error', error: err.message });
+    // ⚠️ Rate limited, and that is the whole point of this block.
+    //
+    // A broken queue is a bug; a broken queue that logs every failure is an outage with an
+    // invoice. When the worker could not talk to Redis it errored several hundred times a second,
+    // and logging each one put 3.3 million lines an hour — about 53 GB a day — into Log Analytics,
+    // which is billed by volume. The connection fault cost nothing. The logging cost ₹13,000 in
+    // twelve hours and stopped the platform.
+    //
+    // So: the FIRST error is logged in full, because somebody needs to see it. Repeats are
+    // counted and summarised at most once a minute, which is enough to know it is still happening
+    // and cannot itself become the problem. This is a property of the logging, not of the error
+    // — any repeating worker fault is now bounded.
+    this.worker.on('error', (err) => this.logWorkerError(err));
+  }
+
+  private lastWorkerErrorLoggedAt = 0;
+  private suppressedWorkerErrors = 0;
+
+  /** At most one line a minute, however fast the worker fails. See the comment at the call site. */
+  private logWorkerError(err: Error): void {
+    const now = Date.now();
+    const elapsed = now - this.lastWorkerErrorLoggedAt;
+    if (elapsed < WORKER_ERROR_LOG_INTERVAL_MS) {
+      this.suppressedWorkerErrors += 1;
+      return;
+    }
+    this.logger.error({
+      msg: 'Email worker error',
+      error: err.message,
+      // Named so the volume is visible in one line rather than in a million of them.
+      suppressedSinceLast: this.suppressedWorkerErrors,
     });
+    this.lastWorkerErrorLoggedAt = now;
+    this.suppressedWorkerErrors = 0;
   }
 
   async onModuleDestroy(): Promise<void> {
