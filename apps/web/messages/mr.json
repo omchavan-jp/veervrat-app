@@ -62,7 +62,8 @@
       "moderation": "नियंत्रण",
       "admin": "प्रशासन",
       "groupAdmin": "प्रशासन",
-      "vmMyVratarthis": "माझे व्रतार्थी"
+      "vmMyVratarthis": "माझे व्रतार्थी",
+      "publicPool": "सार्वजनिक संग्रह"
     },
     "actions": {
       "save": "जतन करा",
@@ -1126,7 +1127,9 @@
     "retry": "पुन्हा प्रयत्न करा",
     "noSubvirtues": "अद्याप कोणतेही उपगुण नाहीत",
     "virtuesEmpty": "अद्याप कोणतेही सद्गुण नाहीत",
-    "weaknessesEmpty": "अद्याप कोणतेही दुर्गुण नाहीत"
+    "weaknessesEmpty": "अद्याप कोणतेही दुर्गुण नाहीत",
+    "breadcrumbLabel": "मार्गसूची",
+    "breadcrumbRoot": "सद्गुण"
   },
   "moderation": {
     "title": "नियंत्रण",
@@ -1555,7 +1558,8 @@
     "buttonLabel": "क्रिया",
     "closeMenu": "मेनू बंद करा",
     "reportProblem": "अडचण कळवा",
-    "suggestContent": "मजकूर सुचवा"
+    "suggestContent": "मजकूर सुचवा",
+    "mySuggestions": "माझ्या सूचना"
   },
   "suggestions": {
     "panelTitle": "मजकूर सुचवा",

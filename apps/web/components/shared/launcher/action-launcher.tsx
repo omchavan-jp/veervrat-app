@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { MessageSquarePlus, MessageSquareText, Sparkles } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ListChecks, MessageSquarePlus, MessageSquareText, Sparkles } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRuntimeConfig } from '@/lib/runtime-config-provider';
 import { FeedbackModal } from '@/components/shared/feedback/feedback-modal';
@@ -25,6 +26,7 @@ export function ActionLauncher() {
 
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [suggesting, setSuggesting] = useState(false);
+  const router = useRouter();
 
   const grants = user?.grants ?? [];
   const canFeedback = feedbackMode !== 'off' && grants.includes('FEEDBACK_WIDGET');
@@ -51,6 +53,17 @@ export function ActionLauncher() {
             label: t('suggestContent'),
             icon: <MessageSquareText className="h-4 w-4" />,
             onSelect: () => setSuggesting(true),
+          },
+          // Where an author reads back what they have suggested. `/suggestions` existed with
+          // nothing linking to it from anywhere — including from here, the place they had just
+          // been to make one. Put behind the same grant as the action above, so the way in is
+          // visible to exactly the people the page is for and to nobody else; a nav item would
+          // need a second visibility rule for a page most people cannot use.
+          {
+            key: 'my-suggestions',
+            label: t('mySuggestions'),
+            icon: <ListChecks className="h-4 w-4" />,
+            onSelect: () => router.push('/suggestions'),
           },
         ]
       : []),

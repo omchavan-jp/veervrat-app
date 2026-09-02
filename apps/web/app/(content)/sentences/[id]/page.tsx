@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { CheckCircle2 } from 'lucide-react';
 import { virtuesApi } from '@/lib/api/virtues';
 import { queryKeys } from '@/lib/api/query-keys';
+import { Breadcrumbs } from '@/components/shared/breadcrumbs';
 import { useAuth } from '@/hooks/use-auth';
 import { BilingualText, ContentText } from '@/components/shared/bilingual-text';
 import { Button } from '@/components/ui/button';
@@ -31,12 +32,23 @@ export default function SentenceInfoPage({ params }: { params: Promise<{ id: str
 
   return (
     <div>
-      <Link
-        href={`/subvirtues/${data.subvirtue.id}`}
-        className="text-[13px] text-muted hover:text-accent"
-      >
-        ← <ContentText en={data.subvirtue.nameEn} mr={data.subvirtue.nameMr} />
-      </Link>
+      <Breadcrumbs
+        label={t('breadcrumbLabel')}
+        crumbs={[
+          { href: '/virtues', en: t('breadcrumbRoot') },
+          {
+            href: `/virtues/${data.subvirtue.virtue.id}`,
+            en: data.subvirtue.virtue.nameEn,
+            mr: data.subvirtue.virtue.nameMr,
+          },
+          {
+            href: `/subvirtues/${data.subvirtue.id}`,
+            en: data.subvirtue.nameEn,
+            mr: data.subvirtue.nameMr,
+          },
+        ]}
+        current={{ en: data.textEn, mr: data.textMr }}
+      />
 
       <div className="mt-4 rounded-2xl border border-border bg-surface p-6 shadow-card">
         <BilingualText en={data.textEn} mr={data.textMr} size="lg" />

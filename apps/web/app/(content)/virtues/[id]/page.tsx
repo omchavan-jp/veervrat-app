@@ -4,10 +4,11 @@ import { use } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { ChevronRight, Sparkles } from 'lucide-react';
 import { virtuesApi } from '@/lib/api/virtues';
 import { queryKeys } from '@/lib/api/query-keys';
 import { BilingualText } from '@/components/shared/bilingual-text';
+import { Breadcrumbs } from '@/components/shared/breadcrumbs';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
@@ -42,12 +43,11 @@ export default function VirtueDetailPage({ params }: { params: Promise<{ id: str
 
   return (
     <div>
-      <Link
-        href="/virtues"
-        className="inline-flex items-center gap-1 text-[13px] text-muted hover:text-accent"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" /> {t('backToBrowser')}
-      </Link>
+      <Breadcrumbs
+        label={t('breadcrumbLabel')}
+        crumbs={[{ href: '/virtues', en: t('breadcrumbRoot') }]}
+        current={{ en: data.nameEn, mr: data.nameMr }}
+      />
       <div className="mt-3">
         <BilingualText en={data.nameEn} mr={data.nameMr} size="xl" />
       </div>
