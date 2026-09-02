@@ -29,6 +29,58 @@ afterEach(() => {
   else process.env.REDIS_URL = ORIGINAL_REDIS_URL;
 });
 
+import { EMAIL_QUEUE_NAME } from './email-queue.service';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+describe('the queue is safe on a CLUSTERED Redis', () => {
+  /**
+   * ⚠️ This is asserted against the source, not against a running Redis, and deliberately so.
+   *
+   * Azure Managed Redis is a cluster. BullMQ's Lua scripts touch several of its keys in one call,
+   * and a cluster requires every key in a command to share a hash slot — which only happens if
+   * part of the key is wrapped in braces. Without that, every operation fails:
+   *
+   *     CROSSSLOT Keys in request don't hash to the same slot
+   *
+   * Shipped without it on 2026-08-31, the worker failed several hundred times a second and each
+   * failure was logged: 3.3M lines an hour, ~53 GB a day, ₹19,230 in twelve hours — 98% of the
+   * month's entire bill against infrastructure costing ₹306.
+   *
+   * **No test could have caught it by connecting to Redis**, because the docker Redis used locally
+   * and in CI is a single node and has no slots to cross. Reproducing the failure needs a cluster
+   * nobody runs in CI. So the check is on the property that makes the code correct — the hash tag
+   * — which is weaker than exercising it and infinitely stronger than the nothing that was there.
+   */
+  const SRC = readFileSync(join(__dirname, 'email-queue.service.ts'), 'utf8');
+
+  it('wraps the key prefix in braces, so every key hashes to one slot', () => {
+    const prefix = /const QUEUE_PREFIX = '([^']+)'/.exec(SRC)?.[1];
+    expect(prefix, 'QUEUE_PREFIX must exist').toBeTruthy();
+    expect(prefix, `${prefix} has no hash tag — a cluster will reject every operation`).toMatch(
+      /^\{.+\}$/,
+    );
+  });
+
+  it('passes that prefix to BOTH the queue and the worker', () => {
+    // One without the other is worse than neither: they would address different keys, and the
+    // failure would look like jobs vanishing rather than like an error.
+    const uses = SRC.match(/prefix: QUEUE_PREFIX/g) ?? [];
+    expect(uses.length, 'prefix must be given to the Queue and to the Worker').toBe(2);
+  });
+
+  it('rate-limits worker errors, so a broken queue cannot bill by the line', () => {
+    // The connection fault cost nothing. Logging every occurrence of it cost ₹19,230.
+    expect(SRC).toMatch(/WORKER_ERROR_LOG_INTERVAL_MS/);
+    expect(SRC).toMatch(/suppressedSinceLast/);
+    expect(SRC).not.toMatch(/on\('error', \(err\) => \{\s*this\.logger\.error/);
+  });
+
+  it('still names the queue plainly — the prefix is separate from the name', () => {
+    expect(EMAIL_QUEUE_NAME).toBe('email');
+  });
+});
+
 describe('EmailQueueService — without Redis', () => {
   beforeEach(() => {
     delete process.env.REDIS_URL;
