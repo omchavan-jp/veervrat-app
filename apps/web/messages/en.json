@@ -62,7 +62,8 @@
       "moderation": "Moderation",
       "admin": "Admin",
       "groupAdmin": "Admin",
-      "vmMyVratarthis": "My Vratarthis"
+      "vmMyVratarthis": "My Vratarthis",
+      "publicPool": "Public pool"
     },
     "actions": {
       "save": "Save",
@@ -1126,7 +1127,9 @@
     "retry": "Try again",
     "noSubvirtues": "No subvirtues yet",
     "virtuesEmpty": "No virtues yet",
-    "weaknessesEmpty": "No weaknesses yet"
+    "weaknessesEmpty": "No weaknesses yet",
+    "breadcrumbLabel": "Breadcrumb",
+    "breadcrumbRoot": "Virtues"
   },
   "moderation": {
     "title": "Moderation",
@@ -1555,7 +1558,8 @@
     "buttonLabel": "Actions",
     "closeMenu": "Close menu",
     "reportProblem": "Report a problem",
-    "suggestContent": "Suggest content"
+    "suggestContent": "Suggest content",
+    "mySuggestions": "My suggestions"
   },
   "suggestions": {
     "panelTitle": "Suggest content",

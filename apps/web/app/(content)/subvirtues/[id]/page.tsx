@@ -4,9 +4,10 @@ import { use } from 'react';
 import Link from 'next/link';
 import { useTranslations, useLocale } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { virtuesApi } from '@/lib/api/virtues';
 import { queryKeys } from '@/lib/api/query-keys';
+import { Breadcrumbs } from '@/components/shared/breadcrumbs';
 import { BilingualText, ContentText } from '@/components/shared/bilingual-text';
 import { Spinner } from '@/components/ui/spinner';
 
@@ -29,13 +30,14 @@ export default function SubvirtueDetailPage({ params }: { params: Promise<{ id: 
 
   return (
     <div>
-      <Link
-        href={`/virtues/${data.virtue.id}`}
-        className="inline-flex items-center gap-1 text-[13px] text-muted hover:text-accent"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />{' '}
-        <ContentText en={data.virtue.nameEn} mr={data.virtue.nameMr} />
-      </Link>
+      <Breadcrumbs
+        label={t('breadcrumbLabel')}
+        crumbs={[
+          { href: '/virtues', en: t('breadcrumbRoot') },
+          { href: `/virtues/${data.virtue.id}`, en: data.virtue.nameEn, mr: data.virtue.nameMr },
+        ]}
+        current={{ en: data.nameEn, mr: data.nameMr }}
+      />
       <div className="mt-3">
         <BilingualText en={data.nameEn} mr={data.nameMr} size="xl" />
       </div>

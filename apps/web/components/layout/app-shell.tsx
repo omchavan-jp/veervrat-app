@@ -16,6 +16,7 @@ import {
   Newspaper,
   Sparkles,
   ScrollText,
+  Library,
   ShieldCheck,
   SlidersHorizontal,
   Settings,
@@ -67,6 +68,11 @@ const PRACTICE: NavItem[] = [
   { href: '/pothi', labelKey: 'pothi', icon: ScrollText },
   { href: '/experiences', labelKey: 'myExperiences', icon: PenLine },
   { href: '/community/blogs', labelKey: 'community', icon: Newspaper },
+  // The public experience pool. It existed and worked for weeks with nothing linking to it,
+  // so the only way in was to already know the URL (#253) — which meant task 5.1 of
+  // experience-log-view could not be performed at all. Placed beside blogs because that is
+  // where it already belongs in the route tree and in what it is for: other people's writing.
+  { href: '/community/experiences', labelKey: 'publicPool', icon: Library },
 ];
 
 // Computes the Guidance + Vratmitra nav groups with live pending-count badges. VM nav

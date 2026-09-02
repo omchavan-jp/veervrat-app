@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { virtuesApi } from '@/lib/api/virtues';
 import { weaknessesApi } from '@/lib/api/weaknesses';
 import { queryKeys } from '@/lib/api/query-keys';
+import { BackLink } from '@/components/shared/breadcrumbs';
 import { useAuth } from '@/hooks/use-auth';
 import { BilingualText } from '@/components/shared/bilingual-text';
 import { Button } from '@/components/ui/button';
@@ -31,9 +32,12 @@ export default function WeaknessBrowseDetailPage({ params }: { params: Promise<{
 
   return (
     <div>
-      <Link href="/virtues" className="text-[13px] text-muted hover:text-accent">
-        ← {t('backToBrowser')}
-      </Link>
+      {/* No breadcrumb, deliberately. A weakness maps to MANY subvirtues (WeaknessSubvirtue is a
+          join table), so it has no single parent and any ancestry shown here would be a claim the
+          data does not support. Its subvirtues are listed in the body below, which is the honest
+          answer. `BackLink` keeps the affordance identical to the breadcrumbed pages even though
+          the hierarchy is not. See openspec/changes/navigation-reachability/design.md decision 1. */}
+      <BackLink href="/virtues" label={t('backToBrowser')} />
       <div className="mt-3">
         <BilingualText en={data.nameEn} mr={data.nameMr} size="xl" />
       </div>
