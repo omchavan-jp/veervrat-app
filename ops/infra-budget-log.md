@@ -19,8 +19,12 @@ nearly cost the file: the decisions *are* finalised, but this is the reference t
 will be written from. Its value is highest now, not lowest.
 
 Writing the proposal is now much easier than when it was planned: we have **actuals**
-(~$56/mo for UAT + prod) rather than estimates, plus a documented trail of what each choice
-cost and why alternatives were rejected.
+(~$56/mo for UAT + prod normal running) rather than estimates, plus a documented trail of what
+each choice cost and why alternatives were rejected.
+
+⚠️ **2026-09-02: a ₹19,230 cost spike from a BullMQ/Redis misconfiguration.** Not normal
+running cost — a one-off incident from Log Analytics ingestion (see §below). `daily_quota_gb`
+now guards against repeats. Grant consumption is ~₹20,700 (~10.8%) after the incident.
 
 ---
 
@@ -133,7 +137,7 @@ Stateful (Postgres/Redis/Blob) = holds the only copy → managed PaaS.
 | Images | **ACR Basic** (~$5/mo, 10 GB) | Flat tier rate, **not per-push**. Same-region pulls are free. |
 | Secrets | **Key Vault** + managed identity | No static credentials anywhere |
 | Search | **deferred**; when needed → Container Apps, ephemeral, **re-index on boot** | No Azure PaaS equivalent, but a search index is *derived data* — rebuildable from Postgres, so no durability need and no VM |
-| Email | **Resend** | Only remaining third-party besides Google OAuth |
+| Email | ~~Resend~~ → **JP IT SMTP relay** (D9, 2026-08-17) | Replaced Resend; no third-party account, no per-message ceiling |
 
 **Kubernetes: yes, but Microsoft's.** Container Apps *is* AKS + KEDA + Envoy underneath. Self-run
 AKS would add 24/7 node cost (~$70/mo min, **no scale-to-zero**), upgrades, YAML, and on-call —
@@ -156,7 +160,7 @@ for two services and one maintainer. Revisit at 10+ services or a dedicated plat
 in the portal list. Storage is required both for Blob *and* for the **Terraform state backend**.
 Unregistered providers cost nothing; no need to remove any of the auto-registered ones.
 
-**Vendor count after this: Azure + Resend** (+ Google for OAuth). Down from five.
+**Vendor count after this: Azure** (+ Google for OAuth + Sentry free tier). Down from five. ⚠️ This originally said "Azure + Resend" — Resend was replaced by JP IT's SMTP relay (D9, 2026-08-17).
 
 ---
 
@@ -295,11 +299,11 @@ cleanup, and Resend domain verification.
 
 - [ ] Does JP qualify for the Microsoft nonprofit grant, and **under which entity**?
 - [ ] Is JP already verified on `nonprofit.microsoft.com` (often true if they use M365 nonprofit)?
-- [ ] Who runs DNS for `jnanaprabodhini.org`; will they delegate a subdomain via NS?
-- [ ] What infra do the existing JP sites use — is there an account to join?
-- [ ] Existing mail setup (M365 / Workspace) — will SPF/DKIM for Resend conflict?
-- [ ] Subdomain vs `veervrat.com` as the primary identity
-- [ ] Rotate the GitHub PAT + session secret at cutover
+- [x] ~~Who runs DNS for `jnanaprabodhini.org`~~ → Shantanoo Mahajan, per-record CNAMEs (D14)
+- [x] ~~What infra do the existing JP sites use~~ → answered; grant secured
+- [x] ~~Existing mail setup~~ → JP IT relay (`dhoomketu.in:587`), no SPF/DKIM conflict (D9)
+- [x] ~~Subdomain vs `veervrat.com`~~ → subdomain; `veervrat.jnanaprabodhini.org` live
+- [ ] Rotate the GitHub PAT + session secret at cutover (O12)
 - [ ] Does anyone actually read `veervrat@jnanaprabodhini.org`? Sentry alerts go there, and an alert channel nobody watches is not an alert channel
 - [ ] Sentry free tier is 5,000 events/month and **drops events past it** — a single looping error can exhaust it. Watch the first month's volume before assuming the tier fits
 
@@ -597,7 +601,7 @@ a call is scheduled or the conversation opens up.
 2. Apply for Microsoft nonprofit verification (needs trust cert, PAN, 12A/80G).
 3. Stand up the Render stopgap so beta testers are unblocked meanwhile.
 4. Write the budget proposal once the grant answer lands.
-5. Then: Terraform → CD workflow → data migration → DNS cutover → Resend.
+5. Then: Terraform → CD workflow → DNS cutover. *(All five complete as of 2026-08-17. Resend replaced by JP SMTP relay — D9.)*
 
 ---
 
@@ -665,3 +669,62 @@ If O7 concludes that prod is not needed soon, `terraform destroy` in `envs/prod`
 today — it holds no data. (At the time this was written, `envs/shared` also held a DNS zone,
 called out here as the one genuinely unrecoverable resource. It was never used and was removed
 2026-08-24, #80 — so `envs/shared` now holds nothing irreplaceable either.)
+
+---
+
+## ⚠️ Cost incident — 2026-09-02: Log Analytics ingestion spike (₹19,230)
+
+**The single largest cost event in this project, consuming ~10% of the annual grant in 12
+hours.** Recorded here as a real cost data point for the budget proposal (#84).
+
+### What happened
+
+BullMQ (the email queue, adopted 2026-08-31, #141) uses Lua scripts internally. Azure Managed
+Redis runs in cluster mode even at the `Balanced_B0` tier. Without a hash tag prefix, BullMQ's
+keys landed in different hash slots, and every queue operation failed with `CROSSSLOT Keys in
+request don't hash to the same slot`. The errors were **logged, not thrown** — the queue
+silently did nothing while generating 3.3 million log lines per hour.
+
+### What it cost and why
+
+| | |
+|---|---|
+| Log volume | ~53 GB/day ingested |
+| Unit cost | ~₹363/GB (Azure Log Analytics, Central India) |
+| Duration | ~12 hours (from deployment of #141's email queue to cost guard firing) |
+| Total | **₹19,230** |
+| Billing model | **per GB ingested** — the act of writing data costs money. Stored data does not accrue new charges |
+
+### Why the protections failed
+
+| Protection | Lag | What happened |
+|---|---|---|
+| Budget alert (50%/75%/100%) | 12–24 hours | fired **after** the money was spent |
+| Cost guard webhook (#93) | 12–24 hours | fired at 09:51 UTC, ~12 hours after the spike began |
+| `daily_quota_gb` | **zero** | **did not exist yet** — added in the same PR that fixed the root cause |
+
+### What was added
+
+1. **`daily_quota_gb = 2`** on both Log Analytics workspaces. Caps ingestion at 2 GB/day at the
+   Log Analytics level with zero billing lag. Maximum daily cost: ~₹730. This is the structural
+   guard the system was missing.
+2. **BullMQ hash tag prefix** (`prefix: '{email}'`) — fixes the root cause.
+3. **Worker error rate limiting** (1 line/min) — caps the blast radius of any future error loop.
+
+### Budget impact
+
+| | Before | After |
+|---|---|---|
+| Grant used | ~₹1,500 (normal running) | **~₹20,700** (~10.8% of ₹1,91,300) |
+| Monthly runway | ~₹15,900/mo (₹1,91,300 ÷ 12) | ~₹14,900/mo (₹1,70,600 remaining ÷ ~11.5 months) |
+| Normal monthly spend | ~₹5,600/mo | unchanged |
+| Risk to runway | none | **none** — the incident is one-off, not recurring. Normal spend is still <40% of monthly runway |
+
+### Lesson for the budget proposal
+
+The ~$28/mo estimate is the **normal** cost. What this incident proves is that Log Analytics
+ingestion can consume the entire monthly budget in hours if a logging loop occurs. The
+`daily_quota_gb` guard means this specific failure mode is now capped at ~₹730/day, but any new
+log-heavy failure (a new queue, a chatty dependency, a misconfigured diagnostic setting) could
+produce a similar spike before the budget-level protections notice. The proposal should name
+`daily_quota_gb` as a cost control, not just a monitoring setting.

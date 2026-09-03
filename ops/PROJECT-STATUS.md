@@ -63,11 +63,43 @@ a design the app now implements.
 
 ---
 
-## Current state (2026-09-01)
+## Current state (2026-09-02)
 
-**Both environments are live, correctly wired, signed into, and — as of today — actually
-usable.** Prod was none of those last things until 2026-08-21, while appearing to be all of
-them.
+**Both environments are live, correctly wired, signed into, and usable.** Prod was none of
+those last things until 2026-08-21, while appearing to be all of them.
+
+### ⚠️ Cost incident — 2026-09-01/02
+
+**₹19,230 consumed in ~12 hours** from Log Analytics ingestion, caused by a BullMQ CROSSSLOT
+error loop on clustered Azure Managed Redis. The email queue library's Lua scripts touched keys
+in different hash slots, failing on every operation and logging 3.3M error lines/hour (~53 GB/day
+ingested at ~₹363/GB). All three budget-level protections (₹13,000 budget alert, 100% threshold,
+cost guard webhook) run on a 12–24 hour billing pipeline and **fired only after the money was
+spent**. The cost guard stopped both environments at 09:51 UTC on 2026-09-02.
+
+**Three-part fix** (PR #293, merged and deployed 2026-09-02):
+1. `prefix: '{email}'` hash tag on BullMQ — forces all keys for the email queue into the same
+   Redis hash slot, preventing CROSSSLOT errors on clustered Redis
+2. Worker error rate limiting — caps error logging to 1 line/min instead of flooding
+3. `daily_quota_gb = 2` on both Log Analytics workspaces — the structural guard that would have
+   limited damage to ~₹730 instead of ₹19,230. Operates at the Log Analytics level with zero
+   billing lag
+
+**Recovery:** CD could not deploy because the daily quota blocked migration verification (CD
+reads Prisma output from Log Analytics). After verifying no new migrations existed in #293,
+both environments were manually deployed via `terraform apply -var="image_tag=3037e87"
+-var="deploy_apps=true"`. Both are healthy: `/ready` 200 (database up, Redis up), zero
+CROSSSLOT errors, zero email worker errors, 0 GB billable ingestion post-fix.
+
+**Lessons:**
+- Azure Managed Redis is **clustered even at the smallest tier** (`Balanced_B0`). Any library
+  using Lua scripts across multiple keys needs hash tags.
+- Budget alerts **cannot** catch a spike faster than their 12–24 hour billing pipeline.
+  `daily_quota_gb` is the real-time guard.
+- Log Analytics bills per GB **ingested**, not stored. Deleting old data does not reclaim cost.
+- A 79.68 GB purge of the old log data was submitted asynchronously.
+
+See `azure-account-facts.md` §4 (payment) and §5 (traps table) for the full details.
 
 - **UAT** — deployed by CD on every merge. Signup → verification email → verify → login proven
   end to end, plus Google sign-in.
@@ -160,7 +192,7 @@ dump — **migration cancelled, see D19**; it is an archive, not a source.
 |---|---|
 | Cloud | **Azure**, Central India (Pune) — grant **US$2,000 / ₹1,91,300**, expires **2027-08-14** |
 | Subscription | `veervrat` · `3ffcc513-dca6-453c-b9ff-83b096ea1381` |
-| Spend | UAT ~$28/mo + prod stateful core ~similar → **~$55-60/mo for both**, once prod runs apps |
+| Spend | UAT ~$28/mo + prod ~similar → **~$55-60/mo normal**. ⚠️ ₹19,230 spike on 2026-09-02 from a Log Analytics ingestion incident (see above). `daily_quota_gb = 2` now guards against repeats |
 | Domain | `veervrat.jnanaprabodhini.org` — **finalised** (O2 closed 2026-08-16) + `veervrat.com` to buy defensively |
 | UAT web | `https://uat.veervrat.jnanaprabodhini.org` |
 | UAT api | `https://api.uat.veervrat.jnanaprabodhini.org` |
@@ -168,7 +200,7 @@ dump — **migration cancelled, see D19**; it is an archive, not a source.
 | Prod api | `https://api.veervrat.jnanaprabodhini.org` |
 | Terraform | `veervrat-app/infra/terraform/` — `envs/shared`, `envs/uat`, `envs/prod` all applied, plans clean |
 | CD | `.github/workflows/cd.yml` — merge to `main` auto-deploys UAT; `prod-*` tag deploys prod. Both paths proven; doc-only merges skip the build |
-| Images | `veervratacr` — `veervrat-api`, `veervrat-api-migrate`, `veervrat-web`, built + cached in CI (GitHub Actions cache, not the registry) |
+| Images | `veervratacr` — `veervrat-api`, `veervrat-api-migrate`, `veervrat-web` (current tag: `3037e87`), built + cached in CI (GitHub Actions cache, not the registry) |
 | DNS | ✅ **live 2026-08-17** — 4 hostnames (web + api, UAT + prod) on `*.veervrat.jnanaprabodhini.org`, per-record via Shantanoo, managed TLS bound (O1/D14) |
 
 `main` is the trunk; `dev` is retired. See `veervrat-app/AGENTS.md` → Git conventions.
@@ -427,6 +459,15 @@ History of already-triaged items: `triage-archive.md`.
     and Spokesperson that `breach-and-lawful-request.md` needs. On the code side the largest
     coherent piece is `my-vratmitras-chat` (13 open), which O8 defers until >1 replica and which
     has never run in production.
+
+23. **2026-09-02 — Log Analytics cost incident and recovery.** BullMQ's CROSSSLOT error loop
+    on clustered Redis consumed ₹19,230 in ~12 hours of Log Analytics ingestion. The cost guard
+    stopped both environments. PR #293 fixed the root cause (`prefix: '{email}'` hash tag),
+    added error rate limiting, and set `daily_quota_gb = 2` on both workspaces. Both environments
+    restored via manual terraform deployment (CD was blocked by the daily quota). Image `3037e87`
+    running in both. **Grant consumption is now ~₹20,700 (~10.8%)** — significant but not
+    threatening to the runway. See the cost incident section at the top of this file and
+    `azure-account-facts.md` §4–5.
 
 Rationale for 5-before-6: CD automates a deploy you understand. Written first, every
 first-time deployment surprise surfaces as a red CI log instead of in front of you.
