@@ -94,9 +94,47 @@ describe('ChatsService', () => {
       );
     });
 
+    // The vratmitra half of the matrix. Every test above this one uses the VA as the actor and
+    // the VM only to derive the room id, so a regression that admitted one side and refused the
+    // other would have passed. Chat is symmetric by design — both participants send.
+    it('AUTH MATRIX POSITIVE: the vratmitra sends in the same room', async () => {
+      const content = makeDoc('From the vratmitra');
+      mockRepository.createMessage.mockResolvedValue({
+        id: 'msg-2',
+        roomId: mockRoom,
+        senderId: mockVmUser.id,
+        body: content,
+        seqNo: 2,
+        createdAt: new Date(),
+      });
+
+      const result = await service.sendMessage(mockRoom, mockVmUser, content);
+
+      expect(result.senderId).toBe(mockVmUser.id);
+      // Same pair, whichever way round — the relationship check is not direction-sensitive.
+      expect(mockVmRepository.hasActiveRelationshipBetween).toHaveBeenCalledWith(
+        mockVmUser.id,
+        mockVaUser.id,
+      );
+    });
+
     it('AUTH MATRIX NEGATIVE: rejects a participant with NO verified relationship (forged room)', async () => {
       mockVmRepository.hasActiveRelationshipBetween.mockResolvedValue(false);
       await expect(service.sendMessage(mockRoom, mockVaUser, makeDoc('hi'))).rejects.toThrow(
+        ForbiddenException,
+      );
+      expect(mockRepository.createMessage).not.toHaveBeenCalled();
+    });
+
+    // The attack the room-id format invites: a client can name any room it likes, so the
+    // relationship must be checked against the OTHER id in the string, not merely that the
+    // caller appears in it. Here the outsider forges a room containing themselves and a victim.
+    it('AUTH MATRIX NEGATIVE: a forged room naming the caller and a stranger is refused', async () => {
+      const attacker: SessionUser = { ...mockVaUser, id: 'attacker-1' };
+      const forged = `chat:${['attacker-1', 'victim-1'].sort().join(':')}`;
+      mockVmRepository.hasActiveRelationshipBetween.mockResolvedValue(false);
+
+      await expect(service.sendMessage(forged, attacker, makeDoc('hi'))).rejects.toThrow(
         ForbiddenException,
       );
       expect(mockRepository.createMessage).not.toHaveBeenCalled();
@@ -149,11 +187,32 @@ describe('ChatsService', () => {
       expect(mockRepository.getMessagesByRoomAfterSeqNo).toHaveBeenCalledWith(mockRoom, 0, 50);
     });
 
+    it('AUTH MATRIX POSITIVE: the vratmitra reads the same room', async () => {
+      const messages = [
+        { id: 'msg-1', roomId: mockRoom, body: {}, seqNo: 1, createdAt: new Date() },
+      ];
+      mockRepository.getMessagesByRoomAfterSeqNo.mockResolvedValue(messages);
+
+      const result = await service.getMessages(mockRoom, mockVmUser, 0, 50);
+
+      expect(result).toEqual(messages);
+    });
+
     it('AUTH MATRIX NEGATIVE: rejects participant with no verified relationship', async () => {
       mockVmRepository.hasActiveRelationshipBetween.mockResolvedValue(false);
       await expect(service.getMessages(mockRoom, mockVaUser, 0, 50)).rejects.toThrow(
         ForbiddenException,
       );
+    });
+
+    // Reading someone else's conversation is the worse half of the failure: a refusal to send
+    // is visible, a leaked read is not.
+    it('AUTH MATRIX NEGATIVE: a stranger cannot read a room they are absent from', async () => {
+      const stranger: SessionUser = { ...mockVmUser, id: 'stranger-7' };
+      await expect(service.getMessages(mockRoom, stranger, 0, 50)).rejects.toThrow(
+        ForbiddenException,
+      );
+      expect(mockRepository.getMessagesByRoomAfterSeqNo).not.toHaveBeenCalled();
     });
 
     it('rejects a non-participant', async () => {
