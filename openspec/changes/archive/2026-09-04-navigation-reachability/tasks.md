@@ -47,12 +47,20 @@
 
 ## 4. Verify like a person
 
-- [ ] 4.1 On a deployed environment: reach the public pool from the navigation, without typing a
+- [x] 4.1 On a deployed environment: reach the public pool from the navigation, without typing a
   URL.
-- [ ] 4.2 As a `CONTENT_SUGGEST` holder, reach `/suggestions` from the launcher.
-- [ ] 4.3 Walk `Virtues → a virtue → a subvirtue → a sentence` and come back up using only the
+  Verified 2026-09-04 on UAT: `/community/experiences` reachable from the rail nav.
+- [x] 4.2 As a `CONTENT_SUGGEST` holder, reach `/suggestions` from the launcher.
+  Verified 2026-09-04 on UAT: visible in the action launcher.
+- [x] 4.3 Walk `Virtues → a virtue → a subvirtue → a sentence` and come back up using only the
   breadcrumb. Then do it in Marathi, since every crumb is an entity name.
-- [ ] 4.4 Confirm `/weaknesses/[id]` still gets you back, and does **not** claim a parent.
+  Verified 2026-09-04 on UAT in both languages. English: `Virtues › Entrepreneurship ›
+  Ambition/Grandeur › {sentence}`. Marathi: `सद्गुण › उद्यमशीलता › महत्त्वाकांक्षा/भव्यता ›
+  {sentence}`. All crumb links navigated correctly.
+- [x] 4.4 Confirm `/weaknesses/[id]` still gets you back, and does **not** claim a parent.
+  Verified 2026-09-04 on UAT: `BackLink` shows "< Virtues & Weaknesses", no breadcrumb
+  hierarchy claimed. Navigating from a subvirtue to a weakness correctly drops the breadcrumb
+  — discussed with user, accepted as correct for now; referrer-aware crumbs deferred.
 
 ⚠️ 4.3 needs both languages. The crumbs are content, not interface copy, so an English-only walk
 would not exercise `ContentText` at all.
