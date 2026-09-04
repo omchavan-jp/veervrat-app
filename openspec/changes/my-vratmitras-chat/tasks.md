@@ -71,15 +71,37 @@
 - [x] 7.4 Implement message list view: iterate messages by seqNo, render text + images, timestamps, sender avatar — Full message list with Avatar, timestamps, sender info, sorted by seqNo
 - [x] 7.5 Implement image preview: inline images from Tiptap content, lazy load from MinIO URL — Image button ready (file picker integration deferred)
 - [x] 7.6 Implement chat input: Tiptap editor instance for rich text (bold, italic, link), send button, image upload button — Plain text input implemented (Tiptap rich editor deferred)
-- [ ] 7.7 Implement image upload flow: click image button → file picker → POST `/api/v1/uploads/chat` → embed URL in Tiptap → include in next message send — UI button ready, file picker integration deferred
-- [ ] 7.8 Implement entity reference trigger: `@` username search, `#` weakness search, insert reference chips — Deferred (requires mention plugin)
+- [x] 7.7 Implement image upload flow: click image button → file picker → POST `/api/v1/uploads/chat` → embed URL in Tiptap → include in next message send — UI button ready, file picker integration deferred
+  **The "deferred" note was stale.** Found implemented and wired 2026-09-05, by reading the code
+  rather than the record. `chat-composer.tsx`: a hidden `<input type="file">` (accepting jpeg,
+  png, gif, webp and heic/heif) → `handleImagePick` → `uploadsApi.uploadChatImage(file, roomId)`
+  → `editor.chain().focus().setImage({ src: url }).run()`, with an `uploading` state driving a
+  spinner, a destructive toast on failure, and the input value reset in `finally` so the same
+  file can be picked twice. `uploads.ts` base64-encodes and posts to `/uploads/chat`.
+  `message-content.tsx` renders the resulting image nodes.
+  ⚠️ This records that the code EXISTS and is wired — `chat-thread-client.tsx:327` mounts the
+  composer. Whether it works against real storage is task 10.4, and is NOT claimed here.
+- [x] 7.8 Implement entity reference trigger: `@` username search, `#` weakness search, insert reference chips — Deferred (requires mention plugin)
+  **Also stale** — `@tiptap/extension-mention` and `@tiptap/suggestion` are both installed.
+  Found implemented 2026-09-05: `entityMention('@')` and `entityMention('#')` are registered as
+  editor extensions; `entity-mention.ts` calls `entitySearchApi.search(query, scope)` behind a
+  two-character floor; `mention-list.tsx` renders the popup; `handleKeyDown` yields Enter to the
+  suggestion popup when one is open rather than sending. `message-content.tsx` renders the chips
+  and routes them via `entityHref()` — `/journeys/[id]` and `/study/[id]`, with concept entities
+  deliberately rendered as non-navigating chips because they have no standalone page.
+  ⚠️ Existence and wiring only. Rendering and navigation in a browser is task 10.5.
 - [x] 7.9 Implement optimistic UI: on send, show message with tempId, replace with server id + seqNo on ack — Optimistic update with temp message, ACK handler replaces with server data
 - [x] 7.10 Implement error state: if message send fails, show error notification, keep message in draft — Error handler with toast notification, error event socket listener
 - [ ] 7.11 Write frontend tests: connect established (mock Socket.IO), message sends with tempId (positive), reconnect fetches catch-up (positive), image upload to MinIO (mock), entity reference chips render — Deferred (requires test setup)
 
 ## 8. Database & Audit
 
-- [ ] 8.1 Add chat message creation to audit event triggers (future: moderation log reference) — Deferred to v1.1
+- [x] 8.1 Add chat message creation to audit event triggers (future: moderation log reference) — Deferred to v1.1
+  **Moved out of this change, 2026-09-05 → issue #296.** It was marked "deferred to v1.1" from the
+  day it was written, so it was never in this change's scope; leaving it open meant the change
+  could never be completed or archived. The reasoning for deferring still holds: audit rows for
+  chat answer a moderation question, and no chat moderation surface exists yet — so it would
+  create a table nobody reads, one row per message. Ticked here as *dispatched*, not as done.
 - [x] 8.2 Plan for soft-delete anonymisation (deferred to Item 31, but ensure schema supports) — Schema supports soft-delete via content anonymisation
 
 ## 9. Testing — Auth Matrix
@@ -88,7 +110,17 @@
 - [x] 9.2 Test matrix: chat.send — Room-based permission validation in ChatsService.spec.ts (participant send, non-participant 403)
 - [x] 9.3 Test VM list endpoint: VmRelationshipsService.spec.ts (VA gets list, non-VA 403, scope filtering)
 - [x] 9.4 Test image upload: UploadsService.spec.ts (auth implicit via SessionUser, image type validation, size limit 10MB, URL returned)
-- [ ] 9.5 Run `pnpm test` — existing build error in study-detail.tsx blocks full test suite execution
+- [x] 9.5 Run `pnpm test` — existing build error in study-detail.tsx blocks full test suite execution
+  **The blocker no longer exists, and may never have applied to this path.** No `study-detail.tsx`
+  is present anywhere under `apps/web`, and `git log` for that path returns nothing.
+  Run 2026-09-05 with `turbo run test --force` (uncached — a cached pass is a pass from a previous
+  run, not this one), plus `pnpm --filter web test` directly to confirm the web project actually
+  executed rather than reporting success having run nothing:
+      api  108 test files  1122 tests  passed
+      web   54 test files   326 tests  passed
+      tsc --noEmit  exit 0
+  This records that the suite runs green on this branch. It says nothing about the chat feature
+  being correct — the chat frontend tests are 7.11, still open.
 
 ## 10. Integration & Manual Verification
 
