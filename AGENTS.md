@@ -22,7 +22,7 @@ When unsure about a product decision, read `spec/decisions/` before guessing. If
 - **Frontend**: Next.js (App Router) + TypeScript + Tailwind CSS + shadcn/ui
 - **Backend**: NestJS + TypeScript
 - **Database**: PostgreSQL + Prisma ORM
-- **Cache**: Redis
+- **Cache / queues**: Redis (⚠️ Azure Managed Redis is **clustered** — see below)
 - **Search**: Meilisearch
 - **Storage**: MinIO (S3-compatible)
 - **WebSocket**: NestJS Gateway + Socket.IO
@@ -90,7 +90,7 @@ veervrat-app/
 - `documentation/15_Design-System.md` — color tokens, typography, spacing, dark mode, component states
 - `documentation/17_Audit-Schema.md` — audit event contract, mandatory events, `@Audited` decorator pattern
 - `documentation/16_Testing-Strategy.md` — what to test, auth matrix tests, E2E flows
-- `documentation/18_Observability-Standard.md` — structured logging schema, GlitchTip setup, alert thresholds
+- `documentation/18_Observability-Standard.md` — structured logging schema, Sentry + App Insights, alert thresholds
 - `documentation/19_Email-Strategy.md` — SMTP (JP IT relay) + React Email, transactional vs notification emails, template structure, bilingual strategy
 - `documentation/21_Infrastructure-Conventions.md` — **read before touching `infra/terraform/`.** Naming rules, the DNS-zone rule, plan-before-apply discipline, import procedure, secrets/access model
 - `documentation/22_Platform-Requirements.md` — what the app needs, provider-agnostic. **Read before any sizing, costing or migration question.** Sizing there is estimated, not measured — say so when quoting it
@@ -132,6 +132,14 @@ veervrat-app/
 - PATCH for updates, never PUT
 - cursor-based pagination by default
 - camelCase in JSON, snake_case in database
+
+### Redis — clustered, even at the smallest tier
+- Azure Managed Redis runs in **cluster mode** regardless of SKU. Any library that uses Lua
+  scripts across multiple keys (BullMQ, rate limiters, any multi-key atomic operation) **must**
+  use `{braces}` hash tags in its key prefix so all keys land in the same hash slot.
+  Example: `prefix: '{email}'` — the braces are literal. Without them, every operation fails
+  with `CROSSSLOT` and logs silently, which cost ₹19,230 in 12 hours before being caught.
+  See `documentation/21_Infrastructure-Conventions.md` §26.
 
 ### Database
 - UUIDs for all primary keys

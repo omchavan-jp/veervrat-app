@@ -229,6 +229,9 @@ swept" — points the follow-up at the wrong problem.
 - **Anything build-time cannot vary per environment** — one image is promoted from UAT to prod
   unchanged. Ask: does this value describe the *image*, or *where it runs*? Only the former may
   be baked. (`documentation/21_Infrastructure-Conventions.md` §17.)
+- **Redis is clustered** — any multi-key operation (BullMQ queues, rate limiters) must use
+  `{braces}` hash tags in key prefixes. Without them, `CROSSSLOT` errors fail silently and
+  flood logs. (`documentation/21_Infrastructure-Conventions.md` §26.)
 
 ## Domain language
 

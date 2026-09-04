@@ -1393,3 +1393,105 @@ Documented in `DEPLOYMENT.md`. In short: `migrate resolve --rolled-back <name>` 
 whether a partially applied migration rolled back is a judgement, not something to retry
 automatically, which is also why `replica_retry_limit = 0`.
 
+---
+
+## 26. Azure Managed Redis is clustered — even at the smallest tier (2026-09-02)
+
+**The most expensive lesson in this project's history: ₹19,230 in 12 hours.**
+
+Azure Managed Redis (`Balanced_B0`) runs in **cluster mode** regardless of tier. This is not
+documented prominently and cannot be changed. Redis cluster partitions keys across hash slots;
+Lua scripts that touch keys in different slots fail with:
+
+```
+CROSSSLOT Keys in request don't hash to the same slot
+```
+
+**BullMQ** uses Lua scripts internally to atomically move jobs between states. Its default key
+prefix (`bull`) produces keys like `bull:email:wait`, `bull:email:active`, etc. — each hashing
+to a **different** slot. Every queue operation fails, silently (BullMQ catches the error
+internally and logs it rather than throwing), and the queue does nothing.
+
+### What it cost
+
+The CROSSSLOT errors were **logged**, not thrown. Each failed operation produced a log line.
+At the email worker's retry rate, this generated **3.3 million log lines per hour** — roughly
+**53 GB per day** of Log Analytics ingestion. At ~₹363/GB (Azure's Log Analytics pricing in
+Central India), the 12-hour window before the cost guard fired consumed **₹19,230** — more
+than the project's entire monthly budget.
+
+### Why the budget protections failed
+
+All three protections — the ₹13,000 budget alert, the 100% budget threshold, and the cost
+guard webhook — run on Azure's **billing pipeline**, which has a **12–24 hour lag**. The spike
+went from ₹0 to ₹19,230 faster than the pipeline could report it.
+
+### The fix (PR #293)
+
+Three parts, each addressing a different layer:
+
+1. **Hash tag prefix**: `prefix: '{email}'` on the BullMQ `Queue` and `Worker`. The `{braces}`
+   tell Redis to hash only the content between them, so all keys for the queue land in the same
+   slot. This is BullMQ's documented solution for clustered Redis.
+   ```typescript
+   new Queue('email', { connection, prefix: '{email}' });
+   new Worker('email', processor, { connection, prefix: '{email}' });
+   ```
+
+2. **Error rate limiting**: The worker's error handler now limits logging to 1 line per minute
+   instead of logging every failure. This caps the blast radius of any future error loop.
+
+3. **`daily_quota_gb = 2`** on both Log Analytics workspaces. This operates at the Log
+   Analytics level, not the billing pipeline, with **zero lag**. At 2 GB/day × ₹363/GB, the
+   maximum daily cost from logging is ~₹730.
+
+### Rules going forward
+
+- **Every Redis key prefix that will be used with Lua scripts (BullMQ, rate limiters, any
+  multi-key atomic operation) must use `{braces}` hash tags.** Without them, the operation
+  fails on clustered Redis.
+- **`daily_quota_gb` must not be removed or raised significantly** without a separate
+  real-time guard in place. The budget alerts are a 12–24 hour lagging indicator, not a
+  real-time control.
+- **Log Analytics bills per GB ingested, not stored.** Deleting old data does not reclaim the
+  ingestion cost. The act of writing data is what costs money.
+
+### Testing for CROSSSLOT
+
+After adding a new Redis-backed library or queue, check for CROSSSLOT errors:
+
+```bash
+WS=$(az monitor log-analytics workspace show -g veervrat-$ENV -n veervrat-$ENV-logs --query customerId -o tsv)
+az monitor log-analytics query -w "$WS" --analytics-query \
+  "ContainerAppConsoleLogs_CL | where TimeGenerated > ago(30m) | where Log_s contains 'CROSSSLOT' | count" -o table
+```
+
+A non-zero count means keys are landing in different hash slots. Fix the prefix before
+deploying.
+
+---
+
+## 27. Log Analytics daily quota and its interaction with CD (2026-09-02)
+
+`daily_quota_gb = 2` on both workspaces. When the quota is hit, Log Analytics **stops
+accepting new data** until midnight UTC (05:30 IST). Queries against existing data still work.
+
+This has one known interaction with CD: the migration verification step in
+`.github/actions/deploy-environment` reads Prisma output from Log Analytics. When the quota is
+hit, migration output cannot be ingested, and CD reports "job reported Succeeded but produced
+no prisma output" — **correctly refusing to proceed**, since it cannot verify the migration
+actually ran.
+
+**When this happens and no new migrations exist in the PR:**
+
+```bash
+# Verify no migrations changed:
+git diff HEAD~1..HEAD -- apps/api/prisma/migrations
+# If empty, deploy manually:
+terraform apply -var="image_tag=$SHA" -var="deploy_apps=true"
+```
+
+**When new migrations DO exist:** wait for midnight UTC when the quota resets, then let CD
+handle the deploy normally. Do not skip migration verification for a PR that contains schema
+changes.
+

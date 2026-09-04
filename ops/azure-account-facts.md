@@ -4,7 +4,7 @@ Operational reference for Jnana Prabodhini's Microsoft tenant and the Veervrat A
 **This is the base truth.** If something here disagrees with memory, this file wins — and if
 reality diverges from this file, update the file in the same session.
 
-Last verified: **2026-08-27**
+Last verified: **2026-09-02**
 
 > Sensitive-ish but not secret: tenant/subscription IDs are identifiers, not credentials. No
 > passwords, keys, or card numbers belong in this file — ever.
@@ -61,7 +61,7 @@ of eligibility** (see guardrails).
 | Amount | **US$2,000.00 = ₹1,91,300.00** |
 | Effective | **14/08/2026** |
 | **Expires** | **14/08/2027** — ⚠️ does **not** roll over |
-| Used | ₹0.00 (0%) |
+| Used | **~₹20,700** (~10.8%) — ₹19,230 from the Log Analytics ingestion spike of 2026-09-01/02 (see §5 traps table), plus ~₹1,500 normal running costs |
 | Status | Active |
 | Activated by | Devavrat, 2026-08-14 — created the subscription below |
 
@@ -85,7 +85,7 @@ balance stays US$2,000.00 — a display artefact, not a double grant.*
 | Type | Usage based · **Microsoft Azure Plan (MCA)** — *not* legacy Sponsorship |
 | Purchased | 2026-08-14 · Billing frequency **Monthly** · Next invoice 2026-09-09 |
 | Currency | **INR** (~₹95.65/USD per the credit conversion) |
-| Status | Active · **UAT and prod both running** — UAT live 2026-08-16, prod live 2026-08-16 and correctly wired since `prod-2026-08-17` |
+| Status | Active · **UAT and prod both running** — UAT live 2026-08-16, prod live 2026-08-16 and correctly wired since `prod-2026-08-17`. ⚠️ Both environments were **stopped by the cost guard** on 2026-09-02 (09:51 UTC) and restored the same day via manual terraform deployment of image `3037e87` |
 | Parent management group | Tenant Root Group |
 | Target region | **Central India (Pune)** |
 
@@ -121,9 +121,18 @@ Mitigations, in order of preference:
 3. Removing the payment method is *not* advised — MCA generally requires one, and its absence can
    suspend the account for non-payment.
 
-Current control: budget ₹13,000/mo with alerts at 50/75/100% to five recipients. Proportionate
-while forecast (~₹5,600/mo) sits far below runway (~₹15,900/mo); the real risk it guards against
-is a misconfiguration spike, not gradual drift.
+Current controls:
+1. **Budget alerts** — ₹13,000/mo with alerts at 50/75/100% to five recipients.
+2. **Cost guard** — budget → action group → webhook → `stop-veervrat` runbook (#93), proven 2026-08-26. Fires at 100% of ₹13,000.
+3. **`daily_quota_gb = 2`** on both Log Analytics workspaces — added 2026-09-02 (PR #293). Caps log *ingestion* at 2 GB/day; past it, ingestion stops until midnight UTC while queries still work. **This is the structural guard** — it operates at the Log Analytics level with zero billing lag.
+
+⚠️ **2026-09-02: all three budget-level protections failed.** A BullMQ CROSSSLOT error loop
+generated 3.3M log lines/hour (~53 GB/day ingested at ~₹363/GB), consuming ₹19,230 in ~12
+hours. The budget alert, the 100% threshold, and the cost guard webhook all fire from Azure's
+billing pipeline, which has a **12–24 hour lag** — the spike went from ₹0 to ₹19,230 faster
+than the pipeline could report it. The cost guard eventually fired at 09:51 UTC on 2026-09-02,
+stopping both environments. `daily_quota_gb` would have capped the damage to ~₹730 (2 GB ×
+₹363). It was added in the same PR that fixed the root cause. See the traps table in §5.
 
 ---
 
@@ -185,9 +194,9 @@ First successful Azure deploy 2026-08-16. `/ready` returns `database: up, redis:
 |---|---|---|
 | Postgres | `veervrat-uat-psql` | Flexible Server, Burstable `Standard_B1ms`, **v18** (matches the Neon source data — no version conversion at migration), 32GB, **auto-grow ON**, 7-day backups, zone 2 pinned, `lifecycle.prevent_destroy` |
 | ⤷ extensions | `azure.extensions = PG_TRGM` | ⚠️ Azure gates `CREATE EXTENSION` behind a **server-level allow-list** — being DB admin is not enough. Keep in sync with `grep -rhoiE "CREATE EXTENSION[^;]*" apps/api/prisma/migrations/` |
-| Redis | `veervrat-uat-redis` | **Azure Managed Redis** `Balanced_B0`, TLS-only, eviction `AllKeysLRU`, no HA (beta tradeoff) |
+| Redis | `veervrat-uat-redis` | **Azure Managed Redis** `Balanced_B0`, TLS-only, eviction `AllKeysLRU`, no HA (beta tradeoff). ⚠️ **CLUSTERED** — even at the smallest tier, Azure Managed Redis runs in cluster mode. Any library using Lua scripts across multiple keys (e.g. BullMQ) must use hash tags (`{braces}` in key prefixes) to ensure all keys land in the same slot. See the CROSSSLOT trap below |
 | Key Vault | `veervrat-uat-kv` | RBAC auth, 90-day soft-delete. Secrets, as listed by `az keyvault secret list` on 2026-08-30: `database-url`, `redis-url`, `postgres-admin-password`, `session-secret`, `backup-encryption-key`, `google-client-secret`, `sentry-dsn`, `smtp-password`. The first five are Terraform-generated and never typed by a human; the last three are third-party credentials placed there. This doc listed only four until 2026-08-30. ⚠️ `backup-encryption-key` **must also exist outside Azure** (Bitwarden, shared with a second maintainer): if the subscription is what was lost, a key held only here makes every surviving dump unopenable |
-| Container Apps env | `veervrat-uat-cae` | + Log Analytics `veervrat-uat-logs` (30-day retention) |
+| Container Apps env | `veervrat-uat-cae` | + Log Analytics `veervrat-uat-logs` (30-day retention, **`daily_quota_gb = 2`** — added 2026-09-02 after the ingestion spike) |
 | api | `veervrat-uat-api` | scale-to-zero → 2 replicas, `DATABASE_POOL_MAX=5`, liveness `/health`, readiness `/ready` |
 | web | `veervrat-uat-web` | scale-to-zero → 2 replicas |
 | Migration job | `veervrat-uat-migrate` | manual trigger only, `replica_retry_limit=0`, runs the **build**-stage image |
@@ -214,9 +223,9 @@ ones that matter under pressure.
 | Resource | Name | Notes |
 |---|---|---|
 | Postgres | `veervrat-prod-psql` | same SKU as UAT, **35-day backups** (the Flexible Server maximum; set at creation because it is immutable afterwards — UAT's 7 days is fine for disposable content) |
-| Redis | `veervrat-prod-redis` | Azure Managed Redis `Balanced_B0`, TLS-only |
+| Redis | `veervrat-prod-redis` | Azure Managed Redis `Balanced_B0`, TLS-only. ⚠️ **CLUSTERED** — same as UAT; see the hash tag requirement above |
 | Key Vault | `veervrat-prod-kv` | RBAC auth, 90-day soft-delete. Also holds `smtp-password` and `google-client-secret`, both set **out of band** — Terraform creates them with placeholders |
-| Container Apps env | `veervrat-prod-cae` | + Log Analytics `veervrat-prod-logs` |
+| Container Apps env | `veervrat-prod-cae` | + Log Analytics `veervrat-prod-logs` (**`daily_quota_gb = 2`** — added 2026-09-02) |
 | api | `veervrat-prod-api` | **scale-to-zero** → 2 replicas, `DATABASE_POOL_MAX=5`. ⚠️ Deliberate: costs nothing idle, but the first request after idle is a **5–20s cold start** (#92). Revisit `min_replicas = 1` (~$14/mo) before beta testers arrive |
 | web | `veervrat-prod-web` | scale-to-zero → 2 replicas |
 | Migration job | `veervrat-prod-migrate` | manual trigger, `replica_retry_limit=0`. ⚠️ Reported success without migrating anything until 2026-08-21 — see the traps table and conventions §21 |
@@ -260,7 +269,7 @@ no schema at all, while `/health` and `/ready` both returned 200. See the traps 
 | `veervrat-web` | Next.js standalone server |
 | `veervrat-backup` | database dump job. Built from `postgres:18-bookworm` rather than a stage of the api image, because `pg_dump` refuses to dump a server newer than itself and Debian ships client 15 against a server on 18. Keeping it separate also leaves `veervrat-api-migrate` — which is on the critical deploy path — untouched |
 
-All four tagged with the release git SHA (currently `86c14e2`) plus `latest`.
+All four tagged with the release git SHA (currently `3037e87`) plus `latest`.
 ⚠️ **No purge policy.** Automatic retention is **Premium-tier only**; on Basic the path is a
 scheduled `acr purge` task. Nothing to purge yet, but this is the line item that grows
 unattended once CD pushes an image per merge. Basic includes 10 GB.
@@ -297,6 +306,11 @@ Each of these cost real time and would recur. Full detail in
 | **Job logs are not where app logs are** | `ContainerAppName_s` is **empty** for jobs; filtering as you would for an app returns nothing and reads as "jobs do not log" | filter on `ContainerName_s`; allow ~2 min for ingestion. `az containerapp job logs show` misses finished jobs — the replica is reaped in seconds |
 | **A killed `terraform apply` leaves an orphaned blob lease** | the next run fails with `state blob is already locked` and — confusingly — `blob metadata "terraformlockid" was empty`, so `force-unlock` has no ID to take. The state write itself usually **did** complete | check no apply is really running (`pgrep -fl terraform` — `terraform-ls` is just the editor), confirm the blob's `lastModified`, then `az storage blob lease break --account-name veervrattfstate --container-name tfstate --blob-name <env>.tfstate --auth-mode login`. Verify with a `plan` expecting `No changes` |
 | **Secrets are in Terraform state in plaintext** | anyone who can read state has every secret for that environment | state lives behind Azure AD RBAC on `veervrattfstate`; treat read access as equivalent to Key Vault admin |
+| **Azure Managed Redis is CLUSTERED — even at the smallest tier** | BullMQ (and any library using Lua scripts across multiple keys) fails with `CROSSSLOT Keys in request don't hash to the same slot` on every operation. The errors are logged, not thrown to the caller, so the queue silently does nothing while flooding Log Analytics | use `{braces}` hash tags in all key prefixes so all keys for a queue land in the same slot. BullMQ: set `prefix: '{email}'` (not `email`). ⚠️ The braces are literal in the prefix string — BullMQ passes them through to Redis, which hashes only the content between the first `{…}` pair. Verified fix: PR #293. See `documentation/21_Infrastructure-Conventions.md` §26 |
+| **Log Analytics bills per GB ingested, not stored** | a logging error loop can spend thousands of rupees in hours. 3.3M lines/hour = ~53 GB/day = ~₹19,230/day at ₹363/GB. Writing the data costs money; the 90GB already stored does not accrue new charges | `daily_quota_gb = 2` on both workspaces. This caps ingestion at the Log Analytics level with zero billing lag. Budget alerts cannot catch this — they run on a 12–24 hour billing pipeline |
+| **Budget alerts and cost guard have 12–24 hour lag** | a spike that goes from ₹0 to ₹19,000 in 12 hours outruns all three budget-level protections (alerts at 50/75/100%, plus the cost guard webhook). They fire *after* the money is already spent | `daily_quota_gb` is the structural guard — it operates at the Log Analytics level, not the billing pipeline. The two are complementary: the quota limits damage in real time, the cost guard limits damage from other resources |
+| **`daily_quota_gb` blocks CD's migration verification** | CD reads Prisma output from Log Analytics to verify migrations succeeded. When the daily quota is hit, new logs cannot be ingested, so CD sees "job reported Succeeded but produced no prisma output" and correctly refuses to proceed | if the quota is hit and no new migrations exist in the PR, deploy manually via `terraform apply -var="image_tag=<sha>" -var="deploy_apps=true"` after verifying with `git diff HEAD~1..HEAD -- apps/api/prisma/migrations` |
+| **Cost guard stops both environments at once** | the `stop-veervrat` runbook scales all Container Apps to `maxReplicas: 0` across both UAT and prod. Recovery requires re-deploying via terraform (CD may not work if the daily quota is also hit) | after fixing the root cause, deploy via `terraform apply -var="image_tag=<sha>" -var="deploy_apps=true"` in each environment. Verify `/ready` returns 200 on both |
 
 
 ### CD — GitHub → Azure (2026-08-16)

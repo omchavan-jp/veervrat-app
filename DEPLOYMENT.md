@@ -8,35 +8,22 @@ Rules and conventions live in `AGENTS.md` (branching, tags, migrations) and
 
 ---
 
-## Current state (2026-08-17)
+## Current state (2026-09-02)
 
-**UAT is live** and running the runtime-config fix (`8039e67`). `/ready` green, schema
-migrated and seeded. The `/api/v1` rewrite proxy is **gone** — the browser calls the api
-directly on `api.uat.veervrat.jnanaprabodhini.org`. Verified there: the web tier advertises its
-own api, `og:url` names the UAT domain, the OAuth `redirect_uri` is on the api origin, CORS
-returns the web origin with credentials, cookies are `Secure; SameSite=Lax` host-scoped.
+**Both environments are live** on image `3037e87` (BullMQ hash-tag fix, PR #293).
+`/ready` green on all four tiers. The `/api/v1` rewrite proxy is gone — browsers call the api
+directly on its own hostname. Cookies are `Secure; SameSite=Lax` host-scoped.
 
-⚠️ **Nobody can log in to UAT yet** — no users exist, Google OAuth is a placeholder, and
-credential login needs email that is not wired. So the browser-only checks (session persists,
-CSRF passes across hosts) are still outstanding. See step 8 below and §18.
+✅ **Login works in both environments.** Email delivers via JP IT's SMTP relay, credential
+signup completes verification, and Google OAuth is configured in UAT. Users exist in both
+environments. The browser-verified checks (session persistence, CSRF across hosts) are confirmed.
 
-✅ **Prod is live and correctly wired** as of `prod-2026-08-17`. The defect that had prod's web
-tier reading and writing **UAT's database** is fixed: prod now calls
-`api.veervrat.jnanaprabodhini.org`, the old `/api/v1` proxy path returns 404, and `og:url` names
-the prod domain. `/ready` green on both tiers.
+✅ **Prod is correctly wired** — prod's web calls `api.veervrat.jnanaprabodhini.org`, `og:url`
+names the prod domain, the old proxy path returns 404.
 
-Remaining gaps on prod, none of them blocking:
-
-- **Google OAuth is still `placeholder-not-configured`** (O23). Credential signup works, so
-  there is a login path, but Google sign-in fails.
-- **Email from prod is configured but unproven.** The real SMTP password is in prod's Key Vault
-  and the config matches UAT's working setup, but no message has actually been sent from prod —
-  deliberately, because issue #75 means a test account created there cannot be deleted. Expect the
-  first real signup to be the proof.
-
-Neon migration is **cancelled** (D19) — prod will be created fresh and seeded, exactly as CD
-already does for UAT. The dump at `../backups/veervrat-neon-20260809T184831Z.dump` is retained
-as an archive, not a migration source.
+⚠️ **Both environments were stopped by the cost guard on 2026-09-02** and restored same day
+via manual terraform deploy (see "Recovering from the cost guard" below). Root cause: BullMQ
+CROSSSLOT errors flooded Log Analytics at ₹19,230 in 12 hours. Fixed by PR #293.
 
 | Piece | State |
 |---|---|
@@ -55,12 +42,12 @@ as an archive, not a migration source.
 | prod Redis | `veervrat-prod-redis` (Azure Managed Redis, Balanced_B0) — running |
 | prod secrets | `veervrat-prod-kv` — `database-url`, `redis-url`, `session-secret`, `postgres-admin-password` |
 | prod data | seeded (same content set as UAT) |
-| prod compute | api + web Container Apps **running** in `veervrat-prod-cae` on the **pre-fix image `5576918`**, scale-to-zero (`min_replicas=0` — revisit once real traffic is expected) |
+| prod compute | api + web Container Apps **running** in `veervrat-prod-cae` on image `3037e87`, scale-to-zero (`min_replicas=0` — revisit once real traffic is expected). ⚠️ Both environments stopped by cost guard 2026-09-02 and restored same day |
 | prod web | https://veervrat.jnanaprabodhini.org (custom domain, live 2026-08-17) — internal: https://veervrat-prod-web.graydesert-a1bc836e.centralindia.azurecontainerapps.io |
-| prod api | https://api.veervrat.jnanaprabodhini.org (custom domain, live 2026-08-17) — hostname bound and serving, but **prod's web still proxies to UAT** until a new tag ships the fix (O22). Internal: https://veervrat-prod-api.graydesert-a1bc836e.centralindia.azurecontainerapps.io |
+| prod api | https://api.veervrat.jnanaprabodhini.org (custom domain, live 2026-08-17) — **called directly by the browser**; the rewrite proxy was removed 2026-08-17. Internal: https://veervrat-prod-api.graydesert-a1bc836e.centralindia.azurecontainerapps.io |
 | DNS | **live** — per-record (not delegation, see `ops/PROJECT-STATUS.md` D14/O1); both custom domains bound with managed TLS certs as of 2026-08-17 |
-| Email | ✅ **delivering on UAT** — nodemailer over JP IT's relay (`dhoomketu.in:587`, STARTTLS), verified 2026-08-17 to an external inbox. ⚠️ **prod's Key Vault holds a placeholder password** — set `smtp-password` there before the next prod deploy, or prod silently logs mail to console |
-| Object storage | **not provisioned** — app still uses the S3 API; needs an SDK swap first |
+| Email | ✅ **delivering on both environments** — nodemailer over JP IT's relay (`dhoomketu.in:587`, STARTTLS). SMTP password set in both Key Vaults |
+| Object storage | ✅ **Azure Blob wired for uploads** (#139, 2026-08-24) — `StorageProvider` seam with Azure Blob implementation. ⚠️ `content-overrides` still speaks S3 only (separate path) |
 | Search (Meilisearch) | deferred |
 
 ---
@@ -145,11 +132,10 @@ SHA=$(git rev-parse --short HEAD)      # clean tree — the tag is a label you c
 az acr build --registry veervratacr --image "veervrat-api:$SHA" --file apps/api/Dockerfile .
 az acr build --registry veervratacr --image "veervrat-api-migrate:$SHA" --target build --file apps/api/Dockerfile .
 az acr build --registry veervratacr --image "veervrat-web:$SHA" --file apps/web/Dockerfile \
-  --build-arg NEXT_PUBLIC_API_URL=/api/v1 \
-  --build-arg API_ORIGIN="https://veervrat-<env>-api.<default-domain>" \
-  --build-arg NEXT_PUBLIC_SITE_URL="https://veervrat-<env>-web.<default-domain>" \
-  --build-arg NEXT_PUBLIC_FEEDBACK_MODE=test \
   --build-arg NEXT_PUBLIC_COMMIT_SHA="$SHA"
+# Note: API_BASE_URL, SITE_URL, and FEEDBACK_MODE are RUNTIME env vars on the Container App,
+# not build args. Only NEXT_PUBLIC_COMMIT_SHA is baked (it describes the image, not the
+# environment). See §17 in documentation/21_Infrastructure-Conventions.md.
 ```
 
 The `<default-domain>` is knowable **before the apps exist**:
@@ -249,9 +235,9 @@ one of these must be true before the environment counts as done:
 - Real Google OAuth credentials are in place — the Terraform default is
   `placeholder-not-configured`, which fails before reaching Google.
 
-Neither was true for UAT or prod as of 2026-08-17, which is also why any change
-to cookies, CORS, CSRF or sessions cannot be verified yet: those need a real browser session.
-See `documentation/21_Infrastructure-Conventions.md` §18.
+Both are now true for UAT (email wired 2026-08-17, Google OAuth configured). Prod has
+email delivery; Google OAuth credentials are configured. See
+`documentation/21_Infrastructure-Conventions.md` §18 for the original sequencing concern.
 
 ### 9. Record it
 
@@ -381,7 +367,7 @@ az monitor log-analytics query -w "$WS" --analytics-query \
 ```
 
 Per **O11**, UAT holds seeded reference data and **never real users**. Prod gets the same
-reference seed plus the migrated beta data from the Neon dump.
+reference seed (Neon migration was cancelled — D19; prod was created fresh and seeded).
 
 ---
 
@@ -419,14 +405,14 @@ Runtime — set on the Container App, changed with a restart, no rebuild:
 |---|---|
 | `API_BASE_URL` | absolute api URL incl. `/api/v1`. The browser calls the api directly — there is no proxy |
 | `SITE_URL` | og:image / canonical URL base |
-| `FEEDBACK_MODE` | `test` = list + form, `public` = form only, `off`/unset = hidden. Environment-level only; per-user is issue #40 |
+| `FEEDBACK_MODE` | `off` (nobody) or `granted` (holders of the `FEEDBACK_WIDGET` capability). Unrecognised values fail closed. Per-user grants via admin dashboard |
 
 Build-time, and only these:
 
 | Var | Notes |
 |---|---|
 | `NEXT_PUBLIC_COMMIT_SHA` | build id attached to feedback reports — describes the *image*, so baking is correct |
-| `NEXT_PUBLIC_CONTENT_EDIT` | deliberately build-time: being inlined lets the bundler drop the editor's code so dev tooling never ships to users. Never passed by CD |
+| `CONTENT_EDIT_ENABLED` | runtime gate on api — routes 404 when false. The web side uses `dynamic()` to keep editor code in a chunk nobody on prod fetches. See §23 in infra conventions |
 
 **The test before adding anything here:** does the value describe the *image*, or the
 *environment the image runs in*? Only the former may be baked.
@@ -447,9 +433,9 @@ whole problem disappears: set `COOKIE_SAMESITE=lax` and drop the proxy. Prefer t
 
 **WebSocket chat needs the custom domain.** Next.js rewrites do not proxy WebSocket
 upgrades, so chat was broken on Railway. Two independent causes existed — that, and the
-missing Socket.IO Redis adapter. **The adapter is now fixed** (multi-instance-readiness);
-the transport half is resolved by putting web and api on the same real domain, which is
-blocked on the pending NS delegation.
+missing Socket.IO Redis adapter. **Both are resolved:** the adapter is fixed, and the
+rewrite proxy is gone (browser calls the api directly on its custom domain). WS transport
+has not been tested end-to-end yet.
 
 **OAuth callback chicken-and-egg.** `GOOGLE_CALLBACK_URL` must exactly match the Google
 console entry, and it should point at whichever origin makes the `Set-Cookie` first-party.
@@ -508,30 +494,20 @@ at this volume) and a domain (~$10–15/year) — small, but not zero, and they 
 
 ## DNS cutover checklist
 
-Runs once, when JP's NS delegation lands (O1). Several of these are easy to forget because
-they're only *implied* by the gotchas above — hence the explicit list.
+**DNS is live** — per-record CNAMEs on `jnanaprabodhini.org` (D14, not NS delegation). The
+Azure DNS zone was destroyed 2026-08-24 (#80). All four hostnames resolve, custom domains
+bound, managed TLS certs issued.
 
-- [ ] Confirm delegation propagated: `dig NS veervrat.jnanaprabodhini.org` returns the four
-      `azure-dns` nameservers from `azure-account-facts.md` §5.
-- [ ] Add the app's DNS records **in Terraform**, inside the existing zone — never
-      re-create the zone (see `21_Infrastructure-Conventions.md` §4).
-- [ ] Bind custom domains + managed TLS certs to the Container Apps.
-- [ ] **Set `COOKIE_SAMESITE=lax`** — the `SameSite=None` workaround exists only because
-      web and api were on different public-suffix domains. On a shared domain it's
-      unnecessary and weaker.
-- [ ] **Remove the Next.js `/api/v1/*` rewrite proxy.** It exists for the same reason and
-      is what breaks WebSockets.
-- [ ] Rebuild web with the new `NEXT_PUBLIC_API_URL`, `API_ORIGIN`, `NEXT_PUBLIC_SITE_URL`
-      — these are **build-time**, so a restart is not enough.
-- [ ] Update `GOOGLE_CALLBACK_URL` **and** the matching entry in the Google console.
-- [ ] Verify chat actually works — this is the payoff; both causes (transport + Redis
-      adapter) are only now resolved.
+- [x] DNS records live: `veervrat`, `uat.veervrat`, `api.veervrat`, `api.uat.veervrat` (per-record CNAMEs, not delegation)
+- [x] Custom domains + managed TLS certs bound to all Container Apps (2026-08-17)
+- [x] Cookies set to `SameSite=Lax` — the `SameSite=None` workaround removed with the proxy
+- [x] Next.js `/api/v1/*` rewrite proxy **removed** (2026-08-17) — browser calls api directly
+- [x] Per-environment values moved to **runtime** — `API_BASE_URL`, `SITE_URL` are runtime env vars, not build args
+- [x] `GOOGLE_CALLBACK_URL` updated in both environments and Google console
+- [x] Email wired: SMTP via JP IT relay, delivering in both environments
 - [ ] **Rotate the exposed secrets (O12):** GitHub PAT, `SESSION_SECRET`, R2 keys — all
-      sat in plaintext in `apps/api/.env.railway`.
-- [x] Wire email: `email.service.ts` now speaks SMTP (shipped 2026-08-17). **No DNS work needed** — D9 moved
-      sending to JP IT's relay, so JP owns SPF/DKIM/DMARC on
-      `notifications.jnanaprabodhini.org` and we add no mail records at all.
-- [ ] Point beta testers at the new URL.
+      sat in plaintext in `apps/api/.env.railway`
+- [ ] Verify chat WebSocket — Redis adapter fixed, but WS transport not yet tested end-to-end
 
 ---
 
@@ -1094,8 +1070,69 @@ merely completes proves less than one whose contents match something known indep
 - **Restoring into Azure.** This rehearsal restored locally. Putting a dump back into a fresh
   Azure Postgres adds provisioning, firewall and connection-string steps that have not been
   exercised.
-- **Prod.** Prod has no backup job yet — it deploys only on a `prod-YYYY-MM-DD` tag — so it has
-  no dump and no key. Everything above is UAT.
+- **Prod.** Prod backup exists since `prod-2026-08-30` (`veervratprodbackups` storage,
+  `veervrat-prod-backup` job). Same procedure applies with the prod key.
+
+## Recovering from the cost guard
+
+The cost guard (`stop-veervrat` runbook, #93) scales all Container Apps to `maxReplicas: 0`
+across both UAT and prod when the budget threshold is hit. Two complications:
+
+1. **The apps were deactivated, not deleted.** Re-deploying is
+   `terraform apply -var="image_tag=<sha>" -var="deploy_apps=true"` in each environment.
+
+2. **CD may not work.** CD verifies migrations by reading Prisma output from Log Analytics. If
+   `daily_quota_gb` is also hit (likely — it exists to limit the same kind of spike), new log
+   ingestion is blocked until midnight UTC, and CD fails with "job reported Succeeded but
+   produced no prisma output". This is CD working correctly.
+
+### Procedure
+
+```bash
+# 1. Fix the root cause first. Never redeploy without understanding why the guard fired.
+
+# 2. Get the SHA of the fix:
+SHA=$(git rev-parse --short HEAD)
+
+# 3. Check whether the PR contains new migrations:
+git diff HEAD~1..HEAD -- apps/api/prisma/migrations
+# Empty = no new migrations → safe to deploy manually.
+# Non-empty = wait for midnight UTC (05:30 IST) when the daily quota resets, then let CD
+# handle the deploy normally.
+
+# 4. Deploy manually to each environment:
+for ENV in uat prod; do
+  cd infra/terraform/envs/$ENV
+  terraform apply -var="image_tag=$SHA" -var="deploy_apps=true"
+done
+
+# 5. Verify:
+curl -s https://api.uat.veervrat.jnanaprabodhini.org/ready
+curl -s https://api.veervrat.jnanaprabodhini.org/ready
+# Expect: {"status":"ok","checks":{"database":"up","redis":"up"}}
+# First request may be slow (cold start from min_replicas=0).
+```
+
+### `daily_quota_gb` — the real-time cost guard for logging
+
+Both Log Analytics workspaces have `daily_quota_gb = 2` (added 2026-09-02, PR #293). This caps
+log **ingestion** at 2 GB/day. Past the cap, ingestion stops until midnight UTC; queries still
+work.
+
+At ~₹363/GB, the maximum daily cost from log ingestion is ~₹730. Without this cap, a logging
+error loop consumed ₹19,230 in 12 hours on 2026-09-02 — faster than the 12–24 hour billing
+pipeline could fire the budget alerts or cost guard.
+
+When the quota is hit:
+- New logs **cannot** be ingested (including migration job output)
+- Existing logs **can** still be queried
+- CD's migration verification fails (it reads Prisma output from Log Analytics)
+- The quota resets at **midnight UTC** (05:30 IST)
+
+**Do not raise `daily_quota_gb` without understanding the consequences.** If it is removed, the
+cost guard (12–24 hour lag) is the only remaining protection against a logging spike.
+
+---
 
 ## Rollback
 
@@ -1109,15 +1146,13 @@ migration.
 
 ## Known gaps
 
-| Gap | Blocked on |
+| Gap | Status |
 |---|---|
-| App not deployed anywhere | first image push + migration job (next step) |
-| Custom domain, HTTPS, working chat | NS delegation from JP (O1) — external |
-| Email (verification, password reset) doesn't deliver | check `SMTP_HOST` is set on the api — without it the service silently logs to console instead of sending |
-| Object storage | app uses the S3 API; Azure Blob doesn't speak it — needs `@azure/storage-blob` swap |
-| Beta data still in Neon | migration after prod exists |
-| Search | Meilisearch deferred |
-| prod environment | Phase 2B Terraform |
+| WebSocket chat | Redis adapter fixed, WS transport not tested end-to-end |
+| Content-editing object storage | `content-overrides` still speaks S3 only; uploads path migrated (#139) |
+| Search | Meilisearch deferred; three reads being moved to Postgres FTS (#194) |
+| Secret rotation (O12) | GitHub PAT, `SESSION_SECRET`, R2 keys exposed in old `.env.railway` |
+| Off-site backup lives on one laptop | #267 tracks replacing `pull-backups.sh` local-only copy |
 
 ---
 
@@ -1134,7 +1169,7 @@ Requires, on top of the normal vars:
 | `NEXT_PUBLIC_CONTENT_EDIT` (web) | `on` — build-time; mounts the editor + i18n overlay |
 | `CONTENT_EDIT_ENABLED` (api) | `true` — master gate; routes 404 when false |
 | `ENVIRONMENT` | `local` \| `uat` \| `prod`. Named explicitly — `NODE_ENV` is `production` on UAT too. `content.edit` is refused outright when this is `prod` (O7) |
-| `FEEDBACK_MODE` | `off` \| `all` \| `granted`. ⚠️ Must be set on the **api** as well as the web tier, or the widget is hidden rather than denied |
+| `FEEDBACK_MODE` | `off` \| `granted`. ⚠️ Must be set on the **api** as well as the web tier, or the widget is hidden rather than denied. `all` mode was removed |
 | `CONTENT_EDIT_GITHUB_TOKEN` | fine-grained PAT, this repo only, Contents + PR write |
 | `CONTENT_EDIT_GITHUB_REPO` | `omchavan-jp/veervrat-app` — confirm against `gh repo view` before setting; the repo has moved owners once already (2026-08-24) and a move to `jnanaprabodhini` is planned (#132) |
 | `CONTENT_EDIT_GITHUB_BASE_BRANCH` | `main` |
