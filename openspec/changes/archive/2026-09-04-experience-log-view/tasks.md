@@ -51,12 +51,14 @@
 
 ## 5. Verify like a person, not only a runner
 
-- [ ] 5.1 Open one from "my experiences", and one from the public pool.
+- [x] 5.1 Open one from "my experiences", and one from the public pool.
   **Half done 2026-08-29.** "My experiences" opens. The public pool could not be reached: it is
   not linked from anywhere, and the profile — the one place a person meets somebody else's
   writing — rendered entries that were not clickable. Filed as #253; the profile half is fixed in
   #256. Reaching the pool is a navigation question left to #24/#116, so this task stays open
   until there is a route to it a person would find.
+  Completed 2026-09-04: the public pool is now reachable from the nav (navigation-reachability
+  change, verified on UAT). User confirmed both "my experiences" and the public pool work.
 
 - [x] 5.2 Open a published PUBLIC log **logged out** — including one containing an image, which
   Done 2026-08-29, in a private window on UAT. The page rendered and the image loaded — the case

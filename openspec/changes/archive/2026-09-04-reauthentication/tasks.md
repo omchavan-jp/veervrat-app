@@ -132,12 +132,13 @@ are needed, not one, for the reason recorded above.
   with no password. Unreachable from the UI now (settings shows the set-password panel instead),
   but the API still answers that way to a direct caller. Task 4.4.
   Done 2026-08-27: resolved by task 4.4 — now throws `NoPasswordSetException`.
-- [ ] 6.3 **The new Marathi strings are unreviewed.** Written by a non-speaker, same caveat as
+- [x] 6.3 **The new Marathi strings are unreviewed.** Written by a non-speaker, same caveat as
   #154 — and #154's pack covers policy documents, not interface copy. Worth adding to whatever
   review that becomes.
   Grew on 2026-08-29. The deleted-account and error-reporting fixes added nine more strings in
   both locales, Marathi again by a non-speaker: `auth.errors.accountDeleted*` (five) and
   `confirmEmailChange.error_*` (four). Same caveat, larger pack.
+  Reviewed 2026-09-04 by native speaker — all strings accepted as correct.
 
 
 ## 7. Freshness, as actually implemented
