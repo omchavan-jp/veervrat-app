@@ -106,6 +106,18 @@ describe('VmRelationshipsService', () => {
 
       expect(mockRepository.getMyVms).toHaveBeenCalledWith(mockVaUser.id, 'GLOBAL');
     });
+
+    // A vratarthi who has invited nobody is an ordinary state, not an error — most accounts are
+    // in it on the day they sign up. It has to come back as an empty list so the screen can show
+    // its empty state, rather than as a refusal, which the client would render as a failure.
+    it('returns an empty list for a vratarthi with no vratmitras, rather than refusing', async () => {
+      mockRepository.getMyVms.mockResolvedValue([]);
+
+      const result = await service.getMyVms(mockVaUser);
+
+      expect(result).toEqual([]);
+      expect(mockRepository.getMyVms).toHaveBeenCalledWith(mockVaUser.id, undefined);
+    });
   });
 
   describe('removeGlobalVm', () => {
