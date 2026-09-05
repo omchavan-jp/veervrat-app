@@ -65,6 +65,15 @@ export class S3StorageProvider implements StorageProvider {
     return Buffer.from(bytes ?? []);
   }
 
+  async getOrNull(key: string, visibility: StorageVisibility): Promise<Buffer | null> {
+    try {
+      return await this.get(key, visibility);
+    } catch (err) {
+      if (isNoSuchKey(err)) return null;
+      throw err;
+    }
+  }
+
   async delete(key: string, visibility: StorageVisibility): Promise<void> {
     await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket(visibility), Key: key }));
   }
@@ -82,4 +91,16 @@ export class S3StorageProvider implements StorageProvider {
   publicUrl(key: string): string {
     return `${this.config.publicBase}/${this.bucket('public')}/${key}`;
   }
+}
+
+/**
+ * Whether an S3 error means "nothing is stored there", as opposed to a real failure.
+ *
+ * Both forms are checked because they do not always arrive together: the SDK sets `name` on the
+ * typed error, while `$metadata.httpStatusCode` comes from the response — and MinIO, which is
+ * what local development talks to, does not always populate the first.
+ */
+function isNoSuchKey(err: unknown): boolean {
+  const e = err as { name?: string; $metadata?: { httpStatusCode?: number } };
+  return e?.name === 'NoSuchKey' || e?.$metadata?.httpStatusCode === 404;
 }

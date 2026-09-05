@@ -69,6 +69,15 @@ export class AzureBlobStorageProvider implements StorageProvider {
     return download;
   }
 
+  async getOrNull(key: string, visibility: StorageVisibility): Promise<Buffer | null> {
+    try {
+      return await this.get(key, visibility);
+    } catch (err) {
+      if (isBlobNotFound(err)) return null;
+      throw err;
+    }
+  }
+
   async delete(key: string, visibility: StorageVisibility): Promise<void> {
     // Idempotent: an avatar's delete path (#140) must not fail because the file was already
     // removed, or because it never existed in the first place.
@@ -101,4 +110,22 @@ export class AzureBlobStorageProvider implements StorageProvider {
 
     return `${blob.url}?${sas.toString()}`;
   }
+}
+
+/**
+ * Whether an Azure Blob error means "nothing is stored there", as opposed to a real failure.
+ *
+ * Deliberately NOT the same check as the S3 provider's. Azure's SDK raises a `RestError` whose
+ * status lives on `statusCode` and whose reason lives on `code` — it has neither `name:
+ * 'NoSuchKey'` nor `$metadata.httpStatusCode`. A single shared helper written against one SDK
+ * would return false for the other and turn "nothing written yet" into "storage failed", which
+ * is the bug `getOrNull` exists to make impossible.
+ *
+ * `code` is checked as well as the status because a 404 can also mean the *container* is
+ * missing (`ContainerNotFound`) — a configuration fault that must keep surfacing as an error
+ * rather than being read as an empty object.
+ */
+function isBlobNotFound(err: unknown): boolean {
+  const e = err as { statusCode?: number; code?: string };
+  return e?.code === 'BlobNotFound' || (e?.statusCode === 404 && e?.code !== 'ContainerNotFound');
 }

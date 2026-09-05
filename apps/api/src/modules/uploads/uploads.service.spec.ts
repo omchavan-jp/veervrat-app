@@ -47,6 +47,7 @@ describe('UploadsService', () => {
   const mockStorage: MockedStorageProvider = {
     put: vi.fn(),
     get: vi.fn(),
+    getOrNull: vi.fn(),
     delete: vi.fn(),
     signedUrl: vi.fn(),
     publicUrl: vi.fn(),

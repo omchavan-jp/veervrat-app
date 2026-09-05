@@ -24,6 +24,13 @@ class UnconfiguredStorageProvider implements StorageProvider {
   get(): Promise<never> {
     return Promise.reject(new Error('File storage is not configured in this environment'));
   }
+  // Rejects rather than resolving null. `null` from this method means "storage is working and
+  // there is nothing stored there" — a caller acting on that would treat an unconfigured
+  // environment as an empty one and carry on, which is exactly the silent failure the rest of
+  // this class exists to prevent.
+  getOrNull(): Promise<never> {
+    return Promise.reject(new Error('File storage is not configured in this environment'));
+  }
   delete(): Promise<never> {
     return Promise.reject(new Error('File storage is not configured in this environment'));
   }

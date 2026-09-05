@@ -1149,7 +1149,7 @@ migration.
 | Gap | Status |
 |---|---|
 | WebSocket chat | Redis adapter fixed, WS transport not tested end-to-end |
-| Content-editing object storage | `content-overrides` still speaks S3 only; uploads path migrated (#139) |
+| ~~Content-editing object storage~~ | **Closed.** `content-overrides` now goes through `StorageProvider`, so it works on Azure Blob as well as S3. It was the last direct S3 consumer; `@aws-sdk/client-s3` is now used only by `S3StorageProvider`. |
 | Search | Meilisearch deferred; three reads being moved to Postgres FTS (#194) |
 | Secret rotation (O12) | GitHub PAT, `SESSION_SECRET`, R2 keys exposed in old `.env.railway` |
 | Off-site backup lives on one laptop | #267 tracks replacing `pull-backups.sh` local-only copy |
