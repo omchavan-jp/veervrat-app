@@ -1344,7 +1344,9 @@ provider-hosted identity as the primary authentication mechanism. Each is genuin
 leave, and difficulty leaving is the cost being avoided.
 
 **Where a provider API is unavoidable**, put an interface between the application and the SDK so
-the provider is one implementation rather than a rewrite. Object storage is the current example.
+the provider is one implementation rather than a rewrite. Object storage is the current example —
+and **§28 records the two ways that boundary was incomplete in practice**, both of which are the
+normal failure mode rather than an unlucky one. Read it before introducing another adapter.
 
 **The application already satisfies this and it is worth keeping that way.** It holds no
 provider SDK outside object storage: PostgreSQL and Redis are reached by connection URL, and
@@ -1495,3 +1497,76 @@ terraform apply -var="image_tag=$SHA" -var="deploy_apps=true"
 handle the deploy normally. Do not skip migration verification for a PR that contains schema
 changes.
 
+
+---
+
+## 28. An adapter boundary is only as good as its least-covered operation (2026-09-05)
+
+§24 requires an interface between the application and any unavoidable provider SDK, and names
+object storage as the example that satisfies it. That was true of the *uploads* path and untrue
+of the application as a whole, in two ways that are worth separating because they fail
+differently.
+
+### One consumer never moved behind the boundary
+
+The in-context content editor answered `503 Content storage is not configured` for every request
+on every deployed environment, while uploads worked perfectly against the same storage account.
+
+`ContentOverridesRepository` had built its own `S3Client` from `S3_ENDPOINT` and friends. When
+the uploads path moved behind `StorageProvider`, this one was left behind — and it was invisible
+because deployed environments set the Azure variables and deliberately set **no** S3 ones (the
+storage factory refuses to start when both are present, so an upload cannot land in the wrong
+store). The client was therefore always `null`, and the feature reported a configuration problem
+that did not exist.
+
+**The lesson is about how the gap stayed open, not that it existed.** An adapter boundary
+introduced by migrating one caller leaves every other caller compiling, passing tests, and
+silently provider-specific. The check that finds this is not a code review; it is:
+
+```bash
+grep -rln "@aws-sdk\|@azure/storage-blob" apps/api/src --include="*.ts"
+```
+
+Any file outside the provider implementations is a consumer that escaped. That command belongs
+in the reviewer's hands whenever an adapter is introduced, and the expected answer is a short,
+named list — not zero, which would mean the grep is wrong.
+
+### The interface had a hole exactly where the SDKs disagree
+
+`StorageProvider` covered put, get, delete and URL generation — every operation *uploads*
+needed. It had nothing for **"read this, and tell me if it is not there."**
+
+Uploads never needed it: `uploads-resolver` looks the key up in the database first and only reads
+objects it knows exist, so absence there is a genuine fault. Content overrides have no such row —
+the blob's absence **is** the signal that nobody has edited that locale yet.
+
+That distinction matters because it is the one place the two SDKs share no vocabulary:
+
+| | S3 | Azure Blob |
+|---|---|---|
+| error type | `NoSuchKey` | `RestError` |
+| status | `$metadata.httpStatusCode` | `statusCode` |
+| reason | — | `code: 'BlobNotFound'` |
+
+A not-found check written against either SDK returns `false` for the other. Reusing the existing
+S3-shaped check would have compiled, passed every test, and turned *"nothing staged yet"* into
+*"storage failed"* on Azure — the original bug wearing a different hat, and harder to find the
+second time because the feature would appear to work right up until a fresh environment.
+
+**The rule:** an adapter interface must cover the operations its callers need, and *"does this
+exist?"* is an operation, not an error case. Where providers disagree about how a condition is
+reported, the translation belongs **inside each implementation** — never in a shared helper, and
+never at the call site. `StorageProvider.getOrNull()` resolves `null` for absence and rejects for
+everything else; each provider recognises only its own SDK's shape, and each has a test asserting
+it does **not** recognise the other's, so a future attempt to unify them fails loudly.
+
+`get()` was deliberately left alone: rejecting on absence is correct for a caller that already
+knows the object exists, and changing it would have degraded a real signal into a null check.
+
+### Verified
+
+The fix was confirmed end-to-end on UAT on 2026-09-05, not merely deployed: opening the content
+editor exercises `readAll` → `getOrNull` against blobs that did not yet exist (the divergent
+not-found path, on real Azure Blob), and saving proved the container's managed identity can write
+under the `content-overrides/` prefix in the private container. Both halves matter — the tests
+mock the SDK and could not have shown either.
