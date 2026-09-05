@@ -762,8 +762,8 @@
     "select_vm": "Select a vratmitra",
     "select_from_list": "Choose a vratmitra from the list to view details and chat.",
     "open_chat": "Open Chat",
-    "global_vm": "Global Mentor",
-    "journey_vm": "Journey Mentor",
+    "global_vm": "Global Vratmitra",
+    "journey_vm": "Journey Vratmitra",
     "assigned_journeys": "Assigned to:",
     "assigned_count": "{count, plural, one {# journey} other {# journeys}}"
   },
@@ -788,7 +788,7 @@
     "image_failed": "Could not upload image",
     "image_alt": "Shared image",
     "send": "Send",
-    "identity_error": "Couldn't load mentor details",
+    "identity_error": "Couldn't load vratmitra details",
     "history_error": "Couldn't load messages",
     "mention": {
       "no_matches": "No matches"

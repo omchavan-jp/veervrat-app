@@ -64,30 +64,30 @@ describe('MyVratmitrasClient — the people walking alongside you', () => {
     renderWithProviders(<MyVratmitrasClient />);
     await screen.findByText('Global Person');
 
-    // Asserted against the strings the bundle actually contains. ⚠️ Both say "Mentor", which
-    // contradicts the project's own domain-language rule (vratmitra, never "mentor"). Pinned
-    // here as it stands so the test tells the truth; changing the copy is a content decision,
-    // and this assertion is where that change will surface.
-    expect(screen.getByText('Global Mentor')).toBeInTheDocument();
-    expect(screen.getByText('Journey Mentor')).toBeInTheDocument();
+    // The domain term, not "Mentor". `spec/CONTEXT.md` is canonical on this, and the onboarding
+    // has a whole section titled "Why vratmitra, not mentor" — which the badges used to
+    // contradict two screens later.
+    expect(screen.getByText('Global Vratmitra')).toBeInTheDocument();
+    expect(screen.getByText('Journey Vratmitra')).toBeInTheDocument();
   });
 
   // The whole point of the card: getting from here into the conversation.
   //
-  // Queried by element rather than by ARIA role. The call to action is a Base UI `Button` with a
-  // `render={<Link/>}` prop, which emits an anchor that does not resolve to the `link` role — so
-  // `getByRole('link')` finds nothing while the anchor is plainly there. What matters to a person
-  // is that a clickable thing points at the right URL, and that is what this checks.
-  it('each card links to that vratmitra’s chat thread', async () => {
+  // Queried by ROLE deliberately. The call to action is a Base UI `Button` with `render={<Link/>}`,
+  // and the primitive used to stamp `role="button"` over the anchor's implicit `link` role — so
+  // this assertion failed while the anchor sat in the DOM, and a screen reader would not have
+  // found it among the page's links either. If it starts failing again, that regressed.
+  it('each card links to that vratmitra’s chat thread, and is announced as a link', async () => {
     resolveWith([vm({ id: 'vm-42' })]);
 
-    const { container } = renderWithProviders(<MyVratmitrasClient />);
+    renderWithProviders(<MyVratmitrasClient />);
     await screen.findByText('Arati Kulkarni');
 
-    expect(
-      container.querySelector('a[href="/my-vratmitras/vm-42/chat"]'),
-      'no anchor pointing at the chat thread was rendered',
-    ).not.toBeNull();
+    const chatLink = screen
+      .getAllByRole('link')
+      .find((a) => a.getAttribute('href') === '/my-vratmitras/vm-42/chat');
+
+    expect(chatLink, 'no element with the link role points at the chat thread').toBeDefined();
   });
 
   it('links the name to that person’s public profile', async () => {
@@ -113,18 +113,18 @@ describe('MyVratmitrasClient — the people walking alongside you', () => {
   it('shows an empty state, not an error, when there are no vratmitras', async () => {
     resolveWith([]);
 
-    const { container } = renderWithProviders(<MyVratmitrasClient />);
+    renderWithProviders(<MyVratmitrasClient />);
 
     // The empty state's own words, so this fails if the branch stops rendering.
     expect(
       await screen.findByText("You haven't been assigned any Vratmitras yet."),
     ).toBeInTheDocument();
 
-    // And a way out of it — the invite route stays reachable from here.
-    expect(
-      container.querySelector('a[href="/invitations"]'),
-      'the empty state offers no way to invite anyone',
-    ).not.toBeNull();
+    // And a way out of it — the invite route stays reachable from here, as a real link.
+    const inviteLink = screen
+      .getAllByRole('link')
+      .find((a) => a.getAttribute('href') === '/invitations');
+    expect(inviteLink, 'the empty state offers no way to invite anyone').toBeDefined();
 
     // Nothing that reads as a failure. This is the ordinary state of a new account.
     expect(screen.queryByText(/failed|error/i)).not.toBeInTheDocument();
