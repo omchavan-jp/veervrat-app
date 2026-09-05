@@ -4,7 +4,7 @@ import { UploadsResolverController } from './uploads-resolver.controller';
 import { UploadsService } from './uploads.service';
 import { UploadsResolverService } from './uploads-resolver.service';
 import { UploadsRepository } from './uploads.repository';
-import { storageProviderFactory } from './storage/storage-provider.factory';
+import { StorageModule } from './storage/storage.module';
 import { AuthModule } from '../auth/auth.module';
 import { ExperienceLogsModule } from '../experience-logs/experience-logs.module';
 
@@ -16,9 +16,9 @@ import { ExperienceLogsModule } from '../experience-logs/experience-logs.module'
  * log's own rules.
  */
 @Module({
-  imports: [AuthModule, forwardRef(() => ExperienceLogsModule)],
+  imports: [AuthModule, StorageModule, forwardRef(() => ExperienceLogsModule)],
   controllers: [UploadsController, UploadsResolverController],
-  providers: [UploadsService, UploadsResolverService, UploadsRepository, storageProviderFactory],
+  providers: [UploadsService, UploadsResolverService, UploadsRepository],
   exports: [UploadsService],
 })
 export class UploadsModule {}

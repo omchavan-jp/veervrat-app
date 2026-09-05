@@ -38,8 +38,32 @@ export interface StorageProvider {
     visibility: StorageVisibility,
   ): Promise<{ url: string }>;
 
-  /** Reads back everything stored under `key`. */
+  /**
+   * Reads back everything stored under `key`. Rejects if there is nothing there — the SDK's own
+   * error, unmodified.
+   *
+   * Right for a caller that already knows the object exists: `uploads-resolver` looks the key up
+   * in the database first, so an absent object means the store and the database disagree, which
+   * is a fault and should read like one.
+   */
   get(key: string, visibility: StorageVisibility): Promise<Buffer>;
+
+  /**
+   * The same read, but **absence is an answer, not a fault** — resolves `null` instead of
+   * rejecting when nothing is stored under `key`.
+   *
+   * This exists because "not found" is the one place the two SDKs disagree in a way a caller
+   * cannot paper over. S3 throws `NoSuchKey` with `$metadata.httpStatusCode`; Azure Blob throws
+   * a `RestError` with `statusCode` and `code: 'BlobNotFound'` — different on every field a
+   * check could test. A caller that recognises one shape silently stops recognising the other
+   * the moment the backend changes, and reports "storage failed" for what is really "nothing
+   * written yet".
+   *
+   * So each provider translates its own SDK here, and callers get one contract. `content-
+   * overrides` needs exactly this: no database row records whether a locale has been edited, so
+   * the blob's absence IS the signal that nobody has edited it.
+   */
+  getOrNull(key: string, visibility: StorageVisibility): Promise<Buffer | null>;
 
   /** Removes whatever is stored under `key`. Safe to call on a key that does not exist. */
   delete(key: string, visibility: StorageVisibility): Promise<void>;

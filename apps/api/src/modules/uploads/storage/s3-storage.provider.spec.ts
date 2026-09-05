@@ -96,3 +96,66 @@ describe('S3StorageProvider', () => {
     );
   });
 });
+
+/**
+ * `getOrNull` — the S3 half of the seam. Its Azure counterpart is tested the same way against a
+ * completely different error shape; the two must agree on the answer while sharing no code.
+ */
+describe('S3StorageProvider.getOrNull — absence is an answer, not a fault', () => {
+  let provider: S3StorageProvider;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    provider = new S3StorageProvider(config);
+  });
+
+  it('returns the buffer when the object is there', async () => {
+    sendMock.mockResolvedValue({
+      Body: { transformToByteArray: () => Promise.resolve(new Uint8Array([123, 125])) },
+    });
+
+    await expect(provider.getOrNull('content-overrides/en.json', 'private')).resolves.toEqual(
+      Buffer.from('{}'),
+    );
+  });
+
+  it('returns null for a typed NoSuchKey error', async () => {
+    sendMock.mockRejectedValue(Object.assign(new Error('NoSuchKey'), { name: 'NoSuchKey' }));
+
+    await expect(provider.getOrNull('content-overrides/en.json', 'private')).resolves.toBeNull();
+  });
+
+  // MinIO — what local development actually talks to — does not always set the typed `name`,
+  // so the status form has to be recognised too or the local experience diverges from deployed.
+  it('returns null for a 404 reported only via $metadata, as MinIO does', async () => {
+    sendMock.mockRejectedValue(
+      Object.assign(new Error('Not Found'), { $metadata: { httpStatusCode: 404 } }),
+    );
+
+    await expect(provider.getOrNull('missing', 'private')).resolves.toBeNull();
+  });
+
+  // The control: a real failure must stay a failure.
+  it('rethrows a real failure instead of reporting it as absent', async () => {
+    sendMock.mockRejectedValue(
+      Object.assign(new Error('AccessDenied'), {
+        name: 'AccessDenied',
+        $metadata: { httpStatusCode: 403 },
+      }),
+    );
+
+    await expect(provider.getOrNull('forbidden', 'private')).rejects.toThrow('AccessDenied');
+  });
+
+  it('does NOT recognise the Azure not-found shape — each provider translates only its own SDK', async () => {
+    sendMock.mockRejectedValue(
+      Object.assign(new Error('BlobNotFound'), {
+        name: 'RestError',
+        statusCode: 404,
+        code: 'BlobNotFound',
+      }),
+    );
+
+    await expect(provider.getOrNull('azure-shaped', 'private')).rejects.toThrow('BlobNotFound');
+  });
+});
