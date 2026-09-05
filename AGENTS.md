@@ -154,6 +154,40 @@ veervrat-app/
 - use `hasPermission(user, resource, action)` — never check `user.role === 'admin'` directly. (3-arg: ABAC context is carried inside the discriminated-union `resource`, not a separate 4th param.)
 - permission matrix is in `spec/decisions/05_permissions.md` — implement exactly what is there
 
+#### ⚠️ Authentication is opt-in, and nothing tells you when you forget it
+
+**There is no global authentication guard.** The only `APP_GUARD` providers are the rate limiter
+and the CSRF check. A controller without `@UseGuards(SessionGuard)` is reachable by anyone, and
+there is no `@Public()` decorator anywhere — because there is nothing to opt *out* of.
+
+So the two-layer rule above is a rule, not a mechanism. Forgetting the first layer produces a
+publicly writable endpoint that compiles, passes every existing test, and reports nothing.
+
+Measured 2026-09-05: **34 of 36 controllers** declare a session guard. The two that do not are
+deliberate and say so in their own comments — `app.controller.ts` (`/health`, `/ready`) and
+`stats.controller.ts` (`GET /api/v1/stats/platform`, guest-accessible by
+`spec/decisions/11_platform-stats.md`). There is no current hole; the risk is entirely
+prospective.
+
+Guarding a new controller is therefore part of writing it, not a review catch. Two habits help:
+
+- **Assert the guard in the controller's own spec**, the way `chats.controller.spec.ts` and
+  `uploads.controller.spec.ts` do:
+  ```ts
+  expect(Reflect.getMetadata('__guards__', MyController)).toContain(SessionGuard);
+  ```
+  Pair it with a control asserting the same lookup finds nothing on an undecorated class —
+  otherwise the assertion passes vacuously if the metadata key ever changes.
+- **When auditing access control, read the services, not the controllers.** `PermissionGuard` and
+  `@RequirePermission` exist and are applied to **zero** routes; all ~48 checks are direct
+  `hasPermission(...)` calls inside service methods, plus a few inline `isAdmin`/`isVa` checks in
+  `audit` and `dashboard`. What an endpoint permits cannot be read off its controller.
+
+⚠️ Checking this with a grep for the *string* `SessionGuard` gives a false pass —
+`stats.controller.ts` contains the words "no SessionGuard" in a comment. Match on
+`@UseGuards\([^)]*SessionGuard` and always count the guarded controllers too, so an empty result
+cannot be mistaken for a clean one.
+
 ## Implementation SOP
 
 ### When to use OpenSpec
