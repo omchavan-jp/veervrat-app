@@ -55,12 +55,29 @@ function Button({
   loading = false,
   disabled,
   children,
+  nativeButton,
+  role,
   ...props
 }: ButtonProps) {
+  // A link that is styled as a button is still a link, and must be announced as one.
+  //
+  // The underlying primitive stamps `role="button"` on whatever it renders, including an
+  // anchor — which overrides the anchor's implicit `link` role. The consequences are not
+  // cosmetic: a screen reader announces it as a button, so it disappears from the "list all
+  // links" navigation that is a primary way of moving around a page; and `role="button"`
+  // promises Space activates it, which an anchor does not do.
+  //
+  // `nativeButton={false}` is the caller saying "this is not a <button>", and every use of it
+  // in this app renders an anchor (25 `<Link>`, 3 `<a>`). So that is the signal used here.
+  // An explicitly supplied `role` still wins, for the case that stops being true.
+  const resolvedRole = role ?? (nativeButton === false ? 'link' : undefined);
+
   return (
     <ButtonPrimitive
       data-slot="button"
       disabled={disabled || loading}
+      nativeButton={nativeButton}
+      role={resolvedRole}
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     >

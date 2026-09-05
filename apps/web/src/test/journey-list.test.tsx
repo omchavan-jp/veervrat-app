@@ -81,9 +81,12 @@ describe('JourneysPage', () => {
     mockUseJourneys.mockReturnValue({ data: { items: [], nextCursor: null }, isLoading: false });
     renderWithQuery(<JourneysPage />);
     expect(screen.getByText('list.emptyState')).toBeInTheDocument();
-    // The CTA is a Button primitive rendered as a Link (base-ui forces role="button"
-    // on the anchor), so query the rendered role/name and still assert the destination.
-    const cta = screen.getByRole('button', { name: 'list.emptyStateCta' });
+    // The CTA is a Button rendered as a Link, and is queried as a LINK. This assertion used to
+    // ask for role="button" with a comment noting that base-ui forces that role onto the anchor
+    // — a workaround that accepted the behaviour as given. It was a defect: it made the control
+    // invisible to a screen reader's link navigation. `components/ui/button.tsx` now supplies
+    // role="link" when nativeButton={false}, so the correct role is what to assert.
+    const cta = screen.getByRole('link', { name: 'list.emptyStateCta' });
     expect(cta).toHaveAttribute('href', '/study');
   });
 
