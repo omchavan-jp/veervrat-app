@@ -1,5 +1,13 @@
 # 20 — Solo-Dev Operations (feedback → triage → implement → log)
 
+> ⚠️ **Partly superseded, 2026-09-08.** The **implement** loop assumed one maintainer and no
+> reviewer — an assumption the 2026-08-27 audit showed was load-bearing. It is replaced by
+> [`23_Development-Process.md`](23_Development-Process.md).
+>
+> **Loop 1 (Capture) and Loop 2 (Triage) below are still current and still correct.** The
+> feedback widget, the capability gating, and GitHub Issues as the canonical backlog are
+> unchanged. Read those here; read the rest in 23.
+
 How defects and change requests flow from users into shipped, documented changes.
 This is the operating manual for the beta-test phase and beyond, for a solo
 maintainer working with Claude Code.
