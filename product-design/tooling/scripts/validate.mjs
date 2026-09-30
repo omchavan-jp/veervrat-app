@@ -210,7 +210,7 @@ function validateDeferredTopics(decisions) {
   const roadmap = loadRoadmapPhases();
   const register = JSON.parse(readFileSync(deferredPath, 'utf8'));
   const schema = JSON.parse(readFileSync(deferredSchemaPath, 'utf8'));
-  const allowedStatuses = ['open', 'resolved', 'moved', 'dropped'];
+  const allowedStatuses = ['open', 'resolved', 'dropped'];
   if (register.$schema !== './deferred-topics.schema.json' || register.version !== 1 || !Array.isArray(register.topics)) {
     fail('Deferred-topic register must have its schema pointer, version 1, and topics array.');
     return;
@@ -219,7 +219,7 @@ function validateDeferredTopics(decisions) {
   if (!Array.isArray(schemaStatuses) || schemaStatuses.join('|') !== allowedStatuses.join('|')) {
     fail(`Deferred-topic schema must declare statuses in this order: ${allowedStatuses.join(', ')}.`);
   }
-  const allowedKeys = new Set(['id', 'title', 'status', 'reason', 'target_phase', 'notes', 'depends_on', 'moved_to_phase', 'resolution_artifact']);
+  const allowedKeys = new Set(['id', 'title', 'status', 'reason', 'target_phase', 'notes', 'depends_on', 'moves', 'drop_reason', 'resolution_artifact']);
   const ids = new Map();
   for (const topic of register.topics) {
     if (!topic || typeof topic !== 'object' || Array.isArray(topic)) { fail('Deferred-topic register contains a non-object entry.'); continue; }
@@ -237,10 +237,27 @@ function validateDeferredTopics(decisions) {
         if (!/^PD-\d{3,}$/.test(id) || !decisions.has(id)) fail(`${topic.id}: depends_on contains unknown or invalid decision ID '${id}'.`);
       }
     }
-    if (topic.status === 'moved') {
-      if (typeof topic.moved_to_phase !== 'string' || !roadmap.has(topic.moved_to_phase)) fail(`${topic.id}: moved item requires a valid moved_to_phase.`);
-      if (topic.moved_to_phase === topic.target_phase) fail(`${topic.id}: moved_to_phase must differ from its original target_phase.`);
-    } else if (topic.moved_to_phase !== undefined) fail(`${topic.id}: moved_to_phase is only valid when status is moved.`);
+    if (topic.moves !== undefined) {
+      if (!Array.isArray(topic.moves)) fail(`${topic.id}: moves must be an array.`);
+      else {
+        let previousTarget;
+        for (const [index, move] of topic.moves.entries()) {
+          const prefix = `${topic.id}: move ${index + 1}`;
+          if (!move || typeof move !== 'object' || Array.isArray(move)) { fail(`${prefix} must be an object.`); continue; }
+          for (const key of Object.keys(move)) if (!['from_phase', 'to_phase', 'reason'].includes(key)) fail(`${prefix}: unexpected field '${key}'.`);
+          for (const field of ['from_phase', 'to_phase', 'reason']) if (typeof move[field] !== 'string' || !move[field].trim()) fail(`${prefix}: ${field} must be a non-empty string.`);
+          if (typeof move.from_phase === 'string' && !roadmap.has(move.from_phase)) fail(`${prefix}: unknown from_phase '${move.from_phase}'.`);
+          if (typeof move.to_phase === 'string' && !roadmap.has(move.to_phase)) fail(`${prefix}: unknown to_phase '${move.to_phase}'.`);
+          if (move.from_phase === move.to_phase) fail(`${prefix}: from_phase and to_phase must differ.`);
+          if (previousTarget !== undefined && move.from_phase !== previousTarget) fail(`${prefix}: move history is discontinuous; expected from_phase '${previousTarget}'.`);
+          previousTarget = move.to_phase;
+        }
+        if (topic.moves.length > 0 && topic.moves.at(-1)?.to_phase !== topic.target_phase) fail(`${topic.id}: the final move to_phase must match current target_phase '${topic.target_phase}'.`);
+      }
+    }
+    if (topic.status === 'dropped') {
+      if (typeof topic.drop_reason !== 'string' || !topic.drop_reason.trim()) fail(`${topic.id}: dropped item requires a non-empty drop_reason.`);
+    } else if (topic.drop_reason !== undefined) fail(`${topic.id}: drop_reason is only valid when status is dropped.`);
     if (topic.status === 'resolved') {
       if (typeof topic.resolution_artifact !== 'string' || !topic.resolution_artifact.trim()) fail(`${topic.id}: resolved item requires resolution_artifact.`);
       else if (/^PD-\d{3,}$/.test(topic.resolution_artifact)) {

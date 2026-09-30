@@ -37,4 +37,5 @@ console.log(requestedPhase ? `Open deferred topics for ${requestedPhase} (${phas
 for (const topic of topics) {
   console.log(`\n${topic.id} — ${topic.title}\n  Target: ${topic.target_phase} (${phases.get(topic.target_phase)})\n  Reason: ${topic.reason}`);
   if (topic.notes) console.log(`  Notes: ${topic.notes}`);
+  for (const move of topic.moves ?? []) console.log(`  Moved: ${move.from_phase} → ${move.to_phase} — ${move.reason}`);
 }

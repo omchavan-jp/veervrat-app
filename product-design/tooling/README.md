@@ -48,7 +48,7 @@ pnpm deferred:list
 pnpm deferred:list PH-004
 ```
 
-The validator checks phase IDs and statuses, moved/resolved metadata, decision dependencies, and historical `DT-*` IDs in Git history. From the repository root, run `node product-design/tooling/scripts/deferred-list.mjs [PH-004]`.
+The validator checks phase IDs and statuses, move-history phase references and chain consistency, required drop rationale, resolved artifacts, decision dependencies, and historical `DT-*` IDs in Git history. A move keeps a topic open at its new `target_phase`; `pnpm deferred:list [PH-###]` therefore includes moved topics under their current target. From the repository root, run `node product-design/tooling/scripts/deferred-list.mjs [PH-004]`.
 
 ## D2 prerequisite
 
