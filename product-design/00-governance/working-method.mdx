@@ -1,0 +1,44 @@
+---
+title: Working method
+description: Governance rules for authoring, tracing, and reviewing redesign artifacts.
+---
+
+# Working method
+
+> **Map:** Use this page whenever recording or changing design knowledge. It sets authority, traceability, and navigation rules; it does not decide Veervrat product behavior.
+
+## Authority and knowledge types
+
+Keep **source**, **decision**, and **proposal** distinct.
+
+- A **source** is evidence or input. It may inform work but does not itself establish a redesign decision.
+- A **decision** records an explicit outcome. User-confirmed decisions are authoritative for the redesign.
+- A **proposal** is a suggestion awaiting a decision. It must never silently become confirmed through repetition, implementation, or age.
+- An **open** item is an unresolved question or unknown. Preserve uncertainty until it is resolved.
+- A **source-derived** item records an interpretation grounded in a cited source; it is not user-confirmed policy.
+
+## Decision records
+
+Each decision has one canonical record and one immutable `PD-*` ID. Do not recycle IDs or silently rewrite decision history. To change a confirmed decision, create a new record, explicitly explain the change, and mark the former record `superseded` with a `superseded_by` link to the replacement. Record the reason and relevant source or discussion in the canonical record.
+
+Artifacts that rely on a decision must cite its ID in plain text. A bare ID such as `PD-014` means a **live dependency**: the artifact currently relies on that decision as truth. If that decision is superseded, validation fails and the artifact must be revisited.
+
+To mention a decision only as history, append the exact marker `(historical)` immediately after the ID, with one space: `PD-014 (historical)`. This form is case-sensitive and machine-checked. It is legal for superseded IDs; it records history without claiming a current dependency. Do not use it to hide an artifact that still relies on the decision. Unknown and malformed IDs fail validation regardless of marker. A superseded record remains part of the history; it is not deleted.
+
+Run `pnpm decision:refs PD-014` from `product-design/tooling` to list backlinks and identify live dependencies to revisit if the decision is superseded.
+
+The machine-readable registry at `decision-registry.json` is the index. Each record names its canonical MDX home. Do not duplicate the full decision in the registry or another document.
+
+## Navigation and structure
+
+Every artifact begins with a human-readable map or summary before deep detail. Use descriptive headings, links to relevant canonical records, and plain text that remains useful in a code editor. MDX is readable Markdown first; the renderer is optional presentation only.
+
+Use D2 source for diagrams and keep it editable. A generated SVG or other render is disposable output. Refer to supporting decisions from the MDX that explains the diagram; add `PD-*` references in D2 only when they materially clarify the diagram's provenance or constraint.
+
+## Reconciliation
+
+At each phase boundary, reconcile the phase's outputs against the confirmed north star and the decision registry. Capture conflicts as explicit open items or proposed changes; do not resolve them by quietly changing confirmed material. Record the reconciliation outcome in the relevant phase artifact once that work begins.
+
+## Validation
+
+Run `node product-design/tooling/scripts/validate.mjs` before considering a change ready to review. It checks the registry, `PD-*` references, relative MDX links, and D2 parsing/rendering when the D2 CLI is available. A missing D2 executable is reported as a skipped check, not a successful D2 validation.

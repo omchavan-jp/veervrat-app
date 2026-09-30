@@ -1,0 +1,21 @@
+import { notFound } from 'next/navigation';
+import defaultMdxComponents from 'fumadocs-ui/mdx';
+import { DocsBody, DocsDescription, DocsPage, DocsTitle } from 'fumadocs-ui/layouts/docs/page';
+import { source } from '../../../lib/source';
+
+export default async function Page({ params }: { params: Promise<{ slug?: string[] }> }) {
+  const { slug } = await params;
+  const page = source.getPage(slug);
+  if (!page) notFound();
+
+  const MDX = page.data.body;
+  return (
+    <DocsPage toc={page.data.toc}>
+      <DocsTitle>{page.data.title}</DocsTitle>
+      {page.data.description ? <DocsDescription>{page.data.description}</DocsDescription> : null}
+      <DocsBody>
+        <MDX components={defaultMdxComponents} />
+      </DocsBody>
+    </DocsPage>
+  );
+}

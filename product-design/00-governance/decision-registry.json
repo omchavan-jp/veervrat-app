@@ -1,0 +1,5 @@
+{
+  "$schema": "./decision-registry.schema.json",
+  "version": 1,
+  "decisions": []
+}

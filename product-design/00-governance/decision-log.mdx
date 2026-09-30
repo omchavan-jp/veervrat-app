@@ -1,0 +1,24 @@
+---
+title: Decision log
+description: Canonical index and history for product-design decisions.
+---
+
+# Decision log
+
+> **Map:** The machine-readable registry is the index of redesign decisions. Each decision has one canonical record and an immutable `PD-*` identifier; this page explains how to use that index. No product decisions have been entered yet.
+
+## Registry
+
+See [`decision-registry.json`](./decision-registry.json) for the current records and [`decision-registry.schema.json`](./decision-registry.schema.json) for the record shape and allowed statuses.
+
+The registry is intentionally empty at workspace creation. Do not seed it with inferred product policy or treat prior application documentation as confirmed redesign decisions.
+
+## Status meanings
+
+- `confirmed` — explicitly confirmed by the user for the redesign.
+- `proposed` — a candidate outcome awaiting confirmation.
+- `open` — unresolved, unknown, or awaiting investigation.
+- `superseded` — retained history replaced by a newer decision; requires `superseded_by`.
+- `source-derived` — an interpretation grounded in a cited source, without user confirmation.
+
+When a status changes, update the registry entry and canonical record together, preserve the ID, and explain the transition. A change to a confirmed decision requires a new decision record and an explicit supersession link.

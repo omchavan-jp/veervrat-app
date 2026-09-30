@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://veervrat.invalid/product-design/decision-registry.schema.json",
+  "title": "Veervrat product design decision registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "version", "decisions"],
+  "properties": {
+    "$schema": { "const": "./decision-registry.schema.json" },
+    "version": { "const": 1 },
+    "decisions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/decision" }
+    }
+  },
+  "$defs": {
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "status", "canonical_home", "summary"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^PD-[0-9]{3,}$" },
+        "title": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["confirmed", "proposed", "open", "superseded", "source-derived"] },
+        "canonical_home": { "type": "string", "minLength": 1 },
+        "summary": { "type": "string", "minLength": 1 },
+        "superseded_by": { "type": "string", "pattern": "^PD-[0-9]{3,}$" },
+        "rationale": { "type": "string" },
+        "sources": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "const": "superseded" } }, "required": ["status"] },
+          "then": { "required": ["superseded_by"] }
+        },
+        {
+          "if": { "required": ["superseded_by"] },
+          "then": { "properties": { "status": { "const": "superseded" } } }
+        }
+      ]
+    }
+  }
+}
