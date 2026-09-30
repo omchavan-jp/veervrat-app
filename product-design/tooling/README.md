@@ -11,7 +11,7 @@ pnpm install
 pnpm dev
 ```
 
-Then open the local URL printed by Next.js. The root page opens the workspace `README.mdx`. MDX remains the source of truth; Fumadocs only presents it. D2 files are authored as `.d2` source and can be rendered to SVG with the D2 CLI.
+Then open the local URL printed by Next.js. The root page opens the workspace `README.mdx`. MDX remains the source of truth; Fumadocs only presents it. D2 files are authored as `.d2` source and rendered on demand by the standalone renderer using the D2 CLI; no checked-in SVG copy is used.
 
 To verify the production renderer build from this directory, run:
 
@@ -36,6 +36,19 @@ pnpm decision:refs PD-014
 node product-design/tooling/scripts/validate.mjs
 node product-design/tooling/scripts/decision-refs.mjs PD-014
 ```
+
+## Deferred topics
+
+The phase roadmap is `../00-governance/design-roadmap.mdx`; its stable `PH-*` IDs are the allowed targets for `../00-governance/deferred-topics.json`. The register uses immutable `DT-*` IDs and records open questions separately from decisions. Its schema is `../00-governance/deferred-topics.schema.json`.
+
+From this directory, list open deferred topics with:
+
+```sh
+pnpm deferred:list
+pnpm deferred:list PH-004
+```
+
+The validator checks phase IDs and statuses, moved/resolved metadata, decision dependencies, and historical `DT-*` IDs in Git history. From the repository root, run `node product-design/tooling/scripts/deferred-list.mjs [PH-004]`.
 
 ## D2 prerequisite
 

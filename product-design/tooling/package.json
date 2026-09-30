@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "validate": "node ./scripts/validate.mjs",
-    "decision:refs": "node ./scripts/decision-refs.mjs"
+    "decision:refs": "node ./scripts/decision-refs.mjs",
+    "deferred:list": "node ./scripts/deferred-list.mjs"
   },
   "dependencies": {
     "@tailwindcss/postcss": "4.3.3",

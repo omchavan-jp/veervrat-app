@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://veervrat.invalid/product-design/deferred-topics.schema.json",
+  "title": "Veervrat product design deferred-topic register",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "version", "topics"],
+  "properties": {
+    "$schema": { "const": "./deferred-topics.schema.json" },
+    "version": { "const": 1 },
+    "topics": { "type": "array", "items": { "$ref": "#/$defs/topic" } }
+  },
+  "$defs": {
+    "topic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "status", "reason", "target_phase"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^DT-[0-9]{3,}$" },
+        "title": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["open", "resolved", "moved", "dropped"] },
+        "reason": { "type": "string", "minLength": 1 },
+        "target_phase": { "type": "string", "pattern": "^PH-[0-9]{3,}$" },
+        "notes": { "type": "string", "minLength": 1 },
+        "depends_on": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^PD-[0-9]{3,}$" } },
+        "moved_to_phase": { "type": "string", "pattern": "^PH-[0-9]{3,}$" },
+        "resolution_artifact": { "type": "string", "minLength": 1 }
+      },
+      "allOf": [
+        { "if": { "properties": { "status": { "const": "moved" } }, "required": ["status"] }, "then": { "required": ["moved_to_phase"] } },
+        { "if": { "required": ["moved_to_phase"] }, "then": { "properties": { "status": { "const": "moved" } } } },
+        { "if": { "properties": { "status": { "const": "resolved" } }, "required": ["status"] }, "then": { "required": ["resolution_artifact"] } },
+        { "if": { "required": ["resolution_artifact"] }, "then": { "properties": { "status": { "const": "resolved" } } } }
+      ]
+    }
+  }
+}

@@ -35,6 +35,12 @@ Every artifact begins with a human-readable map or summary before deep detail. U
 
 Use D2 source for diagrams and keep it editable. A generated SVG or other render is disposable output. Refer to supporting decisions from the MDX that explains the diagram; add `PD-*` references in D2 only when they materially clarify the diagram's provenance or constraint.
 
+## Deferred topics and phase traceability
+
+When a discussion intentionally says “later”, “open for phase X”, or equivalent, create or update a stable `DT-*` item in `deferred-topics.json`. Do not leave the deferral only in prose or chat. Deferred topics track questions; they are not product decisions and must not silently become confirmed requirements.
+
+Each topic must target a phase ID listed in the [design roadmap](./design-roadmap.mdx). At the start of a phase, review every open topic targeting it. At the end, account for every incoming topic: resolve it with a resolution artifact, move it to a valid phase with the new target recorded, drop it with a rationale, or leave it visibly open with an updated reason. Keep IDs immutable; do not delete or reuse them.
+
 ## Reconciliation
 
 At each phase boundary, reconcile the phase's outputs against the confirmed north star and the decision registry. Capture conflicts as explicit open items or proposed changes; do not resolve them by quietly changing confirmed material. Record the reconciliation outcome in the relevant phase artifact once that work begins.
@@ -42,3 +48,5 @@ At each phase boundary, reconcile the phase's outputs against the confirmed nort
 ## Validation
 
 Run `node product-design/tooling/scripts/validate.mjs` before considering a change ready to review. It checks the registry, `PD-*` references, relative MDX links, and D2 parsing/rendering when the D2 CLI is available. A missing D2 executable is reported as a skipped check, not a successful D2 validation.
+
+Run `pnpm deferred:list` from `product-design/tooling` to review all open deferred topics, or pass a phase ID (for example, `pnpm deferred:list PH-004`) to see the topics due for that phase.

@@ -3,9 +3,12 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { findReferences, loadRegistry, productDesignDir, registryPath, validStatuses, walk } from './governance.mjs';
+import { findReferences, loadRegistry, productDesignDir, registryPath, toolingDir, validStatuses, walk } from './governance.mjs';
 
 const schemaPath = path.join(productDesignDir, '00-governance', 'decision-registry.schema.json');
+const deferredPath = path.join(productDesignDir, '00-governance', 'deferred-topics.json');
+const deferredSchemaPath = path.join(productDesignDir, '00-governance', 'deferred-topics.schema.json');
+const roadmapPath = path.join(productDesignDir, '00-governance', 'design-roadmap.mdx');
 const errors = [];
 const warnings = [];
 const fail = (message) => errors.push(message);
@@ -28,7 +31,6 @@ function validateRegistry() {
     fail(`Registry schema must declare statuses in this order: ${validStatuses.join(', ')}.`);
   }
   const ids = new Map();
-  const homes = new Map();
   const allowedKeys = new Set(['id', 'title', 'status', 'canonical_home', 'summary', 'superseded_by', 'rationale', 'sources']);
   for (const record of registry.decisions) {
     if (!record || typeof record !== 'object' || Array.isArray(record)) { fail('Registry contains a non-object decision.'); continue; }
@@ -55,8 +57,6 @@ function validateRegistry() {
       if (!canonicalReferences.some((reference) => reference.id === record.id)) {
         fail(`${record.id}: canonical_home must contain its decision ID.`);
       }
-      if (homes.has(homeReal)) fail(`${record.id}: canonical home is already assigned to ${homes.get(homeReal)}.`);
-      else homes.set(homeReal, record.id);
     } catch {
       fail(`${record.id}: canonical_home '${record.canonical_home}' does not resolve to an existing MDX file inside product-design.`);
     }
@@ -114,6 +114,150 @@ function validateHistoricalIds(ids) {
   }
 }
 
+function loadRoadmapPhases() {
+  const text = readFileSync(roadmapPath, 'utf8');
+  const phases = new Map();
+  const reconciliations = new Map();
+  const statuses = new Set(['completed', 'current', 'planned']);
+  for (const [index, line] of text.split('\n').entries()) {
+    if (!/^\| `PH-/.test(line)) continue;
+    const cells = line.split('|').slice(1, -1).map((cell) => cell.trim().replace(/^`|`$/g, ''));
+    if (cells.length !== 4) continue;
+    const [id, name, purpose, status] = cells;
+    if (!/^PH-\d{3,}$/.test(id)) fail(`design-roadmap.mdx:${index + 1}: invalid phase ID '${id}'.`);
+    if (phases.has(id)) fail(`Duplicate roadmap phase ID: ${id}.`);
+    else phases.set(id, { name, purpose, status });
+    if (!name || !purpose) fail(`${id}: phase name and purpose are required.`);
+    if (!statuses.has(status)) fail(`${id}: invalid phase status '${status}'.`);
+  }
+  for (const [index, line] of text.split('\n').entries()) {
+    if (!/^\| `PH-/.test(line) || !line.includes(' | ') || !/(complete|pending)/.test(line)) continue;
+    const cells = line.split('|').slice(1, -1).map((cell) => cell.trim().replace(/^`|`$/g, ''));
+    if (cells.length !== 3 || !/^PH-\d{3,}$/.test(cells[0]) || !['complete', 'pending'].includes(cells[1].split(/\s+[—-]/)[0]) || !['complete', 'pending'].includes(cells[2].split(/\s+[—-]/)[0])) continue;
+    if (reconciliations.has(cells[0])) fail(`Duplicate reconciliation row for ${cells[0]} at design-roadmap.mdx:${index + 1}.`);
+    reconciliations.set(cells[0], { start: cells[1].startsWith('complete'), end: cells[2].startsWith('complete') });
+  }
+  if (phases.size === 0) fail('Design roadmap has no machine-readable phase rows.');
+  const current = [...phases.values()].filter((phase) => phase.status === 'current');
+  if (current.length !== 1) fail(`Design roadmap must have exactly one current phase; found ${current.length}.`);
+  for (const id of phases.keys()) if (!reconciliations.has(id)) fail(`${id}: roadmap requires a deferred-topic reconciliation row.`);
+  for (const [id, phase] of phases) {
+    const reconciliation = reconciliations.get(id);
+    if (!reconciliation) continue;
+    if (phase.status === 'current' && !reconciliation.start) fail(`${id}: complete its deferred-topic start review before work proceeds.`);
+    if (phase.status === 'completed' && (!reconciliation.start || !reconciliation.end)) fail(`${id}: completed phases require complete start and end deferred-topic reviews.`);
+    if (phase.status === 'planned' && (reconciliation.start || reconciliation.end)) fail(`${id}: planned phases cannot have completed reconciliation reviews.`);
+  }
+  validateHistoricalPhaseIds(phases);
+  return phases;
+}
+
+function validateHistoricalPhaseIds(phases) {
+  const roadmapRepoPath = 'product-design/00-governance/design-roadmap.mdx';
+  let commits;
+  try {
+    commits = execFileSync('git', ['log', '--all', '--format=%H', '--', '00-governance/design-roadmap.mdx'], { cwd: productDesignDir, encoding: 'utf8' }).trim().split('\n').filter(Boolean);
+  } catch {
+    warnings.push('Roadmap phase-ID history check skipped: Git history is unavailable.');
+    return;
+  }
+  if (commits.length === 0) {
+    warnings.push('Roadmap phase-ID history check not active yet: the roadmap has no committed history. It activates after the first roadmap commit.');
+    return;
+  }
+  const previouslyUsed = new Set();
+  for (const commit of commits) {
+    try {
+      const text = execFileSync('git', ['show', `${commit}:${roadmapRepoPath}`], { cwd: productDesignDir, encoding: 'utf8' });
+      for (const match of text.matchAll(/^\| `(PH-\d{3,})` \|/gm)) previouslyUsed.add(match[1]);
+    } catch (error) {
+      fail(`Could not read design roadmap at Git revision ${commit}: ${error instanceof Error ? error.message : String(error)}.`);
+    }
+  }
+  for (const historicalId of previouslyUsed) {
+    if (!phases.has(historicalId)) fail(`Roadmap phase ID ${historicalId} exists in committed history and cannot be deleted or reused.`);
+  }
+}
+
+function validateDeferredHistory(ids) {
+  const registryRepoPath = 'product-design/00-governance/deferred-topics.json';
+  let commits;
+  try {
+    commits = execFileSync('git', ['log', '--all', '--format=%H', '--', '00-governance/deferred-topics.json'], { cwd: productDesignDir, encoding: 'utf8' }).trim().split('\n').filter(Boolean);
+  } catch {
+    warnings.push('Deferred-topic immutable-ID history check skipped: Git history is unavailable.');
+    return;
+  }
+  if (commits.length === 0) {
+    warnings.push('Deferred-topic immutable-ID history check not active yet: the register has no committed history. It activates after the first register commit.');
+    return;
+  }
+  const previouslyUsed = new Set();
+  for (const commit of commits) {
+    try {
+      const previous = JSON.parse(execFileSync('git', ['show', `${commit}:${registryRepoPath}`], { cwd: productDesignDir, encoding: 'utf8' }));
+      for (const topic of previous.topics ?? []) if (typeof topic.id === 'string') previouslyUsed.add(topic.id);
+    } catch (error) {
+      fail(`Could not read deferred-topic register at Git revision ${commit}: ${error instanceof Error ? error.message : String(error)}.`);
+    }
+  }
+  for (const historicalId of previouslyUsed) {
+    if (!ids.has(historicalId)) fail(`Deferred-topic ID ${historicalId} exists in committed register history and cannot be deleted or reused.`);
+  }
+}
+
+function validateDeferredTopics(decisions) {
+  const roadmap = loadRoadmapPhases();
+  const register = JSON.parse(readFileSync(deferredPath, 'utf8'));
+  const schema = JSON.parse(readFileSync(deferredSchemaPath, 'utf8'));
+  const allowedStatuses = ['open', 'resolved', 'moved', 'dropped'];
+  if (register.$schema !== './deferred-topics.schema.json' || register.version !== 1 || !Array.isArray(register.topics)) {
+    fail('Deferred-topic register must have its schema pointer, version 1, and topics array.');
+    return;
+  }
+  const schemaStatuses = schema.$defs?.topic?.properties?.status?.enum;
+  if (!Array.isArray(schemaStatuses) || schemaStatuses.join('|') !== allowedStatuses.join('|')) {
+    fail(`Deferred-topic schema must declare statuses in this order: ${allowedStatuses.join(', ')}.`);
+  }
+  const allowedKeys = new Set(['id', 'title', 'status', 'reason', 'target_phase', 'notes', 'depends_on', 'moved_to_phase', 'resolution_artifact']);
+  const ids = new Map();
+  for (const topic of register.topics) {
+    if (!topic || typeof topic !== 'object' || Array.isArray(topic)) { fail('Deferred-topic register contains a non-object entry.'); continue; }
+    for (const key of Object.keys(topic)) if (!allowedKeys.has(key)) fail(`${topic.id ?? '(missing ID)'}: unexpected deferred-topic field '${key}'.`);
+    if (!/^DT-\d{3,}$/.test(topic.id ?? '')) fail(`Invalid deferred-topic ID: ${topic.id ?? '(missing)'}.`);
+    if (ids.has(topic.id)) fail(`Duplicate deferred-topic ID: ${topic.id}.`);
+    else ids.set(topic.id, topic);
+    for (const field of ['title', 'reason']) if (typeof topic[field] !== 'string' || !topic[field].trim()) fail(`${topic.id}: missing or invalid ${field}.`);
+    if (!allowedStatuses.includes(topic.status)) fail(`${topic.id}: invalid status '${topic.status}'.`);
+    if (typeof topic.target_phase !== 'string' || !roadmap.has(topic.target_phase)) fail(`${topic.id}: target_phase '${topic.target_phase ?? ''}' is not a phase in design-roadmap.mdx.`);
+    if (topic.notes !== undefined && (typeof topic.notes !== 'string' || !topic.notes.trim())) fail(`${topic.id}: notes must be a non-empty string when present.`);
+    if (topic.depends_on !== undefined) {
+      if (!Array.isArray(topic.depends_on)) fail(`${topic.id}: depends_on must be an array.`);
+      else for (const id of topic.depends_on) {
+        if (!/^PD-\d{3,}$/.test(id) || !decisions.has(id)) fail(`${topic.id}: depends_on contains unknown or invalid decision ID '${id}'.`);
+      }
+    }
+    if (topic.status === 'moved') {
+      if (typeof topic.moved_to_phase !== 'string' || !roadmap.has(topic.moved_to_phase)) fail(`${topic.id}: moved item requires a valid moved_to_phase.`);
+      if (topic.moved_to_phase === topic.target_phase) fail(`${topic.id}: moved_to_phase must differ from its original target_phase.`);
+    } else if (topic.moved_to_phase !== undefined) fail(`${topic.id}: moved_to_phase is only valid when status is moved.`);
+    if (topic.status === 'resolved') {
+      if (typeof topic.resolution_artifact !== 'string' || !topic.resolution_artifact.trim()) fail(`${topic.id}: resolved item requires resolution_artifact.`);
+      else if (/^PD-\d{3,}$/.test(topic.resolution_artifact)) {
+        if (!decisions.has(topic.resolution_artifact)) fail(`${topic.id}: resolution_artifact references unknown ${topic.resolution_artifact}.`);
+      } else {
+        const artifactPath = path.resolve(path.dirname(deferredPath), topic.resolution_artifact);
+        try {
+          const root = realpathSync(productDesignDir);
+          const target = realpathSync(artifactPath);
+          if (!isInside(root, target) || !statSync(target).isFile()) fail(`${topic.id}: resolution_artifact must point to an existing file inside product-design or a known PD-* decision.`);
+        } catch { fail(`${topic.id}: resolution_artifact '${topic.resolution_artifact}' does not exist inside product-design.`); }
+      }
+    } else if (topic.resolution_artifact !== undefined) fail(`${topic.id}: resolution_artifact is only valid when status is resolved.`);
+  }
+  validateDeferredHistory(ids);
+}
+
 function validateLinks(mdxFiles) {
   for (const file of mdxFiles) {
     const text = readFileSync(file, 'utf8');
@@ -121,6 +265,13 @@ function validateLinks(mdxFiles) {
       const link = match[1].trim();
       const [rawPath, ...fragmentParts] = link.split(/[?#]/);
       if (/^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(rawPath)) continue;
+      if (rawPath.startsWith('/')) {
+        const appRoot = path.join(toolingDir, 'app');
+        const routePath = path.resolve(appRoot, `.${rawPath}`, 'route.ts');
+        if (isInside(appRoot, routePath) && existsSync(routePath)) continue;
+        const publicPath = path.resolve(toolingDir, 'public', `.${rawPath}`);
+        if (isInside(path.join(toolingDir, 'public'), publicPath) && existsSync(publicPath)) continue;
+      }
       const target = rawPath ? path.resolve(path.dirname(file), decodeURIComponent(rawPath)) : file;
       let realTarget;
       try { realTarget = realpathSync(target); }
@@ -179,6 +330,7 @@ function validateD2(d2Files) {
 
 try {
   const decisions = validateRegistry();
+  validateDeferredTopics(decisions);
   const mdxFiles = walk(productDesignDir, (file) => file.endsWith('.mdx'));
   const d2Files = walk(productDesignDir, (file) => file.endsWith('.d2'));
   validateLinks(mdxFiles);

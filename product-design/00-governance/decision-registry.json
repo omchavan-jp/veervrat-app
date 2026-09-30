@@ -1,5 +1,41 @@
 {
   "$schema": "./decision-registry.schema.json",
   "version": 1,
-  "decisions": []
+  "decisions": [
+    {
+      "id": "PD-001",
+      "title": "Veervrat North Star: कर्तृत्वशक्तीचे स्वावलंबन",
+      "status": "confirmed",
+      "canonical_home": "../01-product-model/north-star.mdx",
+      "summary": "Veervrat aims at progressively increasing कर्तृत्वशक्तीचे स्वावलंबन: the motivation, judgment, virtues, capacity for action, perseverance, adaptability, and self-reflection for कर्तृत्व increasingly arise from within the person, enabling meaningful and consequential action."
+    },
+    {
+      "id": "PD-002",
+      "title": "दोषापनयन fundamentally occurs through गुणसंवर्धन",
+      "status": "confirmed",
+      "canonical_home": "../01-product-model/north-star.mdx",
+      "summary": "Development is framed through cultivating relevant गुण / उपगुण so that a corresponding lacuna gradually weakens; lacunae help identify constraints on कर्तृत्व without encouraging identification with deficiency."
+    },
+    {
+      "id": "PD-003",
+      "title": "Veervrat, its structured process, and the app are distinct",
+      "status": "confirmed",
+      "canonical_home": "../01-product-model/north-star.mdx",
+      "summary": "Veervrat is a संस्कार undertaken so that कर्तृत्वशक्तीचे स्वावलंबन increases; a structured process supports undertaking it, and the Veervrat app is the community's digital platform. Veervrat itself is neither the workflow nor the software."
+    },
+    {
+      "id": "PD-004",
+      "title": "Agency must be strengthened, not substituted",
+      "status": "confirmed",
+      "canonical_home": "../01-product-model/north-star.mdx",
+      "summary": "The locus of judgment and action remains with the Vratarthi; the process, Vratamitra, app, AI, and community support development without replacing or owning the Vratarthi's agency."
+    },
+    {
+      "id": "PD-005",
+      "title": "Success is demonstrated developmental change",
+      "status": "confirmed",
+      "canonical_home": "../01-product-model/north-star.mdx",
+      "summary": "Journey success is developmental change in how genuinely, consistently, and independently the chosen Sentence's quality or capability is present in life. Ratings, completion states, and metrics are evidence or proxies, not objectives; Challenge cardinality remains open."
+    }
+  ]
 }
