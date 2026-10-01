@@ -1348,7 +1348,8 @@
     "capability": {
       "FEEDBACK_WIDGET": "Feedback widget",
       "CONTENT_EDIT": "Content editor",
-      "CONTENT_SUGGEST": "Content suggestions"
+      "CONTENT_SUGGEST": "Content suggestions",
+      "PRODUCT_DOCS_VIEW": "Product docs"
     }
   },
   "audit": {

@@ -15,7 +15,7 @@ export function GET() {
 
     return new Response(svg, {
       headers: {
-        'Cache-Control': 'public, max-age=60',
+        'Cache-Control': 'private, no-store',
         'Content-Type': 'image/svg+xml; charset=utf-8',
       },
     });

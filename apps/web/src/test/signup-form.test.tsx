@@ -86,6 +86,7 @@ const renderSignup = () =>
         apiBaseUrl: 'http://localhost:3001/api/v1',
         siteUrl: 'http://localhost:3000',
         feedbackMode: 'off',
+        productDocsMode: 'off',
         environment: 'local',
         contentEditEnabled: false,
         sentryDsn: undefined,

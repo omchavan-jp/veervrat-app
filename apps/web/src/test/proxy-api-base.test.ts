@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { internalApiBase, publicApiBase } from '@/proxy';
+import { internalApiBase, publicApiBase } from '@/lib/runtime-config';
 
 /**
  * The proxy makes one server-to-server call per request — `/auth/me`, to resolve the session

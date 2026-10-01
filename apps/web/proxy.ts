@@ -1,29 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { SUPPORTED_LOCALES, type Locale } from '@/lib/i18n-constants';
 import type { SessionUser } from '@/lib/session-user';
-
-// Read per request, never at module scope. Middleware modules are bundled, and a
-// module-scope `process.env` read can be frozen into that bundle — the same build-time
-// baking that pointed prod's web tier at UAT's api (21_Infrastructure-Conventions §17).
-
-/**
- * The in-environment address of the api, when one is configured.
- *
- * This is the single call the *server* makes to the api, and both run in the same Container Apps
- * environment. Sent to the public origin it leaves the network and comes back: latency on every
- * server-rendered page, and a cold api becomes something the proxy waits on.
- *
- * Returns null when unset, which is the normal state in local development and in any environment
- * that has not been given one.
- */
-export function internalApiBase(): string | null {
-  return process.env.API_INTERNAL_URL || null;
-}
-
-/** What the browser uses, and what the server falls back to. */
-export function publicApiBase(): string {
-  return process.env.API_BASE_URL || 'http://localhost:3001/api/v1';
-}
+import { internalApiBase, publicApiBase } from '@/lib/runtime-config';
 
 // How long an in-environment call may take before it is treated as broken. It is a call to a
 // neighbour behind the same proxy; if it has not answered in two seconds, waiting longer only
@@ -137,6 +115,9 @@ function localeFrom(user: SessionUser | null, request: NextRequest): Locale {
 }
 
 export async function proxy(request: NextRequest) {
+  if (/^\/product-docs(?:\/|$)/.test(request.nextUrl.pathname)) {
+    return NextResponse.next();
+  }
   // The session is resolved on every document request for signed-in users. That is a deliberate
   // cost, decided in openspec/changes/server-resolved-auth: it is what lets the client render
   // with auth already known, instead of fetching it and gating the whole tree on a spinner.

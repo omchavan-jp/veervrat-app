@@ -9,6 +9,7 @@ let setResponseCookies: Array<{ name: string; value: string }> = [];
 vi.mock('next/server', () => {
   class MockNextRequest {
     url: string;
+    nextUrl: URL;
     cookies: { get: (name: string) => { value: string } | undefined };
     headers: Headers;
 
@@ -17,6 +18,7 @@ vi.mock('next/server', () => {
       init?: { headers?: Record<string, string>; cookies?: Record<string, string> },
     ) {
       this.url = url;
+      this.nextUrl = new URL(url);
       const cookieMap = init?.cookies ?? {};
       const headerMap: Record<string, string> = {};
       for (const [k, v] of Object.entries(init?.headers ?? {})) {

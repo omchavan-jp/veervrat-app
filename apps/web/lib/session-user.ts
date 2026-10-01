@@ -1,4 +1,8 @@
-export type Capability = 'FEEDBACK_WIDGET' | 'CONTENT_EDIT' | 'CONTENT_SUGGEST';
+export type Capability =
+  | 'FEEDBACK_WIDGET'
+  | 'CONTENT_EDIT'
+  | 'CONTENT_SUGGEST'
+  | 'PRODUCT_DOCS_VIEW';
 
 /**
  * The user as resolved server-side from the session cookie and seeded into the client.

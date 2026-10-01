@@ -6,6 +6,7 @@ type D2DiagramProps = {
 };
 
 export function D2Diagram({ src, alt }: D2DiagramProps) {
+  const diagramUrl = `/product-docs${src}`;
   return (
     <figure className="not-prose my-8 max-w-full">
       <div
@@ -14,9 +15,9 @@ export function D2Diagram({ src, alt }: D2DiagramProps) {
         role="region"
         tabIndex={0}
       >
-        <ImageZoom src={src} zoomInProps={{ alt }}>
+        <ImageZoom src={diagramUrl} zoomInProps={{ alt }}>
           <img
-            src={src}
+            src={diagramUrl}
             alt={alt}
             className="block h-auto w-auto max-w-none"
             style={{ height: 'auto', maxWidth: 'none', width: 'auto' }}
@@ -25,7 +26,7 @@ export function D2Diagram({ src, alt }: D2DiagramProps) {
       </div>
       <figcaption className="mt-2 flex flex-wrap gap-x-2 text-sm text-fd-muted-foreground">
         <span>Scroll horizontally to inspect the full diagram. Click it to zoom.</span>
-        <a href={src} target="_blank" rel="noreferrer">
+        <a href={diagramUrl} target="_blank" rel="noreferrer">
           Open SVG full size
         </a>
       </figcaption>

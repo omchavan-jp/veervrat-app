@@ -7,6 +7,7 @@ const baseConfig = {
   apiBaseUrl: 'http://localhost:3001/api/v1',
   siteUrl: 'http://localhost:3000',
   feedbackMode: 'off' as const,
+  productDocsMode: 'off' as const,
   environment: 'uat' as const,
   contentEditEnabled: false,
 };
