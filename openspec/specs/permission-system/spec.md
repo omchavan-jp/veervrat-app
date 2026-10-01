@@ -1,6 +1,6 @@
 ### Requirement: hasPermission function enforces RBAC+ABAC hybrid
 
-The system SHALL provide a pure function `hasPermission(user, resource, action, context)` that evaluates whether the given `SessionUser` is permitted to perform `action` on `resource`. The function MUST return `true` only when all conditions are satisfied and MUST return `false` for all other cases (no default-allow). The function MUST NOT perform any I/O — all resource and relationship data MUST be passed in via the arguments.
+The system SHALL provide a pure function `hasPermission(user, resource, action)` that evaluates whether the given `SessionUser` is permitted to perform `action` on `resource`. Resource and relationship context is carried by the discriminated `resource` value. The function MUST return `true` only when all conditions are satisfied and MUST return `false` for all other cases (no default-allow). The function MUST NOT perform any I/O — all resource and relationship data MUST be passed in via the arguments.
 
 #### Scenario: VA can create a journey (own action)
 - **WHEN** a user with role VRATARTHI calls `hasPermission` with action `journey.create` and resource `{ type: 'platform' }`
@@ -249,3 +249,19 @@ The system SHALL provide a `@RequirePermission(action, resolver?)` decorator. Wh
 #### Scenario: Decorator without resolver defaults to platform resource
 - **WHEN** `@RequirePermission('admin.manage_taxonomy')` is applied without a resolver
 - **THEN** the guard resolves the resource as `{ type: 'platform' }` automatically
+
+### Requirement: Product docs access is an environment-gated individual capability
+
+The system SHALL grant `product_docs.view` only to an authenticated user holding
+`PRODUCT_DOCS_VIEW` when `PRODUCT_DOCS_MODE=granted`. An Admin role SHALL NOT
+imply this capability. The API SHALL read the current grant for each access
+check, so revocation takes effect without a new login. Production SHALL keep
+the mode off for this UAT-only deployment.
+
+#### Scenario: Holder may view product docs in UAT
+- **WHEN** an authenticated capability holder requests a page or asset under `/product-docs` in UAT
+- **THEN** the API authorizes the web gateway to forward the request to the internal renderer
+
+#### Scenario: No grant or disabled environment denies access
+- **WHEN** the user lacks the grant, or the environment mode is off
+- **THEN** the gateway does not forward the request to the renderer

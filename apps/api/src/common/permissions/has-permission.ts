@@ -360,6 +360,12 @@ function checkLayerOne(
         allowedByFeature(resource.featureMode, resource.grants, 'CONTENT_EDIT')
       );
 
+    case 'product_docs.view':
+      return (
+        resource.type === 'platform' &&
+        allowedByFeature(resource.featureMode, resource.grants, 'PRODUCT_DOCS_VIEW')
+      );
+
     // ── Content suggestions ──────────────────────────────────────────────────
     // Enforced here, not only in the widget. Both existing capability-gated features shipped
     // with the check in the browser alone — the feedback widget's flag reached the web tier

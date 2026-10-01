@@ -1047,3 +1047,29 @@ describe('capability-gated: content.edit', () => {
     expect(hasPermission(VA, resource, 'content.edit')).toBe(false);
   });
 });
+
+describe('capability-gated: product_docs.view', () => {
+  const action = 'product_docs.view' as const;
+
+  it('allows an explicitly granted user when enabled', () => {
+    expect(
+      hasPermission(
+        VA,
+        { type: 'platform', grants: [Capability.PRODUCT_DOCS_VIEW], featureMode: 'granted' },
+        action,
+      ),
+    ).toBe(true);
+  });
+
+  it('denies an ungranted user and an ungranted admin', () => {
+    const resource = { type: 'platform' as const, grants: [], featureMode: 'granted' as const };
+    expect(hasPermission(VA, resource, action)).toBe(false);
+    expect(hasPermission(ADMIN, resource, action)).toBe(false);
+  });
+
+  it('denies a grant when the environment is off or the mode is absent', () => {
+    const grants = [Capability.PRODUCT_DOCS_VIEW];
+    expect(hasPermission(VA, { type: 'platform', grants, featureMode: 'off' }, action)).toBe(false);
+    expect(hasPermission(VA, { type: 'platform', grants }, action)).toBe(false);
+  });
+});
