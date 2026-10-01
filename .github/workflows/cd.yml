@@ -1,16 +1,15 @@
 # Continuous deployment.
 #
-# Encodes the release rules from AGENTS.md so they cannot be got wrong by hand:
-#   merge to main       -> build images tagged with the SHA -> migrate -> deploy UAT
-#   tag prod-YYYY-MM-DD -> migrate -> deploy prod with the SAME image (never rebuilt)
+# Main builds and deploys changed app/docs image sets to UAT. A prod-* tag rebuilds
+# and deploys app images; the documented artifact-promotion intent differs from
+# that current behavior and is tracked as separate deployment debt.
 #
 # Every step exists because doing it manually went wrong at least once. See
 # documentation/21_Infrastructure-Conventions.md §14 and the traps table in
 # ../../azure-account-facts.md §5.
 #
-# A push to main only builds+deploys if it touched an app-relevant path (see the `changes`
-# step in `prepare`, and §16 of 21_Infrastructure-Conventions.md). A doc-only merge — this
-# comment included — used to still rebuild all 3 images and redeploy UAT for nothing.
+# A push to main uses one changed-file classifier for app, product-docs, and
+# docs-infrastructure work. Ordinary documentation-only pushes skip CD.
 # prod-* tag pushes are never filtered: they're already a deliberate, rare, manual act.
 name: CD
 
@@ -48,6 +47,8 @@ jobs:
       image_tag: ${{ steps.meta.outputs.sha }}
       uat_domain: ${{ steps.meta.outputs.domain }}
       app_changed: ${{ steps.changes.outputs.app_changed }}
+      docs_changed: ${{ steps.changes.outputs.docs_changed }}
+      docs_infra_changed: ${{ steps.changes.outputs.docs_infra_changed }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -69,25 +70,15 @@ jobs:
           # image no longer needs it, since per-environment URLs are runtime config now.
           echo "domain=$(az containerapp env show -n veervrat-uat-cae -g veervrat-uat \
             --query properties.defaultDomain -o tsv)" >> "$GITHUB_OUTPUT"
-      # Only meaningful for branch pushes to main — tag pushes always build (see `build`'s
-      # `if`), and a manual workflow_dispatch has no `before` SHA to diff against. Anything
-      # NOT matching the ignore list below counts as app-relevant, deliberately conservative:
-      # an unrecognised new top-level path triggers a build rather than silently skipping one.
+      # Only meaningful for branch pushes to main. Tag pushes always build app
+      # images, and manual dispatch has no `before` SHA to diff against. The
+      # shared classifier defaults unknown paths to app-relevant.
       - id: changes
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/')
         run: |
           set -euo pipefail
           changed="$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}")"
-          # `grep -qv` was tried first and dropped: piped through `-q`, it exits as soon as it
-          # has enough input to decide, and on this input size that raced with a still-writing
-          # producer and returned the wrong status intermittently. Capturing full output first
-          # and checking it for content is slower by nothing that matters here, and correct.
-          non_ignored="$(echo "$changed" | grep -vE '^(documentation/|ops/|openspec/|spec/|\.claude/)|\.md$' || true)"
-          if [ -n "$non_ignored" ]; then
-            echo "app_changed=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "app_changed=false" >> "$GITHUB_OUTPUT"
-          fi
+          printf '%s\n' "$changed" | bash .github/scripts/classify-changes.sh >> "$GITHUB_OUTPUT"
 
   # One job per image, in parallel. Three benefits over the previous single sequential job:
   # each gets its own fresh Azure login (see above), wall-clock is the slowest image rather
@@ -183,9 +174,37 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.image }}
           cache-to: type=gha,scope=${{ matrix.image }},mode=max
 
+  build-docs:
+    needs: prepare
+    if: github.ref == 'refs/heads/main' && needs.prepare.outputs.docs_changed == 'true'
+    runs-on: ubuntu-latest
+    environment: build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - run: az acr login --name "$REGISTRY"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: product-design/tooling/Dockerfile
+          target: runtime
+          push: true
+          tags: ${{ env.REGISTRY_SERVER }}/veervrat-docs:${{ needs.prepare.outputs.image_tag }}
+          cache-from: type=gha,scope=veervrat-docs
+          cache-to: type=gha,scope=veervrat-docs,mode=max
+
   deploy-uat:
-    needs: [prepare, build]
-    if: startsWith(github.ref, 'refs/heads/main')
+    needs: [prepare, build, build-docs]
+    if: >-
+      always() && github.ref == 'refs/heads/main' && needs.prepare.result == 'success' &&
+      (github.event_name == 'workflow_dispatch' || needs.prepare.outputs.app_changed == 'true' || needs.prepare.outputs.docs_changed == 'true') &&
+      (needs.build.result == 'success' || needs.build.result == 'skipped') &&
+      (needs.build-docs.result == 'success' || needs.build-docs.result == 'skipped')
     runs-on: ubuntu-latest
     environment: uat
     steps:
@@ -199,6 +218,8 @@ jobs:
         with:
           environment: uat
           image_tag: ${{ needs.prepare.outputs.image_tag }}
+          deploy_apps: ${{ github.event_name == 'workflow_dispatch' || needs.prepare.outputs.app_changed == 'true' }}
+          docs_image_tag: ${{ needs.prepare.outputs.docs_changed == 'true' && needs.prepare.outputs.image_tag || '' }}
 
   deploy-prod:
     needs: [prepare, build]

@@ -904,6 +904,15 @@ already-deliberate act would only add a way for a real prod deploy to silently n
 The ignore list is an allow-list of known-safe non-app paths, not a blocklist of app paths —
 an unrecognised new top-level directory defaults to *triggering* a build, not skipping one.
 
+**Current extension for product docs:** `prepare` still uses one changed-file
+list, now classified by `.github/scripts/classify-changes.sh` into app, docs,
+and docs infrastructure flags. Canonical `product-design/` content and renderer
+code build/deploy only the internal UAT docs image; app paths retain the app
+image/migration path; mixed pushes take the union. The ordinary documentation
+ignore list above remains. `prod-*` tags still build app images and cannot
+create the docs renderer, which production Terraform disables. The shell
+classifier has fixtures in `.github/scripts/classify-changes.test.sh`.
+
 **A portability trap hit while writing the check:** the first version used `grep -qvE
 'pattern'` to test "did any changed file NOT match the ignore list". `-q` makes grep exit as
 soon as it has enough input to decide, and piped from a `$(...)` command substitution this
@@ -1245,6 +1254,7 @@ Two questions look alike and are not:
 |---|---|---|
 | Does this feature exist **in this environment**? | env config | `FEEDBACK_MODE`, `CONTENT_EDIT_ENABLED` |
 | May **this person** use it here? | database (`user_capabilities`) | a beta tester's `FEEDBACK_WIDGET` grant |
+| May this person view internal product docs? | database (`user_capabilities`) | `PRODUCT_DOCS_VIEW`, with no Admin bypass |
 
 Both must be satisfied. An environment with the feature off ignores grants entirely, which is
 what makes "content editor never on prod, for anyone" (O7) enforceable no matter what a future
@@ -1257,6 +1267,13 @@ never once populated in any environment before being deleted.
 
 `FEEDBACK_MODE` values: `off` (nobody) and `granted` (holders of the capability). Unrecognised
 values **fail closed** — a typo, or a stale `all` left in config, must not open a gated feature.
+
+`PRODUCT_DOCS_MODE` follows the same `off`/`granted` pattern. UAT sets it on
+both web and API; production sets it to `off` and both services force it off
+when `ENVIRONMENT=prod`. The web gateway authorizes every `/product-docs/*`
+request through the API using the current session, and the API checks the
+current per-user grant. The standalone Fumadocs renderer has internal-only
+ingress and a separate docs image tag.
 
 **UAT mirrors prod.** An earlier `all` mode (every authenticated user, grants ignored) was used
 on UAT so reviewers needed no setup. It meant the grant path was never exercised before prod —

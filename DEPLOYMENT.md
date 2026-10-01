@@ -57,23 +57,38 @@ CROSSSLOT errors flooded Log Analytics at ₹19,230 in 12 hours. Fixed by PR #29
 See `AGENTS.md` → Git conventions for the rules. In short:
 
 ```
-merge PR to main  →  build image tagged with git SHA  →  push to veervratacr
-                  →  auto-deploy that image to UAT
+merge PR to main  →  classify paths  →  build changed app/docs image set
+                  →  deploy to UAT (app migrations only for app changes)
 
-tag prod-YYYY-MM-DD  →  deploy the SAME image to prod
+tag prod-YYYY-MM-DD  →  rebuild and deploy app images to prod
 ```
 
-**Promote, never rebuild.** The prod deploy ships the exact image UAT exercised.
+The production workflow currently rebuilds app images on a `prod-*` tag. The
+repository's earlier promote-without-rebuild guidance does not match that
+executable workflow; the discrepancy is tracked separately.
 
-**A merge only triggers a build+deploy if it touched an app-relevant path.** Doc-only merges
-(`documentation/`, `ops/`, `openspec/`, `spec/`, `.claude/`, any `*.md`) are skipped — added
-2026-08-16 after a pure doc PR rebuilt and redeployed for nothing. `prod-*` tag pushes are
-never filtered. Details and the reasoning for not making UAT tag-gated instead:
+**A merge triggers only the affected UAT image set.** Changes under
+`product-design/` build/deploy the internal docs renderer without app image
+rebuilds or migrations. App changes retain the existing app deployment path;
+mixed pushes deploy both. Ordinary doc-only merges (`documentation/`, `ops/`,
+`openspec/`, `spec/`, `.claude/`, any `*.md`) are skipped. Unknown paths default
+to an app build. `prod-*` tag pushes are never filtered, but never deploy docs.
+Details and the reasoning for not making UAT tag-gated instead:
 `documentation/21_Infrastructure-Conventions.md` §16.
 
 Automated in `.github/workflows/cd.yml`. The prod gate is the **tag itself** — GitHub's
 required-reviewers rule needs a paid plan on private repos, so there is no approval prompt.
 Pushing a `prod-*` tag is the deliberate act.
+
+The product docs deployment uses `veervrat-docs:<docs_image_tag>` in the UAT
+Container Apps Environment. Terraform gives it **internal ingress only** and
+no public hostname. Browsers enter at the existing web domain's
+`/product-docs/*` route; the web gateway checks the API's current session and
+`PRODUCT_DOCS_VIEW` grant on every request. The renderer receives no identity
+headers. An admin can grant or revoke the capability per user. In production,
+Terraform creates no renderer and sets the runtime gate to `off`, so tagged
+commits containing design files do not expose the route. A docs-only UAT apply
+pins the existing app image tags and skips API migrations.
 
 Local development is `docker-compose` and is not a deploy target — no pipeline touches it.
 
@@ -392,6 +407,7 @@ identity — never pasted into the portal, never committed.
 | `SHUTDOWN_TIMEOUT_MS` | default 10000 | must stay under the platform's SIGTERM→SIGKILL grace period |
 | `S3_*` | unset for now | uploads degrade gracefully — chat image upload is disabled, nothing else breaks |
 | `MEILI_*` | unset | search deferred |
+| `PRODUCT_DOCS_MODE` | `granted` in UAT, `off` in prod; API enforces `PRODUCT_DOCS_VIEW` per-user grants and forces prod off |
 
 ### web — **runtime**, except the commit SHA
 
@@ -406,6 +422,8 @@ Runtime — set on the Container App, changed with a restart, no rebuild:
 | `API_BASE_URL` | absolute api URL incl. `/api/v1`. The browser calls the api directly — there is no proxy |
 | `SITE_URL` | og:image / canonical URL base |
 | `FEEDBACK_MODE` | `off` (nobody) or `granted` (holders of the `FEEDBACK_WIDGET` capability). Unrecognised values fail closed. Per-user grants via admin dashboard |
+| `PRODUCT_DOCS_MODE` | `granted` in UAT, `off` in prod. The gateway returns 404 before renderer access when off; prod also forces off in code. |
+| `PRODUCT_DOCS_INTERNAL_URL` | Internal UAT docs Container App origin, supplied by Terraform when the renderer image exists. No public docs hostname. |
 
 Build-time, and only these:
 

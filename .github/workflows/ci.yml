@@ -20,6 +20,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       # No `version:` — the action reads `packageManager` from package.json, so the
       # pinned version cannot drift out of sync with local development.
@@ -55,3 +57,27 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Check CD path classification
+        run: bash .github/scripts/classify-changes.test.sh
+
+      - name: Install pinned D2 for product design validation
+        run: |
+          set -euo pipefail
+          D2_VERSION=v0.7.1
+          mkdir -p "$RUNNER_TEMP/d2"
+          curl -fsSL "https://github.com/d2lang/d2/releases/download/$D2_VERSION/d2-$D2_VERSION-linux-amd64.tar.gz" -o "$RUNNER_TEMP/d2.tar.gz"
+          tar -xzf "$RUNNER_TEMP/d2.tar.gz" -C "$RUNNER_TEMP/d2" --strip-components=1
+          echo "$RUNNER_TEMP/d2/bin" >> "$GITHUB_PATH"
+
+      - name: Install product design renderer dependencies
+        working-directory: product-design/tooling
+        run: corepack pnpm install --frozen-lockfile
+
+      - name: Validate canonical product design
+        working-directory: product-design/tooling
+        run: corepack pnpm validate
+
+      - name: Build Fumadocs renderer
+        working-directory: product-design/tooling
+        run: corepack pnpm build --webpack

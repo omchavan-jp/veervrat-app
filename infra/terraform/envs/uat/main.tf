@@ -54,6 +54,12 @@ variable "app_image_tag" {
   default     = ""
 }
 
+variable "docs_image_tag" {
+  description = "Independent SHA tag of the product docs renderer."
+  type        = string
+  default     = ""
+}
+
 variable "wipe_users_confirm" {
   description = "Must equal the environment name for the wipe-users job to act. Empty = inert."
   type        = string
@@ -87,7 +93,10 @@ module "environment" {
   # Mirrors prod deliberately. UAT used to be "everyone, grants ignored" so reviewers needed no
   # setup — which meant the grant path was never exercised before prod, the opposite of what
   # UAT is for. Reviewers are granted once from the admin dashboard instead.
-  feedback_mode = "granted"
+  feedback_mode        = "granted"
+  product_docs_enabled = true
+  product_docs_mode    = "granted"
+  docs_image_tag       = var.docs_image_tag
 
   # Outbound email via JP IT's relay (D9). The password is NOT here — Terraform creates the
   # Key Vault secret with a placeholder and the real value is set out of band; see
