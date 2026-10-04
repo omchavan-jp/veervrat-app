@@ -1,0 +1,56 @@
+---
+title: Working method
+description: Governance rules for authoring, tracing, and reviewing redesign artifacts.
+---
+
+# Working method
+
+> **Map:** Use this page whenever recording or changing design knowledge. It sets authority, traceability, and navigation rules; it does not decide Veervrat product behavior.
+
+## Authority and knowledge types
+
+Keep **source**, **decision**, and **proposal** distinct.
+
+- A **source** is evidence or input. It may inform work but does not itself establish a redesign decision.
+- A **decision** records an explicit outcome. User-confirmed decisions are authoritative for the redesign.
+- A **proposal** is a suggestion awaiting a decision. It must never silently become confirmed through repetition, implementation, or age.
+- An **open** item is an unresolved question or unknown. Preserve uncertainty until it is resolved.
+- A **source-derived** item records an interpretation grounded in a cited source; it is not user-confirmed policy.
+
+## Decision records
+
+Each decision has one canonical record and one immutable `PD-*` ID. Do not recycle IDs or silently rewrite decision history. To change a confirmed decision, create a new record, explicitly explain the change, and mark the former record `superseded` with a `superseded_by` link to the replacement. Record the reason and relevant source or discussion in the canonical record.
+
+Artifacts that rely on a decision must cite its ID in plain text. A bare ID such as `PD-014` means a **live dependency**: the artifact currently relies on that decision as truth. If that decision is superseded, validation fails and the artifact must be revisited.
+
+To mention a decision only as history, append the exact marker `(historical)` immediately after the ID, with one space: `PD-014 (historical)`. This form is case-sensitive and machine-checked. It is legal for superseded IDs; it records history without claiming a current dependency. Do not use it to hide an artifact that still relies on the decision. Unknown and malformed IDs fail validation regardless of marker. A superseded record remains part of the history; it is not deleted.
+
+Run `pnpm decision:refs PD-014` from `product-design/tooling` to list backlinks and identify live dependencies to revisit if the decision is superseded.
+
+The machine-readable registry at `decision-registry.json` is the index. Each record names its canonical MDX home. Do not duplicate the full decision in the registry or another document.
+
+## Navigation and structure
+
+Every artifact begins with a human-readable map or summary before deep detail. Use descriptive headings, links to relevant canonical records, and plain text that remains useful in a code editor. MDX is readable Markdown first; the renderer is optional presentation only.
+
+Use D2 source for diagrams and keep it editable. A generated SVG or other render is disposable output. Refer to supporting decisions from the MDX that explains the diagram; add `PD-*` references in D2 only when they materially clarify the diagram's provenance or constraint.
+
+## Deferred topics and phase traceability
+
+When a discussion intentionally says “later”, “open for phase X”, or equivalent, create or update a stable `DT-*` item in `deferred-topics.json`. Do not leave the deferral only in prose or chat. Deferred topics track questions; they are not product decisions and must not silently become confirmed requirements.
+
+The `status` field describes current resolution state: `open`, `resolved`, or `dropped`. Moving a topic does not resolve it. A moved topic remains `open`, its `target_phase` changes to the current target, and a move-history entry records `from_phase`, `to_phase`, and a non-empty reason. Keep move entries in order; each move starts where the previous one ended, and the final `to_phase` matches the current target. A moved open topic remains actionable in the deferred list under that target.
+
+Keep the original `reason` as the reason the question was deferred. A `dropped` topic must also have a separate, non-empty `drop_reason`; do not overwrite the original deferral reason. A `resolved` topic requires a valid `resolution_artifact`. These states are distinct: **resolved** has an outcome recorded in an artifact, **moved** remains open at a new target, and **dropped** is closed with an explicit rationale.
+
+Each topic must target a phase ID listed in the [design roadmap](./design-roadmap.mdx). At the start of a phase, review every open topic targeting it. At the end, account for every incoming topic: resolve it with a resolution artifact, move it to a valid phase with a move-history entry and rationale, drop it with a separate `drop_reason`, or leave it visibly open with an updated reason. Keep IDs immutable; do not delete or reuse them.
+
+## Reconciliation
+
+At each phase boundary, reconcile the phase's outputs against the confirmed north star and the decision registry. Capture conflicts as explicit open items or proposed changes; do not resolve them by quietly changing confirmed material. Record the reconciliation outcome in the relevant phase artifact once that work begins.
+
+## Validation
+
+Run `node product-design/tooling/scripts/validate.mjs` before considering a change ready to review. It checks the registry, `PD-*` references, relative MDX links, and D2 parsing/rendering when the D2 CLI is available. A missing D2 executable is reported as a skipped check, not a successful D2 validation.
+
+Run `pnpm deferred:list` from `product-design/tooling` to review all open deferred topics, or pass a phase ID (for example, `pnpm deferred:list PH-004`) to see the topics due for that phase.

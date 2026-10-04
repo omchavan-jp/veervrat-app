@@ -39,6 +39,7 @@ veervrat-app/
 │   ├── web/                    # Next.js frontend
 │   │   ├── app/                # App Router — route groups by role
 │   │   │   ├── (public)/       # login, signup, forgot-password, reset-password
+│   │   │   ├── product-docs/    # protected gateway to internal UAT renderer
 │   │   │   ├── (app)/          # VA dashboard, journeys, study flow, actions
 │   │   │   ├── (vratmitra)/    # VM views — my-vratarthis, vm-actions
 │   │   │   ├── (moderation)/   # moderation dashboard
@@ -71,6 +72,7 @@ veervrat-app/
 ├── spec/                       # product spec (decisions, ADRs, screen specs, audit)
 ├── documentation/              # engineering decisions and standards
 ├── openspec/                   # spec-driven workflow (active changes)
+├── product-design/             # canonical MDX/D2; tooling/ is the separate Fumadocs renderer
 └── .claude/                    # skills and commands
 ```
 
@@ -296,7 +298,9 @@ single maintainer. Revisit when a second maintainer joins or the repo moves to a
 - **Deliberately not semver** — semver signals a public API contract this app doesn't have.
 - The tag is a human-readable bookmark. Real traceability is the **container image tagged
   with the git SHA**.
-- **Promote, never rebuild.** The prod deploy ships the *same image* UAT already exercised.
+- **Desired release invariant: promote, never rebuild.** The current `cd.yml`
+  still rebuilds app images on `prod-*` tags; that discrepancy is tracked as
+  separate deployment debt. Do not assume the invariant is currently enforced.
   Rebuilding from the same commit usually produces identical bits — but not guaranteed
   (dependency resolution drifts), and then you'd ship something nobody tested.
 

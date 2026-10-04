@@ -164,6 +164,29 @@ variable "app_image_tag" {
   default = ""
 }
 
+variable "docs_image_tag" {
+  description = "Independent SHA tag for the UAT-only product docs renderer."
+  type        = string
+  default     = ""
+}
+
+variable "product_docs_enabled" {
+  description = "Create an internal product docs renderer in this environment."
+  type        = bool
+  default     = false
+}
+
+variable "product_docs_mode" {
+  description = "Server-side product docs access gate: off | granted."
+  type        = string
+  default     = "off"
+
+  validation {
+    condition     = contains(["off", "granted"], var.product_docs_mode)
+    error_message = "product_docs_mode must be one of: off, granted."
+  }
+}
+
 # Public hostnames bound to the Container Apps (custom domain + managed TLS). Empty falls back
 # to the platform's `*.azurecontainerapps.io` FQDN, which is what a brand-new environment has
 # before DNS exists.

@@ -61,6 +61,14 @@ cp apps/web/.env.example apps/web/.env
 
 Defaults are fine for local development.
 
+To exercise the protected product-design renderer locally, run the separate
+Fumadocs app from `product-design/tooling` on port 3002 (`pnpm dev --port 3002`)
+with the `d2` CLI installed. Set `PRODUCT_DOCS_MODE=granted` in both API and web
+`.env` files, and set `PRODUCT_DOCS_INTERNAL_URL=http://localhost:3002` in the
+web `.env`. Grant `PRODUCT_DOCS_VIEW` to the test user from
+`/admin/users/[id]`, then visit `http://localhost:3000/product-docs`.
+Default mode is `off`, which returns 404 for every docs path.
+
 ## 4. Set up the database
 
 Generate the Prisma client and run migrations:
@@ -290,4 +298,3 @@ contracts, database queries and migrations.
 **The rule that follows:** verify locally first, and reserve a deploy for what only a deployed
 artifact can prove. A green local run is not evidence about the four rows above — say which was
 actually checked rather than "it works".
-

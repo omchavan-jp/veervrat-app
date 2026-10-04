@@ -30,9 +30,10 @@ enum Role {
 // each time a feature joined it, leaving audit rows that record a grant whose consequences
 // drifted after the fact.
 enum Capability {
-  FEEDBACK_WIDGET  @map("feedback_widget")
-  CONTENT_EDIT     @map("content_edit")
-  CONTENT_SUGGEST  @map("content_suggest")
+  FEEDBACK_WIDGET   @map("feedback_widget")
+  CONTENT_EDIT      @map("content_edit")
+  CONTENT_SUGGEST   @map("content_suggest")
+  PRODUCT_DOCS_VIEW @map("product_docs_view")
 
   @@map("capability")
 }

@@ -1,9 +1,8 @@
 // Configuration that differs between deployed environments, resolved when the app RUNS.
 //
-// It cannot be resolved at build time. CD builds one web image and promotes that same image
-// from UAT to production without rebuilding, so anything the bundler inlines — every
-// `NEXT_PUBLIC_*`, and anything `next.config.ts` freezes into the build — is identical in both
-// environments. That is not theoretical: prod's web tier proxied to UAT's *database* for a day
+// It cannot be resolved at build time. The intended UAT-to-prod promotion model reuses
+// an image, while the current prod-* workflow still rebuilds it. Either way, bundler-inlined
+// values can cross environment boundaries: prod's web tier proxied to UAT's *database* for a day
 // because `API_ORIGIN` was baked. See documentation/21_Infrastructure-Conventions.md §17.
 //
 // The test for whether a value may be baked: **does it describe the image, or the environment
@@ -24,6 +23,7 @@
  * being able to express "these specific people".
  */
 export type FeedbackMode = 'off' | 'granted';
+export type ProductDocsMode = 'off' | 'granted';
 
 export type RuntimeConfig = {
   /** Absolute base URL of the api, including the /api/v1 prefix. */
@@ -31,6 +31,7 @@ export type RuntimeConfig = {
   /** Absolute origin this app is served from; used for canonical and og: URLs. */
   siteUrl: string;
   feedbackMode: FeedbackMode;
+  productDocsMode: ProductDocsMode;
   /**
    * Which deployment this is. Used to show environment-unavailable controls as unavailable
    * rather than merely inert — e.g. content editing, which the API refuses on prod for
@@ -50,7 +51,7 @@ export type RuntimeConfig = {
    * The browser Sentry DSN for this environment, or undefined if error tracking is off.
    *
    * Threaded through here rather than read as `NEXT_PUBLIC_SENTRY_DSN`, on purpose: that would
-   * be inlined at build time, and one web image is promoted from UAT to prod unchanged (§17) —
+   * be inlined at build time and cannot safely carry per-environment config (§17) —
    * UAT's DSN would ship to production, or an empty build-time value would ship to both.
    *
    * Not a secret. A browser Sentry SDK always ships its DSN in the page it instruments — it is
@@ -79,6 +80,22 @@ function parseFeedbackMode(raw: string | undefined): FeedbackMode {
   return raw === 'granted' ? 'granted' : 'off';
 }
 
+function parseProductDocsMode(raw: string | undefined): ProductDocsMode {
+  return raw === 'granted' ? 'granted' : 'off';
+}
+
+export function productDocsInternalUrl(): string | null {
+  return process.env.PRODUCT_DOCS_INTERNAL_URL || null;
+}
+
+export function internalApiBase(): string | null {
+  return process.env.API_INTERNAL_URL || null;
+}
+
+export function publicApiBase(): string {
+  return process.env.API_BASE_URL || 'http://localhost:3001/api/v1';
+}
+
 /**
  * `undefined` for both "not set" and "set to something that isn't a DSN".
  *
@@ -102,6 +119,10 @@ export function readServerRuntimeConfig(): RuntimeConfig {
     apiBaseUrl: process.env.API_BASE_URL || 'http://localhost:3001/api/v1',
     siteUrl: process.env.SITE_URL || 'http://localhost:3000',
     feedbackMode: parseFeedbackMode(process.env.FEEDBACK_MODE),
+    productDocsMode:
+      process.env.ENVIRONMENT === 'prod'
+        ? 'off'
+        : parseProductDocsMode(process.env.PRODUCT_DOCS_MODE),
     environment: parseEnvironment(process.env.ENVIRONMENT),
     contentEditEnabled: process.env.CONTENT_EDIT_ENABLED === 'true',
     sentryDsn: parseSentryDsn(process.env.SENTRY_DSN),

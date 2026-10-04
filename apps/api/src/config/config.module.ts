@@ -73,6 +73,7 @@ import * as Joi from 'joi';
         // which is why the widget was hidden rather than denied and the API accepted feedback
         // from anyone signed in.
         FEEDBACK_MODE: Joi.string().valid('off', 'granted').default('off'),
+        PRODUCT_DOCS_MODE: Joi.string().valid('off', 'granted').default('off'),
         // In-context content editor (dev-only tooling; hard-off in production). All default
         // off/empty so production, CI, and local dev are unaffected unless explicitly enabled.
         CONTENT_EDIT_ENABLED: Joi.boolean().default(false),

@@ -1,0 +1,58 @@
+{
+  "$schema": "./deferred-topics.schema.json",
+  "version": 1,
+  "topics": [
+    {
+      "id": "DT-001",
+      "title": "Challenge cardinality",
+      "status": "open",
+      "reason": "The North Star intentionally uses neutral Challenge(s) wording and does not decide whether one Journey has exactly one Challenge or may have multiple Challenges.",
+      "target_phase": "PH-004"
+    },
+    {
+      "id": "DT-002",
+      "title": "Feature-level Vratamitra information, actions, and permissions",
+      "status": "open",
+      "reason": "Do not globally enumerate exact visibility, actions, contributions, validation, chat or reference behavior, and permissions before the relevant features are designed. Derive information, access, ownership, Primary versus Journey Vratamitra scope, and historical behavior as each feature is modeled.",
+      "target_phase": "PH-008",
+      "notes": "Cross-cutting: revisit for chat, Journey evidence, Exposures, Resolutions, Challenges, reassessment, resources, AI summaries, and other feature-design phases."
+    },
+    {
+      "id": "DT-003",
+      "title": "Community moderation actions and escalation",
+      "status": "open",
+      "reason": "Moderator purpose will be considered at the actor level; exact moderation actions, reports, restrictions, removal, and escalation depend on the community features and content types that are modeled.",
+      "target_phase": "PH-006"
+    },
+    {
+      "id": "DT-004",
+      "title": "Curated-resource mechanics",
+      "status": "open",
+      "reason": "Curators steward centrally curated or endorsed resources, while approval, promotion, featuring, pinning, official status, recommendations, collections, and entity-linking mechanics should be decided per content type.",
+      "target_phase": "PH-005",
+      "notes": "Reconcile with PH-006 when resource and community content types overlap."
+    },
+    {
+      "id": "DT-005",
+      "title": "Auth-gated public actions and return-to-context UX",
+      "status": "open",
+      "reason": "Public visitors may encounter actions that require registration or login; preserve the attempted context and design the return behavior when authentication journeys are specified.",
+      "target_phase": "PH-011"
+    },
+    {
+      "id": "DT-006",
+      "title": "Under-18 public access and age-gating details",
+      "status": "open",
+      "reason": "Sign-up is restricted to age 18+, but public browsing, age declaration or verification, rationale and communication, and related access behavior remain undecided.",
+      "target_phase": "PH-008",
+      "notes": "Also reconcile age-gated public journeys and edge cases in PH-011."
+    },
+    {
+      "id": "DT-007",
+      "title": "Challenge application semantics",
+      "status": "open",
+      "reason": "Challenge(s) contribute to application and evidence of developmental change; lifecycle, repeatability, success and completion semantics, authoring or selection, and relationship to Journey completion remain undecided.",
+      "target_phase": "PH-004"
+    }
+  ]
+}

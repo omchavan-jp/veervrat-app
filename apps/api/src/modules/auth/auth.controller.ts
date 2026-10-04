@@ -426,6 +426,13 @@ export class AuthController {
     return { ...me, grants: await this.capabilities.grantsFor(me.id) };
   }
 
+  @Get('product-docs-access')
+  @UseGuards(SessionGuard)
+  async productDocsAccess(@CurrentUser() user: SessionUser) {
+    await this.capabilities.assertProductDocsView(user);
+    return { allowed: true };
+  }
+
   private setSessionCookie(res: Response, token: string): void {
     // Remove any pre-scope-change cookie first, or the browser holds two of the same name and
     // sends both — the state that made logout itself return 401 on UAT.

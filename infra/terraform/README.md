@@ -33,6 +33,14 @@ bootstrap/
                              not be necessary again.
 ```
 
+The environment module also defines an optional product-design renderer
+Container App. UAT enables it when `docs_image_tag` names a built
+`veervrat-docs` image; it has internal ingress only and the web Container App
+receives its internal origin through `PRODUCT_DOCS_INTERNAL_URL`. UAT sets
+`PRODUCT_DOCS_MODE=granted` on web and API. Production explicitly sets the mode
+to `off` and disables the renderer resource. Docs image tags are independent
+from the API/web image tag, so docs-only applies preserve running app images.
+
 ## The one hard rule — for any DNS zone this project ever manages
 
 **Never destroy and re-create a DNS zone that something is delegating to.**

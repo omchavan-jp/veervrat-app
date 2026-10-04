@@ -54,7 +54,7 @@ export function useAuth() {
   };
 }
 
-export function useLogin() {
+export function useLogin(returnTo?: string | null) {
   const queryClient = useQueryClient();
   const router = useRouter();
 
@@ -71,7 +71,7 @@ export function useLogin() {
       if (user.language) {
         setLocaleCookie(user.language);
       }
-      router.push(user.onboardingCompletedAt ? '/dashboard' : '/onboarding');
+      router.push(user.onboardingCompletedAt ? (returnTo ?? '/dashboard') : '/onboarding');
     },
   });
 }

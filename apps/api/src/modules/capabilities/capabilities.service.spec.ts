@@ -10,6 +10,22 @@ function make(env: Record<string, unknown> = {}) {
 }
 
 describe('CapabilitiesService.featureMode', () => {
+  describe('PRODUCT_DOCS_VIEW', () => {
+    it('is grant-gated only when explicitly enabled', () => {
+      expect(make({ PRODUCT_DOCS_MODE: 'granted' }).service.featureMode('PRODUCT_DOCS_VIEW')).toBe(
+        'granted',
+      );
+      expect(make({}).service.featureMode('PRODUCT_DOCS_VIEW')).toBe('off');
+      expect(make({ PRODUCT_DOCS_MODE: 'all' }).service.featureMode('PRODUCT_DOCS_VIEW')).toBe(
+        'off',
+      );
+      expect(
+        make({ ENVIRONMENT: 'prod', PRODUCT_DOCS_MODE: 'granted' }).service.featureMode(
+          'PRODUCT_DOCS_VIEW',
+        ),
+      ).toBe('off');
+    });
+  });
   describe('FEEDBACK_WIDGET', () => {
     it('reads the configured mode', () => {
       expect(make({ FEEDBACK_MODE: 'granted' }).service.featureMode('FEEDBACK_WIDGET')).toBe(

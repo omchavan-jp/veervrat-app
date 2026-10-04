@@ -68,6 +68,7 @@ VA and VM acting as participants. A user who is also admin holds these only for 
 | `feedback.create` | ⚙️ capability-gated (see below) | ⚙️ capability-gated (see below) |
 | `feedback.read` | ⚙️ capability-gated (see below) | ⚙️ capability-gated (see below) |
 | `feedback.upvote` | ⚙️ capability-gated (see below), one per item | ⚙️ capability-gated (see below), one per item |
+| `product_docs.view` | ⚙️ capability-gated (see below) | ⚙️ capability-gated (see below) |
 
 **⚙️ `feedback.*` is capability-gated, not role-gated.** Two conditions, both required:
 
@@ -77,6 +78,12 @@ VA and VM acting as participants. A user who is also admin holds these only for 
 `off` denies everyone regardless of grants, and an unrecognised value **fails closed**. Holding
 `ADMIN` grants nothing here — these are grants, not privilege levels. Both UAT and prod use
 `granted`, so the grant path is exercised before it reaches users.
+
+**`product_docs.view` requires both an enabled environment and a per-user grant.**
+`PRODUCT_DOCS_MODE=granted` enables the internal UAT renderer gateway, and the
+user must hold `PRODUCT_DOCS_VIEW` in `user_capabilities`. `ADMIN` does not bypass
+this grant. Admins grant or revoke it in `/admin/users/[id]`. The API and web
+gateway force the mode off in production, independently of the stored grant.
 
 > ⚠️ **This table used to read "any authenticated user", and that was accurate.** Until
 > 2026-08-21 `hasPermission` returned `true` for these three actions for anyone signed in, while

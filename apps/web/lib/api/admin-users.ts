@@ -1,4 +1,8 @@
-export type AdminCapability = 'FEEDBACK_WIDGET' | 'CONTENT_EDIT' | 'CONTENT_SUGGEST';
+export type AdminCapability =
+  | 'FEEDBACK_WIDGET'
+  | 'CONTENT_EDIT'
+  | 'CONTENT_SUGGEST'
+  | 'PRODUCT_DOCS_VIEW';
 import { api } from './client';
 
 type Wrapped<T> = { data: T };

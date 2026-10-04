@@ -38,9 +38,11 @@ numbered by purpose so the reading order is obvious:
 | 17 | [Audit Schema](17_Audit-Schema.md) | Audit event contract, mandatory events, `@Audited` pattern. |
 | 18 | [Observability Standard](18_Observability-Standard.md) | Structured logging schema, error tracking, alert thresholds. ⚠️ Describes the target — not yet implemented (issue #79). |
 | 19 | [Email Strategy](19_Email-Strategy.md) | Transactional vs notification email, templates, bilingual strategy. ✅ Live on UAT via JP's SMTP relay. |
-| 20 | [Solo-Dev Operations](20_Solo-Dev-Operations.md) | Feedback capture → triage (GitHub Issues) → implement → changelog/doc loop. |
+| 20 | [Solo-Dev Operations](20_Solo-Dev-Operations.md) | ⚠️ **Superseded by 23** for the implement loop. Its capture → triage half (feedback widget → GitHub Issues) is still current. |
 | 21 | [Infrastructure Conventions](21_Infrastructure-Conventions.md) | Terraform, Azure, CD, deployment traps. **Read before touching `infra/`.** |
 | 22 | [Platform Requirements](22_Platform-Requirements.md) | What the app needs, stated **without reference to any provider**. Read before sizing, costing or migrating anywhere. |
+| 23 | [Development Process](23_Development-Process.md) | **How work gets done, for a team.** Two tracks — changing what exists, and building what doesn't. Tiers, gates, definition of done, decision rights. **Read before starting any item.** |
+| 24 | [Documentation Standard](24_Documentation-Standard.md) | What a document is for, what keeps it true, and the cleanup procedure. **Read before writing or deleting one.** |
 
 ## 90+ · Historical — frozen records
 

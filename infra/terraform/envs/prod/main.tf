@@ -91,7 +91,9 @@ module "environment" {
 
   # Per-user (D20/#40): which users see the widget is data, managed from the admin dashboard,
   # not config. The API enforces this too — it is not just a hidden control.
-  feedback_mode = "granted"
+  feedback_mode        = "granted"
+  product_docs_enabled = false
+  product_docs_mode    = "off"
 
   # Outbound email via JP IT's relay (D9). The password is NOT here — Terraform creates the
   # Key Vault secret with a placeholder and the real value is set out of band; see

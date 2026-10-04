@@ -28,7 +28,12 @@ const ALL_ROLES: AdminRole[] = ['VRATARTHI', 'VRATMITRA', 'MODERATOR', 'ADMIN'];
 
 // What a person may TRY, as opposed to who they ARE. Kept as a separate list, and a separate
 // section below, so the distinction stays visible to whoever is clicking.
-const ALL_CAPABILITIES: AdminCapability[] = ['FEEDBACK_WIDGET', 'CONTENT_EDIT', 'CONTENT_SUGGEST'];
+const ALL_CAPABILITIES: AdminCapability[] = [
+  'FEEDBACK_WIDGET',
+  'CONTENT_EDIT',
+  'CONTENT_SUGGEST',
+  'PRODUCT_DOCS_VIEW',
+];
 const JOURNEY_STATES = ['NOT_STARTED', 'ACTIVE', 'PAUSED', 'DORMANT', 'COMPLETED'];
 
 // Grapheme-safe initials: Array.from splits on full code points so a Devanagari
@@ -71,7 +76,7 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
     },
     onError: onErr,
   });
-  const { environment, contentEditEnabled } = useRuntimeConfig();
+  const { environment, contentEditEnabled, productDocsMode } = useRuntimeConfig();
   const toggleCapability = useMutation({
     mutationFn: ({ capability, has }: { capability: AdminCapability; has: boolean }) =>
       adminUsersApi.updateCapabilities(id, has ? { remove: [capability] } : { add: [capability] }),
@@ -227,7 +232,9 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
             const has = granted !== undefined;
             // Content editing is never available on prod, for anyone (O7) — the API refuses it
             // regardless of what is stored, so the control must not imply otherwise.
-            const unavailable = capability === 'CONTENT_EDIT' && !isContentEditAvailable;
+            const unavailable =
+              (capability === 'CONTENT_EDIT' && !isContentEditAvailable) ||
+              (capability === 'PRODUCT_DOCS_VIEW' && productDocsMode !== 'granted');
             return (
               <button
                 key={capability}

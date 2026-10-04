@@ -1,31 +1,41 @@
-# CI Workflows
+# GitHub Actions workflows
 
-Two workflows run on push to `dev`/`main` and on all PRs targeting them. They activate
-automatically once the repo is pushed to GitHub (see `PUSH_INSTRUCTIONS.md`).
+`ci.yml` runs on every push to `main` and every PR targeting `main`. It has no
+path filter. On Node 24 it installs the root pnpm workspace, generates Prisma,
+then runs lint, typecheck, API and web unit tests, and the workspace build. It
+also tests the CD path classifier, validates canonical `product-design/` MDX,
+JSON, links and D2 with a pinned D2 CLI, and builds the standalone Fumadocs
+renderer.
 
-## `ci.yml` — fast gate (no services)
-Runs on Node 24 + pnpm 11.1.3:
-1. `pnpm --filter api db:generate` — Prisma client (a generated import the api needs)
-2. `pnpm lint` — eslint across api/web/types (0 errors required; warnings allowed)
-3. `pnpm typecheck` — `tsc --noEmit` across the workspace
-4. `pnpm --filter api test:unit` + `pnpm --filter web test` — unit tests (no DB)
-5. `pnpm build` — turbo build of all packages
+`integration.yml` runs API integration tests with PostgreSQL and Redis service
+containers. `e2e.yml` runs Playwright. Their triggers and scope are unchanged
+by the product docs deployment.
 
-## `integration.yml` — integration gate (Postgres + Redis)
-Same setup plus Postgres 16 + Redis 7 service containers. Applies migrations
-(`db:migrate:deploy`) to the test DB, then runs `pnpm --filter api test:integration`.
-Job-level `DATABASE_URL`/`REDIS_URL` override `.env.test`'s local ports to reach the
-service containers.
+`cd.yml` runs on pushes to `main`, `prod-*` tags, and manual dispatch. On main,
+its `prepare` job classifies one changed-file list with
+`.github/scripts/classify-changes.sh`:
 
-## Notes / deliberate scoping
-- **Lint is `--fix`-free in CI** (`api` has a separate `lint:fix` for local dev) — CI
-  must check, not mutate.
-- **`prettier/prettier` is enforced via eslint** on api code. Repo-wide
-  `format:check` is NOT a CI gate (≈471 unformatted markdown/spec docs — a separate
-  cosmetic cleanup, out of scope for the code gate).
-- **Playwright E2E runs in CI** (`e2e.yml`, wired 2026-08-27). It had existed and run nowhere;
-  the stated reason was the docker stack, but the real one was that registration is throttled to
-  5/hour and the suite needs ~15 accounts. "Unit + integration + build cover the code paths" was
-  the belief that let a string of defects reach a person instead of a test — see
-  `ops/audit/01-e2e-runtime-pass.md`.
-- Everything here was verified green locally before the workflows were written.
+| Change on main | UAT action |
+|---|---|
+| App, API, web, shared, or unknown path | Build four app images; apply Terraform, migrate, deploy apps |
+| Canonical `product-design/` content or renderer code | Build and deploy `veervrat-docs` only; preserve app images and skip migrations |
+| Docs-specific Terraform | Build docs image and apply UAT infrastructure |
+| Both app and docs paths | Build both image sets; one serialized UAT deployment |
+| Ordinary Markdown, `documentation/`, `ops/`, `openspec/`, `spec/`, `.claude/` only | Skip CD builds and UAT deployment |
+
+The classifier's fixtures are in `.github/scripts/classify-changes.test.sh`.
+UAT docs use a separate image tag and an internal-only Container App. A docs-only
+deploy reads the currently deployed app tag so Terraform does not move API/web
+to an image that was never built. It fails if API and web are on different tags.
+The composite action's `deploy_apps=false` skips app build deployment and
+migration steps; its docs-only Terraform apply still passes `deploy_apps=true`
+to keep the existing app resources in state. An app-only deploy preserves the
+current docs tag. The `prod-*` tag path continues to build and deploy the app images; it
+does not build or deploy docs. Product docs mode and the docs Container App are
+explicitly off in production Terraform.
+
+The current production tag workflow **rebuilds** app images. Older repository
+guidance describes artifact promotion without a rebuild; that discrepancy is
+tracked separately and is not changed by the product docs path.
+
+CI lint does not apply fixes. Repo-wide `format:check` is not a CI gate.

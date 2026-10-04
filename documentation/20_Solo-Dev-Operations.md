@@ -1,5 +1,13 @@
 # 20 — Solo-Dev Operations (feedback → triage → implement → log)
 
+> ⚠️ **Partly superseded, 2026-09-08.** The **implement** loop assumed one maintainer and no
+> reviewer — an assumption the 2026-08-27 audit showed was load-bearing. It is replaced by
+> [`23_Development-Process.md`](23_Development-Process.md).
+>
+> **Loop 1 (Capture) and Loop 2 (Triage) below are still current and still correct.** The
+> feedback widget, the capability gating, and GitHub Issues as the canonical backlog are
+> unchanged. Read those here; read the rest in 23.
+
 How defects and change requests flow from users into shipped, documented changes.
 This is the operating manual for the beta-test phase and beyond, for a solo
 maintainer working with Claude Code.
@@ -162,7 +170,9 @@ Updated 2026-08-16 (O6) — the Railway-era single-environment model is gone.
   `dev` is retired.
 - **Merging to `main` deploys to UAT automatically.** It does **not** reach beta testers.
 - **Beta testers are on prod** (D11), reached only by cutting a `prod-YYYY-MM-DD` tag and
-  approving the deploy. The same image UAT tested is promoted — never rebuilt.
+  approving the deploy. The intended process promotes the same image UAT tested;
+  the current `prod-*` CD workflow rebuilds app images instead. This discrepancy
+  is tracked separately from the product docs work.
 - **`main` must always be releasable**, since a tag is only useful if `HEAD` is shippable.
 - **Never auto-migrate a deployed environment.** Migrations run as a one-off job inside
   Azure on the same image as the app, in the order build → migrate → deploy.

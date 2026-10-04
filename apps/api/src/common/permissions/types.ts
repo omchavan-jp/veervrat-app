@@ -68,6 +68,7 @@ type FeedbackAction = 'feedback.create' | 'feedback.read' | 'feedback.upvote' | 
 
 // Content editing (dev-only in-context editor) — allowlist-backed, not role-based.
 type ContentAction = 'content.edit';
+type ProductDocsAction = 'product_docs.view';
 
 // Content suggestions — proposing content in the place it belongs. Capability-backed for
 // authoring; triage rides on the existing admin permission rather than a new role.
@@ -112,6 +113,7 @@ export type PermissionAction =
   | GlobalVmAction
   | FeedbackAction
   | ContentAction
+  | ProductDocsAction
   | ContentSuggestionAction
   | AdminAction
   | ModeratorAction;

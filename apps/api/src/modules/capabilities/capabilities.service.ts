@@ -3,6 +3,9 @@ import { ConfigService } from '@nestjs/config';
 import { Capability } from '@prisma/client';
 import { CapabilitiesRepository } from './capabilities.repository';
 import type { FeatureMode } from '../../common/permissions/types';
+import type { SessionUser } from '../auth/types/auth.types';
+import { hasPermission } from '../../common/permissions/has-permission';
+import { AccessDeniedException } from '../../common/exceptions/app.exceptions';
 
 /**
  * Resolves the two halves of a capability decision.
@@ -24,6 +27,19 @@ export class CapabilitiesService {
 
   async grantsFor(userId: string): Promise<Capability[]> {
     return this.repository.listForUser(userId);
+  }
+
+  async assertProductDocsView(user: SessionUser): Promise<void> {
+    const grants = await this.grantsFor(user.id);
+    if (
+      !hasPermission(
+        user,
+        { type: 'platform', grants, featureMode: this.featureMode('PRODUCT_DOCS_VIEW') },
+        'product_docs.view',
+      )
+    ) {
+      throw new AccessDeniedException();
+    }
   }
 
   /**
@@ -62,6 +78,11 @@ export class CapabilitiesService {
         // Unrecognised values fail closed — a typo in config must not open a gated feature.
         return this.config.get<string>('FEEDBACK_MODE', 'off') === 'granted' ? 'granted' : 'off';
       }
+      case 'PRODUCT_DOCS_VIEW':
+        if (this.config.get<string>('ENVIRONMENT') === 'prod') return 'off';
+        return this.config.get<string>('PRODUCT_DOCS_MODE', 'off') === 'granted'
+          ? 'granted'
+          : 'off';
     }
   }
 }

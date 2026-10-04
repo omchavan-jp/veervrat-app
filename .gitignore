@@ -60,3 +60,5 @@ test-results/
 # unlazy gate ledgers — machine-local working state
 .unlazy/
 .unlazy-hook-state.json
+
+.pnpm-store/

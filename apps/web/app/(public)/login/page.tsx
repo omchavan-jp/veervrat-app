@@ -17,6 +17,7 @@ import { loginSchema, type LoginInput } from '@/lib/validations/auth';
 import { ApiError } from '@/lib/api/client';
 import { rateLimitRetryAfter } from '@/lib/api/rate-limit';
 import { getRuntimeConfig } from '@/lib/runtime-config';
+import { safeProductDocsReturnTo } from '@/lib/product-docs-return';
 
 const FIELD_LABEL = 'mb-2 block font-mono text-[11px] uppercase tracking-[0.1em] text-muted';
 
@@ -30,7 +31,7 @@ export default function LoginPage() {
   // was warned "cannot be undone" completes in silence, and the only way to find out whether it
   // worked is to try signing in again.
   const justDeleted = searchParams.get('notice') === 'account_deleted';
-  const login = useLogin();
+  const login = useLogin(safeProductDocsReturnTo(searchParams.get('returnTo')));
 
   const {
     register,
