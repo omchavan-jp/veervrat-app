@@ -8,8 +8,8 @@
 # documentation/21_Infrastructure-Conventions.md §14 and the traps table in
 # ../../azure-account-facts.md §5.
 #
-# A push to main uses one changed-file classifier for app, product-docs, and
-# docs-infrastructure work. Ordinary documentation-only pushes skip CD.
+# A push to main uses one changed-file classifier for app and product-docs work,
+# including docs-specific infrastructure. Ordinary documentation-only pushes skip CD.
 # prod-* tag pushes are never filtered: they're already a deliberate, rare, manual act.
 name: CD
 
@@ -48,7 +48,6 @@ jobs:
       uat_domain: ${{ steps.meta.outputs.domain }}
       app_changed: ${{ steps.changes.outputs.app_changed }}
       docs_changed: ${{ steps.changes.outputs.docs_changed }}
-      docs_infra_changed: ${{ steps.changes.outputs.docs_infra_changed }}
     steps:
       - uses: actions/checkout@v4
         with:

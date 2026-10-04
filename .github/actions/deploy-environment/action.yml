@@ -74,8 +74,9 @@ runs:
       run: terraform init -input=false
 
     # What image are the apps serving RIGHT NOW? Step 1 pins them to it so they keep serving
-    # while migrations run. Empty on a first deploy, in which case they simply come up on the
-    # new image after migrations.
+    # while migrations run. Empty only when the resource group or app does not yet exist.
+    # An Azure read failure must not masquerade as a first deploy: that would move existing
+    # apps onto the new image before the migration.
     #
     # An earlier version used `deploy_apps=false` here, reasoning that it would "leave the apps
     # untouched". It did the opposite: the flag gates the app resources, so Terraform DESTROYED
@@ -87,9 +88,35 @@ runs:
       env:
         ENVIRONMENT: ${{ inputs.environment }}
       run: |
-        set -uo pipefail
-        TAG=$(az containerapp show -n "veervrat-$ENVIRONMENT-api" -g "veervrat-$ENVIRONMENT" \
-          --query "properties.template.containers[0].image" -o tsv 2>/dev/null | sed 's/.*://' || true)
+        set -euo pipefail
+        TAG=""
+        if [ "$(az group exists -n "veervrat-$ENVIRONMENT" -o tsv)" = "true" ]; then
+          APPS=$(az containerapp list -g "veervrat-$ENVIRONMENT" -o json)
+          CURRENT=$(jq -r --arg name "veervrat-$ENVIRONMENT-api" \
+            '.[] | select(.name == $name) | .properties.template.containers[0].image' <<< "$APPS")
+          WEB=$(jq -r --arg name "veervrat-$ENVIRONMENT-web" \
+            '.[] | select(.name == $name) | .properties.template.containers[0].image' <<< "$APPS")
+          if [ -n "$CURRENT" ] && [ -n "$WEB" ]; then
+            case "$WEB" in
+              veervratacr.azurecr.io/veervrat-web:*) ;;
+              *) echo "::error::unexpected $ENVIRONMENT web image: $WEB"; exit 1 ;;
+            esac
+          fi
+          if [ -n "$CURRENT" ]; then
+            case "$CURRENT" in
+              veervratacr.azurecr.io/veervrat-api:*) TAG="${CURRENT##*:}" ;;
+              *) echo "::error::unexpected $ENVIRONMENT API image: $CURRENT"; exit 1 ;;
+            esac
+          fi
+          if [ -n "$CURRENT" ] && [ "$WEB" != "veervratacr.azurecr.io/veervrat-web:$TAG" ]; then
+            echo "::error::$ENVIRONMENT API and web are not on the same image tag; refusing to move either before migration"
+            exit 1
+          fi
+          if [ -z "$CURRENT" ] && [ -n "$WEB" ]; then
+            echo "::error::$ENVIRONMENT web exists without API; refusing to treat this as a first deploy"
+            exit 1
+          fi
+        fi
         echo "currently serving: ${TAG:-<none — first deploy>}"
         echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
@@ -127,6 +154,10 @@ runs:
           echo '::error::No current app image exists; docs-only deployment needs an existing UAT app'
           exit 1
         fi
+        # The composite input skips app deployment steps. Terraform's deploy_apps=true keeps
+        # existing API/web resources in state; false would plan to destroy them. Both image
+        # inputs use the currently deployed tag, so this apply cannot select the docs SHA for
+        # API/web or migrate jobs. Terraform may still reconcile unrelated configuration drift.
         terraform apply -input=false -auto-approve \
           -var="image_tag=${{ steps.current.outputs.tag }}" \
           -var="app_image_tag=${{ steps.current.outputs.tag }}" \
@@ -134,8 +165,8 @@ runs:
           -var="deploy_apps=true"
 
     # Step 1 — everything EXCEPT moving the apps to the new image. The jobs (migrate, seed) are
-    # updated to the new tag; the apps stay pinned to whatever they are already serving, so
-    # nothing user-visible changes and nothing is torn down.
+    # updated to the new tag; app *images* stay pinned to the current tag. Terraform can still
+    # create an old-image revision when its environment changes (as on the first docs rollout).
     - name: Apply infrastructure (apps stay on the current image)
       if: inputs.deploy_apps == 'true'
       shell: bash

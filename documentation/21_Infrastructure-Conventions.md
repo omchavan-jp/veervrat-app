@@ -905,9 +905,9 @@ The ignore list is an allow-list of known-safe non-app paths, not a blocklist of
 an unrecognised new top-level directory defaults to *triggering* a build, not skipping one.
 
 **Current extension for product docs:** `prepare` still uses one changed-file
-list, now classified by `.github/scripts/classify-changes.sh` into app, docs,
-and docs infrastructure flags. Canonical `product-design/` content and renderer
-code build/deploy only the internal UAT docs image; app paths retain the app
+list, now classified by `.github/scripts/classify-changes.sh` into app and docs
+flags. Canonical `product-design/` content, renderer code, and docs-specific Terraform
+build/deploy only the internal UAT docs image; app paths retain the app
 image/migration path; mixed pushes take the union. The ordinary documentation
 ignore list above remains. `prod-*` tags still build app images and cannot
 create the docs renderer, which production Terraform disables. The shell

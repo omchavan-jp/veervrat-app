@@ -26,8 +26,11 @@ its `prepare` job classifies one changed-file list with
 The classifier's fixtures are in `.github/scripts/classify-changes.test.sh`.
 UAT docs use a separate image tag and an internal-only Container App. A docs-only
 deploy reads the currently deployed app tag so Terraform does not move API/web
-to an image that was never built. An app-only deploy preserves the current docs
-tag. The `prod-*` tag path continues to build and deploy the app images; it
+to an image that was never built. It fails if API and web are on different tags.
+The composite action's `deploy_apps=false` skips app build deployment and
+migration steps; its docs-only Terraform apply still passes `deploy_apps=true`
+to keep the existing app resources in state. An app-only deploy preserves the
+current docs tag. The `prod-*` tag path continues to build and deploy the app images; it
 does not build or deploy docs. Product docs mode and the docs Container App are
 explicitly off in production Terraform.
 
