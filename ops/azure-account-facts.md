@@ -327,8 +327,9 @@ on `veervrattfstate`, Key Vault Secrets Officer — all subscription-scoped. **P
 resource groups** — CD needed to create its first new role assignment and discovered
 Contributor alone cannot. The first product-docs rollout on 2026-10-04 found a second
 boundary: `AcrPull` for the docs identity is assigned at the shared registry, outside the
-UAT resource group. Shared Terraform now also declares registry-scoped User Access
-Administrator for CD; it requires a privileged bootstrap apply. Check Azure before
+UAT resource group. Shared Terraform now also declares registry-scoped Role Based
+Access Control Administrator for CD, conditioned to `AcrPull` assignments for
+service principals; it requires a privileged bootstrap apply. Check Azure before
 assuming that new grant is live. See `21_Infrastructure-Conventions.md` §15.
 
 No paid-plan reviewer gate exists (422 on this account). The prod gate is the `prod-*` tag
