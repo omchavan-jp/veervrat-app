@@ -1,3 +1,19 @@
+resource "azurerm_user_assigned_identity" "docs" {
+  count               = var.product_docs_enabled ? 1 : 0
+  name                = "veervrat-${var.environment}-docs-id"
+  resource_group_name = azurerm_resource_group.this.name
+  location            = var.location
+  tags                = local.tags
+}
+
+resource "azurerm_role_assignment" "docs_acr_pull" {
+  count                = var.product_docs_enabled ? 1 : 0
+  scope                = data.azurerm_container_registry.shared.id
+  role_definition_name = "AcrPull"
+  principal_id         = azurerm_user_assigned_identity.docs[0].principal_id
+  principal_type       = "ServicePrincipal"
+}
+
 resource "azurerm_container_app" "docs" {
   count = local.deploy && var.product_docs_enabled && var.docs_image_tag != "" ? 1 : 0
 

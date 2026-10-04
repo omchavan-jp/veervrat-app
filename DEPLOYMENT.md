@@ -90,6 +90,21 @@ Terraform creates no renderer and sets the runtime gate to `off`, so tagged
 commits containing design files do not expose the route. A docs-only UAT apply
 pins the existing app image tags and skips API migrations.
 
+**First docs rollout prerequisite:** the GitHub Actions identity needs permission to
+create the docs identity's `AcrPull` assignment at the shared registry scope.
+The first UAT deploy on 2026-10-04 stopped at that assignment with a 403, before
+migration or new app images were deployed. The registry-scoped Role Based Access
+Control Administrator grant, conditioned to `AcrPull` for service principals, is declared
+in `infra/terraform/envs/shared/github-oidc.tf`. CD does not apply shared state,
+and cannot grant this permission to itself. After the fix PR is reviewed, a
+privileged operator must run `terraform plan` and `terraform apply`
+in `infra/terraform/envs/shared` from the **reviewed fix branch**, confirming
+the single conditioned registry-scoped role assignment. Once the grant is
+effective, merge the fix PR. That mixed app/docs push builds both image sets
+and deploys with the corrected docs `principal_type`. Do not rerun the original
+failed CD job: it uses the old checkout, which lacks that required field. Do
+not merge the fix PR before the bootstrap grant; the same 403 will recur.
+
 Local development is `docker-compose` and is not a deploy target — no pipeline touches it.
 
 ---

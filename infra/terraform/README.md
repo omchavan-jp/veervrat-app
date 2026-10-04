@@ -63,6 +63,14 @@ terraform plan   # review before applying, as always
 terraform apply  # container registry + GitHub OIDC federated credentials
 ```
 
+The first UAT product-docs deployment needs one additional bootstrap apply of
+this shared state. `github-oidc.tf` grants the CD identity Role Based Access
+Control Administrator at the **registry** scope, conditioned to add or remove
+only `AcrPull` assignments for service principals. This lets it create the docs
+identity's `AcrPull` assignment. A privileged operator must review the plan and apply it;
+the CI identity cannot grant this permission to itself. See `DEPLOYMENT.md`
+for the failed first rollout and retry order.
+
 ### The DNS zone that used to live here
 
 Created 2026-08-15 for a planned **NS delegation** of

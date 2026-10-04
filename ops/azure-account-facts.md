@@ -323,11 +323,14 @@ no wildcards.
 
 Roles: Contributor (it creates resource groups itself), AcrPush, Storage Blob Data Contributor
 on `veervrattfstate`, Key Vault Secrets Officer — all subscription-scoped. **Plus, since
-2026-08-24, User Access Administrator scoped to only the `veervrat-uat`/`veervrat-prod`
+2026-08-24, User Access Administrator scoped to the `veervrat-uat`/`veervrat-prod`
 resource groups** — CD needed to create its first new role assignment and discovered
-Contributor alone cannot; see `21_Infrastructure-Conventions.md` §15 for the full incident and
-why that grant is deliberately resource-group-scoped rather than subscription-wide like
-everything else.
+Contributor alone cannot. The first product-docs rollout on 2026-10-04 found a second
+boundary: `AcrPull` for the docs identity is assigned at the shared registry, outside the
+UAT resource group. Shared Terraform now also declares registry-scoped Role Based
+Access Control Administrator for CD, conditioned to `AcrPull` assignments for
+service principals; it requires a privileged bootstrap apply. Check Azure before
+assuming that new grant is live. See `21_Infrastructure-Conventions.md` §15.
 
 No paid-plan reviewer gate exists (422 on this account). The prod gate is the `prod-*` tag
 itself; the `prod` GitHub Environment carries no protection rule.

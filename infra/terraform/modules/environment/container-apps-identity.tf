@@ -24,14 +24,6 @@ resource "azurerm_user_assigned_identity" "web" {
   tags                = local.tags
 }
 
-resource "azurerm_user_assigned_identity" "docs" {
-  count               = var.product_docs_enabled ? 1 : 0
-  name                = "veervrat-${var.environment}-docs-id"
-  resource_group_name = azurerm_resource_group.this.name
-  location            = var.location
-  tags                = local.tags
-}
-
 resource "azurerm_role_assignment" "api_acr_pull" {
   scope                = data.azurerm_container_registry.shared.id
   role_definition_name = "AcrPull"
@@ -42,13 +34,6 @@ resource "azurerm_role_assignment" "web_acr_pull" {
   scope                = data.azurerm_container_registry.shared.id
   role_definition_name = "AcrPull"
   principal_id         = azurerm_user_assigned_identity.web.principal_id
-}
-
-resource "azurerm_role_assignment" "docs_acr_pull" {
-  count                = var.product_docs_enabled ? 1 : 0
-  scope                = data.azurerm_container_registry.shared.id
-  role_definition_name = "AcrPull"
-  principal_id         = azurerm_user_assigned_identity.docs[0].principal_id
 }
 
 # Read-only on secret *values* — deliberately not Key Vault Administrator. The app never

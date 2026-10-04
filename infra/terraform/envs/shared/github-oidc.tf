@@ -76,13 +76,15 @@ resource "azurerm_federated_identity_credential" "github" {
 # apply` with their own (Owner-level) credentials; every CD run since then saw those resources
 # as already matching and never exercised the write path. The first PR to add a genuinely NEW
 # role assignment and leave it for CD to create (#175, the web identity's first Key Vault
-# access) failed with a 403: `Microsoft.Authorization/roleAssignments/write` needs `Owner` or
-# `User Access Administrator`, and CI had neither. Confirmed by reading the SP's actual
+# access) failed with a 403: `Microsoft.Authorization/roleAssignments/write` needs `Owner`,
+# `Role Based Access Control Administrator`, or `User Access Administrator`; CI had none.
+# Confirmed by reading the SP's actual
 # assignments (`az role assignment list`), not assumed from the error message alone.
 #
 # Fixed below by granting `User Access Administrator`, deliberately **not** at subscription
 # scope like everything else here — that would let a compromised pipeline grant itself Owner.
-# Scoped to only the two resource groups CI ever needs to grant access within.
+# Scoped to the two app resource groups. The docs renderer needs one additional AcrPull
+# assignment on the registry itself, which lives in veervrat-shared rather than veervrat-uat.
 
 data "azurerm_subscription" "current" {}
 
@@ -122,14 +124,9 @@ resource "azurerm_role_assignment" "github_kv_secrets" {
 # those environments having been applied at least once, which is not true on a from-scratch
 # bootstrap).
 #
-# `User Access Administrator` is the narrowest BUILT-IN role that includes
-# `roleAssignments/write` — Azure has no built-in role scoped to "may grant only these specific
-# roles". A future tightening worth doing is an ABAC condition on these assignments restricting
-# WHICH roles CI may grant (Key Vault Secrets User, Storage Blob Data Contributor, AcrPull —
-# never Owner or User Access Administrator itself), so a compromised pipeline could still widen
-# access to a resource but never escalate its own privilege. Not built here: Azure's role-
-# assignment condition syntax is easy to get subtly wrong, and a wrong condition is worse than
-# none — it looks like a restriction while enforcing nothing.
+# These existing UAA grants are broader than necessary: Role Based Access Control Administrator
+# has fewer permissions, and Azure ABAC conditions can restrict which roles CI may assign.
+# Review them separately; the new registry grant below uses that narrower model.
 resource "azurerm_role_assignment" "github_user_access_admin_uat" {
   scope                = "${data.azurerm_subscription.current.id}/resourceGroups/veervrat-uat"
   role_definition_name = "User Access Administrator"
@@ -140,6 +137,46 @@ resource "azurerm_role_assignment" "github_user_access_admin_prod" {
   scope                = "${data.azurerm_subscription.current.id}/resourceGroups/veervrat-prod"
   role_definition_name = "User Access Administrator"
   principal_id         = azurerm_user_assigned_identity.github_actions.principal_id
+}
+
+# The first product-docs UAT apply failed with roleAssignments/write 403 when it tried to
+# grant the new docs identity AcrPull on this shared registry. UAT resource-group scope does
+# not cover a role assignment whose scope is the registry. Keep this grant at the registry,
+# never at subscription or veervrat-shared resource-group scope.
+#
+# Microsoft documents this exact conditional-delegation case for AcrPull to managed
+# identities. Both write (Request) and delete (Resource) must be constrained independently.
+# The AcrPull built-in role ID is stable and was verified against Azure's role definition.
+# The UAT docs assignment explicitly supplies principal_type = ServicePrincipal so the
+# Request-side principal-type check has an attribute to evaluate.
+# Bootstrap: a privileged operator must apply shared state; CI cannot grant itself this role.
+resource "azurerm_role_assignment" "github_rbac_admin_acr_pull" {
+  scope                = azurerm_container_registry.veervrat.id
+  role_definition_name = "Role Based Access Control Administrator"
+  principal_id         = azurerm_user_assigned_identity.github_actions.principal_id
+  principal_type       = "ServicePrincipal"
+  condition_version    = "2.0"
+  condition            = <<-EOT
+    (
+      (!(ActionMatches{'Microsoft.Authorization/roleAssignments/write'}))
+      OR
+      (
+        @Request[Microsoft.Authorization/roleAssignments:RoleDefinitionId] ForAnyOfAnyValues:GuidEquals {7f951dda-4ed3-4680-a7ca-43fe172d538d}
+        AND
+        @Request[Microsoft.Authorization/roleAssignments:PrincipalType] ForAnyOfAnyValues:StringEqualsIgnoreCase {'ServicePrincipal'}
+      )
+    )
+    AND
+    (
+      (!(ActionMatches{'Microsoft.Authorization/roleAssignments/delete'}))
+      OR
+      (
+        @Resource[Microsoft.Authorization/roleAssignments:RoleDefinitionId] ForAnyOfAnyValues:GuidEquals {7f951dda-4ed3-4680-a7ca-43fe172d538d}
+        AND
+        @Resource[Microsoft.Authorization/roleAssignments:PrincipalType] ForAnyOfAnyValues:StringEqualsIgnoreCase {'ServicePrincipal'}
+      )
+    )
+  EOT
 }
 
 output "github_actions_client_id" {
