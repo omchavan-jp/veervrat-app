@@ -82,7 +82,8 @@ resource "azurerm_federated_identity_credential" "github" {
 #
 # Fixed below by granting `User Access Administrator`, deliberately **not** at subscription
 # scope like everything else here — that would let a compromised pipeline grant itself Owner.
-# Scoped to only the two resource groups CI ever needs to grant access within.
+# Scoped to the two app resource groups. The docs renderer needs one additional AcrPull
+# assignment on the registry itself, which lives in veervrat-shared rather than veervrat-uat.
 
 data "azurerm_subscription" "current" {}
 
@@ -138,6 +139,19 @@ resource "azurerm_role_assignment" "github_user_access_admin_uat" {
 
 resource "azurerm_role_assignment" "github_user_access_admin_prod" {
   scope                = "${data.azurerm_subscription.current.id}/resourceGroups/veervrat-prod"
+  role_definition_name = "User Access Administrator"
+  principal_id         = azurerm_user_assigned_identity.github_actions.principal_id
+}
+
+# The first product-docs UAT apply failed with roleAssignments/write 403 when it tried to
+# grant the new docs identity AcrPull on this shared registry. UAT resource-group scope does
+# not cover a role assignment whose scope is the registry. Keep this grant at the registry,
+# never at subscription or veervrat-shared resource-group scope.
+#
+# Bootstrap: a privileged operator must apply the shared state once after this change lands;
+# GitHub Actions cannot grant itself this role. Then rerun the failed UAT CD job.
+resource "azurerm_role_assignment" "github_user_access_admin_acr" {
+  scope                = azurerm_container_registry.veervrat.id
   role_definition_name = "User Access Administrator"
   principal_id         = azurerm_user_assigned_identity.github_actions.principal_id
 }

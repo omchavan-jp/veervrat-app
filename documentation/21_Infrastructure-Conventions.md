@@ -832,7 +832,7 @@ repo:omchavan-jp@317451750/veervrat-app@1287947867:environment:prod
 Verify what exists: `az identity federated-credential list --identity-name
 veervrat-github-actions -g veervrat-shared -o table`.
 
-### Roles — subscription-scoped, except the one narrow exception below
+### Roles — scoped to the resources that need them
 
 | Role | Scope | Why |
 |---|---|---|
@@ -840,7 +840,8 @@ veervrat-github-actions -g veervrat-shared -o table`.
 | AcrPush | `veervratacr` | push built images — no admin password exists on the registry (`admin_enabled = false`) |
 | Storage Blob Data Contributor | `veervrattfstate` | read/write Terraform state |
 | Key Vault Secrets Officer | subscription | re-apply the same generated secrets on every run — Terraform is idempotent, so this must be read/write, not just read |
-| User Access Administrator | `veervrat-uat`, `veervrat-prod` resource groups **only** | added 2026-08-24 — see below |
+| User Access Administrator | `veervrat-uat`, `veervrat-prod` resource groups | added 2026-08-24 — see below |
+| User Access Administrator | `veervratacr` registry | declared after the 2026-10-04 first docs rollout failed; requires a privileged shared-state apply before CD can grant the docs identity `AcrPull` |
 
 **Contributor cannot grant roles**, and still can't — that boundary is unchanged. What changed
 is that CD needed a *separate*, narrower power added alongside it.
@@ -854,10 +855,15 @@ failed with a 403, exposing that Contributor deliberately excludes exactly that 
 
 Fixed by granting `User Access Administrator` — the narrowest **built-in** role that includes
 `roleAssignments/write`; Azure has none scoped to "may grant only these specific roles" — but
-**resource-group scoped, not subscription-wide**, unlike everything else in this table. That
-asymmetry is deliberate: subscription-wide would let a compromised pipeline grant itself
-`Owner`. See `infra/terraform/envs/shared/github-oidc.tf` for the full reasoning, including a
-noted-but-not-built tightening (an ABAC condition restricting *which* roles CD may grant).
+**resource-group scoped, not subscription-wide**, unlike everything else in this table. The
+docs renderer exposed one more scope boundary: its `AcrPull` assignment is on the shared
+registry, outside `veervrat-uat`. The 2026-10-04 rollout failed with
+`Microsoft.Authorization/roleAssignments/write` 403 at that scope. A separate
+registry-scoped grant is declared for the GitHub Actions identity, but it must be
+applied by a privileged operator from shared Terraform state before CD can retry.
+Neither grant is subscription-wide. See `infra/terraform/envs/shared/github-oidc.tf`
+for the full reasoning, including a noted-but-not-built tightening (an ABAC condition
+restricting *which* roles CD may grant).
 
 The claim this section used to make — **"prod needed zero additional role assignments once its
 resource group existed"** — is no longer true. Both `User Access Administrator` grants apply to
