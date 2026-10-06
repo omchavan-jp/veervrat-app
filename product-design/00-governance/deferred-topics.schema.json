@@ -23,6 +23,8 @@
         "target_phase": { "type": "string", "pattern": "^PH-[0-9]{3,}$" },
         "notes": { "type": "string", "minLength": 1 },
         "depends_on": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^PD-[0-9]{3,}$" } },
+        "reconcile_in": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^PH-[0-9]{3,}$" } },
+        "downstream_phases": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^PH-[0-9]{3,}$" } },
         "moves": {
           "type": "array",
           "items": {

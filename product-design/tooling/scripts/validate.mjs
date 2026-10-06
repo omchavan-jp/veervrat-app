@@ -219,7 +219,7 @@ function validateDeferredTopics(decisions) {
   if (!Array.isArray(schemaStatuses) || schemaStatuses.join('|') !== allowedStatuses.join('|')) {
     fail(`Deferred-topic schema must declare statuses in this order: ${allowedStatuses.join(', ')}.`);
   }
-  const allowedKeys = new Set(['id', 'title', 'status', 'reason', 'target_phase', 'notes', 'depends_on', 'moves', 'drop_reason', 'resolution_artifact']);
+  const allowedKeys = new Set(['id', 'title', 'status', 'reason', 'target_phase', 'notes', 'depends_on', 'reconcile_in', 'downstream_phases', 'moves', 'drop_reason', 'resolution_artifact']);
   const ids = new Map();
   for (const topic of register.topics) {
     if (!topic || typeof topic !== 'object' || Array.isArray(topic)) { fail('Deferred-topic register contains a non-object entry.'); continue; }
@@ -236,6 +236,11 @@ function validateDeferredTopics(decisions) {
       else for (const id of topic.depends_on) {
         if (!/^PD-\d{3,}$/.test(id) || !decisions.has(id)) fail(`${topic.id}: depends_on contains unknown or invalid decision ID '${id}'.`);
       }
+    }
+    for (const field of ['reconcile_in', 'downstream_phases']) {
+      if (topic[field] === undefined) continue;
+      if (!Array.isArray(topic[field])) fail(`${topic.id}: ${field} must be an array.`);
+      else for (const phaseId of topic[field]) if (typeof phaseId !== 'string' || !roadmap.has(phaseId)) fail(`${topic.id}: ${field} contains unknown phase ID '${phaseId}'.`);
     }
     if (topic.moves !== undefined) {
       if (!Array.isArray(topic.moves)) fail(`${topic.id}: moves must be an array.`);
