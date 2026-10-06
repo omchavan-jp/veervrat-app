@@ -1,0 +1,48 @@
+---
+title: Journey Vratamitra relationship lifecycle
+description: Confirmed guidance modes, invitation transitions, and relationship history for a Journey.
+---
+
+# Journey Vratamitra relationship lifecycle
+
+> **Map:** Journey guidance has two distinct modes: Primary-derived guidance follows the Vratarthi's current active Primary, while a specific-person Journey Vratamitra requires explicit acceptance and remains linked to that Journey independently of Primary changes. The Vratarthi may switch modes while the Journey is active. Ending and completion preserve relationship history and contributions; exact artifact access remains deferred.
+
+## PD-008 — Journey Vratamitra relationship lifecycle
+
+### Guidance modes
+
+| Mode | Relationship basis | Effective Journey Vratamitra | Acceptance |
+| --- | --- | --- | --- |
+| Primary-derived guidance | The Journey is linked to the Vratarthi's active Primary Vratamitra relationship. | Whoever is currently the active Primary; no effective Journey Vratamitra while there is no active Primary. | No separate Journey-level acceptance; guidance uses the already-accepted Primary relationship. |
+| Specific-person Journey Vratamitra | The Journey is linked to a specifically selected person. | The person who explicitly accepted the Journey-specific relationship, independently of later Primary changes. | Explicit acceptance is required, even if the person is currently Primary. |
+
+Identity equality does not determine the mode. The Vratarthi may deliberately select their current Primary as a specific-person Journey Vratamitra. In Primary-derived mode, guidance automatically follows a new active Primary when the Primary changes; if there is temporarily no active Primary, there is no effective Journey Vratamitra until a Primary exists again. The Primary relationship lifecycle is recorded in [PD-007](./primary-vratamitra-relationship.mdx).
+
+### Specific-person invitation lifecycle
+
+- At most one specific-person Journey Vratamitra invitation may be pending per Journey.
+- The Vratarthi may withdraw a pending invitation; the invitee may decline it. Withdrawn or declined invitations are terminal and cannot later be accepted.
+- Preserve invitation status, actor, timestamp, and any optional note.
+- The Vratarthi may change the pending invitee by withdrawing the previous invitation and issuing another; the exact interaction flow remains deferred.
+- If the Journey completes while an invitation is pending, the invitation automatically closes and can no longer be accepted.
+
+### Switching modes while the Journey is active
+
+Switching between Primary-derived and specific-person guidance is allowed while the Journey is active.
+
+| Transition | While a new invitation is pending | When the transition takes effect |
+| --- | --- | --- |
+| Specific A → Specific B | A remains the active Journey Vratamitra. | When B accepts, A becomes historical and B becomes active. |
+| Primary-derived → Specific B | The current Primary remains the effective Journey Vratamitra. | When B accepts, the Journey switches to specific-person mode with B. |
+| Specific A → Primary-derived | No new acceptance is required for Primary-derived guidance. | The switch is immediate and A becomes historical. If an active Primary exists, that Primary becomes effective; otherwise the Journey enters Primary-derived mode with no effective Journey Vratamitra until a Primary exists. |
+
+### Ending and Journey completion
+
+- The Vratarthi may remove a specific-person Journey Vratamitra unilaterally. A specific-person Journey Vratamitra may step down unilaterally. Ending the Journey-specific relationship requires no mutual approval.
+- Ending preserves relationship history and prior contributions; it does not delete them. Record who ended the relationship and when. An optional note or reason may be retained, but is never required.
+- On Journey completion, any active Journey-specific Vratamitra relationship automatically becomes historical/completed.
+- Journey completion does not determine whether the former Journey Vratamitra may later view the completed Journey or other feature-specific artifacts. Exact access remains deferred under [DT-002](../00-governance/deferred-topics.mdx#deferred-topics), for PH-008 and PH-011 reconciliation.
+
+### Deferred boundaries
+
+Automatic invitation expiry and its timing remain undecided under [DT-009](../00-governance/deferred-topics.mdx#deferred-topics). The confirmed closure of pending invitations on Journey completion is distinct from an automatic time-based expiry rule. Exact screens, confirmation dialogs, notifications, chat behavior, implementation, completed-Journey visibility, and feature-level access are not established by this record.

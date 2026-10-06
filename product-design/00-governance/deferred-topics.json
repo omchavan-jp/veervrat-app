@@ -15,8 +15,9 @@
       "status": "open",
       "reason": "Do not globally enumerate exact visibility, actions, contributions, validation, chat or reference behavior, and permissions before the relevant features are designed. Derive information, access, ownership, Primary versus Journey Vratamitra scope, and historical behavior as each feature is modeled.",
       "target_phase": "PH-008",
-      "depends_on": ["PD-007"],
-      "notes": "Cross-cutting: revisit for chat, Journey evidence, Exposures, Resolutions, Challenges, reassessment, resources, AI summaries, and other feature-design phases. Include exact post-relationship access to feature-specific artifacts after their ownership/participation models and permissions are designed; former-Primary status alone does not grant continuing broad Primary-level access. Do not invent access categories here."
+      "depends_on": ["PD-007", "PD-008"],
+      "notes": "Cross-cutting: revisit for chat, Journey evidence, Exposures, Resolutions, Challenges, reassessment, resources, AI summaries, and other feature-design phases. Include exact post-relationship access to feature-specific artifacts after their ownership/participation models and permissions are designed; former-Primary status alone does not grant continuing broad Primary-level access. Do not invent access categories here. Reconcile completed-Journey visibility and post-relationship access for former Journey Vratamitras under PH-008 and PH-011; Journey completion does not itself determine that access.",
+      "reconcile_in": ["PH-011"]
     },
     {
       "id": "DT-003",
@@ -68,11 +69,19 @@
     },
     {
       "id": "DT-009",
-      "title": "Automatic Primary invitation expiry",
+      "title": "Automatic Vratamitra invitation expiry",
       "status": "open",
       "reason": "The confirmed Primary Vratamitra lifecycle leaves automatic invitation expiry undecided; it establishes acceptance, withdrawal, and decline states but no automatic expiry rule.",
-      "target_phase": "PH-002",
-      "depends_on": ["PD-007"]
+      "target_phase": "PH-011",
+      "moves": [
+        {
+          "from_phase": "PH-002",
+          "to_phase": "PH-011",
+          "reason": "PH-002 has established acceptance, withdrawal, decline, replacement, terminal states, and Journey-completion closure. Automatic time-based expiry and its duration are not required to complete the actor/relationship model; PH-011 can decide this later journey/state/UX policy with actual invitation flows and the notification/re-engagement model available."
+        }
+      ],
+      "depends_on": ["PD-007", "PD-008"],
+      "notes": "Also covers automatic expiry and expiry timing for specific-person Journey Vratamitra invitations. Closing a pending Journey invitation on Journey completion is confirmed in PD-008 and is distinct from an undecided time-based expiry rule."
     }
   ]
 }

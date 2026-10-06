@@ -50,6 +50,13 @@
       "status": "confirmed",
       "canonical_home": "../02-actors-and-relationships/primary-vratamitra-relationship.mdx",
       "summary": "A Vratarthi has at most one active Primary Vratamitra and one pending invitation. The relationship begins on acceptance; either party may end it independently, preserving history and contributions. Invitation history is retained, and former-Primary status alone grants no continuing broad Primary-level access; feature-specific artifact access remains deferred under DT-002."
+    },
+    {
+      "id": "PD-008",
+      "title": "Journey Vratamitra relationship lifecycle",
+      "status": "confirmed",
+      "canonical_home": "../02-actors-and-relationships/journey-vratamitra-relationship.mdx",
+      "summary": "Journey guidance uses distinct Primary-derived and specific-person modes. Primary-derived guidance follows the current active Primary without separate Journey acceptance; specific-person guidance requires explicit acceptance and persists independently of Primary changes. Active Journeys may switch modes. Ending and completion preserve history and contributions; completed-Journey and artifact access remain deferred under DT-002."
     }
   ]
 }
