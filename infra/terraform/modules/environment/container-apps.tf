@@ -433,10 +433,6 @@ resource "azurerm_container_app" "web" {
         name  = "PRODUCT_DOCS_MODE"
         value = var.product_docs_mode
       }
-      env {
-        name  = "PRODUCT_DOCS_INTERNAL_URL"
-        value = local.deploy && var.product_docs_enabled && var.docs_image_tag != "" ? "https://${azurerm_container_app.docs[0].ingress[0].fqdn}" : ""
-      }
       # So the admin UI can show environment-unavailable controls as unavailable rather than
       # inert — content editing is refused on prod for everyone (O7), and a toggle that saves
       # but never takes effect is a footgun.

@@ -171,18 +171,6 @@ variable "web_image_tag" {
   default = ""
 }
 
-variable "docs_image_tag" {
-  description = "Independent SHA tag for the UAT-only product docs renderer."
-  type        = string
-  default     = ""
-}
-
-variable "product_docs_enabled" {
-  description = "Create an internal product docs renderer in this environment."
-  type        = bool
-  default     = false
-}
-
 variable "product_docs_mode" {
   description = "Server-side product docs access gate: off | granted."
   type        = string

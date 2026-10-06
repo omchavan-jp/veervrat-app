@@ -57,6 +57,8 @@ The validator checks phase IDs and statuses, move-history phase references and c
 
 ## D2 prerequisite
 
+See [DIAGRAMS.md](DIAGRAMS.md) for the diagram styling and review workflow.
+
 When `.d2` files exist, validation requires the `d2` CLI. On macOS, install it with `brew install d2`; verify with `d2 version`. The official D2 install script also supports previewing its actions with `curl -fsSL https://d2lang.com/install.sh | sh -s -- --dry-run` before installation.
 
 `pnpm build --webpack` generates the diagram assets and manifest automatically. The
@@ -74,9 +76,7 @@ MDX/D2/JSON. Its export is copied to `/app/product-docs-export`, outside the
 web public directory. The web route serves each file after a server-side
 `PRODUCT_DOCS_MODE` gate and an API check for the current `PRODUCT_DOCS_VIEW`
 grant. Production sets `PRODUCT_DOCS_MODE=off` even though its web image contains
-the static bytes. During cutover, the old internal-only UAT docs Container App
-remains deployed but is no longer used by the gateway; a follow-up Terraform
-cleanup removes it after static UAT verification.
+the static bytes. No separate renderer server or Container App is deployed.
 
 For local gateway testing, run `pnpm build --webpack` here, run the normal web
 and API apps, set `PRODUCT_DOCS_MODE=granted` in both app environments, and grant

@@ -8,9 +8,6 @@ while IFS= read -r file; do
   [[ -z "$file" ]] && continue
 
   case "$file" in
-    infra/terraform/modules/environment/product-docs.tf)
-      docs_changed=true
-      ;;
     product-design/*)
       if [[ "$file" != *.md ]]; then docs_changed=true; fi
       ;;

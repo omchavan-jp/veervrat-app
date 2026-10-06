@@ -841,7 +841,6 @@ veervrat-github-actions -g veervrat-shared -o table`.
 | Storage Blob Data Contributor | `veervrattfstate` | read/write Terraform state |
 | Key Vault Secrets Officer | subscription | re-apply the same generated secrets on every run — Terraform is idempotent, so this must be read/write, not just read |
 | User Access Administrator | `veervrat-uat`, `veervrat-prod` resource groups | added 2026-08-24 — see below |
-| Role Based Access Control Administrator, conditioned to `AcrPull` for service principals | `veervratacr` registry | declared after the 2026-10-04 first docs rollout failed; requires a privileged shared-state apply before CD can grant the docs identity `AcrPull` |
 
 **Contributor cannot grant roles**, and still can't — that boundary is unchanged. What changed
 is that CD needed a *separate*, narrower power added alongside it.
@@ -857,16 +856,14 @@ The 2026-08-24 fix granted `User Access Administrator` at the UAT and production
 resource groups, not at subscription scope. That historical choice is broader than
 necessary: `Role Based Access Control Administrator` has fewer permissions, and Azure
 role-assignment conditions can restrict which roles may be granted. Reviewing those
-existing grants is separate from the docs rollout. The docs renderer exposed another
-scope boundary: its `AcrPull` assignment is on the shared registry, outside
-`veervrat-uat`. The 2026-10-04 rollout failed with
-`Microsoft.Authorization/roleAssignments/write` 403 at that scope. The new
-registry-scoped grant uses **conditioned Role Based Access Control Administrator**:
-CI may add or remove only `AcrPull` assignments for service principals there.
-The Terraform assignment for the docs managed identity explicitly sets
-`principal_type = "ServicePrincipal"` so the create condition can evaluate it.
-A privileged operator must apply shared Terraform state before CD can retry.
-See `infra/terraform/envs/shared/github-oidc.tf` for the condition.
+existing grants is separate from the docs rollout. Historically, the separate docs
+renderer exposed another scope boundary: its `AcrPull` assignment was on the shared
+registry, outside `veervrat-uat`. The 2026-10-04 rollout failed with
+`Microsoft.Authorization/roleAssignments/write` 403 at that scope. A temporary
+registry-scoped, conditioned Role Based Access Control Administrator grant let CI
+assign or remove only `AcrPull` for service principals. The renderer, its identity,
+and that temporary registry grant were retired when the docs became a static export
+inside the existing web image.
 
 The claim this section used to make — **"prod needed zero additional role assignments once its
 resource group existed"** — is no longer true. Both `User Access Administrator` grants apply to
@@ -915,13 +912,13 @@ an unrecognised new top-level directory defaults to *triggering* a build, not sk
 
 **Current extension for product docs:** `prepare` still uses one changed-file
 list, now classified by `.github/scripts/classify-changes.sh` into app and docs
-flags. Canonical `product-design/` content, renderer code, and docs-specific Terraform
+flags. Canonical `product-design/` content and renderer code
 build/deploy a new web image containing a static Fumadocs export, while API and
 migration job images remain on their deployed tag. App paths retain the app
 image/migration path; mixed pushes use that path. The ordinary documentation
 ignore list above remains. `prod-*` tags still build app images but the docs
-route remains off in production. The old internal UAT renderer is retained
-only during cutover and removed after live verification. The shell
+route remains off in production. The former internal UAT renderer was removed
+after live verification. The shell
 classifier has fixtures in `.github/scripts/classify-changes.test.sh`.
 
 **A portability trap hit while writing the check:** the first version used `grep -qvE
