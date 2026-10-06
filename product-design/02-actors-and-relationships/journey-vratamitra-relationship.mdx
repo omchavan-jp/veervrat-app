@@ -11,6 +11,8 @@ description: Confirmed guidance modes, invitation transitions, and relationship 
 
 ### Guidance modes
 
+A Journey has at most one active specific-person Journey Vratamitra relationship at a time.
+
 | Mode | Relationship basis | Effective Journey Vratamitra | Acceptance |
 | --- | --- | --- | --- |
 | Primary-derived guidance | The Journey is linked to the Vratarthi's active Primary Vratamitra relationship. | Whoever is currently the active Primary; no effective Journey Vratamitra while there is no active Primary. | No separate Journey-level acceptance; guidance uses the already-accepted Primary relationship. |
@@ -39,6 +41,7 @@ Switching between Primary-derived and specific-person guidance is allowed while 
 ### Ending and Journey completion
 
 - The Vratarthi may remove a specific-person Journey Vratamitra unilaterally. A specific-person Journey Vratamitra may step down unilaterally. Ending the Journey-specific relationship requires no mutual approval.
+- If that active specific-person relationship ends while the Journey remains active, the Journey becomes **unguided/solo**. It does not automatically fall back to Primary-derived guidance. The Vratarthi may subsequently explicitly choose Primary-derived guidance or invite another specific-person Journey Vratamitra. This ending is distinct from replacement (where the existing guide remains effective until acceptance) and an explicit switch to Primary-derived guidance.
 - Ending preserves relationship history and prior contributions; it does not delete them. Record who ended the relationship and when. An optional note or reason may be retained, but is never required.
 - On Journey completion, any active Journey-specific Vratamitra relationship automatically becomes historical/completed.
 - Journey completion does not determine whether the former Journey Vratamitra may later view the completed Journey or other feature-specific artifacts. Exact access remains deferred under [DT-002](../00-governance/deferred-topics.mdx#deferred-topics), for PH-008 and PH-011 reconciliation.
@@ -46,3 +49,11 @@ Switching between Primary-derived and specific-person guidance is allowed while 
 ### Deferred boundaries
 
 Automatic invitation expiry and its timing remain undecided under [DT-009](../00-governance/deferred-topics.mdx#deferred-topics). The confirmed closure of pending invitations on Journey completion is distinct from an automatic time-based expiry rule. Exact screens, confirmation dialogs, notifications, chat behavior, implementation, completed-Journey visibility, and feature-level access are not established by this record.
+
+General invitation-flow and mode-switch UX edge cases are tracked by DT-011 / PH-011.
+
+## Explanatory diagram
+
+This compact projection of PD-008 explains the two guidance modes, solo ending, and completion. The MDX above remains canonical; the diagram does not exhaust every invitation or switching edge case.
+
+<D2Diagram src="/02-actors-and-relationships/diagrams/journey-vratamitra-lifecycle.d2" alt="Journey guidance modes, accepted specific-person replacement, solo ending, and completion" />

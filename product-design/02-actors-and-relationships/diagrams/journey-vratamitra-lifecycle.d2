@@ -1,0 +1,23 @@
+# Explanatory projection of PD-008.
+# Selected transitions only; the canonical MDX governs all details.
+direction: down
+
+active: "While the Journey is active" {
+  direction: down
+  primary: "Primary-derived guidance\nCurrent Primary, or none\nNo Journey acceptance needed" {class: core}
+  specific: "Specific-person guidance\nExplicit acceptance required\nIndependent of Primary changes" {class: process}
+  solo: "Unguided / solo\nNo automatic Primary fallback" {class: outcome}
+  primary -> specific: "invite accepted" {class: progression}
+  specific -> specific: "replacement accepts\nprevious guide historical" {class: support}
+  specific -> primary: "explicit switch\nguide historical" {class: support}
+  specific -> solo: "removed / steps down\nhistory preserved" {class: progression}
+  solo -> primary: "explicit choice" {class: support}
+  solo -> specific: "new invite accepted" {class: support}
+}
+
+historical: "Specific relationship\nHistorical / completed" {class: outcome}
+active.specific -> historical: "Journey completes" {class: progression}
+
+invitation: "Pending specific invitation\nAt most one per Journey" {class: platform}
+closed: "Invitation closed\nCannot be accepted" {class: outcome}
+invitation -> closed: "Journey completes" {class: progression}

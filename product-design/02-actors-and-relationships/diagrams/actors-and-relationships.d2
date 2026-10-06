@@ -1,0 +1,28 @@
+# Explanatory projection of PD-010, PD-007, PD-008, and PD-009.
+# actor-inventory.mdx and the relationship records remain semantic truth.
+direction: down
+grid-columns: 1
+
+participation: "Participation" {
+  direction: right
+  visitor: "Public Visitor\nUnsigned-in public participation" {class: platform}
+  vratarthi: "Vratarthi\nEvery signed-in user" {class: core}
+  visitor -> vratarthi: "signs in" {class: progression}
+}
+
+capabilities: "Additional roles/capabilities\nMay coexist" {
+  grid-columns: 2
+  curator: "Curator\nKnowledge/content stewardship" {class: process}
+  moderator: "Moderator\nCommunity-content moderation" {class: process}
+  admin: "Admin\nOperational/product administration" {class: process}
+  guide: "Vratamitra\nSupports another Vratarthi" {class: process}
+}
+
+guidance: "Vratamitra guidance relationship types\nMay coexist for the same pair" {
+  grid-columns: 2
+  primary: "Primary Vratamitra\nContinuing longitudinal guidance" {class: outcome}
+  journey: "Journey Vratamitra\nJourney-specific guidance" {class: outcome}
+}
+
+participation.vratarthi -> capabilities: "may additionally hold/serve as" {class: support}
+capabilities.guide -> guidance: "participates through" {class: support}
