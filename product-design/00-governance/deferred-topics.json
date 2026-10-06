@@ -53,6 +53,17 @@
       "status": "open",
       "reason": "Challenge(s) contribute to application and evidence of developmental change; lifecycle, repeatability, success and completion semantics, authoring or selection, and relationship to Journey completion remain undecided.",
       "target_phase": "PH-004"
+    },
+    {
+      "id": "DT-008",
+      "title": "Notification and re-engagement model",
+      "status": "open",
+      "reason": "The notification constraint in PD-006 is confirmed; the notification and re-engagement model and its mechanics are intentionally left for later design.",
+      "target_phase": "PH-009",
+      "depends_on": ["PD-006"],
+      "reconcile_in": ["PH-011"],
+      "downstream_phases": ["PH-013", "PH-014", "PH-015", "PH-016"],
+      "notes": "Later decisions include notification-producing events; recipients; urgency and importance; in-app notification center/activity model; reminders and re-engagement; email, push, and in-app channels; timing; batching and deduplication; read, unread, and actioned state; preferences and controls; notification-to-action navigation; ignored or expired notifications; and anti-dependency/anti-nagging behavior. Reconcile the experience in PH-011; carry relevant implications into PH-013 through PH-016. Do not decide these mechanics in this record."
     }
   ]
 }

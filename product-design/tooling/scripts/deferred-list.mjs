@@ -37,5 +37,7 @@ console.log(requestedPhase ? `Open deferred topics for ${requestedPhase} (${phas
 for (const topic of topics) {
   console.log(`\n${topic.id} — ${topic.title}\n  Target: ${topic.target_phase} (${phases.get(topic.target_phase)})\n  Reason: ${topic.reason}`);
   if (topic.notes) console.log(`  Notes: ${topic.notes}`);
+  if (topic.reconcile_in?.length) console.log(`  Reconcile in: ${topic.reconcile_in.map((id) => `${id} (${phases.get(id)})`).join(', ')}`);
+  if (topic.downstream_phases?.length) console.log(`  Downstream: ${topic.downstream_phases.map((id) => `${id} (${phases.get(id)})`).join(', ')}`);
   for (const move of topic.moves ?? []) console.log(`  Moved: ${move.from_phase} → ${move.to_phase} — ${move.reason}`);
 }

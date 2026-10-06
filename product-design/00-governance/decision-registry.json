@@ -36,6 +36,13 @@
       "status": "confirmed",
       "canonical_home": "../01-product-model/north-star.mdx",
       "summary": "Journey success is developmental change in how genuinely, consistently, and independently the chosen Sentence's quality or capability is present in life. Ratings, completion states, and metrics are evidence or proxies, not objectives; Challenge cardinality remains open."
+    },
+    {
+      "id": "PD-006",
+      "title": "Notifications and re-engagement support self-directed action",
+      "status": "confirmed",
+      "canonical_home": "../01-product-model/north-star.mdx",
+      "summary": "As an application of PD-004, notifications may inform or remind the Vratarthi about intentions they already own, but must not become a source of dependency or optimize for compulsive engagement, streak anxiety, artificial urgency, or repeated-prompt dependence. This constrains behavior without banning reminders or re-engagement."
     }
   ]
 }
