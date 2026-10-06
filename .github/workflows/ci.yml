@@ -64,7 +64,7 @@ jobs:
       - name: Install pinned D2 for product design validation
         run: |
           set -euo pipefail
-          D2_VERSION=v0.7.1
+          D2_VERSION=v0.9.0
           mkdir -p "$RUNNER_TEMP/d2"
           curl -fsSL "https://github.com/d2lang/d2/releases/download/$D2_VERSION/d2-$D2_VERSION-linux-amd64.tar.gz" -o "$RUNNER_TEMP/d2.tar.gz"
           tar -xzf "$RUNNER_TEMP/d2.tar.gz" -C "$RUNNER_TEMP/d2" --strip-components=1

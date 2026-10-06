@@ -33,13 +33,13 @@ bootstrap/
                              not be necessary again.
 ```
 
-The environment module also defines an optional product-design renderer
-Container App. UAT enables it when `docs_image_tag` names a built
-`veervrat-docs` image; it has internal ingress only and the web Container App
-receives its internal origin through `PRODUCT_DOCS_INTERNAL_URL`. UAT sets
-`PRODUCT_DOCS_MODE=granted` on web and API. Production explicitly sets the mode
-to `off` and disables the renderer resource. Docs image tags are independent
-from the API/web image tag, so docs-only applies preserve running app images.
+The web image now includes a build-time Fumadocs static export outside its public
+directory. The web route reads it only after the API grants `PRODUCT_DOCS_VIEW`.
+UAT sets `PRODUCT_DOCS_MODE=granted` on web and API; production sets it to `off`.
+Terraform accepts a separate `web_image_tag` for docs-only UAT deploys, so the
+API and migration job retain their current image. The old internal-only docs
+Container App and its independent image tag remain during the cutover and will
+be removed after the static route passes live verification.
 
 ## The one hard rule — for any DNS zone this project ever manages
 

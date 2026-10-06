@@ -916,10 +916,12 @@ an unrecognised new top-level directory defaults to *triggering* a build, not sk
 **Current extension for product docs:** `prepare` still uses one changed-file
 list, now classified by `.github/scripts/classify-changes.sh` into app and docs
 flags. Canonical `product-design/` content, renderer code, and docs-specific Terraform
-build/deploy only the internal UAT docs image; app paths retain the app
-image/migration path; mixed pushes take the union. The ordinary documentation
-ignore list above remains. `prod-*` tags still build app images and cannot
-create the docs renderer, which production Terraform disables. The shell
+build/deploy a new web image containing a static Fumadocs export, while API and
+migration job images remain on their deployed tag. App paths retain the app
+image/migration path; mixed pushes use that path. The ordinary documentation
+ignore list above remains. `prod-*` tags still build app images but the docs
+route remains off in production. The old internal UAT renderer is retained
+only during cutover and removed after live verification. The shell
 classifier has fixtures in `.github/scripts/classify-changes.test.sh`.
 
 **A portability trap hit while writing the check:** the first version used `grep -qvE
@@ -1281,8 +1283,9 @@ values **fail closed** — a typo, or a stale `all` left in config, must not ope
 both web and API; production sets it to `off` and both services force it off
 when `ENVIRONMENT=prod`. The web gateway authorizes every `/product-docs/*`
 request through the API using the current session, and the API checks the
-current per-user grant. The standalone Fumadocs renderer has internal-only
-ingress and a separate docs image tag.
+current per-user grant. Fumadocs statically exports pages, search, governance
+JSON and D2 assets into the web image at build time. The export sits outside
+the public directory, and production retains the bytes with its route gate off.
 
 **UAT mirrors prod.** An earlier `all` mode (every authenticated user, grants ignored) was used
 on UAT so reviewers needed no setup. It meant the grant path was never exercised before prod —

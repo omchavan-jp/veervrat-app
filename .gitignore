@@ -7,6 +7,8 @@ node_modules/
 dist/
 .next/
 out/
+product-design/tooling/.cache/
+product-design/tooling/public/diagrams/
 build/
 
 # turbo

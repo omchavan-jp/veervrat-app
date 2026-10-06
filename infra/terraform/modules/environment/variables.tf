@@ -164,6 +164,13 @@ variable "app_image_tag" {
   default = ""
 }
 
+# Docs-only main pushes rebuild the web image while API and migration stay on their
+# previous SHA. Empty follows app_image_tag (normal app and production deploys).
+variable "web_image_tag" {
+  type    = string
+  default = ""
+}
+
 variable "docs_image_tag" {
   description = "Independent SHA tag for the UAT-only product docs renderer."
   type        = string

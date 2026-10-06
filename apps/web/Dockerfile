@@ -16,6 +16,30 @@ COPY apps/web/package.json apps/web/
 COPY packages/types/package.json packages/types/
 RUN pnpm install --frozen-lockfile
 
+# Product-design remains an independent build-time renderer. Its static export is kept
+# outside web/public so every request must pass the authenticated web route handler.
+FROM base AS docs-deps
+WORKDIR /app/product-design/tooling
+COPY product-design/tooling/package.json product-design/tooling/pnpm-lock.yaml product-design/tooling/pnpm-workspace.yaml ./
+RUN pnpm install --frozen-lockfile
+
+FROM node:24-slim AS d2
+ARG D2_VERSION=v0.9.0
+ARG TARGETARCH
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl \
+  && mkdir -p /tmp/d2 \
+  && curl -fsSL "https://github.com/d2lang/d2/releases/download/${D2_VERSION}/d2-${D2_VERSION}-linux-${TARGETARCH}.tar.gz" -o /tmp/d2.tar.gz \
+  && tar -xzf /tmp/d2.tar.gz -C /tmp/d2 --strip-components=1 \
+  && install -m 0755 /tmp/d2/bin/d2 /usr/local/bin/d2 \
+  && /usr/local/bin/d2 version
+
+FROM base AS docs-build
+WORKDIR /app/product-design/tooling
+COPY --from=docs-deps /app/product-design/tooling/node_modules ./node_modules
+COPY --from=d2 /usr/local/bin/d2 /usr/local/bin/d2
+COPY product-design/ /app/product-design/
+RUN pnpm build --webpack
+
 # ---- Build ----
 FROM base AS build
 # ⚠️ Build args here are BAKED INTO THE IMAGE, and CD promotes one image from UAT to prod
@@ -54,6 +78,8 @@ RUN groupadd --system --gid 1001 nodejs && useradd --system --uid 1001 --gid nod
 COPY --from=build --chown=nodejs:nodejs /app/apps/web/.next/standalone ./
 COPY --from=build --chown=nodejs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
 COPY --from=build --chown=nodejs:nodejs /app/apps/web/public ./apps/web/public
+COPY --from=docs-build --chown=nodejs:nodejs /app/product-design/tooling/out ./product-docs-export
+ENV PRODUCT_DOCS_STATIC_ROOT=/app/product-docs-export
 USER nodejs
 EXPOSE 3000
 ENV PORT=3000

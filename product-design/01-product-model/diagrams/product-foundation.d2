@@ -1,16 +1,16 @@
 direction: down
 
-veervrat: "Veervrat\nA संस्कार"
-aim: "Aim\nकर्तृत्वशक्तीचे स्वावलंबन"
-process: "Structured process\nSupports undertaking and living\nthe संस्कार"
-platform: "Veervrat app\nDigital platform for practice and documentation,\nknowledge and resources, Vratamitra guidance,\ncommunity interaction, and longitudinal history"
+veervrat: "Veervrat\nA संस्कार" {class: core}
+aim: "Aim\nकर्तृत्वशक्तीचे स्वावलंबन" {class: outcome}
+process: "Structured process\nSupports undertaking and living\nthe संस्कार" {class: process}
+platform: "Veervrat app\nDigital platform for practice and documentation,\nknowledge and resources, Vratamitra guidance,\ncommunity interaction, and longitudinal history" {class: platform}
 
-quality: "गुणसंवर्धन\nCultivate relevant गुण / उपगुण"
-lacuna: "दोषापनयन\nCorresponding lacuna gradually weakens"
+quality: "गुणसंवर्धन\nCultivate relevant गुण / उपगुण" {class: growth}
+lacuna: "दोषापनयन\nLacuna gradually weakens" {class: weakness}
 
-veervrat -> aim: "aims at progressive increase"
-veervrat -> process: "undertaken with support from"
-process -> quality: "development through cultivation"
-quality -> lacuna: "as relevant गुण / उपगुण grow"
-lacuna -> aim: "constraints weaken; कर्तृत्वशक्ती increases"
-platform -> process: "supports practice and records its history"
+veervrat -> aim: "aims at progressive increase" {class: progression}
+veervrat -> process: "undertaken with support from" {class: progression}
+process -> quality: "development through cultivation" {class: progression}
+quality -> lacuna: "as relevant गुण / उपगुण grow" {class: progression}
+lacuna -> aim: "constraints weaken; कर्तृत्वशक्ती increases" {class: progression}
+platform -> process: "supports practice and records its history" {class: support}

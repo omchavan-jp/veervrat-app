@@ -33,3 +33,9 @@ export default async function Page({ params }: { params: Promise<{ slug?: string
     </DocsPage>
   );
 }
+
+export const dynamicParams = false;
+
+export function generateStaticParams() {
+  return source.generateParams();
+}

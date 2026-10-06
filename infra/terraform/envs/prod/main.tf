@@ -53,6 +53,12 @@ variable "app_image_tag" {
   default     = ""
 }
 
+variable "web_image_tag" {
+  description = "Independent web SHA; empty follows the app tag."
+  type        = string
+  default     = ""
+}
+
 variable "migrate_command" {
   description = "Prisma CLI subcommand the migration job runs. Override to recover a failed migration."
   type        = string
@@ -113,6 +119,7 @@ module "environment" {
 
   image_tag       = var.image_tag
   app_image_tag   = var.app_image_tag
+  web_image_tag   = var.web_image_tag
   deploy_apps     = var.deploy_apps
   migrate_command = var.migrate_command
 

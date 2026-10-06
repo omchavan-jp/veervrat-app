@@ -17,7 +17,8 @@
 .github
 **/.DS_Store
 
-# tests / e2e / docs not needed at build
+# tests / e2e / ordinary repo documentation not needed at build;
+# product-design/*.mdx, .d2 and governance JSON are build inputs for web.
 e2e
 playwright-report
 test-results

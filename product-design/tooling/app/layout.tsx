@@ -11,7 +11,9 @@ export default function Layout({ children }: Readonly<{ children: ReactNode }>) 
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="flex min-h-screen flex-col">
-        <RootProvider>{children}</RootProvider>
+        <RootProvider search={{ options: { type: 'static', api: '/product-docs/api/search' } }}>
+          {children}
+        </RootProvider>
       </body>
     </html>
   );

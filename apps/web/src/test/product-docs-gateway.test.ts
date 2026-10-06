@@ -1,8 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
+import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import { GET } from '../../app/product-docs/[[...path]]/route';
 
-afterEach(() => {
+let staticRoot: string | undefined;
+afterEach(async () => {
+  if (staticRoot) await rm(staticRoot, { recursive: true, force: true });
+  staticRoot = undefined;
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();
 });
@@ -63,24 +69,20 @@ describe('product docs gateway', () => {
     expect(response.headers.get('location')).toContain('/login?returnTo=');
   });
 
-  it('forwards allowed pages and assets under the protected prefix without identity headers', async () => {
+  it('serves pages, search data, and encoded Next assets only after API authorization', async () => {
     vi.stubEnv('PRODUCT_DOCS_MODE', 'granted');
-    vi.stubEnv('PRODUCT_DOCS_INTERNAL_URL', 'http://docs-internal:3000');
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(new Response('{"data":{"allowed":true}}', { status: 200 }))
-      .mockResolvedValueOnce(
-        new Response('asset', {
-          status: 200,
-          headers: {
-            'Content-Type': 'application/javascript',
-            'Cache-Control': 'public, max-age=3600',
-          },
-        }),
-      );
+    staticRoot = await mkdtemp(path.join(tmpdir(), 'veervrat-product-docs-'));
+    vi.stubEnv('PRODUCT_DOCS_STATIC_ROOT', staticRoot);
+    await mkdir(path.join(staticRoot, 'nested'), { recursive: true });
+    await mkdir(path.join(staticRoot, 'api'), { recursive: true });
+    await mkdir(path.join(staticRoot, '_next', 'static'), { recursive: true });
+    await writeFile(path.join(staticRoot, 'nested', 'index.html'), '<h1>Nested</h1>');
+    await writeFile(path.join(staticRoot, 'api', 'search'), '{"type":"advanced"}');
+    await writeFile(path.join(staticRoot, '_next', 'static', '[chunk].js'), 'asset');
+    const fetchMock = vi.fn().mockResolvedValue(new Response('{"allowed":true}', { status: 200 }));
     vi.stubGlobal('fetch', fetchMock);
     const response = await GET(
-      request('/product-docs/_next/static/chunk.js?v=1', 'session', {
+      request('/product-docs/_next/static/%5Bchunk%5D.js?v=1', 'session', {
         RSC: '1',
         'X-Session-User': 'forged',
         Authorization: 'Bearer forged',
@@ -89,14 +91,16 @@ describe('product docs gateway', () => {
     expect(response.status).toBe(200);
     expect(await response.text()).toBe('asset');
     expect(response.headers.get('cache-control')).toBe('private, no-store');
-    expect(fetchMock.mock.calls[1][0].toString()).toBe(
-      'http://docs-internal:3000/product-docs/_next/static/chunk.js?v=1',
-    );
-    const forwarded = fetchMock.mock.calls[1][1].headers as Headers;
-    expect(forwarded.get('rsc')).toBe('1');
-    expect(forwarded.has('cookie')).toBe(false);
-    expect(forwarded.has('x-session-user')).toBe(false);
-    expect(forwarded.has('authorization')).toBe(false);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][0]).toContain('/auth/product-docs-access');
+    expect(fetchMock.mock.calls[0][1].headers).toEqual({ Cookie: 'veervrat_session=session' });
+    const page = await GET(request('/product-docs/nested/', 'session'));
+    expect(page.status).toBe(200);
+    expect(page.headers.get('content-type')).toContain('text/html');
+    expect(await page.text()).toBe('<h1>Nested</h1>');
+    const search = await GET(request('/product-docs/api/search', 'session'));
+    expect(search.headers.get('content-type')).toContain('application/json');
+    expect(await search.json()).toEqual({ type: 'advanced' });
   });
 
   it('fails closed when API access validation fails', async () => {
