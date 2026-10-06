@@ -4,7 +4,7 @@
 
 ## Renderer
 
-The standalone Fumadocs app reads the workspace MDX files directly through the documented Fumadocs MDX macro source. Its package and dependencies are isolated here and do not enter the end-user app workspace/runtime. From this directory, install its local dependencies once and run:
+The Fumadocs app reads the workspace MDX files directly through the documented Fumadocs MDX macro source. It is an isolated build-time renderer; its static export is packaged inside the Veervrat web image outside `apps/web/public`. From this directory, install its local dependencies once and run:
 
 ```sh
 pnpm install
@@ -14,11 +14,11 @@ pnpm dev
 Open `http://localhost:3000/product-docs` (or the port printed by Next.js). The
 renderer has a `/product-docs` base path and opens the workspace `README.mdx`
 there. MDX remains the source of truth; Fumadocs only presents it. D2 files
-are authored as `.d2` source and rendered on demand by the D2 CLI; no checked-in
-SVG copy is used. Links to the canonical governance JSON files are served from
-the same source directory.
+are authored as `.d2` source and rendered at build time by a pinned D2 CLI into
+light and dark SVG files; no checked-in SVG copy is used. Search indexing and
+governance JSON are also generated during the static build.
 
-To verify the production renderer build from this directory, run:
+To verify the static export from this directory, run:
 
 ```sh
 pnpm build --webpack
@@ -59,19 +59,27 @@ The validator checks phase IDs and statuses, move-history phase references and c
 
 When `.d2` files exist, validation requires the `d2` CLI. On macOS, install it with `brew install d2`; verify with `d2 version`. The official D2 install script also supports previewing its actions with `curl -fsSL https://d2lang.com/install.sh | sh -s -- --dry-run` before installation.
 
-Render an authored diagram from `product-design` with `d2 path/to/diagram.d2 /tmp/diagram.svg`.
+`pnpm build --webpack` generates the diagram assets and manifest automatically. The
+palette and semantic D2 classes live in `scripts/diagram-theme.mjs`; apply a class
+to each node/edge in canonical `.d2` source, then inspect both themes and the
+expanded viewer. The viewer provides zoom/pan and PNG/SVG downloads. Keep
+Devanagari labels short enough to fit the rendered boxes; D2's text measurements
+can differ from browser glyph layout. Use `d2 path/to/diagram.d2 /tmp/diagram.svg`
+for a quick source check.
 
 ## UAT deployment
 
-The Dockerfile here builds this renderer from the repository root context,
-including canonical MDX, governance JSON, and D2 sources. Its runtime uses a
-pinned D2 binary and Next standalone output. The UAT Container App has internal
-ingress only. The existing Veervrat web app serves `/product-docs/*` through a
-server-side gate and checks `PRODUCT_DOCS_VIEW` against the API on each request.
-The renderer has no public hostname. Production creates no docs Container App
-and sets `PRODUCT_DOCS_MODE=off`.
+The web Dockerfile builds this renderer as a separate build stage from canonical
+MDX/D2/JSON. Its export is copied to `/app/product-docs-export`, outside the
+web public directory. The web route serves each file after a server-side
+`PRODUCT_DOCS_MODE` gate and an API check for the current `PRODUCT_DOCS_VIEW`
+grant. Production sets `PRODUCT_DOCS_MODE=off` even though its web image contains
+the static bytes. During cutover, the old internal-only UAT docs Container App
+remains deployed but is no longer used by the gateway; a follow-up Terraform
+cleanup removes it after static UAT verification.
 
-For local gateway testing, run this renderer on port 3002, set the web app's
-`PRODUCT_DOCS_INTERNAL_URL=http://localhost:3002` and `PRODUCT_DOCS_MODE=granted`,
-and grant `PRODUCT_DOCS_VIEW` through `/admin/users/[id]`. The API must have
-`PRODUCT_DOCS_MODE=granted` too. Otherwise the gateway responds with 404.
+For local gateway testing, run `pnpm build --webpack` here, run the normal web
+and API apps, set `PRODUCT_DOCS_MODE=granted` in both app environments, and grant
+`PRODUCT_DOCS_VIEW` through `/admin/users/[id]`. The web route reads the local
+export from `product-design/tooling/out` unless `PRODUCT_DOCS_STATIC_ROOT` is
+set. No separate renderer server is needed.

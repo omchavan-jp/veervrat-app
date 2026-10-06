@@ -39,7 +39,7 @@ veervrat-app/
 │   ├── web/                    # Next.js frontend
 │   │   ├── app/                # App Router — route groups by role
 │   │   │   ├── (public)/       # login, signup, forgot-password, reset-password
-│   │   │   ├── product-docs/    # protected gateway to internal UAT renderer
+│   │   │   ├── product-docs/    # protected static-export gateway
 │   │   │   ├── (app)/          # VA dashboard, journeys, study flow, actions
 │   │   │   ├── (vratmitra)/    # VM views — my-vratarthis, vm-actions
 │   │   │   ├── (moderation)/   # moderation dashboard
@@ -72,7 +72,7 @@ veervrat-app/
 ├── spec/                       # product spec (decisions, ADRs, screen specs, audit)
 ├── documentation/              # engineering decisions and standards
 ├── openspec/                   # spec-driven workflow (active changes)
-├── product-design/             # canonical MDX/D2; tooling/ is the separate Fumadocs renderer
+├── product-design/             # canonical MDX/D2; tooling/ builds a separate Fumadocs static export
 └── .claude/                    # skills and commands
 ```
 

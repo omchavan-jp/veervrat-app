@@ -4,8 +4,7 @@
 path filter. On Node 24 it installs the root pnpm workspace, generates Prisma,
 then runs lint, typecheck, API and web unit tests, and the workspace build. It
 also tests the CD path classifier, validates canonical `product-design/` MDX,
-JSON, links and D2 with a pinned D2 CLI, and builds the standalone Fumadocs
-renderer.
+JSON, links and D2 with a pinned D2 CLI, and builds the Fumadocs static export.
 
 `integration.yml` runs API integration tests with PostgreSQL and Redis service
 containers. `e2e.yml` runs Playwright. Their triggers and scope are unchanged
@@ -18,21 +17,22 @@ its `prepare` job classifies one changed-file list with
 | Change on main | UAT action |
 |---|---|
 | App, API, web, shared, or unknown path | Build four app images; apply Terraform, migrate, deploy apps |
-| Canonical `product-design/` content or renderer code | Build and deploy `veervrat-docs` only; preserve app images and skip migrations |
-| Docs-specific Terraform | Build docs image and apply UAT infrastructure |
-| Both app and docs paths | Build both image sets; one serialized UAT deployment |
+| Canonical `product-design/` content or renderer code | Build and deploy the web image with its static export; preserve API and migration image tags; skip migrations |
+| Docs-specific Terraform | Rebuild web and apply UAT infrastructure |
+| Both app and docs paths | Build the normal app image set; one serialized UAT deployment |
 | Ordinary Markdown, `documentation/`, `ops/`, `openspec/`, `spec/`, `.claude/` only | Skip CD builds and UAT deployment |
 
 The classifier's fixtures are in `.github/scripts/classify-changes.test.sh`.
-UAT docs use a separate image tag and an internal-only Container App. A docs-only
-deploy reads the currently deployed app tag so Terraform does not move API/web
-to an image that was never built. It fails if API and web are on different tags.
-The composite action's `deploy_apps=false` skips app build deployment and
-migration steps; its docs-only Terraform apply still passes `deploy_apps=true`
-to keep the existing app resources in state. An app-only deploy preserves the
-current docs tag. The `prod-*` tag path continues to build and deploy the app images; it
-does not build or deploy docs. Product docs mode and the docs Container App are
-explicitly off in production Terraform.
+The Fumadocs export is built inside the web image, outside its public directory.
+A docs-only deploy reads the current API tag, builds a new web tag, and applies
+Terraform with API and migration images pinned to the old tag. The composite
+action's `deploy_apps=false` skips migrations; its docs-only Terraform apply
+still passes `deploy_apps=true` to keep the existing app resources in state.
+Normal app deploys read API and web tags separately and hold both through the
+migration step. Production tags rebuild the normal app image set, including the
+static docs bytes, while `PRODUCT_DOCS_MODE=off` keeps the route unavailable.
+The old internal UAT renderer remains in Terraform during cutover and is removed
+after the protected static route is verified live.
 
 The current production tag workflow **rebuilds** app images. Older repository
 guidance describes artifact promotion without a rebuild; that discrepancy is

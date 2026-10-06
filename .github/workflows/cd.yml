@@ -1,6 +1,6 @@
 # Continuous deployment.
 #
-# Main builds and deploys changed app/docs image sets to UAT. A prod-* tag rebuilds
+# Main builds and deploys changed app images to UAT. Product-design changes rebuild web. A prod-* tag rebuilds
 # and deploys app images; the documented artifact-promotion intent differs from
 # that current behavior and is tracked as separate deployment debt.
 #
@@ -173,9 +173,9 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.image }}
           cache-to: type=gha,scope=${{ matrix.image }},mode=max
 
-  build-docs:
+  build-docs-web:
     needs: prepare
-    if: github.ref == 'refs/heads/main' && needs.prepare.outputs.docs_changed == 'true'
+    if: github.ref == 'refs/heads/main' && needs.prepare.outputs.docs_changed == 'true' && needs.prepare.outputs.app_changed == 'false'
     runs-on: ubuntu-latest
     environment: build
     steps:
@@ -190,20 +190,21 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: .
-          file: product-design/tooling/Dockerfile
+          file: apps/web/Dockerfile
           target: runtime
           push: true
-          tags: ${{ env.REGISTRY_SERVER }}/veervrat-docs:${{ needs.prepare.outputs.image_tag }}
-          cache-from: type=gha,scope=veervrat-docs
-          cache-to: type=gha,scope=veervrat-docs,mode=max
+          tags: ${{ env.REGISTRY_SERVER }}/veervrat-web:${{ needs.prepare.outputs.image_tag }}
+          build-args: NEXT_PUBLIC_COMMIT_SHA=${{ needs.prepare.outputs.image_tag }}
+          cache-from: type=gha,scope=veervrat-web
+          cache-to: type=gha,scope=veervrat-web,mode=max
 
   deploy-uat:
-    needs: [prepare, build, build-docs]
+    needs: [prepare, build, build-docs-web]
     if: >-
       always() && github.ref == 'refs/heads/main' && needs.prepare.result == 'success' &&
       (github.event_name == 'workflow_dispatch' || needs.prepare.outputs.app_changed == 'true' || needs.prepare.outputs.docs_changed == 'true') &&
       (needs.build.result == 'success' || needs.build.result == 'skipped') &&
-      (needs.build-docs.result == 'success' || needs.build-docs.result == 'skipped')
+      (needs.build-docs-web.result == 'success' || needs.build-docs-web.result == 'skipped')
     runs-on: ubuntu-latest
     environment: uat
     steps:
@@ -218,7 +219,6 @@ jobs:
           environment: uat
           image_tag: ${{ needs.prepare.outputs.image_tag }}
           deploy_apps: ${{ github.event_name == 'workflow_dispatch' || needs.prepare.outputs.app_changed == 'true' }}
-          docs_image_tag: ${{ needs.prepare.outputs.docs_changed == 'true' && needs.prepare.outputs.image_tag || '' }}
 
   deploy-prod:
     needs: [prepare, build]

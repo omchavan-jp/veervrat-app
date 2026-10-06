@@ -57,7 +57,7 @@ CROSSSLOT errors flooded Log Analytics at ₹19,230 in 12 hours. Fixed by PR #29
 See `AGENTS.md` → Git conventions for the rules. In short:
 
 ```
-merge PR to main  →  classify paths  →  build changed app/docs image set
+merge PR to main  →  classify paths  →  build changed app/web image set
                   →  deploy to UAT (app migrations only for app changes)
 
 tag prod-YYYY-MM-DD  →  rebuild and deploy app images to prod
@@ -68,11 +68,12 @@ repository's earlier promote-without-rebuild guidance does not match that
 executable workflow; the discrepancy is tracked separately.
 
 **A merge triggers only the affected UAT image set.** Changes under
-`product-design/` build/deploy the internal docs renderer without app image
-rebuilds or migrations. App changes retain the existing app deployment path;
-mixed pushes deploy both. Ordinary doc-only merges (`documentation/`, `ops/`,
+`product-design/` build/deploy only the web image with its static Fumadocs
+export; API and migration images remain on their current tag and no migration
+runs. App changes retain the existing app deployment path; mixed pushes use
+that path. Ordinary doc-only merges (`documentation/`, `ops/`,
 `openspec/`, `spec/`, `.claude/`, any `*.md`) are skipped. Unknown paths default
-to an app build. `prod-*` tag pushes are never filtered, but never deploy docs.
+to an app build. `prod-*` tag pushes are never filtered and retain the docs runtime gate off.
 Details and the reasoning for not making UAT tag-gated instead:
 `documentation/21_Infrastructure-Conventions.md` §16.
 
@@ -80,15 +81,16 @@ Automated in `.github/workflows/cd.yml`. The prod gate is the **tag itself** —
 required-reviewers rule needs a paid plan on private repos, so there is no approval prompt.
 Pushing a `prod-*` tag is the deliberate act.
 
-The product docs deployment uses `veervrat-docs:<docs_image_tag>` in the UAT
-Container Apps Environment. Terraform gives it **internal ingress only** and
-no public hostname. Browsers enter at the existing web domain's
-`/product-docs/*` route; the web gateway checks the API's current session and
-`PRODUCT_DOCS_VIEW` grant on every request. The renderer receives no identity
-headers. An admin can grant or revoke the capability per user. In production,
-Terraform creates no renderer and sets the runtime gate to `off`, so tagged
-commits containing design files do not expose the route. A docs-only UAT apply
-pins the existing app image tags and skips API migrations.
+Fumadocs builds a static export from canonical `product-design/` sources inside
+the web image. It is copied outside the public directory. Browsers enter at
+the existing web domain's `/product-docs/*` route; the web gateway checks the
+API's current session and `PRODUCT_DOCS_VIEW` grant before reading each file.
+An admin can grant or revoke the capability per user. Production retains the
+same bytes in its web image but sets the runtime gate to `off`, so tagged commits
+containing design files do not expose the route. A docs-only UAT apply deploys
+only a new web SHA while pinning API/migration images and skipping migration.
+The old internal-only UAT renderer is retained temporarily during cutover and
+will be removed by a separate cleanup apply after live verification.
 
 **First docs rollout prerequisite:** the GitHub Actions identity needs permission to
 create the docs identity's `AcrPull` assignment at the shared registry scope.
@@ -437,8 +439,9 @@ Runtime — set on the Container App, changed with a restart, no rebuild:
 | `API_BASE_URL` | absolute api URL incl. `/api/v1`. The browser calls the api directly — there is no proxy |
 | `SITE_URL` | og:image / canonical URL base |
 | `FEEDBACK_MODE` | `off` (nobody) or `granted` (holders of the `FEEDBACK_WIDGET` capability). Unrecognised values fail closed. Per-user grants via admin dashboard |
-| `PRODUCT_DOCS_MODE` | `granted` in UAT, `off` in prod. The gateway returns 404 before renderer access when off; prod also forces off in code. |
-| `PRODUCT_DOCS_INTERNAL_URL` | Internal UAT docs Container App origin, supplied by Terraform when the renderer image exists. No public docs hostname. |
+| `PRODUCT_DOCS_MODE` | `granted` in UAT, `off` in prod. The gateway returns 404 before reading the static export when off; prod also forces off in code. |
+| `PRODUCT_DOCS_STATIC_ROOT` | Set by the web Dockerfile to `/app/product-docs-export`, outside `public`. For local use, defaults to `product-design/tooling/out` relative to the web package. |
+| `PRODUCT_DOCS_INTERNAL_URL` | Legacy UAT value retained only during cutover; the static gateway no longer reads it and Terraform cleanup removes it. |
 
 Build-time, and only these:
 

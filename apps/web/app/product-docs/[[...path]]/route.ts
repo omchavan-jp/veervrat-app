@@ -1,29 +1,27 @@
 import type { NextRequest } from 'next/server';
-import {
-  internalApiBase,
-  productDocsInternalUrl,
-  publicApiBase,
-  readServerRuntimeConfig,
-} from '@/lib/runtime-config';
+import { readFile, realpath, stat } from 'node:fs/promises';
+import path from 'node:path';
+import { internalApiBase, publicApiBase, readServerRuntimeConfig } from '@/lib/runtime-config';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const PREFIX = '/product-docs';
-const FORWARD_HEADERS = [
-  'accept',
-  'accept-language',
-  'if-modified-since',
-  'if-none-match',
-  'next-router-prefetch',
-  'next-router-state-tree',
-  'next-url',
-  'purpose',
-  'range',
-  'rsc',
-  'user-agent',
-  'x-nextjs-data',
-];
+const TYPES: Record<string, string> = {
+  '.html': 'text/html; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.ico': 'image/x-icon',
+  '.txt': 'text/plain; charset=utf-8',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+  '.map': 'application/json; charset=utf-8',
+};
 
 function privateResponse(status: number, body: string): Response {
   return new Response(body, {
@@ -47,6 +45,26 @@ function loginRedirect(request: NextRequest): Response {
   });
 }
 
+async function checkAccess(
+  base: string,
+  session: string,
+  timeoutMs: number,
+): Promise<Response | null> {
+  try {
+    const response = await fetch(`${base}/auth/product-docs-access`, {
+      headers: { Cookie: `veervrat_session=${session}` },
+      cache: 'no-store',
+      redirect: 'manual',
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+    // A denial is an authoritative answer. Only connection failures, redirects and server
+    // errors justify trying the other API address; never override a 401 or 403.
+    return response.ok || response.status === 401 || response.status === 403 ? response : null;
+  } catch {
+    return null;
+  }
+}
+
 async function handle(request: NextRequest): Promise<Response> {
   if (readServerRuntimeConfig().productDocsMode !== 'granted') {
     return privateResponse(404, 'Not found');
@@ -55,94 +73,76 @@ async function handle(request: NextRequest): Promise<Response> {
   const session = request.cookies.get('veervrat_session')?.value;
   if (!session) return loginRedirect(request);
 
-  const api = internalApiBase() ?? publicApiBase();
-  let access: Response;
-  try {
-    access = await fetch(`${api}/auth/product-docs-access`, {
-      headers: { Cookie: `veervrat_session=${session}` },
-      cache: 'no-store',
-      redirect: 'manual',
-      signal: AbortSignal.timeout(10_000),
-    });
-  } catch {
-    return privateResponse(503, 'Access check unavailable');
-  }
+  const internal = internalApiBase();
+  const external = publicApiBase();
+  const access =
+    (internal ? await checkAccess(internal, session, 2_000) : null) ??
+    (await checkAccess(external, session, 10_000));
+  if (!access) return privateResponse(503, 'Access check unavailable');
   if (access.status === 401) return loginRedirect(request);
   if (access.status === 403) return privateResponse(403, 'Forbidden');
   if (!access.ok) return privateResponse(503, 'Access check unavailable');
 
-  const configured = productDocsInternalUrl();
-  if (!configured) return privateResponse(503, 'Product docs unavailable');
-
-  let origin: URL;
+  const pathname = request.nextUrl.pathname;
+  if (pathname !== PREFIX && !pathname.startsWith(`${PREFIX}/`))
+    return privateResponse(404, 'Not found');
+  let root: string;
   try {
-    origin = new URL(configured);
-    if (
-      !['http:', 'https:'].includes(origin.protocol) ||
-      origin.username ||
-      origin.password ||
-      origin.pathname !== '/'
-    ) {
-      return privateResponse(503, 'Product docs unavailable');
-    }
+    root = await realpath(
+      path.resolve(
+        process.env.PRODUCT_DOCS_STATIC_ROOT ??
+          path.join(process.cwd(), '../../product-design/tooling/out'),
+      ),
+    );
   } catch {
     return privateResponse(503, 'Product docs unavailable');
   }
-
-  const path = request.nextUrl.pathname;
-  if (path !== PREFIX && !path.startsWith(`${PREFIX}/`)) return privateResponse(404, 'Not found');
-  const target = new URL(path + request.nextUrl.search, origin);
-  const forwarded = new Headers();
-  for (const name of FORWARD_HEADERS) {
-    const value = request.headers.get(name);
-    if (value) forwarded.set(name, value);
-  }
-
-  let upstream: Response;
+  let decoded: string;
   try {
-    upstream = await fetch(target, {
-      method: request.method,
-      headers: forwarded,
-      cache: 'no-store',
-      redirect: 'manual',
-      signal: AbortSignal.timeout(30_000),
+    decoded = decodeURIComponent(pathname.slice(PREFIX.length));
+  } catch {
+    return privateResponse(404, 'Not found');
+  }
+  const relative = decoded.split('/').filter(Boolean);
+  if (
+    relative.some(
+      (part) =>
+        part === '.' ||
+        part === '..' ||
+        part.includes('\\') ||
+        part.includes('\0') ||
+        part.includes('%'),
+    )
+  )
+    return privateResponse(404, 'Not found');
+  const requested = path.resolve(root, ...relative);
+  if (requested !== root && !requested.startsWith(root + path.sep))
+    return privateResponse(404, 'Not found');
+  let file = requested;
+  try {
+    if ((await stat(file)).isDirectory()) file = path.join(file, 'index.html');
+    const actual = await realpath(file);
+    if (!actual.startsWith(root + path.sep)) return privateResponse(404, 'Not found');
+    if (!(await stat(actual)).isFile()) return privateResponse(404, 'Not found');
+    const content = request.method === 'HEAD' ? null : await readFile(actual);
+    return new Response(content, {
+      status: 200,
+      headers: {
+        'Content-Type':
+          pathname === '/product-docs/api/search'
+            ? TYPES['.json']
+            : (TYPES[path.extname(actual)] ?? 'application/octet-stream'),
+        'Cache-Control': 'private, no-store',
+        'X-Robots-Tag': 'noindex, nofollow',
+        Vary: 'Cookie',
+      },
     });
-  } catch {
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT')
+      return privateResponse(404, 'Not found');
+    console.error('Product docs static file unavailable', error);
     return privateResponse(503, 'Product docs unavailable');
   }
-
-  const headers = new Headers(upstream.headers);
-  for (const name of [
-    'set-cookie',
-    'content-encoding',
-    'content-length',
-    'connection',
-    'keep-alive',
-    'transfer-encoding',
-    'upgrade',
-    'server',
-    'x-powered-by',
-  ]) {
-    headers.delete(name);
-  }
-  const location = headers.get('location');
-  if (location) {
-    const destination = new URL(location, origin);
-    if (
-      destination.origin !== origin.origin ||
-      (destination.pathname !== PREFIX && !destination.pathname.startsWith(`${PREFIX}/`))
-    ) {
-      return privateResponse(502, 'Invalid product docs redirect');
-    }
-    headers.set('location', destination.pathname + destination.search + destination.hash);
-  }
-  headers.set('Cache-Control', 'private, no-store');
-  headers.set('X-Robots-Tag', 'noindex, nofollow');
-  headers.set('Vary', [headers.get('Vary'), 'Cookie'].filter(Boolean).join(', '));
-  return new Response(request.method === 'HEAD' ? null : upstream.body, {
-    status: upstream.status,
-    headers,
-  });
 }
 
 export const GET = handle;

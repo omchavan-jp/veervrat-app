@@ -1,14 +1,14 @@
 name: Deploy environment
 description: >
   Applies infrastructure, runs migrations, then deploys app images when requested.
-  UAT docs-only changes apply infrastructure while preserving app image tags.
+  UAT docs-only changes deploy a new web image while preserving the API image and migration job.
 
 inputs:
   environment:
     description: uat or prod
     required: true
   image_tag:
-    description: Git SHA of the app images to deploy, or the current app tag for docs-only applies.
+    description: Git SHA of the images built by this run.
     required: true
   deploy_apps:
     description: Whether to run the existing app image/migration deployment path.
@@ -63,6 +63,19 @@ runs:
           exit 1
         fi
 
+    - name: Verify docs-only web image exists
+      if: inputs.deploy_apps != 'true'
+      shell: bash
+      env:
+        IMAGE_TAG: ${{ inputs.image_tag }}
+      run: |
+        set -euo pipefail
+        TAGS=$(az acr repository show-tags --name veervratacr --repository veervrat-web -o tsv)
+        if ! grep -qx "$IMAGE_TAG" <<<"$TAGS"; then
+          echo "::error::veervrat-web:$IMAGE_TAG is absent from the registry"
+          exit 1
+        fi
+
     - uses: hashicorp/setup-terraform@v3
       with:
         terraform_version: 1.15.8
@@ -90,6 +103,7 @@ runs:
       run: |
         set -euo pipefail
         TAG=""
+        WEB_TAG=""
         if [ "$(az group exists -n "veervrat-$ENVIRONMENT" -o tsv)" = "true" ]; then
           APPS=$(az containerapp list -g "veervrat-$ENVIRONMENT" -o json)
           CURRENT=$(jq -r --arg name "veervrat-$ENVIRONMENT-api" \
@@ -98,7 +112,7 @@ runs:
             '.[] | select(.name == $name) | .properties.template.containers[0].image' <<< "$APPS")
           if [ -n "$CURRENT" ] && [ -n "$WEB" ]; then
             case "$WEB" in
-              veervratacr.azurecr.io/veervrat-web:*) ;;
+              veervratacr.azurecr.io/veervrat-web:*) WEB_TAG="${WEB##*:}" ;;
               *) echo "::error::unexpected $ENVIRONMENT web image: $WEB"; exit 1 ;;
             esac
           fi
@@ -108,8 +122,8 @@ runs:
               *) echo "::error::unexpected $ENVIRONMENT API image: $CURRENT"; exit 1 ;;
             esac
           fi
-          if [ -n "$CURRENT" ] && [ "$WEB" != "veervratacr.azurecr.io/veervrat-web:$TAG" ]; then
-            echo "::error::$ENVIRONMENT API and web are not on the same image tag; refusing to move either before migration"
+          if [ -n "$CURRENT" ] && [ -z "$WEB_TAG" ]; then
+            echo "::error::$ENVIRONMENT API exists without a recognized web image"
             exit 1
           fi
           if [ -z "$CURRENT" ] && [ -n "$WEB" ]; then
@@ -119,6 +133,7 @@ runs:
         fi
         echo "currently serving: ${TAG:-<none — first deploy>}"
         echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+        echo "web_tag=$WEB_TAG" >> "$GITHUB_OUTPUT"
 
     - name: Resolve docs image tag
       id: docs
@@ -144,7 +159,7 @@ runs:
         fi
         echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
-    - name: Deploy docs only (preserve app images, no migration)
+    - name: Deploy docs-only web image (preserve API, no migration)
       if: inputs.deploy_apps != 'true'
       shell: bash
       working-directory: infra/terraform/envs/${{ inputs.environment }}
@@ -155,12 +170,12 @@ runs:
           exit 1
         fi
         # The composite input skips app deployment steps. Terraform's deploy_apps=true keeps
-        # existing API/web resources in state; false would plan to destroy them. Both image
-        # inputs use the currently deployed tag, so this apply cannot select the docs SHA for
-        # API/web or migrate jobs. Terraform may still reconcile unrelated configuration drift.
+        # existing API/web resources in state; false would plan to destroy them. The API and
+        # migration job retain the deployed API SHA; only web takes the docs commit SHA.
         terraform apply -input=false -auto-approve \
           -var="image_tag=${{ steps.current.outputs.tag }}" \
           -var="app_image_tag=${{ steps.current.outputs.tag }}" \
+          -var="web_image_tag=${{ inputs.image_tag }}" \
           -var="docs_image_tag=${{ steps.docs.outputs.tag }}" \
           -var="deploy_apps=true"
 
@@ -175,6 +190,7 @@ runs:
         terraform apply -input=false -auto-approve \
           -var="image_tag=${{ inputs.image_tag }}" \
           -var="app_image_tag=${{ steps.current.outputs.tag }}" \
+          -var="web_image_tag=${{ steps.current.outputs.web_tag }}" \
           -var="docs_image_tag=${{ steps.docs.outputs.tag }}" \
           -var="deploy_apps=true"
 

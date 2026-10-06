@@ -24,6 +24,7 @@ locals {
   # window: while migrations run, jobs are on the NEW image and the apps are still serving the
   # OLD one. That is what enforces migrate-before-deploy without downtime.
   app_image = var.app_image_tag != "" ? var.app_image_tag : var.image_tag
+  web_image = var.web_image_tag != "" ? var.web_image_tag : local.app_image
 
   api_fqdn = "veervrat-${var.environment}-api.${azurerm_container_app_environment.this.default_domain}"
   web_fqdn = "veervrat-${var.environment}-web.${azurerm_container_app_environment.this.default_domain}"
@@ -377,7 +378,7 @@ resource "azurerm_container_app" "web" {
 
     container {
       name   = "web"
-      image  = "${data.azurerm_container_registry.shared.login_server}/veervrat-web:${local.app_image}"
+      image  = "${data.azurerm_container_registry.shared.login_server}/veervrat-web:${local.web_image}"
       cpu    = 0.25
       memory = "0.5Gi"
 

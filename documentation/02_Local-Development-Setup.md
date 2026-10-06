@@ -62,10 +62,10 @@ cp apps/web/.env.example apps/web/.env
 Defaults are fine for local development.
 
 To exercise the protected product-design renderer locally, run the separate
-Fumadocs app from `product-design/tooling` on port 3002 (`pnpm dev --port 3002`)
+Fumadocs static export from `product-design/tooling` (`pnpm build --webpack`)
 with the `d2` CLI installed. Set `PRODUCT_DOCS_MODE=granted` in both API and web
-`.env` files, and set `PRODUCT_DOCS_INTERNAL_URL=http://localhost:3002` in the
-web `.env`. Grant `PRODUCT_DOCS_VIEW` to the test user from
+`.env` files. The web route reads `product-design/tooling/out` locally by default;
+`PRODUCT_DOCS_STATIC_ROOT` can override that path. Grant `PRODUCT_DOCS_VIEW` to the test user from
 `/admin/users/[id]`, then visit `http://localhost:3000/product-docs`.
 Default mode is `off`, which returns 404 for every docs path.
 
