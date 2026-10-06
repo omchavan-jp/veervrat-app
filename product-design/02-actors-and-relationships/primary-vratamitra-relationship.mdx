@@ -1,0 +1,34 @@
+---
+title: Primary Vratamitra relationship lifecycle
+description: Confirmed domain-level lifecycle for a Vratarthi's Primary Vratamitra relationship.
+---
+
+# Primary Vratamitra relationship lifecycle
+
+> **Map:** A Vratarthi may have zero or one active Primary Vratamitra and zero or one pending Primary invitation. A relationship starts on acceptance, may be ended independently by either party, and remains part of relationship history after it ends. Former-Primary status alone grants no continuing broad Primary-level access; exact artifact access is deferred under DT-002.
+
+## PD-007 — Primary Vratamitra relationship lifecycle
+
+### Cardinality and start
+
+- A Vratarthi may have **zero or one active Primary Vratamitra** and **zero or one pending Primary Vratamitra invitation**.
+- Having no active Primary Vratamitra is a valid first-class state.
+- A Primary relationship begins only when the invited person accepts.
+- There are never two active Primary Vratamitra relationships for one Vratarthi.
+
+### Invitation transitions
+
+- If the Vratarthi has active Primary P and invites A as a replacement, P remains active while A's invitation is pending.
+- If A accepts, P's active relationship ends and becomes historical, and A becomes the active Primary Vratamitra.
+- At most one Primary invitation is pending at a time. Conceptually, the Vratarthi may change the pending invitation by withdrawing it and issuing a new one; the interaction flow is not decided here.
+- The Vratarthi may withdraw a pending invitation, and the invitee may decline it. A withdrawn or declined invitation cannot later be accepted.
+- Invitation history and status, the actor, and timestamp are preserved. An optional note may also be retained.
+- If an active Primary relationship ends while a replacement invitation is pending, that invitation remains valid. The Vratarthi has no active Primary until the invitee accepts, at which point the invitee becomes Primary.
+- Automatic invitation expiry is undecided; see [DT-009](../00-governance/deferred-topics.mdx#deferred-topics).
+
+### Ending and history
+
+- The Vratarthi may end an active Primary relationship without replacing it. The Primary Vratamitra may independently step down. Ending does not require mutual approval.
+- An ending records who ended the relationship and when. An optional note or reason may be provided, but is never required.
+- Ending preserves the historical relationship and prior contributions; it does not delete them.
+- Former-Primary status itself does not confer continuing broad Primary-level access. Exact post-relationship access to feature-specific artifacts remains open under [DT-002](../00-governance/deferred-topics.mdx#deferred-topics), for reconciliation in PH-008 after the relevant features, ownership/participation models, and permissions are designed. No access categories are established here.
