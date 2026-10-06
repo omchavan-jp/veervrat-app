@@ -45,6 +45,26 @@ function loginRedirect(request: NextRequest): Response {
   });
 }
 
+async function checkAccess(
+  base: string,
+  session: string,
+  timeoutMs: number,
+): Promise<Response | null> {
+  try {
+    const response = await fetch(`${base}/auth/product-docs-access`, {
+      headers: { Cookie: `veervrat_session=${session}` },
+      cache: 'no-store',
+      redirect: 'manual',
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+    // A denial is an authoritative answer. Only connection failures, redirects and server
+    // errors justify trying the other API address; never override a 401 or 403.
+    return response.ok || response.status === 401 || response.status === 403 ? response : null;
+  } catch {
+    return null;
+  }
+}
+
 async function handle(request: NextRequest): Promise<Response> {
   if (readServerRuntimeConfig().productDocsMode !== 'granted') {
     return privateResponse(404, 'Not found');
@@ -53,18 +73,12 @@ async function handle(request: NextRequest): Promise<Response> {
   const session = request.cookies.get('veervrat_session')?.value;
   if (!session) return loginRedirect(request);
 
-  const api = internalApiBase() ?? publicApiBase();
-  let access: Response;
-  try {
-    access = await fetch(`${api}/auth/product-docs-access`, {
-      headers: { Cookie: `veervrat_session=${session}` },
-      cache: 'no-store',
-      redirect: 'manual',
-      signal: AbortSignal.timeout(10_000),
-    });
-  } catch {
-    return privateResponse(503, 'Access check unavailable');
-  }
+  const internal = internalApiBase();
+  const external = publicApiBase();
+  const access =
+    (internal ? await checkAccess(internal, session, 2_000) : null) ??
+    (await checkAccess(external, session, 10_000));
+  if (!access) return privateResponse(503, 'Access check unavailable');
   if (access.status === 401) return loginRedirect(request);
   if (access.status === 403) return privateResponse(403, 'Forbidden');
   if (!access.ok) return privateResponse(503, 'Access check unavailable');

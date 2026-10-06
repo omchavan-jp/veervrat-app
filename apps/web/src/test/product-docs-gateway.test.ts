@@ -52,6 +52,7 @@ describe('product docs gateway', () => {
 
   it('denies an authenticated user without the capability', async () => {
     vi.stubEnv('PRODUCT_DOCS_MODE', 'granted');
+    vi.stubEnv('API_INTERNAL_URL', 'https://api.internal/api/v1');
     const fetchMock = vi.fn().mockResolvedValue(new Response('Forbidden', { status: 403 }));
     vi.stubGlobal('fetch', fetchMock);
     const response = await GET(request('/product-docs', 'session'));
@@ -108,5 +109,23 @@ describe('product docs gateway', () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('unavailable')));
     const response = await GET(request('/product-docs', 'session'));
     expect(response.status).toBe(503);
+  });
+
+  it('retries through the public API only when the internal access check is unavailable', async () => {
+    vi.stubEnv('PRODUCT_DOCS_MODE', 'granted');
+    vi.stubEnv('API_INTERNAL_URL', 'https://api.internal/api/v1');
+    staticRoot = await mkdtemp(path.join(tmpdir(), 'veervrat-product-docs-'));
+    vi.stubEnv('PRODUCT_DOCS_STATIC_ROOT', staticRoot);
+    const fetchMock = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('internal unavailable'))
+      .mockResolvedValueOnce(new Response('{"allowed":true}', { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+    const response = await GET(request('/product-docs/unknown-file', 'session'));
+    expect(response.status).toBe(404);
+    expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
+      'https://api.internal/api/v1/auth/product-docs-access',
+      'http://localhost:3001/api/v1/auth/product-docs-access',
+    ]);
   });
 });
