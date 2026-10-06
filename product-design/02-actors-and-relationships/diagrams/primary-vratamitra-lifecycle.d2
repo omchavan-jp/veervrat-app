@@ -1,0 +1,24 @@
+# Explanatory projection of PD-007.
+# Current relationship state and invitation state are independent tracks.
+direction: down
+grid-columns: 1
+
+relationship: "Current Primary relationship\nZero or one active" {
+  direction: down
+  none: "No active Primary\nValid first-class state" {class: core}
+  active: "Active Primary\nAccepted relationship" {class: process}
+  none -> active: "invite accepted" {class: progression}
+  active -> none: "either party ends\nhistory preserved" {class: progression}
+  active -> active: "replacement accepts\nprior relationship historical" {class: support}
+}
+
+invitation: "Primary invitation\nZero or one pending; history retained" {
+  direction: down
+  pending: "Pending\nExisting Primary stays active" {class: process}
+  accepted: "Accepted\nInvited person becomes Primary" {class: outcome}
+  withdrawn: "Withdrawn\nCannot later be accepted" {class: platform}
+  declined: "Declined\nCannot later be accepted" {class: platform}
+  pending -> accepted: "invitee accepts" {class: progression}
+  pending -> withdrawn: "Vratarthi withdraws" {class: support}
+  pending -> declined: "invitee declines" {class: support}
+}

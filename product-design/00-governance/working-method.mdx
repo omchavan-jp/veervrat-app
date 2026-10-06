@@ -33,7 +33,11 @@ The machine-readable registry at `decision-registry.json` is the index. Each rec
 
 Every artifact begins with a human-readable map or summary before deep detail. Use descriptive headings, links to relevant canonical records, and plain text that remains useful in a code editor. MDX is readable Markdown first; the renderer is optional presentation only.
 
+Canonical product-design artifacts preserve current product truth and the minimum durable rationale needed to understand, apply, and safely revisit it. Do not reproduce full deliberation history unless that history itself is materially important. Keep decision records concise; do not expand them merely to preserve conversation history.
+
 Use D2 source for diagrams and keep it editable. A generated SVG or other render is disposable output. Refer to supporting decisions from the MDX that explains the diagram; add `PD-*` references in D2 only when they materially clarify the diagram's provenance or constraint.
+
+MDX remains canonical for semantic truth. D2 diagrams are explanatory projections of canonical MDX decisions and must not introduce independent relationships, states, cardinalities, transitions, permissions, or behavior.
 
 ## Deferred topics and phase traceability
 

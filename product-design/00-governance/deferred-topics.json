@@ -23,8 +23,11 @@
       "id": "DT-003",
       "title": "Community moderation actions and escalation",
       "status": "open",
-      "reason": "Moderator purpose will be considered at the actor level; exact moderation actions, reports, restrictions, removal, and escalation depend on the community features and content types that are modeled.",
-      "target_phase": "PH-006"
+      "reason": "PD-010 confirms Moderator purpose at the actor level; exact moderation scopes, visibility rules, actions, reports, restrictions, removal, and escalation remain deferred until community features and content types are modeled, with permission reconciliation in PH-008.",
+      "target_phase": "PH-006",
+      "notes": "Include moderation of user-generated/community content for different visibility contexts, and exact scopes, visibility rules, actions, and permissions; reconcile permission implications in PH-008. Actor purpose is confirmed in PD-010.",
+      "depends_on": ["PD-010"],
+      "reconcile_in": ["PH-008"]
     },
     {
       "id": "DT-004",
@@ -32,7 +35,9 @@
       "status": "open",
       "reason": "Curators steward centrally curated or endorsed resources, while approval, promotion, featuring, pinning, official status, recommendations, collections, and entity-linking mechanics should be decided per content type.",
       "target_phase": "PH-005",
-      "notes": "Reconcile with PH-006 when resource and community content types overlap."
+      "notes": "Reconcile with PH-006 when resource and community content types overlap. Include stewardship mechanics for canonical Veervrat knowledge/content as well as centrally curated resources; reconcile permission implications in PH-008.",
+      "depends_on": ["PD-010"],
+      "reconcile_in": ["PH-006", "PH-008"]
     },
     {
       "id": "DT-005",
@@ -82,6 +87,31 @@
       ],
       "depends_on": ["PD-007", "PD-008"],
       "notes": "Also covers automatic expiry and expiry timing for specific-person Journey Vratamitra invitations. Closing a pending Journey invitation on Journey completion is confirmed in PD-008 and is distinct from an undecided time-based expiry rule."
+    },
+    {
+      "id": "DT-010",
+      "title": "Canonical identity/account ontology",
+      "status": "open",
+      "reason": "PH-002 confirms participation and capability roles without establishing account or database entity structure. PH-003 must define the relationship between person, signed-in user/account, Vratarthi, profile, roles/capabilities, and relationship assignments while preserving that every signed-in user is a Vratarthi.",
+      "target_phase": "PH-003",
+      "depends_on": ["PD-010"]
+    },
+    {
+      "id": "DT-011",
+      "title": "Invitation flows and guidance mode-switch UX edge cases",
+      "status": "open",
+      "reason": "PH-002 establishes domain invitation and guidance semantics, while exact invitation flows, changing pending invitees, confirmation dialogs, and mode-switch UX edge cases require later user-journey design.",
+      "target_phase": "PH-011",
+      "depends_on": ["PD-007", "PD-008"],
+      "notes": "Reconcile pending replacement invitations when another explicit mode change occurs and the actual invitation/solo-to-guidance flows. Preserve accepted domain rules; time-based expiry remains DT-009 and notification mechanics remain DT-008."
+    },
+    {
+      "id": "DT-012",
+      "title": "Admin authority and permissions",
+      "status": "open",
+      "reason": "PH-002 establishes broader operational/product-administration responsibility but leaves exact authority and permissions for later permissions/privacy design.",
+      "target_phase": "PH-008",
+      "depends_on": ["PD-010"]
     }
   ]
 }

@@ -1,18 +1,34 @@
 ---
 title: Actors & Relationships
-description: PH-002 map of actors and their relationships.
+description: Completed PH-002 actor and relationship model, with explicit downstream carry-forwards.
 ---
 
 # Actors & Relationships
 
-> **Map:** This is the canonical PH-002 area for actor and relationship concepts. The confirmed [Primary Vratamitra relationship lifecycle](./primary-vratamitra-relationship.mdx) and [Journey Vratamitra relationship lifecycle](./journey-vratamitra-relationship.mdx) record their relationship modes, invitation transitions, ending, and historical continuity. [Multiplicity, coexistence, and capacity](./vratamitra-multiplicity-and-capacity.mdx) records how guidance relationships coexist across people and Journeys. Feature-specific access remains deferred to the permissions and privacy work.
-
-## Scope
-
-This phase records domain-level actor and relationship decisions. It does not specify screens, interaction flows, feature-level permissions, or implementation details.
+> **Map:** PH-002 is complete. The actor inventory defines participation and additional capabilities; the lifecycle records define Primary and Journey guidance, and the multiplicity record defines coexistence and capacity. Exact ontology, permissions, and user-journey mechanics are carried forward to later phases.
 
 ## Canonical records
 
+- [Actor inventory](./actor-inventory.mdx) — **PD-010**
 - [Primary Vratamitra relationship lifecycle](./primary-vratamitra-relationship.mdx) — **PD-007**
 - [Journey Vratamitra relationship lifecycle](./journey-vratamitra-relationship.mdx) — **PD-008**
 - [Vratamitra multiplicity, coexistence, and capacity](./vratamitra-multiplicity-and-capacity.mdx) — **PD-009**
+
+## Explanatory diagrams
+
+MDX is canonical semantic truth. These D2 projections explain selected confirmed rules; omitted edge cases remain governed by the linked MDX.
+
+<D2Diagram src="/02-actors-and-relationships/diagrams/actors-and-relationships.d2" alt="Base participation role, additional capabilities, and guidance relationship types" />
+
+The [Primary](./primary-vratamitra-relationship.mdx#explanatory-diagram) and [Journey](./journey-vratamitra-relationship.mdx#explanatory-diagram) lifecycle pages embed their corresponding diagrams.
+
+## Phase-boundary reconciliation and closure
+
+**PH-002 COMPLETE.** The confirmed actor inventory and solo-state clarification resolve the conceptual gaps identified at the phase boundary.
+
+- **North Star:** PD-001, PD-002, PD-003, PD-004, PD-005, and PD-006 remain intact. Guidance supports the Vratarthi's agency and preserves their judgment; no role grants ownership of their development or establishes feature-level authority.
+- **Relationships:** PD-007 and PD-009 remain intact. PD-008 now explicitly records at most one active specific-person Journey relationship and unguided/solo state after ending it. Replacement, explicit switch, and ending remain distinct; history and contributions are preserved.
+- **Ontology carry-forward:** PH-003 must define person, signed-in user/account, Vratarthi, profile, roles/capabilities, and relationship assignments under DT-010, preserving that every signed-in user is a Vratarthi. No account/database entity model is decided here.
+- **Deferred-topic reconciliation:** No open topic targets PH-002. DT-002 retains feature-level information/actions/permissions and former-relationship/completed-Journey access (PH-008, with PH-011 reconciliation). DT-003 retains moderation scope, visibility-context rules, and actions (PH-006, with PH-008 reconciliation); DT-004 retains curator/content/resource mechanics (PH-005, with PH-006/008 reconciliation). DT-005/006 retain authentication return-to-context and age/public-access details. DT-008 retains notification/re-engagement design. DT-009 has moved to PH-011 for time-based invitation expiry, preserving the distinction from confirmed Journey-completion closure. DT-011 tracks general invitation-flow/mode-switch UX in PH-011; DT-012 tracks Admin authority in PH-008.
+
+The [roadmap](../00-governance/design-roadmap.mdx) records completion and PH-003 intake readiness. Downstream questions remain in the [deferred-topic register](../00-governance/deferred-topics.mdx); no PH-003 product decisions are made in this closure pass.
