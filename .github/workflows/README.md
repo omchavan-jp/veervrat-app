@@ -18,7 +18,6 @@ its `prepare` job classifies one changed-file list with
 |---|---|
 | App, API, web, shared, or unknown path | Build four app images; apply Terraform, migrate, deploy apps |
 | Canonical `product-design/` content or renderer code | Build and deploy the web image with its static export; preserve API and migration image tags; skip migrations |
-| Docs-specific Terraform | Rebuild web and apply UAT infrastructure |
 | Both app and docs paths | Build the normal app image set; one serialized UAT deployment |
 | Ordinary Markdown, `documentation/`, `ops/`, `openspec/`, `spec/`, `.claude/` only | Skip CD builds and UAT deployment |
 
@@ -31,8 +30,8 @@ still passes `deploy_apps=true` to keep the existing app resources in state.
 Normal app deploys read API and web tags separately and hold both through the
 migration step. Production tags rebuild the normal app image set, including the
 static docs bytes, while `PRODUCT_DOCS_MODE=off` keeps the route unavailable.
-The old internal UAT renderer remains in Terraform during cutover and is removed
-after the protected static route is verified live.
+No separate docs Container App or docs image is built. The static export is
+served only through the protected web route.
 
 The current production tag workflow **rebuilds** app images. Older repository
 guidance describes artifact promotion without a rebuild; that discrepancy is

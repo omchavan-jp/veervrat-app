@@ -84,10 +84,6 @@ function parseProductDocsMode(raw: string | undefined): ProductDocsMode {
   return raw === 'granted' ? 'granted' : 'off';
 }
 
-export function productDocsInternalUrl(): string | null {
-  return process.env.PRODUCT_DOCS_INTERNAL_URL || null;
-}
-
 export function internalApiBase(): string | null {
   return process.env.API_INTERNAL_URL || null;
 }

@@ -37,9 +37,8 @@ The web image now includes a build-time Fumadocs static export outside its publi
 directory. The web route reads it only after the API grants `PRODUCT_DOCS_VIEW`.
 UAT sets `PRODUCT_DOCS_MODE=granted` on web and API; production sets it to `off`.
 Terraform accepts a separate `web_image_tag` for docs-only UAT deploys, so the
-API and migration job retain their current image. The old internal-only docs
-Container App and its independent image tag remain during the cutover and will
-be removed after the static route passes live verification.
+API and migration job retain their current image. There is no separate docs
+Container App, image tag, managed identity, or registry pull grant.
 
 ## The one hard rule — for any DNS zone this project ever manages
 
@@ -63,13 +62,11 @@ terraform plan   # review before applying, as always
 terraform apply  # container registry + GitHub OIDC federated credentials
 ```
 
-The first UAT product-docs deployment needs one additional bootstrap apply of
-this shared state. `github-oidc.tf` grants the CD identity Role Based Access
-Control Administrator at the **registry** scope, conditioned to add or remove
-only `AcrPull` assignments for service principals. This lets it create the docs
-identity's `AcrPull` assignment. A privileged operator must review the plan and apply it;
-the CI identity cannot grant this permission to itself. See `DEPLOYMENT.md`
-for the failed first rollout and retry order.
+The former docs renderer required a temporary conditioned registry-scoped
+RBAC Administrator grant for CI to assign `AcrPull` to its identity. After the
+static cutover, environment Terraform removes that docs assignment and a
+privileged shared-state apply removes the delegation. See the historical
+rollout note in `DEPLOYMENT.md`.
 
 ### The DNS zone that used to live here
 

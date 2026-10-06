@@ -89,23 +89,15 @@ An admin can grant or revoke the capability per user. Production retains the
 same bytes in its web image but sets the runtime gate to `off`, so tagged commits
 containing design files do not expose the route. A docs-only UAT apply deploys
 only a new web SHA while pinning API/migration images and skipping migration.
-The old internal-only UAT renderer is retained temporarily during cutover and
-will be removed by a separate cleanup apply after live verification.
+There is no separate docs Container App or public docs hostname.
 
-**First docs rollout prerequisite:** the GitHub Actions identity needs permission to
-create the docs identity's `AcrPull` assignment at the shared registry scope.
-The first UAT deploy on 2026-10-04 stopped at that assignment with a 403, before
-migration or new app images were deployed. The registry-scoped Role Based Access
-Control Administrator grant, conditioned to `AcrPull` for service principals, is declared
-in `infra/terraform/envs/shared/github-oidc.tf`. CD does not apply shared state,
-and cannot grant this permission to itself. After the fix PR is reviewed, a
-privileged operator must run `terraform plan` and `terraform apply`
-in `infra/terraform/envs/shared` from the **reviewed fix branch**, confirming
-the single conditioned registry-scoped role assignment. Once the grant is
-effective, merge the fix PR. That mixed app/docs push builds both image sets
-and deploys with the corrected docs `principal_type`. Do not rerun the original
-failed CD job: it uses the old checkout, which lacks that required field. Do
-not merge the fix PR before the bootstrap grant; the same 403 will recur.
+**Historical rollout note:** the original internal renderer needed a conditioned
+registry-scoped RBAC Administrator grant so CI could assign `AcrPull` to its
+managed identity. The 2026-10-04 first apply failed before migration because
+the grant was missing. PR #307 bootstrapped it; the static cutover superseded
+the renderer. Its UAT Container App, identity, and `AcrPull` assignment are
+removed by environment Terraform before a privileged shared-state apply
+removes the temporary registry delegation. CI does not apply shared state.
 
 Local development is `docker-compose` and is not a deploy target — no pipeline touches it.
 
@@ -441,7 +433,6 @@ Runtime — set on the Container App, changed with a restart, no rebuild:
 | `FEEDBACK_MODE` | `off` (nobody) or `granted` (holders of the `FEEDBACK_WIDGET` capability). Unrecognised values fail closed. Per-user grants via admin dashboard |
 | `PRODUCT_DOCS_MODE` | `granted` in UAT, `off` in prod. The gateway returns 404 before reading the static export when off; prod also forces off in code. |
 | `PRODUCT_DOCS_STATIC_ROOT` | Set by the web Dockerfile to `/app/product-docs-export`, outside `public`. For local use, defaults to `product-design/tooling/out` relative to the web package. |
-| `PRODUCT_DOCS_INTERNAL_URL` | Legacy UAT value retained only during cutover; the static gateway no longer reads it and Terraform cleanup removes it. |
 
 Build-time, and only these:
 

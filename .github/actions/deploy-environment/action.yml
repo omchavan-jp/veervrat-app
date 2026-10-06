@@ -14,11 +14,6 @@ inputs:
     description: Whether to run the existing app image/migration deployment path.
     required: false
     default: 'true'
-  docs_image_tag:
-    description: New UAT docs image SHA, or empty to preserve the currently deployed docs image.
-    required: false
-    default: ''
-
 runs:
   using: composite
   steps:
@@ -49,19 +44,6 @@ runs:
           fi
           echo "ok: $repo:$IMAGE_TAG"
         done
-
-    - name: Verify docs image exists
-      if: inputs.docs_image_tag != ''
-      shell: bash
-      env:
-        IMAGE_TAG: ${{ inputs.docs_image_tag }}
-      run: |
-        set -euo pipefail
-        TAGS=$(az acr repository show-tags --name veervratacr --repository veervrat-docs -o tsv)
-        if ! grep -qx "$IMAGE_TAG" <<<"$TAGS"; then
-          echo "::error::veervrat-docs:$IMAGE_TAG is absent from the registry"
-          exit 1
-        fi
 
     - name: Verify docs-only web image exists
       if: inputs.deploy_apps != 'true'
@@ -135,30 +117,6 @@ runs:
         echo "tag=$TAG" >> "$GITHUB_OUTPUT"
         echo "web_tag=$WEB_TAG" >> "$GITHUB_OUTPUT"
 
-    - name: Resolve docs image tag
-      id: docs
-      shell: bash
-      env:
-        ENVIRONMENT: ${{ inputs.environment }}
-        NEW_DOCS_TAG: ${{ inputs.docs_image_tag }}
-      run: |
-        set -euo pipefail
-        TAG="$NEW_DOCS_TAG"
-        if [ "$ENVIRONMENT" = "uat" ] && [ -z "$TAG" ]; then
-          # A failed Azure read must fail the deploy, never look like "no docs"
-          # and cause Terraform to delete an existing renderer. A successful list
-          # returns empty when the renderer has not yet been deployed.
-          CURRENT=$(az containerapp list -g veervrat-uat \
-            --query "[?name=='veervrat-uat-docs'].properties.template.containers[0].image" -o tsv)
-          if [ -n "$CURRENT" ]; then
-            case "$CURRENT" in
-              veervratacr.azurecr.io/veervrat-docs:*) TAG="${CURRENT##*:}" ;;
-              *) echo "::error::unexpected UAT docs image: $CURRENT"; exit 1 ;;
-            esac
-          fi
-        fi
-        echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-
     - name: Deploy docs-only web image (preserve API, no migration)
       if: inputs.deploy_apps != 'true'
       shell: bash
@@ -176,7 +134,6 @@ runs:
           -var="image_tag=${{ steps.current.outputs.tag }}" \
           -var="app_image_tag=${{ steps.current.outputs.tag }}" \
           -var="web_image_tag=${{ inputs.image_tag }}" \
-          -var="docs_image_tag=${{ steps.docs.outputs.tag }}" \
           -var="deploy_apps=true"
 
     # Step 1 — everything EXCEPT moving the apps to the new image. The jobs (migrate, seed) are
@@ -191,7 +148,6 @@ runs:
           -var="image_tag=${{ inputs.image_tag }}" \
           -var="app_image_tag=${{ steps.current.outputs.tag }}" \
           -var="web_image_tag=${{ steps.current.outputs.web_tag }}" \
-          -var="docs_image_tag=${{ steps.docs.outputs.tag }}" \
           -var="deploy_apps=true"
 
     # Step 2 — migrate, on the NEW image, before any app runs the new code.
@@ -311,7 +267,6 @@ runs:
       run: |
         terraform apply -input=false -auto-approve \
           -var="image_tag=${{ inputs.image_tag }}" \
-          -var="docs_image_tag=${{ steps.docs.outputs.tag }}" \
           -var="deploy_apps=true"
 
     # `/ready` pings Postgres and Redis, so a green here proves images, Key Vault secrets via
