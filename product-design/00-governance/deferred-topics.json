@@ -15,7 +15,8 @@
       "status": "open",
       "reason": "Do not globally enumerate exact visibility, actions, contributions, validation, chat or reference behavior, and permissions before the relevant features are designed. Derive information, access, ownership, Primary versus Journey Vratamitra scope, and historical behavior as each feature is modeled.",
       "target_phase": "PH-008",
-      "notes": "Cross-cutting: revisit for chat, Journey evidence, Exposures, Resolutions, Challenges, reassessment, resources, AI summaries, and other feature-design phases."
+      "depends_on": ["PD-007"],
+      "notes": "Cross-cutting: revisit for chat, Journey evidence, Exposures, Resolutions, Challenges, reassessment, resources, AI summaries, and other feature-design phases. Include exact post-relationship access to feature-specific artifacts after their ownership/participation models and permissions are designed; former-Primary status alone does not grant continuing broad Primary-level access. Do not invent access categories here."
     },
     {
       "id": "DT-003",
@@ -64,6 +65,14 @@
       "reconcile_in": ["PH-011"],
       "downstream_phases": ["PH-013", "PH-014", "PH-015", "PH-016"],
       "notes": "Later decisions include notification-producing events; recipients; urgency and importance; in-app notification center/activity model; reminders and re-engagement; email, push, and in-app channels; timing; batching and deduplication; read, unread, and actioned state; preferences and controls; notification-to-action navigation; ignored or expired notifications; and anti-dependency/anti-nagging behavior. Reconcile the experience in PH-011; carry relevant implications into PH-013 through PH-016. Do not decide these mechanics in this record."
+    },
+    {
+      "id": "DT-009",
+      "title": "Automatic Primary invitation expiry",
+      "status": "open",
+      "reason": "The confirmed Primary Vratamitra lifecycle leaves automatic invitation expiry undecided; it establishes acceptance, withdrawal, and decline states but no automatic expiry rule.",
+      "target_phase": "PH-002",
+      "depends_on": ["PD-007"]
     }
   ]
 }

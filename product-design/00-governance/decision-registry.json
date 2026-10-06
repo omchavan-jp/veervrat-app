@@ -43,6 +43,13 @@
       "status": "confirmed",
       "canonical_home": "../01-product-model/north-star.mdx",
       "summary": "As an application of PD-004, notifications may inform or remind the Vratarthi about intentions they already own, but must not become a source of dependency or optimize for compulsive engagement, streak anxiety, artificial urgency, or repeated-prompt dependence. This constrains behavior without banning reminders or re-engagement."
+    },
+    {
+      "id": "PD-007",
+      "title": "Primary Vratamitra relationship lifecycle",
+      "status": "confirmed",
+      "canonical_home": "../02-actors-and-relationships/primary-vratamitra-relationship.mdx",
+      "summary": "A Vratarthi has at most one active Primary Vratamitra and one pending invitation. The relationship begins on acceptance; either party may end it independently, preserving history and contributions. Invitation history is retained, and former-Primary status alone grants no continuing broad Primary-level access; feature-specific artifact access remains deferred under DT-002."
     }
   ]
 }
