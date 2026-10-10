@@ -8,18 +8,14 @@ Refresh when: the private reporting route or security responsibilities change.
 Do not put vulnerability details, exploit code, credentials, personal data, or logs containing
 them in a public issue or PR.
 
-The agreed reporting route is GitHub private vulnerability reporting. Its activation is tracked
-in [governance rollout status](ops/github-governance-status.md). Do not assume it is available
-until the repository Security tab offers **Report a vulnerability**.
+Use [GitHub private vulnerability reporting](https://github.com/omchavan-jp/veervrat-app/security/advisories/new),
+or **Security → Report a vulnerability**. Activation/read-back evidence is recorded in
+[governance rollout status](ops/github-governance-status.md).
 
-Once available, submit your report at:
-https://github.com/omchavan-jp/veervrat-app/security/advisories/new
-
-Until that route is active, existing collaborators should use their established private team
-channel to contact the maintainer. External researchers may open an issue requesting a private
-security-reporting channel, containing **only the contact request**, no finding details. The
-maintainer must establish a private route before requesting the report. Do not include the
-vulnerability in a public contact request.
+If the private route is unavailable, existing collaborators should contact the maintainer through
+their established private team channel. External researchers may open an issue containing only
+a request for a private reporting channel, never finding details. The maintainer must establish
+that channel before requesting the report.
 
 In the private report, include affected behavior/version, reproduction steps, expected impact,
 and any proposed fix. Do not send real credentials or other people's personal data.

@@ -1,0 +1,15 @@
+{
+  "github_owned_allowed": false,
+  "verified_allowed": false,
+  "patterns_allowed": [
+    "actions/checkout@*",
+    "actions/setup-node@*",
+    "actions/upload-artifact@*",
+    "pnpm/action-setup@*",
+    "azure/login@*",
+    "docker/setup-buildx-action@*",
+    "docker/build-push-action@*",
+    "hashicorp/setup-terraform@*",
+    "github/codeql-action/*@*"
+  ]
+}

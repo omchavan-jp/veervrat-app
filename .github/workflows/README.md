@@ -18,12 +18,12 @@ by the product docs deployment.
 its `prepare` job classifies one changed-file list with
 `.github/scripts/classify-changes.sh`:
 
-| Change on main | UAT action |
-|---|---|
-| App, API, web, shared, or unknown path | Build four app images; apply Terraform, migrate, deploy apps |
-| Canonical `product-design/` content or renderer code | Build and deploy the web image with its static export; preserve API and migration image tags; skip migrations |
-| Both app and docs paths | Build the normal app image set; one serialized UAT deployment |
-| Ordinary Markdown, `documentation/`, `ops/`, `openspec/`, `spec/`, `.claude/` only | Skip CD builds and UAT deployment |
+| Change on main                                                                     | UAT action                                                                                                    |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| App, API, web, shared, or unknown path                                             | Build four app images; apply Terraform, migrate, deploy apps                                                  |
+| Canonical `product-design/` content or renderer code                               | Build and deploy the web image with its static export; preserve API and migration image tags; skip migrations |
+| Both app and docs paths                                                            | Build the normal app image set; one serialized UAT deployment                                                 |
+| Ordinary Markdown, `documentation/`, `ops/`, `openspec/`, `spec/`, `.claude/` only | Skip CD builds and UAT deployment                                                                             |
 
 The classifier's fixtures are in `.github/scripts/classify-changes.test.sh`.
 The Fumadocs export is built inside the web image, outside its public directory.
@@ -43,3 +43,27 @@ changes. Those workflow changes are separate implementation tasks; this document
 does not implement them.
 
 CI lint does not apply fixes. Repo-wide `format:check` is not a CI gate.
+
+## Security automation
+
+The checked-in Action references use full commit SHAs and the reviewed repositories in
+[`actions-policy.json`](../actions-policy.json). CI runs the
+[policy checker](../scripts/check-actions-security.mjs) and its negative fixtures. Workflow tokens
+default to `contents: read`; only CD jobs that use Azure login request `id-token: write`.
+Public-fork runs require maintainer approval and ordinary PR jobs have no deployment OIDC grant.
+This does not yet split the shared Azure identity; that remains separate release-control work.
+
+GitHub-managed CodeQL default setup analyzes Actions, JavaScript/TypeScript and Python on pushes,
+PRs and its weekly schedule. It has no checked-in CodeQL workflow. The native main ruleset
+requires completed CodeQL analysis and blocks new high/critical security findings; non-security
+warnings are not a blanket merge gate. Existing findings remain tracked, not auto-dismissed.
+
+[`dependabot.yml`](../dependabot.yml) configures weekly Monday 10:00 Asia/Kolkata updates for the
+root pnpm workspace, standalone product-design tooling, workflow Actions and the deploy composite.
+Minor/patch version updates are grouped; majors remain separate. Security updates are enabled
+independently and do not wait for the weekly version-update schedule. Bots open PRs; they never
+approve or merge them. Dependabot's first scheduled evaluation after this file reaches main is
+the end-to-end configuration check; writing YAML alone does not prove an update PR was generated.
+
+Native SHA-only enforcement must be switched on after these pins reach main, so old workflows are
+not disabled mid-rollout. See [rollout status](../../ops/github-governance-status.md) for that last step.

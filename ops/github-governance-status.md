@@ -1,9 +1,9 @@
 # STATE — GitHub Governance Rollout
 
 Owner: `omchavan-jp`.
-Last verified: 2026-10-10 for effective rules, owner bypass capabilities, merge settings,
-CODEOWNERS validity and disposable branch/tag tests. Main remained at
-`9529b60bc6c1451ec887b0c56c681ec38c6af57a` throughout those tests.
+Last verified: 2026-10-10 for permission read-back, security settings and the initial CodeQL baseline.
+Main remained at `9529b60bc6c1451ec887b0c56c681ec38c6af57a` during the permission tests;
+PR #317 then merged at `cb9eaadab2c5cb48eff6df33f911448a098574de`, which the CodeQL baseline analyzed.
 Refresh when: a governance PR merges, settings/cloud permissions change, a gate is tested,
 or repository visibility/GitHub plan changes.
 
@@ -16,15 +16,15 @@ Implementation work: [OpenSpec tasks](../openspec/changes/github-governance/task
 | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | Policy and contributor documentation          | Merged in [PR #315](https://github.com/omchavan-jp/veervrat-app/pull/315); post-merge CI, integration, E2E and UAT deployment passed |
 | CODEOWNERS and PR template                    | Merged in #315; CODEOWNERS has no API-reported errors; required owner review is now active                                           |
-| Main and production tag rulesets              | Five active rulesets verified by API read-back and disposable branch/tag tests; details below                                        |
+| Main and production tag rulesets              | Five permission rulesets verified; sixth CodeQL security ruleset is active after baseline triage                                     |
 | Merge method / branch deletion settings       | Squash only; automatic source-branch deletion enabled; squash commit uses PR title/body                                              |
 | Historical branch purge                       | Owner authorized deletion without backup; execution pending; preserve main and production tags                                       |
-| Existing automated checks / CD                | Consult workflow definitions; this PR does not change their executable behavior                                                      |
+| Existing automated checks / CD                | PR #317 post-merge checks passed; security PR stages Action pins and job-scoped permissions without changing deployment ordering     |
 | UAT acceptance and release manifests          | Implementation and verification pending                                                                                              |
 | Production reviewer gate and digest promotion | Implementation and verification pending; existing CD can deploy on a prod-\* tag                                                     |
 | Separate production cloud authority           | Implementation/live-assignment verification pending                                                                                  |
-| Dependency/code security controls             | Enablement, baseline triage, and verification are later implementation work                                                          |
-| Private vulnerability reporting               | GET private-vulnerability-reporting returned enabled=false; SECURITY.md documents a contact-request fallback                         |
+| Dependency/code security controls             | Dependabot alerts/security updates and CodeQL are enabled; existing findings recorded; grouped version-update config awaits merge    |
+| Private vulnerability reporting               | Enabled and verified by API; SECURITY.md links to the confidential GitHub reporting form                                             |
 
 ## Read-back commands
 
@@ -69,10 +69,41 @@ target refs; the live main branch and production tags were not mutated:
 - Owner could create a disposable non-production tag; updating and deleting it were each
   rejected with HTTP 422 under copies of the immutable-tag rules.
 - The test PR was closed without merge. Both disposable branches, the test tag, and all five
-  temporary verification rulesets were removed. Final inventory contains only the five live rules above.
+  temporary verification rulesets were removed. At the permission-batch check, inventory contained only those five rules; the security batch adds the CodeQL rule below.
 
 Limits: no collaborator account was impersonated; contributor denial follows the exact-user
 allowlist read-back. Main force-push/deletion denial was verified from effective rules rather
-than attempted destructively. Automatic post-merge deletion and successful merging with green
-checks will also be exercised by subsequent approved PRs. Production was not deployed by these tests.
+than attempted destructively. PR #317 then exercised successful owner merging with green checks and automatic source-branch deletion. Production was not deployed by these tests.
 The owner exception cannot be limited automatically to owner-authored PRs; policy limits its use.
+
+## Security automation activation
+
+- Dependabot alerts and automatic security-update PRs are enabled. The initial baseline is
+  [recorded separately](audit/github-security-baseline-2026-10-10.md); existing findings were not dismissed.
+- GitHub-managed CodeQL default setup is configured and its initial Actions, JavaScript/TypeScript
+  and Python analyses succeeded. [main-codeql-security](https://github.com/omchavan-jp/veervrat-app/rules/24831677)
+  requires CodeQL results and rejects new high/critical security findings, with no owner bypass.
+- Secret scanning and push protection remain enabled. Private vulnerability reporting is enabled.
+- All external fork contributors require workflow-run approval. The default token remains read-only
+  and workflows cannot approve PR reviews.
+- The selected-Action allowlist is active: no broad GitHub-owned or Marketplace-verified allowance;
+  only the nine reviewed patterns in `.github/actions-policy.json` are permitted.
+- Full-SHA Action pins, explicit workflow/job permissions, the CI security-policy checker, and
+  weekly grouped Dependabot configuration are prepared in the security implementation PR.
+  These repository files take effect after merge, not merely because settings were enabled.
+- Native `sha_pinning_required` is deliberately false during this transition. Enable it after
+  pinned workflows reach main, then run/read back CodeQL and ordinary checks to verify compatibility.
+  Do not enable it against old version-tag workflows or claim rollout complete before this final step.
+- Shared build/UAT/production Azure authority, production approval and artifact promotion remain
+  pending release-control work. No production tag or deployment is part of this security batch.
+
+Read-back commands for security activation:
+
+```bash
+gh api repos/omchavan-jp/veervrat-app/vulnerability-alerts
+gh api repos/omchavan-jp/veervrat-app/automated-security-fixes
+gh api repos/omchavan-jp/veervrat-app/code-scanning/default-setup
+gh api repos/omchavan-jp/veervrat-app/rulesets/24831677
+gh api repos/omchavan-jp/veervrat-app/actions/permissions/selected-actions
+gh api repos/omchavan-jp/veervrat-app/actions/permissions/fork-pr-contributor-approval
+```
