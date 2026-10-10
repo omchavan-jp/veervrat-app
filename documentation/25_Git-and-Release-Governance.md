@@ -67,7 +67,7 @@ Require the maintainer's approval on other developers' PRs. Dismiss stale approv
 
 GitHub does not count a PR author's self-approval as an approving review. The maintainer may use an approval exception for their own PR after self-review. This exception must not waive the PR requirement, mandatory checks, resolved conversations, or `main` protections.
 
-GitHub's native role-based approval bypass is not conditional on PR authorship. Its availability to the maintainer on other PRs is a technical limitation; policy permits its use only for maintainer-authored changes. Keep the review exception in a separate ruleset from mandatory controls.
+GitHub's native approval bypass is not conditional on PR authorship. Its availability to the maintainer on other PRs is a technical limitation; policy permits its use only for maintainer-authored changes. Keep the review exception in a separate ruleset from mandatory controls.
 
 ### Verification stages
 
