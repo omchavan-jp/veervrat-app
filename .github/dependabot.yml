@@ -16,9 +16,14 @@ updates:
       prefix: chore
       include: scope
     groups:
+      formatter-npm:
+        applies-to: version-updates
+        patterns: ['prettier']
+        update-types: [minor, patch]
       routine-npm:
         applies-to: version-updates
         patterns: ['*']
+        exclude-patterns: ['prettier']
         update-types: [minor, patch]
   - package-ecosystem: github-actions
     directories:
