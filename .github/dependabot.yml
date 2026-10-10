@@ -1,0 +1,42 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directories:
+      - /
+      - /product-design/tooling
+    schedule:
+      interval: weekly
+      day: monday
+      time: '10:00'
+      timezone: Asia/Kolkata
+    open-pull-requests-limit: 10
+    assignees:
+      - omchavan-jp
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      routine-npm:
+        applies-to: version-updates
+        patterns: ['*']
+        update-types: [minor, patch]
+  - package-ecosystem: github-actions
+    directories:
+      - /
+      - /.github/actions/deploy-environment
+    schedule:
+      interval: weekly
+      day: monday
+      time: '10:00'
+      timezone: Asia/Kolkata
+    open-pull-requests-limit: 10
+    assignees:
+      - omchavan-jp
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      routine-actions:
+        applies-to: version-updates
+        patterns: ['*']
+        update-types: [minor, patch]

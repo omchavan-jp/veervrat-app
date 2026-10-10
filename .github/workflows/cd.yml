@@ -26,7 +26,6 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  id-token: write # required to request the GitHub OIDC token Azure exchanges
   contents: read
 
 env:
@@ -38,6 +37,9 @@ jobs:
   # jobs can start with a *fresh* Azure login. Azure's OIDC assertion is valid for only ~5
   # minutes; a single long job outlives its own credentials mid-run (AADSTS700024).
   prepare:
+    permissions:
+      contents: read
+      id-token: write
     runs-on: ubuntu-latest
     # Declared so the OIDC subject is `environment:build` regardless of whether this run was
     # triggered by a branch push or a tag. Without it the subject differs between the two and
@@ -49,12 +51,13 @@ jobs:
       app_changed: ${{ steps.changes.outputs.app_changed }}
       docs_changed: ${{ steps.changes.outputs.docs_changed }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
+          persist-credentials: false
           # Full history, not the default single-commit shallow clone — `changes` below diffs
           # against the pre-push SHA, which a depth-1 checkout wouldn't have locally.
           fetch-depth: 0
-      - uses: azure/login@v2
+      - uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
@@ -83,6 +86,9 @@ jobs:
   # each gets its own fresh Azure login (see above), wall-clock is the slowest image rather
   # than the sum, and a failure names the image that broke.
   build:
+    permissions:
+      contents: read
+      id-token: write
     needs: prepare
     # Tag pushes always build (never filtered — see the top-of-file comment). Branch pushes
     # to main build only when `prepare` found an app-relevant path changed; an empty/unset
@@ -113,11 +119,13 @@ jobs:
           # it. See apps/backup/Dockerfile.
           - image: veervrat-backup
             dockerfile: apps/backup/Dockerfile
-            target: ""
+            target: ''
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
 
-      - uses: azure/login@v2
+      - uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
@@ -128,7 +136,7 @@ jobs:
       - name: Log in to ACR
         run: az acr login --name "$REGISTRY"
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
 
       # Build args only matter for web, and only because the Dockerfile declares matching
       # ARG+ENV for each. Pass an undeclared build arg and Docker drops it silently — no
@@ -160,7 +168,7 @@ jobs:
       #
       # Cache lives in GitHub Actions cache, not the registry: ACR Basic has a 10GB quota and
       # no purge policy yet (O17), so pushing cache layers there would quietly consume it.
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
           context: .
           file: ${{ matrix.dockerfile }}
@@ -174,20 +182,25 @@ jobs:
           cache-to: type=gha,scope=${{ matrix.image }},mode=max
 
   build-docs-web:
+    permissions:
+      contents: read
+      id-token: write
     needs: prepare
     if: github.ref == 'refs/heads/main' && needs.prepare.outputs.docs_changed == 'true' && needs.prepare.outputs.app_changed == 'false'
     runs-on: ubuntu-latest
     environment: build
     steps:
-      - uses: actions/checkout@v4
-      - uses: azure/login@v2
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       - run: az acr login --name "$REGISTRY"
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/build-push-action@v6
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
           context: .
           file: apps/web/Dockerfile
@@ -199,6 +212,9 @@ jobs:
           cache-to: type=gha,scope=veervrat-web,mode=max
 
   deploy-uat:
+    permissions:
+      contents: read
+      id-token: write
     needs: [prepare, build, build-docs-web]
     if: >-
       always() && github.ref == 'refs/heads/main' && needs.prepare.result == 'success' &&
@@ -208,8 +224,10 @@ jobs:
     runs-on: ubuntu-latest
     environment: uat
     steps:
-      - uses: actions/checkout@v4
-      - uses: azure/login@v2
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
@@ -221,6 +239,9 @@ jobs:
           deploy_apps: ${{ github.event_name == 'workflow_dispatch' || needs.prepare.outputs.app_changed == 'true' }}
 
   deploy-prod:
+    permissions:
+      contents: read
+      id-token: write
     needs: [prepare, build]
     if: startsWith(github.ref, 'refs/tags/prod-')
     runs-on: ubuntu-latest
@@ -236,8 +257,10 @@ jobs:
     # Revisit with a second maintainer, or if the repo moves to an org on a paid plan.
     environment: prod
     steps:
-      - uses: actions/checkout@v4
-      - uses: azure/login@v2
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
