@@ -43,6 +43,7 @@ numbered by purpose so the reading order is obvious:
 | 22 | [Platform Requirements](22_Platform-Requirements.md) | What the app needs, stated **without reference to any provider**. Read before sizing, costing or migrating anywhere. |
 | 23 | [Development Process](23_Development-Process.md) | **How work gets done, for a team.** Two tracks — changing what exists, and building what doesn't. Tiers, gates, definition of done, decision rights. **Read before starting any item.** |
 | 24 | [Documentation Standard](24_Documentation-Standard.md) | What a document is for, what keeps it true, and the cleanup procedure. **Read before writing or deleting one.** |
+| 25 | [Git and Release Governance](25_Git-and-Release-Governance.md) | **Authoritative delivery policy:** roles, branches, merge gates, release approval, security and recovery. |
 
 ## 90+ · Historical — frozen records
 
@@ -58,6 +59,9 @@ or `../ops/PROJECT-STATUS.md` instead.
 ---
 
 ### Related entry points
+- **Contributor guide:** [CONTRIBUTING.md](../CONTRIBUTING.md) — onboarding, PR flow and offboarding.
+- **Governance rollout:** [status](../ops/github-governance-status.md) — implemented/verified controls versus agreed policy.
+- **Security reporting:** [SECURITY.md](../SECURITY.md) — private reporting route and activation fallback.
 - **Product spec:** `../spec/SPEC_INDEX.md` — every product decision, ADRs, the 74 screen specs.
 - **Agent context:** `../AGENTS.md` — hard rules, project layout, session discipline.
 - **Project status:** `../ops/PROJECT-STATUS.md` — decisions register (`D`), open threads (`O`),

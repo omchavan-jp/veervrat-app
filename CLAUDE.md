@@ -35,9 +35,14 @@ along the way.
   `git checkout <ref> -- <path>` is the dangerous one: it overwrites the working file with no
   conflict, no warning and nothing in the reflog. Enforced by
   `.claude/hooks/guard-git-checkout.sh`. Stash first; a stash is recoverable and this is not.
-- Feature branches are **kept** after merging, never deleted.
+- Squash merge and delete the source branch; start each subsequent change from current `main`.
 - Conventional commits. `main` must always be releasable.
-- Merging to `main` deploys **UAT**. Production ships only by pushing a `prod-YYYY-MM-DD` tag.
+- Only `omchavan-jp` merges and releases. Their own PRs use the documented self-review exception;
+  PRs and required checks are still compulsory.
+- Release policy requires recorded UAT acceptance, exact tested artifact promotion, and production
+  approval before any production-changing step. A `prod-*` tag starts preparation, not authorization.
+- Authority: `documentation/25_Git-and-Release-Governance.md`. Active controls and pending work:
+  `ops/github-governance-status.md`. Do not treat documented gates as already implemented.
 
 ## Checkpoints — run these at the trigger, not from memory
 

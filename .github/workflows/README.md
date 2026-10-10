@@ -1,5 +1,9 @@
 # GitHub Actions workflows
 
+Delivery requirements are defined in [Git and Release Governance](../../documentation/25_Git-and-Release-Governance.md).
+This README describes the checked-in workflows, not proof of server-side enforcement. Track
+required checks, approval gates and artifact promotion in [rollout status](../../ops/github-governance-status.md).
+
 `ci.yml` runs on every push to `main` and every PR targeting `main`. It has no
 path filter. On Node 24 it installs the root pnpm workspace, generates Prisma,
 then runs lint, typecheck, API and web unit tests, and the workspace build. It
@@ -33,8 +37,9 @@ static docs bytes, while `PRODUCT_DOCS_MODE=off` keeps the route unavailable.
 No separate docs Container App or docs image is built. The static export is
 served only through the protected web route.
 
-The current production tag workflow **rebuilds** app images. Older repository
-guidance describes artifact promotion without a rebuild; that discrepancy is
-tracked separately and is not changed by the product docs path.
+The current production tag workflow **rebuilds** app images. The agreed governance policy
+requires promotion of accepted digests without rebuild and approval before all production
+changes. Those workflow changes are separate implementation tasks; this documentation PR
+does not implement them.
 
 CI lint does not apply fixes. Repo-wide `format:check` is not a CI gate.
