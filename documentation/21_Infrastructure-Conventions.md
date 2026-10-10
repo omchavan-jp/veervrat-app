@@ -577,21 +577,21 @@ Note the recurring Azure distinction: *Contributor covers the control plane but 
 Blob and Key Vault each need their own data-plane role — the same trap that catches people
 expecting subscription Owner to read secrets.
 
-### Environment protection rules need a paid plan on private repos
+### Historical private-plan limitation; public production approval policy
 
-Attempting to add a required reviewer returns:
+The earlier private-repository setup returned this error when adding a required reviewer:
 
 ```
 422 Failed to create the environment protection rule.
 Please ensure the billing plan supports the required reviewers protection rule.
 ```
 
-Free plan + private repo = no protection rules. **The prod gate is therefore the tag
-itself**, which is defensible: pushing `prod-YYYY-MM-DD` is deliberate and traceable, and a
-self-approval prompt is a rubber stamp for a single maintainer. The `prod` environment still
-exists and still scopes the OIDC subject — it just carries no gate.
-
-Revisit if a second maintainer joins, or when the repo moves to an organisation.
+That observation is historical, not a reason to omit approval on the now-public repository.
+[Git and Release Governance](25_Git-and-Release-Governance.md) requires recorded UAT acceptance,
+promotion without rebuild, and approval before every production-changing job. The maintainer may
+self-approve for this iteration; administrator gate bypass is disabled under the policy.
+Consult [rollout status](../ops/github-governance-status.md) for activation evidence. Before a
+future move to private, review feature/plan limits and preserve the gates with supported replacements.
 
 ### Build caching — and a correction to "always build in Azure"
 
@@ -873,13 +873,15 @@ nothing further was ever needed per-environment) stopped being the whole picture
 resource-group-scoped grant was added for the first time. Confirm current reality rather than
 trusting this paragraph: `az role assignment list --assignee <client-id> --all`.
 
-### No paid-plan reviewer gate — the tag is the gate
+### Production release policy and authorization boundary
 
-GitHub's required-reviewers protection rule needs a paid plan on private repos (422 on this
-account — see §14). The `prod` GitHub Environment therefore carries no protection rule; it
-exists solely to make the OIDC subject `environment:prod`. The deploy gate is **cutting and
-pushing a `prod-YYYY-MM-DD` tag** — deliberate and traceable, accepted as adequate for a
-single maintainer. Revisit with a second maintainer or a move to an org.
+The earlier tag-only authorization is superseded by
+[Git and Release Governance](25_Git-and-Release-Governance.md). Restrict tag creation, validate
+main ancestry/exact-commit checks/accepted digests, and approve before any production-changing
+step. Separate production Azure authority from build/UAT authority: an environment name alone
+does not limit a shared identity's permissions. Verify live Azure grants as well as workflow gates.
+See [rollout status](../ops/github-governance-status.md); this documentation does not itself
+change the current workflow or Azure role assignments.
 
 ## 16. A doc-only merge used to rebuild and redeploy anyway (2026-08-16)
 
@@ -891,8 +893,9 @@ triggered a full CD run for nothing.
 **Why not fix it by making UAT tag-based too, matching prod?** Considered and rejected. UAT's
 entire value is running the exact commit that just merged, immediately — that's what lets an
 integration bug get attributed to one merge instead of a batch, and it's the whole reason a
-continuous-deploy staging environment exists at all. Prod is tag-gated because it protects
-real users and the tag is a deliberate go/no-go act; UAT protects nobody, so gating it the
+continuous-deploy staging environment exists at all. A production tag starts deliberate release
+preparation; the governance policy additionally requires recorded acceptance and approval.
+UAT is the integration target, so gating it the
 same way would trade away the fast-feedback property for a manual step with no matching
 safety benefit. It would also erase the one thing that currently makes UAT and prod
 *behave* differently — trigger discipline (auto vs. deliberate tag) — collapsing them into

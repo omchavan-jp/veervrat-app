@@ -3,8 +3,10 @@
 The live runbook. **This must describe what is actually deployed**, not what we intend to
 deploy. Update it in any infra PR.
 
-Rules and conventions live in `AGENTS.md` (branching, tags, migrations) and
-`documentation/21_Infrastructure-Conventions.md` (Terraform). This file is the *procedure*.
+Delivery rules live in [Git and Release Governance](documentation/25_Git-and-Release-Governance.md)
+and Terraform rules in `documentation/21_Infrastructure-Conventions.md`. This file is the
+procedure. [Governance rollout status](ops/github-governance-status.md) distinguishes agreed
+gates from mechanisms actually implemented and verified.
 
 ---
 
@@ -54,7 +56,9 @@ CROSSSLOT errors flooded Log Analytics at ₹19,230 in 12 hours. Fixed by PR #29
 
 ## How code reaches each environment
 
-See `AGENTS.md` → Git conventions for the rules. In short:
+The checked-in [CD workflow](.github/workflows/cd.yml) and
+[deploy action](.github/actions/deploy-environment/action.yml) define executable behavior.
+The following describes that path; it does not certify the new release policy as implemented:
 
 ```
 merge PR to main  →  classify paths  →  build changed app/web image set
@@ -77,9 +81,10 @@ to an app build. `prod-*` tag pushes are never filtered and retain the docs runt
 Details and the reasoning for not making UAT tag-gated instead:
 `documentation/21_Infrastructure-Conventions.md` §16.
 
-Automated in `.github/workflows/cd.yml`. The prod gate is the **tag itself** — GitHub's
-required-reviewers rule needs a paid plan on private repos, so there is no approval prompt.
-Pushing a `prod-*` tag is the deliberate act.
+The agreed policy adds recorded UAT acceptance and explicit production approval to tag-triggered
+release preparation. Public-repository deployment approval is available; the earlier private-plan
+explanation does not apply to this repository's current visibility. Check rollout status before
+treating a tag push as safe: until the workflow/control changes are active it can still deploy.
 
 Fumadocs builds a static export from canonical `product-design/` sources inside
 the web image. It is copied outside the public directory. Browsers enter at
@@ -271,10 +276,12 @@ in the file.
 
 ---
 
-## Database migrations — manual, never automatic
+## Database migrations — reviewed, ordered, and authorized
 
-Per the hard rule in `AGENTS.md`: migrations are never applied automatically to a deployed
-environment. A bad migration against real user data is expensive to undo.
+Migrations may run automatically as an ordered deployment step. Under the governance policy,
+every production-changing step must follow explicit production approval. The older blanket
+"never automatic" instruction is superseded; this documentation change does not activate the gate.
+A bad migration against real user data is expensive to undo.
 
 **They run as a one-off Container Apps Job inside Azure**, using the same image as the app.
 Two reasons this is not done from a laptop:
@@ -297,6 +304,39 @@ Reversed, the app boots and queries columns that don't exist yet.
 
 Migrations are **forward-only**. A bad migration is corrected with a new migration —
 never `migrate reset` against a deployed database.
+
+Every migration PR must state changes to schema/data, compatibility with the current and previous
+app, rollout order, irreversible effects and recovery if migration or rollout fails. Before an
+application rollback, explicitly check compatibility with the resulting schema. If the old app
+cannot run safely, use a corrective migration or forward fix. Database restore is a separate,
+owner-authorized recovery decision because it may lose newer writes.
+
+### Agreed release procedure — activate through implementation PRs
+
+This section specifies the required operating sequence, not commands for workflows that have
+already been built. Use [rollout status](ops/github-governance-status.md) to confirm activation.
+Do not create a production tag merely to test these gates.
+
+1. Select a successful UAT deployment and its actual API/web/migration/backup image digests.
+   A path-filtered deployment can contain mixed component versions; do not infer them from HEAD.
+2. Verify required checks for the exact candidate commit and manually exercise the affected flows.
+3. The owner records UAT acceptance: deployment, full commit SHA, digests, identity/time and
+   meaningful verification notes. Retain the record when UAT advances.
+4. Create a new date-based production tag targeting a commit in main history. Eligibility
+   validation rejects missing checks, missing/mismatched acceptance, or missing artifacts.
+5. Prepare a GitHub Release/manifest showing changes, evidence, intended image set and recovery
+   considerations before production changes. Do not authorize a different image set after review.
+6. Obtain the owner's production environment approval. The owner may self-approve for this
+   iteration; administrator bypass is disabled. All production credentials and changing steps
+   must remain behind this boundary, including Terraform and migrations.
+7. Serialize the whole production operation across tags. Promote accepted digests without rebuild,
+   run authorized migrations before the new app, and stop later stages when any step fails.
+8. Verify deployment health and record success/failure, approvals and run links in the release.
+   Missing outcome evidence is visible incomplete work, not a successful audit record.
+
+For recovery, select a previous verified image set, assess schema compatibility, and use a new
+recovery release record/tag with explicit approval. Never move an old tag or automatically restore
+the database. Failure detection can be automatic; the rollback decision remains deliberate.
 
 ### Procedure
 

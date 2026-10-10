@@ -143,8 +143,15 @@ negative test per permission row the change touches. `pnpm test` green before ap
 
 Two parts, both required:
 
-- `/code-review` on the diff.
-- **A second person walks the flow on UAT.** Not the implementer.
+- **Before merge:** `/code-review` on the diff, maintainer approval and required CI/integration/E2E
+  checks against current main. New changes invalidate stale approval.
+- **After merge, before production:** walk the deployed flow on UAT and record the release
+  acceptance. UAT receives main after merge; do not demand a pre-merge UAT deployment.
+
+`omchavan-jp` reviews other developers' changes. Maintainer-authored PRs use the explicitly agreed
+self-review exception; it never waives PRs or required checks. Authority and implementation
+status: [governance policy](25_Git-and-Release-Governance.md) and
+[rollout status](../ops/github-governance-status.md).
 
 The second part is the change that this whole document exists to make. See §6.
 
@@ -265,7 +272,8 @@ Six conditions. All of them, every time, tier 0 included.
 1. `pnpm test` passes — unit and integration.
 2. The capability spec in `openspec/specs/` matches what was built.
 3. Deployed to UAT and healthy.
-4. **Someone who did not implement it walked the flow on UAT.**
+4. **The maintainer walked the flow on UAT**, independently for other developers' work;
+   maintainer-authored work uses the documented self-review exception. Record observed evidence.
 5. The issue is closed with **what was observed**, not the word "done".
 6. CHANGELOG updated.
 
@@ -275,8 +283,9 @@ was missing, inert, or pointed somewhere useless."* The working definition of do
 *the API can do it*. Eight defects, three of which made core flows impossible for every real
 user, all invisible to a green test suite.
 
-A team of one cannot satisfy condition 4. That is the single most valuable thing team size buys,
-and it is worth more than any artifact in this document.
+Independent walkthrough remains the normal rule for another developer's work. The owner has
+accepted the temporary self-review exception for their own work; do not describe that exception
+as independent verification or waive the remaining conditions.
 
 ---
 
@@ -291,7 +300,7 @@ and it is worth more than any artifact in this document.
 | Changing the design system itself | Product owner |
 | Adding a dependency | Product owner — `10_Platform-Engineering-Standard.md` is a hard gate |
 | Priority and sequence | Product owner |
-| Whether it is done | Reviewer, per §6 — never the builder alone |
+| Whether it is done | Maintainer, per §6 and the explicit maintainer self-review exception |
 
 The test when unsure, unchanged from `AGENTS.md`: **would the product owner be surprised to
 learn this was decided without them?** Announcing a decision is not making it jointly — it
@@ -308,5 +317,6 @@ still leaves someone else to catch it.
   well-specified item. This document is the human process around it, and A1 and A7 are additions
   the SOP does not have.
 
-Unchanged and still authoritative: git conventions and branching (`AGENTS.md`), the OpenSpec
+Delivery authority: [Git and Release Governance](25_Git-and-Release-Governance.md), with short
+reminders in `AGENTS.md`. Unchanged: the OpenSpec
 commands, `04_Implementation-Cautions-and-Principles.md`, and the hard rules in `AGENTS.md`.

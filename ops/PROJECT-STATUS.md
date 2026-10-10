@@ -494,10 +494,13 @@ from a guess. Full version in `veervrat-app/AGENTS.md`.
 
 - **`main` is the trunk** (O6, 2026-08-16). Never commit directly — branch + PR always.
   `dev` is retired. Merging to `main` deploys UAT; prod ships by `prod-*` tag.
-- Feature branches are **kept** after merge, never deleted
+- Delivery policy: [Git and Release Governance](../documentation/25_Git-and-Release-Governance.md).
+  Squash merge and delete source branches; enforcement progress is tracked in
+  [governance rollout status](github-governance-status.md).
 - Non-trivial features go through **OpenSpec** (`veervrat-app/openspec/`)
 - Conventional commits
-- **Never auto-migrate production** — manual approval gate
+- Production-changing jobs, including migrations, require release approval under the agreed
+  governance policy. Do not assume that gate is active until rollout status provides evidence.
 
 
 

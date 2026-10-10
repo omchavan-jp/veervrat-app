@@ -84,6 +84,7 @@ veervrat-app/
 - `documentation/04_Implementation-Cautions-and-Principles.md` — **read before implementing any item.** Generalized principles, a feature Definition-of-Done, and a verification ladder distilled from a remediation pass on earlier AI-built code. Prevents the recurring failure classes (unverified "done", layer-only features, unmapped tokens, transport misconfig, partial i18n, missing negative tests).
 
 ### Convention docs
+- `documentation/25_Git-and-Release-Governance.md` — authoritative Git, review, security and release policy; `ops/github-governance-status.md` distinguishes policy from active controls
 - `documentation/14_Auth-Architecture-Decision.md` — auth, sessions, OAuth, CSRF (double-submit cookie), rate limiting, brute force
 - `documentation/11_Backend-Conventions.md` — layering, modules, naming, validation, errors, DB, logging
 - `documentation/12_API-Conventions.md` — routes, methods, response shapes, pagination
@@ -149,7 +150,7 @@ veervrat-app/
 - soft deletes (`deleted_at`) for user-facing entities
 - all schema changes via Prisma migrations with descriptive names
 - no manual DDL
-- **never run migrations against production** — migrations run manually after review
+- Production migrations require explicit release authorization and compatibility/recovery review; run them through the approved Azure job, never an ad hoc laptop migration. See `documentation/25_Git-and-Release-Governance.md` and `DEPLOYMENT.md`.
 
 ### Permissions
 - every protected route must enforce two layers: guard (who are you) + service check (are you allowed on this specific resource)
@@ -218,6 +219,11 @@ Do all of this before invoking the skill:
 
 ## Git conventions
 
+**Authority:** `documentation/25_Git-and-Release-Governance.md` supersedes earlier delivery rules.
+The reminders below do not prove enforcement; consult `ops/github-governance-status.md`.
+Only `omchavan-jp` reviews, merges, accepts UAT releases and authorizes production.
+Their own PRs use the documented self-review exception, never a bypass of required checks.
+
 ### One-time setup — activate the hooks
 
 ```bash
@@ -271,7 +277,7 @@ when Railway auto-deployed `dev` to the only environment there was.
   half-finished stays on its branch or goes behind a flag.
 - `feat/<name>` · `fix/<name>` · `refactor/<name>` · `chore/<name>` · `spec/<name>` —
   all branched from `main`.
-- `dev` is **retired** — kept (branches are never deleted) but no longer merged into.
+- `dev` is **retired** and included in the authorized historical remote-branch purge.
 
 **Branches are not environments.** A branch says what code exists; a tag says what was
 released. There is no `uat` branch and no `prod` branch — the same commit is promoted
@@ -282,16 +288,16 @@ through environments by tag, so what you tested is literally what ships.
 | Environment | What runs there | Triggered by |
 |---|---|---|
 | **dev** | local `docker-compose` | nothing — it's your machine, no pipeline touches it |
-| **UAT** | `veervrat-uat` on Azure | **automatic** on every merge to `main` |
-| **prod** | `veervrat-prod` on Azure | **a `prod-*` tag** — the tag itself is the gate (see below) |
+| **UAT** | `veervrat-uat` on Azure | automatic on app-relevant merges to `main`; ordinary Markdown-only work is skipped by CD |
+| **prod** | `veervrat-prod` on Azure | release starts with `prod-*`; policy additionally requires recorded UAT acceptance and production approval |
 
 Note the name collision: the *environment* called "dev" (D10) is local docker-compose. It
 has nothing to do with the old `dev` *branch*.
 
-**On the prod gate:** GitHub's "required reviewers" protection rule needs a **paid plan on
-private repos**, so there is no approval prompt. The deliberate act is cutting the tag —
-nobody pushes a `prod-*` tag by accident, and self-approval would be a rubber stamp for a
-single maintainer. Revisit when a second maintainer joins or the repo moves to an org.
+**Production authorization:** a tag alone is insufficient under the agreed policy. The public
+repository supports the planned native `prod` approval gate; private visibility needs a separate
+plan/control review. Gate every production-changing step, including infrastructure and migrations.
+Do not assume acceptance, approval or artifact promotion is active until rollout status provides evidence.
 
 ### Release tags
 - Format `prod-YYYY-MM-DD`, suffixed `-2`, `-3` for multiple releases in a day.
@@ -305,12 +311,11 @@ single maintainer. Revisit when a second maintainer joins or the repo moves to a
   (dependency resolution drifts), and then you'd ship something nobody tested.
 
 ### Hotfix
-1. Branch from the **last `prod-*` tag** (not necessarily `main` — `main` may contain
-   unreleased work).
-2. Fix, PR, merge to `main`.
-3. Tag and deploy.
-4. **Confirm the fix is on `main`.** This is the step everyone forgets; skip it and the
-   next release silently reverts the hotfix.
+1. Start a fresh fix branch from current `main`; keep the fix complete and reviewable.
+2. Open a PR, pass required checks, and squash merge through the maintainer.
+3. Verify the candidate on UAT, record acceptance, and obtain production approval before release.
+4. If unrelated changes on `main` make an urgent release unsafe, escalate release selection to
+   the owner rather than silently reviving a separate long-lived branch or skipping release gates.
 
 ### Commit messages (conventional commits)
 - `feat: add journey status overview endpoint`
@@ -325,19 +330,15 @@ single maintainer. Revisit when a second maintainer joins or the repo moves to a
 ### Merging philosophy
 - Squash merge feature branches into `main` (clean history)
 - Never merge `main` into a feature branch mid-work — rebase instead
-- Feature branches are **kept** after merge, never deleted
-
-**Squash and keep-the-branch are a pair, not two independent preferences.** Squashing puts
-one commit per PR on `main` — readable history, and a revert is a single commit, which
-matters now that tags mark releases. The cost is that the branch becomes the *only* place
-the granular commits survive, so deleting it would genuinely lose that history. (The
-coherent alternative is normal-merge + delete, which keeps every `wip`/`fix typo` commit in
-`main`'s history instead. We chose the other trade.) If the branch list gets noisy, prune
-old *merged* branches deliberately — don't switch merge strategy.
+- Delete the source branch after squash merge; start subsequent work on a fresh branch from `main`.
+- Historical remote branches other than `main` are authorized for deletion without backup.
+  This is a separate cleanup operation; preserve production tags and unfinished implementation work.
 
 ### Database migrations
-- **Never auto-migrate any deployed environment.** Migrations run as a deliberate,
-  separately-triggered step, before the app image that needs them is deployed.
+- Migrations may run as an ordered deployment step after authorization; production changes
+  must sit behind the release approval gate. This supersedes the blanket ban on automated migrations.
+- Migration PRs state backward compatibility, rollout ordering, irreversible effects and recovery.
+  Before application rollback, assess compatibility with the resulting schema; otherwise forward-fix.
 - They run as a one-off job **inside Azure**, using the same container image as the app —
   not from a laptop. Azure Postgres only accepts connections from Azure services, and
   running from a local machine also risks a Prisma version mismatch with production.
@@ -479,4 +480,5 @@ lint, the CD wiring check); the ones broken that day were all prose-only.
 - Framework: Vitest + supertest (backend), Vitest + React Testing Library (frontend), Playwright (E2E)
 - Full strategy: `documentation/16_Testing-Strategy.md`
 - Auth matrix tests are the highest-priority category — one positive + one negative per permission row
-- Tests are not set up yet — do not assume test infrastructure exists until configured
+- Consult `.github/workflows/README.md` and the workflow definitions for test commands and scope;
+  do not infer a passing check from the existence of a test file.
