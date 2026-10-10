@@ -65,5 +65,6 @@ independently and do not wait for the weekly version-update schedule. Bots open 
 approve or merge them. Dependabot's first scheduled evaluation after this file reaches main is
 the end-to-end configuration check; writing YAML alone does not prove an update PR was generated.
 
-Native SHA-only enforcement must be switched on after these pins reach main, so old workflows are
-not disabled mid-rollout. See [rollout status](../../ops/github-governance-status.md) for that last step.
+Native SHA-only enforcement is enabled after the pinned workflows merged in #319. Ordinary
+checks and GitHub-managed CodeQL passed under it. See [rollout status](../../ops/github-governance-status.md)
+and [remediation status](../../ops/security-remediation-status.md) for remaining security work.

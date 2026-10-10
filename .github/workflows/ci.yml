@@ -85,7 +85,9 @@ jobs:
 
       - name: Validate canonical product design
         working-directory: product-design/tooling
-        run: corepack pnpm validate
+        run: |
+          node --test scripts/governance.test.mjs
+          corepack pnpm validate
 
       - name: Build Fumadocs renderer
         working-directory: product-design/tooling

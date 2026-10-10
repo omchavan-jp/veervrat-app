@@ -44,6 +44,7 @@ describe('App Foundation', () => {
     it('sets baseline hardening headers', async () => {
       const res = await getRequest().get('/health');
       expect(res.headers['x-content-type-options']).toBe('nosniff');
+      expect(res.headers['content-security-policy']).toContain("default-src 'self'");
       // helmet sets X-Frame-Options to SAMEORIGIN by default
       expect(res.headers['x-frame-options']).toBeTruthy();
     });

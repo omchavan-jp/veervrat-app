@@ -17,7 +17,7 @@ import { REDIS_CLIENT } from '../redis/redis.provider';
  * side must be its own client.
  */
 export class RedisIoAdapter extends IoAdapter {
-  private readonly logger = new Logger(RedisIoAdapter.name);
+  private readonly adapterLogger = new Logger(RedisIoAdapter.name);
   private pubClient?: Redis;
   private subClient?: Redis;
 
@@ -39,11 +39,14 @@ export class RedisIoAdapter extends IoAdapter {
     // forced a connection yet. Connect explicitly: an unconnected pub/sub pair fails silently,
     // which is the exact failure mode this adapter exists to remove.
     void Promise.all([this.pubClient.connect(), this.subClient.connect()]).catch((err: Error) =>
-      this.logger.error({ msg: 'Socket.IO Redis adapter failed to connect', error: err.message }),
+      this.adapterLogger.error({
+        msg: 'Socket.IO Redis adapter failed to connect',
+        error: err.message,
+      }),
     );
 
     server.adapter(createAdapter(this.pubClient, this.subClient));
-    this.logger.log('Socket.IO using Redis adapter (safe for multiple replicas)');
+    this.adapterLogger.log('Socket.IO using Redis adapter (safe for multiple replicas)');
 
     return server;
   }

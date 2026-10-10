@@ -19,13 +19,17 @@ function makeRepo(overrides: Partial<Record<keyof DataExportRepository, unknown>
     feedbackItems: vi.fn().mockResolvedValue([]),
     ...overrides,
   };
-  return base as unknown as DataExportRepository;
+  return base;
+}
+
+function makeService(repo: ReturnType<typeof makeRepo>) {
+  return new DataExportService(repo as unknown as DataExportRepository);
 }
 
 describe('DataExportService.exportFor', () => {
   it('gathers every category under its own named key', async () => {
     const repo = makeRepo();
-    const result = await new DataExportService(repo).exportFor('u1');
+    const result = await makeService(repo).exportFor('u1');
 
     // Named explicitly rather than spread, so a category silently missing from the returned
     // object is a visible diff here, not a document quietly incomplete.
@@ -51,7 +55,7 @@ describe('DataExportService.exportFor', () => {
 
   it('queries every category for the requesting user, and only that user', async () => {
     const repo = makeRepo();
-    await new DataExportService(repo).exportFor('the-requester');
+    await makeService(repo).exportFor('the-requester');
 
     for (const key of [
       'identity',
@@ -73,7 +77,7 @@ describe('DataExportService.exportFor', () => {
   });
 
   it('stamps when the export was produced', async () => {
-    const result = await new DataExportService(makeRepo()).exportFor('u1');
+    const result = await makeService(makeRepo()).exportFor('u1');
     expect(new Date(result.exportedAt).getTime()).not.toBeNaN();
   });
 });

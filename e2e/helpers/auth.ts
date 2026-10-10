@@ -1,4 +1,5 @@
 import { APIRequestContext, Page, request as pwRequest, expect } from '@playwright/test';
+import { randomBytes } from 'node:crypto';
 import { latestVerificationToken } from './db';
 
 export const API = process.env.E2E_API_URL ?? 'http://localhost:3001';
@@ -8,8 +9,7 @@ export type TestUser = { email: string; password: string; displayName: string; u
 
 // A unique, valid (lowercase/underscore) username + email for an ephemeral account.
 export function makeUser(prefix: string): TestUser {
-  const suffix =
-    `${Date.now().toString(36)}${Math.floor(Math.random() * 1e4).toString(36)}`.toLowerCase();
+  const suffix = randomBytes(12).toString('hex');
   const slug = `${prefix}_${suffix}`.replace(/[^a-z0-9_]/g, '');
   return {
     email: `${slug}@e2e.local`,
