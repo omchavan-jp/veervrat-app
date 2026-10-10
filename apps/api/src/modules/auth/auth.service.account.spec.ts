@@ -77,6 +77,11 @@ describe('AuthService — changePassword', () => {
     expect(repo.updatePasswordHash).toHaveBeenCalledWith('a1', 'newhash');
     expect(repo.deleteAllUserSessions).toHaveBeenCalledWith('u1');
     expect(typeof r.sessionToken).toBe('string');
+    expect(r.sessionToken).toMatch(/^[a-f0-9]{64}$/);
+    expect(r.sessionToken).not.toBe('newpassword1');
+    expect(repo.createSession).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: 'u1', token: r.sessionToken }),
+    );
   });
 
   it('rejects when there is no credential account (Google-only)', async () => {

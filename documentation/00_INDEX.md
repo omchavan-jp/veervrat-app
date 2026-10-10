@@ -14,36 +14,36 @@ numbered by purpose so the reading order is obvious:
 
 ## 00–05 · Orientation & roadmap
 
-| # | Document | What it's for |
-|---|---|---|
-| 00 | [INDEX](00_INDEX.md) | This file. |
-| 01 | [System Decisions & Status](01_System-Decisions-and-Status.md) | Master list of all tech decisions and current status. **Read first at session start.** |
-| 02 | [Local Development Setup](02_Local-Development-Setup.md) | How to run the app, services, and databases locally. |
-| 03 | [Implementation Order](03_Implementation-Order.md) | 📌 **Historical** — the build plan, now complete. Kept for sequencing rationale; **not** a status document. |
-| 04 | [Implementation Cautions & Principles](04_Implementation-Cautions-and-Principles.md) | Definition-of-Done, verification ladder, and generalized cautions. **Read before implementing any item.** |
-| 05 | [Deferral Ledger](05_Deferral-Ledger.md) | Cross-item index of intentionally-deferred work + which item pays it back. **Scan for your item number before starting.** |
+| #   | Document                                                                             | What it's for                                                                                                             |
+| --- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| 00  | [INDEX](00_INDEX.md)                                                                 | This file.                                                                                                                |
+| 01  | [System Decisions & Status](01_System-Decisions-and-Status.md)                       | Master list of all tech decisions and current status. **Read first at session start.**                                    |
+| 02  | [Local Development Setup](02_Local-Development-Setup.md)                             | How to run the app, services, and databases locally.                                                                      |
+| 03  | [Implementation Order](03_Implementation-Order.md)                                   | 📌 **Historical** — the build plan, now complete. Kept for sequencing rationale; **not** a status document.               |
+| 04  | [Implementation Cautions & Principles](04_Implementation-Cautions-and-Principles.md) | Definition-of-Done, verification ladder, and generalized cautions. **Read before implementing any item.**                 |
+| 05  | [Deferral Ledger](05_Deferral-Ledger.md)                                             | Cross-item index of intentionally-deferred work + which item pays it back. **Scan for your item number before starting.** |
 
 ## 10–29 · Standards & conventions
 
-| # | Document | What it's for |
-|---|---|---|
-| 10 | [Platform Engineering Standard](10_Platform-Engineering-Standard.md) | Approved library catalog, security baseline, numeric constants. **A library not listed here is not approved.** |
-| 11 | [Backend Conventions](11_Backend-Conventions.md) | Layering, modules, naming, validation, errors, DB, logging. |
-| 12 | [API Conventions](12_API-Conventions.md) | Routes, methods, response shapes, pagination. |
-| 13 | [Frontend Conventions](13_Frontend-Conventions.md) | Routing, components, data fetching, forms, styling. |
-| 14 | [Auth Architecture Decision](14_Auth-Architecture-Decision.md) | Auth, sessions, OAuth, CSRF, rate limiting, brute-force defense. |
-| 15 | [Design System & Design Language](15_Design-System.md) | Principles, shell/nav, tokens, motion, component language, bilingual rendering. Merged with the former out-of-repo design-language doc. |
-| 15a | [UI Consistency Rules](15a_UI-Consistency-Rules.md) | How to *apply* the tokens — exact classes, anti-drift rules. **Wins over 15 on class names.** |
-| 16 | [Testing Strategy](16_Testing-Strategy.md) | What to test, auth-matrix tests, E2E flows. |
-| 17 | [Audit Schema](17_Audit-Schema.md) | Audit event contract, mandatory events, `@Audited` pattern. |
-| 18 | [Observability Standard](18_Observability-Standard.md) | Structured logging schema, error tracking, alert thresholds. ⚠️ Describes the target — not yet implemented (issue #79). |
-| 19 | [Email Strategy](19_Email-Strategy.md) | Transactional vs notification email, templates, bilingual strategy. ✅ Live on UAT via JP's SMTP relay. |
-| 20 | [Solo-Dev Operations](20_Solo-Dev-Operations.md) | ⚠️ **Superseded by 23** for the implement loop. Its capture → triage half (feedback widget → GitHub Issues) is still current. |
-| 21 | [Infrastructure Conventions](21_Infrastructure-Conventions.md) | Terraform, Azure, CD, deployment traps. **Read before touching `infra/`.** |
-| 22 | [Platform Requirements](22_Platform-Requirements.md) | What the app needs, stated **without reference to any provider**. Read before sizing, costing or migrating anywhere. |
-| 23 | [Development Process](23_Development-Process.md) | **How work gets done, for a team.** Two tracks — changing what exists, and building what doesn't. Tiers, gates, definition of done, decision rights. **Read before starting any item.** |
-| 24 | [Documentation Standard](24_Documentation-Standard.md) | What a document is for, what keeps it true, and the cleanup procedure. **Read before writing or deleting one.** |
-| 25 | [Git and Release Governance](25_Git-and-Release-Governance.md) | **Authoritative delivery policy:** roles, branches, merge gates, release approval, security and recovery. |
+| #   | Document                                                             | What it's for                                                                                                                                                                           |
+| --- | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 10  | [Platform Engineering Standard](10_Platform-Engineering-Standard.md) | Approved library catalog, security baseline, numeric constants. **A library not listed here is not approved.**                                                                          |
+| 11  | [Backend Conventions](11_Backend-Conventions.md)                     | Layering, modules, naming, validation, errors, DB, logging.                                                                                                                             |
+| 12  | [API Conventions](12_API-Conventions.md)                             | Routes, methods, response shapes, pagination.                                                                                                                                           |
+| 13  | [Frontend Conventions](13_Frontend-Conventions.md)                   | Routing, components, data fetching, forms, styling.                                                                                                                                     |
+| 14  | [Auth Architecture Decision](14_Auth-Architecture-Decision.md)       | Auth, sessions, OAuth, CSRF, rate limiting, brute-force defense.                                                                                                                        |
+| 15  | [Design System & Design Language](15_Design-System.md)               | Principles, shell/nav, tokens, motion, component language, bilingual rendering. Merged with the former out-of-repo design-language doc.                                                 |
+| 15a | [UI Consistency Rules](15a_UI-Consistency-Rules.md)                  | How to _apply_ the tokens — exact classes, anti-drift rules. **Wins over 15 on class names.**                                                                                           |
+| 16  | [Testing Strategy](16_Testing-Strategy.md)                           | What to test, auth-matrix tests, E2E flows.                                                                                                                                             |
+| 17  | [Audit Schema](17_Audit-Schema.md)                                   | Audit event contract, mandatory events, `@Audited` pattern.                                                                                                                             |
+| 18  | [Observability Standard](18_Observability-Standard.md)               | Structured logging schema, error tracking, alert thresholds. ⚠️ Describes the target — not yet implemented (issue #79).                                                                 |
+| 19  | [Email Strategy](19_Email-Strategy.md)                               | Transactional vs notification email, templates, bilingual strategy. ✅ Live on UAT via JP's SMTP relay.                                                                                 |
+| 20  | [Solo-Dev Operations](20_Solo-Dev-Operations.md)                     | ⚠️ **Superseded by 23** for the implement loop. Its capture → triage half (feedback widget → GitHub Issues) is still current.                                                           |
+| 21  | [Infrastructure Conventions](21_Infrastructure-Conventions.md)       | Terraform, Azure, CD, deployment traps. **Read before touching `infra/`.**                                                                                                              |
+| 22  | [Platform Requirements](22_Platform-Requirements.md)                 | What the app needs, stated **without reference to any provider**. Read before sizing, costing or migrating anywhere.                                                                    |
+| 23  | [Development Process](23_Development-Process.md)                     | **How work gets done, for a team.** Two tracks — changing what exists, and building what doesn't. Tiers, gates, definition of done, decision rights. **Read before starting any item.** |
+| 24  | [Documentation Standard](24_Documentation-Standard.md)               | What a document is for, what keeps it true, and the cleanup procedure. **Read before writing or deleting one.**                                                                         |
+| 25  | [Git and Release Governance](25_Git-and-Release-Governance.md)       | **Authoritative delivery policy:** roles, branches, merge gates, release approval, security and recovery.                                                                               |
 
 ## 90+ · Historical — frozen records
 
@@ -51,14 +51,16 @@ These describe a moment, not the present. Each carries a banner saying so. **Do 
 them to match reality** — that destroys their value as a record; write current state in `01`
 or `../ops/PROJECT-STATUS.md` instead.
 
-| # | Document | Snapshot of |
-|---|---|---|
-| 90 | [Session Handoff — Auth Implementation](90_Session-Handoff-Auth-Implementation.md) | 2026-05-20 — how auth was built. Its "known issues" are all resolved. |
-| 91 | [Production Readiness Audit](91_Production-Readiness-Audit.md) | 2026-07-01 — code-grounded audit taken *before* the Azure migration. |
+| #   | Document                                                                           | Snapshot of                                                           |
+| --- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| 90  | [Session Handoff — Auth Implementation](90_Session-Handoff-Auth-Implementation.md) | 2026-05-20 — how auth was built. Its "known issues" are all resolved. |
+| 91  | [Production Readiness Audit](91_Production-Readiness-Audit.md)                     | 2026-07-01 — code-grounded audit taken _before_ the Azure migration.  |
 
 ---
 
 ### Related entry points
+
+- **Security remediation:** [status](../ops/security-remediation-status.md) — candidate fixes, verified scanner dispositions and unresolved upstream advisories.
 - **Contributor guide:** [CONTRIBUTING.md](../CONTRIBUTING.md) — onboarding, PR flow and offboarding.
 - **Governance rollout:** [status](../ops/github-governance-status.md) — implemented/verified controls versus agreed policy.
 - **Security reporting:** [SECURITY.md](../SECURITY.md) — private reporting route and activation fallback.
@@ -99,7 +101,7 @@ when the document was made. Symptoms, all found in a single review:
 - **Time-relative claims.** "None exist today", "not deployed today", "when testers arrive".
   These decay silently — the sentence stays grammatical while becoming false. Prefer a condition
   ("once object storage is provisioned") over a date-dependent one.
-- **Confusing *not provisioned* with *not required*.** A built feature has requirements whether
+- **Confusing _not provisioned_ with _not required_.** A built feature has requirements whether
   or not it is currently deployed. Someone sizing a new environment from "uploads: none exist"
   will omit object storage and discover the gap after committing.
 - **Narrating incidents in place of stating rules.** "Production served healthy responses over an
@@ -119,4 +121,3 @@ its own.
 
 A useful test before committing a document: **would this still be correct, and still make sense,
 read a year from now by someone with no access to the conversation that produced it?**
-

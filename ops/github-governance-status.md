@@ -12,19 +12,19 @@ Implementation work: [OpenSpec tasks](../openspec/changes/github-governance/task
 
 ## Distinguish policy from enforcement
 
-| Area                                          | Evidence / implementation state                                                                                                      |
-| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| Policy and contributor documentation          | Merged in [PR #315](https://github.com/omchavan-jp/veervrat-app/pull/315); post-merge CI, integration, E2E and UAT deployment passed |
-| CODEOWNERS and PR template                    | Merged in #315; CODEOWNERS has no API-reported errors; required owner review is now active                                           |
-| Main and production tag rulesets              | Five permission rulesets verified; sixth CodeQL security ruleset is active after baseline triage                                     |
-| Merge method / branch deletion settings       | Squash only; automatic source-branch deletion enabled; squash commit uses PR title/body                                              |
-| Historical branch purge                       | Owner authorized deletion without backup; execution pending; preserve main and production tags                                       |
-| Existing automated checks / CD                | PR #317 post-merge checks passed; security PR stages Action pins and job-scoped permissions without changing deployment ordering     |
-| UAT acceptance and release manifests          | Implementation and verification pending                                                                                              |
-| Production reviewer gate and digest promotion | Implementation and verification pending; existing CD can deploy on a prod-\* tag                                                     |
-| Separate production cloud authority           | Implementation/live-assignment verification pending                                                                                  |
-| Dependency/code security controls             | Dependabot alerts/security updates and CodeQL are enabled; existing findings recorded; grouped version-update config awaits merge    |
-| Private vulnerability reporting               | Enabled and verified by API; SECURITY.md links to the confidential GitHub reporting form                                             |
+| Area                                          | Evidence / implementation state                                                                                                                                                  |
+| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Policy and contributor documentation          | Merged in [PR #315](https://github.com/omchavan-jp/veervrat-app/pull/315); post-merge CI, integration, E2E and UAT deployment passed                                             |
+| CODEOWNERS and PR template                    | Merged in #315; CODEOWNERS has no API-reported errors; required owner review is now active                                                                                       |
+| Main and production tag rulesets              | Five permission rulesets verified; sixth CodeQL security ruleset is active after baseline triage                                                                                 |
+| Merge method / branch deletion settings       | Squash only; automatic source-branch deletion enabled; squash commit uses PR title/body                                                                                          |
+| Historical branch purge                       | Owner authorized deletion without backup; execution pending; preserve main and production tags                                                                                   |
+| Existing automated checks / CD                | PR #317 post-merge checks passed; security PR stages Action pins and job-scoped permissions without changing deployment ordering                                                 |
+| UAT acceptance and release manifests          | Implementation and verification pending                                                                                                                                          |
+| Production reviewer gate and digest promotion | Implementation and verification pending; existing CD can deploy on a prod-\* tag                                                                                                 |
+| Separate production cloud authority           | Implementation/live-assignment verification pending                                                                                                                              |
+| Dependency/code security controls             | Dependabot alerts/security updates and CodeQL are enabled; existing findings recorded; grouped version-update config merged in #319; remaining remediation is tracked separately |
+| Private vulnerability reporting               | Enabled and verified by API; SECURITY.md links to the confidential GitHub reporting form                                                                                         |
 
 ## Read-back commands
 
@@ -79,7 +79,8 @@ The owner exception cannot be limited automatically to owner-authored PRs; polic
 ## Security automation activation
 
 - Dependabot alerts and automatic security-update PRs are enabled. The initial baseline is
-  [recorded separately](audit/github-security-baseline-2026-10-10.md); existing findings were not dismissed.
+  [recorded separately](audit/github-security-baseline-2026-10-10.md); subsequent assessments and
+  candidate fixes are tracked in [remediation status](security-remediation-status.md).
 - GitHub-managed CodeQL default setup is configured and its initial Actions, JavaScript/TypeScript
   and Python analyses succeeded. [main-codeql-security](https://github.com/omchavan-jp/veervrat-app/rules/24831677)
   requires CodeQL results and rejects new high/critical security findings, with no owner bypass.
@@ -88,12 +89,12 @@ The owner exception cannot be limited automatically to owner-authored PRs; polic
   and workflows cannot approve PR reviews.
 - The selected-Action allowlist is active: no broad GitHub-owned or Marketplace-verified allowance;
   only the nine reviewed patterns in `.github/actions-policy.json` are permitted.
-- Full-SHA Action pins, explicit workflow/job permissions, the CI security-policy checker, and
-  weekly grouped Dependabot configuration are prepared in the security implementation PR.
-  These repository files take effect after merge, not merely because settings were enabled.
-- Native `sha_pinning_required` is deliberately false during this transition. Enable it after
-  pinned workflows reach main, then run/read back CodeQL and ordinary checks to verify compatibility.
-  Do not enable it against old version-tag workflows or claim rollout complete before this final step.
+- Full-SHA Action pins, explicit workflow/job permissions, the CI security-policy checker and
+  grouped Dependabot configuration merged in [PR #319](https://github.com/omchavan-jp/veervrat-app/pull/319).
+- Native `sha_pinning_required` is enabled. Post-merge CI, integration, E2E, GitHub-managed CodeQL
+  and UAT CD passed under the enforced policy; the three workflow-permission alerts are fixed.
+- [Security remediation status](security-remediation-status.md) records tested dependency/code
+  fixes, one evidence-backed false-positive disposition and the unresolved upstream braces alert.
 - Shared build/UAT/production Azure authority, production approval and artifact promotion remain
   pending release-control work. No production tag or deployment is part of this security batch.
 
