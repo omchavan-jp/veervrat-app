@@ -6,8 +6,7 @@ import { ExperienceLogsService } from '../experience-logs/experience-logs.servic
 import type { SessionUser } from '../auth/types/auth.types';
 
 export type ResolvedUpload =
-  | { kind: 'redirect'; url: string }
-  | { kind: 'stream'; body: Buffer; contentType: string };
+  { kind: 'redirect'; url: string } | { kind: 'stream'; body: Buffer; contentType: string };
 
 const CONTENT_TYPE_BY_EXT: Record<string, string> = {
   jpg: 'image/jpeg',

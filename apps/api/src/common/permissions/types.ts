@@ -14,11 +14,7 @@ export type { SessionUser };
 
 // Layer 1 — participant actions
 type JourneyAction =
-  | 'journey.create'
-  | 'journey.view'
-  | 'journey.pause'
-  | 'journey.resume'
-  | 'journey.complete';
+  'journey.create' | 'journey.view' | 'journey.pause' | 'journey.resume' | 'journey.complete';
 
 type ErcAction =
   | 'erc.select'
@@ -29,20 +25,14 @@ type ErcAction =
   | 'erc.remove';
 
 type CustomErcAction =
-  | 'custom_erc.create'
-  | 'custom_erc.submit_for_review'
-  | 'custom_erc.edit'
-  | 'custom_erc.delete';
+  'custom_erc.create' | 'custom_erc.submit_for_review' | 'custom_erc.edit' | 'custom_erc.delete';
 
 type TestAction = 'test.take' | 'test.view_results';
 
 type ChatAction = 'chat.view' | 'chat.send';
 
 type ExperienceLogAction =
-  | 'experience_log.create'
-  | 'experience_log.view'
-  | 'experience_log.edit'
-  | 'experience_log.delete';
+  'experience_log.create' | 'experience_log.view' | 'experience_log.edit' | 'experience_log.delete';
 
 type BlogAction = 'blog.create' | 'blog.edit' | 'blog.delete';
 
@@ -51,10 +41,7 @@ type CommentAction = 'comment.create' | 'comment.delete' | 'comment.hide' | 'com
 type FollowAction = 'follow.create' | 'follow.remove';
 
 type InvitationAction =
-  | 'vm_invitation.send'
-  | 'vm_invitation.accept'
-  | 'vm_invitation.cancel'
-  | 'vm_invitation.decline';
+  'vm_invitation.send' | 'vm_invitation.accept' | 'vm_invitation.cancel' | 'vm_invitation.decline';
 
 type VmRelationshipAction = 'vm_relationship.withdraw';
 
@@ -73,9 +60,7 @@ type ProductDocsAction = 'product_docs.view';
 // Content suggestions — proposing content in the place it belongs. Capability-backed for
 // authoring; triage rides on the existing admin permission rather than a new role.
 type ContentSuggestionAction =
-  | 'content_suggestion.create'
-  | 'content_suggestion.read_own'
-  | 'content_suggestion.triage';
+  'content_suggestion.create' | 'content_suggestion.read_own' | 'content_suggestion.triage';
 
 // Layer 2 — platform actions
 type AdminAction =
@@ -92,9 +77,7 @@ type AdminAction =
   | 'admin.manage_resources';
 
 type ModeratorAction =
-  | 'moderator.review_custom_erc'
-  | 'moderator.manage_display_content'
-  | 'comment.moderate';
+  'moderator.review_custom_erc' | 'moderator.manage_display_content' | 'comment.moderate';
 
 export type PermissionAction =
   | JourneyAction

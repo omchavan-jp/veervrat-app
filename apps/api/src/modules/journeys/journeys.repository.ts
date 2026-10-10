@@ -8,11 +8,7 @@ import type {
 } from '../../common/permissions/types';
 
 export type JourneyActivityEventType =
-  | 'erc_started'
-  | 'erc_submitted'
-  | 'erc_approved'
-  | 'checkin'
-  | 'vm_suggestion';
+  'erc_started' | 'erc_submitted' | 'erc_approved' | 'checkin' | 'vm_suggestion';
 
 export type JourneyActivityEvent = {
   id: string;
