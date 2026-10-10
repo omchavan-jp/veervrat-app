@@ -53,4 +53,31 @@ test('rejects privileged triggers on checked-in workflows', () => {
     checkWorkflow(`${workflow}on:\n  pull_request_target:\n`, '.github/workflows/ci.yml').length,
   );
   assert.ok(checkWorkflow(`${workflow}on:\n  workflow_run:\n`, '.github/workflows/ci.yml').length);
+  assert.ok(
+    checkWorkflow(`${workflow}on: [push, pull_request_target]\n`, '.github/workflows/ci.yml')
+      .length,
+  );
+});
+test('job overrides cannot widen token access or hide grants inline', () => {
+  for (const grant of ['contents: write', 'pull-requests: write', 'deployments: write']) {
+    assert.ok(
+      checkWorkflow(
+        `${workflow}jobs:\n  test:\n    permissions:\n      ${grant}\n`,
+        '.github/workflows/ci.yml',
+      ).length,
+    );
+  }
+  assert.ok(
+    checkWorkflow(
+      `${workflow}jobs:\n  test:\n    permissions: { contents: write }\n`,
+      '.github/workflows/ci.yml',
+    ).length,
+  );
+  assert.deepEqual(
+    checkWorkflow(
+      `${workflow}jobs:\n  test:\n    permissions:\n      contents: read\n`,
+      '.github/workflows/ci.yml',
+    ),
+    [],
+  );
 });

@@ -44,6 +44,47 @@ export function checkWorkflow(text, filename) {
   if (filename !== '.github/workflows/cd.yml' && /^\s*id-token:\s*write\b/m.test(text)) {
     errors.push(`${filename}: PR checks must not request deployment OIDC tokens`);
   }
+  if (/^(?:on|'on'|"on"):[ \t]*[^ \t#\r\n]/m.test(text)) {
+    errors.push(
+      `${filename}: use block event syntax so privileged triggers cannot be hidden inline`,
+    );
+  }
+  const lines = text.split('\n');
+  for (let index = 0; index < lines.length; index++) {
+    const block = lines[index].match(
+      /^([ ]*)(?:permissions|'permissions'|"permissions"):[ \t]*(.*)$/,
+    );
+    if (!block) continue;
+    if (block[2] && !block[2].startsWith('#')) {
+      errors.push(`${filename}: use literal block permissions, not inline or dynamic grants`);
+      continue;
+    }
+    const seen = new Set();
+    for (let child = index + 1; child < lines.length; child++) {
+      const line = lines[child];
+      if (!line.trim() || line.trimStart().startsWith('#')) continue;
+      if (line.length - line.trimStart().length <= block[1].length) break;
+      const grant = line
+        .trim()
+        .replace(/[ \t]+#.*$/, '')
+        .match(/^([\w-]+):[ \t]*(read|write|none)$/);
+      if (!grant || seen.has(grant[1])) {
+        errors.push(`${filename}: permissions must use unique literal grants`);
+        continue;
+      }
+      seen.add(grant[1]);
+      if (
+        grant[2] === 'write' &&
+        !(
+          grant[1] === 'id-token' &&
+          block[1].length >= 4 &&
+          filename === '.github/workflows/cd.yml'
+        )
+      ) {
+        errors.push(`${filename}: unexpected write permission: ${grant[1]}`);
+      }
+    }
+  }
   return errors;
 }
 
