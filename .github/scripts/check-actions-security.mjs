@@ -34,6 +34,7 @@ export function checkReferences(text, filename, policy) {
 
 export function checkWorkflow(text, filename) {
   const errors = [];
+  const acceptsPr = /^\s*(?:pull_request|'pull_request'|"pull_request")\s*:/m.test(text);
   if (!/^permissions:\s*\n[ ]{2}contents: read\s*$/m.test(text)) {
     errors.push(`${filename}: declare workflow-level contents: read`);
   }
@@ -41,7 +42,10 @@ export function checkWorkflow(text, filename) {
     errors.push(`${filename}: OIDC permission belongs on trusted jobs, not the whole workflow`);
   if (/^\s*(?:pull_request_target|workflow_run)\s*:/m.test(text))
     errors.push(`${filename}: privileged PR triggers require a separate security review`);
-  if (filename !== '.github/workflows/cd.yml' && /^\s*id-token:\s*write\b/m.test(text)) {
+  if (
+    (filename !== '.github/workflows/cd.yml' || acceptsPr) &&
+    /^\s*id-token:\s*write\b/m.test(text)
+  ) {
     errors.push(`${filename}: PR checks must not request deployment OIDC tokens`);
   }
   if (/^(?:on|'on'|"on"):[ \t]*[^ \t#\r\n]/m.test(text)) {
@@ -78,7 +82,8 @@ export function checkWorkflow(text, filename) {
         !(
           grant[1] === 'id-token' &&
           block[1].length >= 4 &&
-          filename === '.github/workflows/cd.yml'
+          filename === '.github/workflows/cd.yml' &&
+          !acceptsPr
         )
       ) {
         errors.push(`${filename}: unexpected write permission: ${grant[1]}`);

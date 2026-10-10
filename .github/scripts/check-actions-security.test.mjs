@@ -47,6 +47,12 @@ test('requires explicit read permissions and keeps OIDC out of PR checks', () =>
     ),
     [],
   );
+  assert.ok(
+    checkWorkflow(
+      `${workflow}on:\n  pull_request:\njobs:\n  deploy:\n    permissions:\n      id-token: write\n`,
+      '.github/workflows/cd.yml',
+    ).length,
+  );
 });
 test('rejects privileged triggers on checked-in workflows', () => {
   assert.ok(
