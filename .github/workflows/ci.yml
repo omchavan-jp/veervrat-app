@@ -54,10 +54,10 @@ jobs:
       # Unit tests only here — integration tests (real Postgres/Redis) run in a
       # separate workflow with service containers.
       - name: Unit tests (api)
-        run: pnpm --filter api test:unit
+        run: pnpm --filter api exec vitest run --project unit --coverage --coverage.reporter=json-summary
 
       - name: Unit tests (web)
-        run: pnpm --filter web test
+        run: pnpm --filter web exec vitest run --coverage --coverage.reporter=json-summary
 
       - name: Build
         run: pnpm build

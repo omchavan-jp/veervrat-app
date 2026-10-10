@@ -103,11 +103,28 @@ Minimum: one positive and one negative test per permission row.
 
 ## CI Integration
 - All tests run on PR (`ci.yml` + `integration.yml`, triggered on `main`)
-- ⚠️ **Merge is NOT blocked when they fail.** Branch protection with required status checks
-  needs a paid plan on private repos (403 *"Upgrade to GitHub Pro or make this repository
-  public"*), so this is currently a **habit, not a rule** — see issue #85. Wait for green
-  before merging; nothing enforces it.
-- Backend tests: `pnpm --filter api test`
+- Required CI, integration and E2E checks block merging and must pass against current main.
+  The owner review exception does not waive these checks. See
+  [Git and Release Governance](25_Git-and-Release-Governance.md) and
+  [live rollout evidence](../ops/github-governance-status.md).
+- Backend unit tests: `pnpm --filter api test:unit`
+- Backend integration tests: `pnpm --filter api test:integration` (requires the isolated test DB and Redis)
 - Frontend tests: `pnpm --filter web test`
-- E2E: `pnpm --filter web test:e2e` (requires running backend + DB)
+- E2E: `pnpm test:e2e` from the repository root (requires the configured test services)
 - No minimum coverage threshold in v1 — focus on critical path coverage, not percentage
+
+## Test-tool compatibility
+
+- Keep Vitest and `@vitest/coverage-v8` on matching releases in both API and web.
+  Dependabot groups their version updates separately from routine application updates,
+  including coordinated major upgrades; security updates remain independent.
+- Node 24 and its matching typings satisfy the Vitest 5 baseline. Vite remains a peer
+  dependency resolved by pnpm; do not bypass frozen installs or supply-chain checks.
+- The web setup registers the real jest-dom matcher implementations explicitly. Its
+  `vitest-matchers.d.ts` augments Vitest's `Matchers<R, T>` instead of global Jest types,
+  preserving synchronous and awaited return types. Regression tests cover both paths.
+  See the [Vitest migration guide](https://vitest.dev/guide/migration/).
+- For local API unit coverage without running database integration tests, use
+  `pnpm --filter api exec vitest run --project unit --coverage`.
+  `pnpm --filter web test:coverage` covers component tests. The API's general
+  `test:coverage` script includes integration projects and requires test services.

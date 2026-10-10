@@ -1,4 +1,7 @@
-import '@testing-library/jest-dom';
+import { expect } from 'vitest';
+import * as domMatchers from '@testing-library/jest-dom/matchers';
+
+expect.extend(domMatchers);
 
 // jsdom does not implement `window.matchMedia`, and calling it throws rather than returning a
 // falsy result. Any component that honours `prefers-reduced-motion` — which this codebase does
