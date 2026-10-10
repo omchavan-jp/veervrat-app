@@ -14,9 +14,9 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\""
   },
   "devDependencies": {
-    "@playwright/test": "^1.60.0",
-    "prettier": "^3.5.0",
-    "turbo": "^2.5.0"
+    "@playwright/test": "^1.63.0",
+    "prettier": "^3.9.9",
+    "turbo": "^2.11.7"
   },
   "packageManager": "pnpm@11.18.0",
   "engines": {
@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@nestjs/websockets": "^11.1.24",
-    "socket.io": "^4.8.3",
-    "socket.io-client": "^4.8.3"
+    "socket.io": "^4.8.4",
+    "socket.io-client": "^4.8.4"
   }
 }
