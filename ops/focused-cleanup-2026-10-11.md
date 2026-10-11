@@ -1,7 +1,12 @@
 # Focused Azure, repository and documentation cleanup
 
 Owner: omchavan-jp. Authorized in the maintainer chat on 2026-10-11.
-Status: reviewed identity-removal plan; historical branch purge prepared, not yet executed.
+Status: reviewed identity-removal plan pending apply; historical branch purge completed.
+
+Remote purge removed exactly 186 inventoried historical refs atomically with expected-SHA leases.
+Post-purge inventory contains main, 16 open Dependabot heads and this active cleanup branch.
+All tag refs/SHAs compared unchanged before/after. No additional Git backup was created;
+remote ref removal has no guaranteed recovery. Existing local work/objects were not deleted.
 
 ## Azure scope
 

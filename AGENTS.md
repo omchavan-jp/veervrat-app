@@ -277,7 +277,7 @@ when Railway auto-deployed `dev` to the only environment there was.
   half-finished stays on its branch or goes behind a flag.
 - `feat/<name>` · `fix/<name>` · `refactor/<name>` · `chore/<name>` · `spec/<name>` —
   all branched from `main`.
-- `dev` is **retired** and included in the authorized historical remote-branch purge.
+- `dev` is **retired**; its historical remote ref was removed in the 2026-10-11 cleanup.
 
 **Branches are not environments.** A branch says what code exists; a tag says what was
 released. There is no `uat` branch and no `prod` branch — the same commit is promoted
