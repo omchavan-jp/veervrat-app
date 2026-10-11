@@ -14,6 +14,20 @@ inputs:
     description: Whether to run the existing app image/migration deployment path.
     required: false
     default: 'true'
+  digest_images:
+    description: UAT-only exact build digest deployment path.
+    required: false
+    default: 'false'
+outputs:
+  final_vars:
+    description: Private runtime variable-file path containing the intended exact image set.
+    value: ${{ steps.digest.outputs.final_vars }}
+  ready_verified:
+    description: API readiness probe passed.
+    value: ${{ steps.ready.outputs.passed }}
+  wiring_verified:
+    description: Cross-tier wiring probe passed.
+    value: ${{ steps.wiring.outputs.passed }}
 runs:
   using: composite
   steps:
@@ -25,7 +39,7 @@ runs:
     # "tag not found", so an expired Azure token reported a missing image that was actually
     # present — the guard lied about why it failed, which is worse than not having one.
     - name: Verify images exist
-      if: inputs.deploy_apps == 'true'
+      if: inputs.deploy_apps == 'true' && inputs.digest_images != 'true'
       shell: bash
       env:
         IMAGE_TAG: ${{ inputs.image_tag }}
@@ -46,7 +60,7 @@ runs:
         done
 
     - name: Verify docs-only web image exists
-      if: inputs.deploy_apps != 'true'
+      if: inputs.deploy_apps != 'true' && inputs.digest_images != 'true'
       shell: bash
       env:
         IMAGE_TAG: ${{ inputs.image_tag }}
@@ -57,6 +71,17 @@ runs:
           echo "::error::veervrat-web:$IMAGE_TAG is absent from the registry"
           exit 1
         fi
+
+    - name: Prepare exact build digests and held/final image sets
+      if: inputs.digest_images == 'true'
+      id: digest
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        DEPLOY_ENVIRONMENT: ${{ inputs.environment }}
+        IMAGE_TAG: ${{ inputs.image_tag }}
+        DEPLOY_APPS: ${{ inputs.deploy_apps }}
+      run: node .github/scripts/deploy-image-set.mjs
 
     - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
       with:
@@ -78,6 +103,7 @@ runs:
     # the running apps — and the migration job with them, which the next step then could not
     # find. Against prod that would have been a full outage on every single deploy.
     - name: Read currently-deployed image tag
+      if: inputs.digest_images != 'true'
       id: current
       shell: bash
       env:
@@ -121,8 +147,14 @@ runs:
       if: inputs.deploy_apps != 'true'
       shell: bash
       working-directory: infra/terraform/envs/${{ inputs.environment }}
+      env:
+        DIGEST_VARS: ${{ steps.digest.outputs.final_vars }}
       run: |
         set -euo pipefail
+        if [ -n "$DIGEST_VARS" ]; then
+          bash "$GITHUB_WORKSPACE/.github/scripts/apply-image-stage.sh" "$DIGEST_VARS"
+          exit 0
+        fi
         if [ -z "${{ steps.current.outputs.tag }}" ]; then
           echo '::error::No current app image exists; docs-only deployment needs an existing UAT app'
           exit 1
@@ -143,7 +175,14 @@ runs:
       if: inputs.deploy_apps == 'true'
       shell: bash
       working-directory: infra/terraform/envs/${{ inputs.environment }}
+      env:
+        DIGEST_VARS: ${{ steps.digest.outputs.held_vars }}
       run: |
+        set -euo pipefail
+        if [ -n "$DIGEST_VARS" ]; then
+          bash "$GITHUB_WORKSPACE/.github/scripts/apply-image-stage.sh" "$DIGEST_VARS"
+          exit 0
+        fi
         terraform apply -input=false -auto-approve \
           -var="image_tag=${{ inputs.image_tag }}" \
           -var="app_image_tag=${{ steps.current.outputs.tag }}" \
@@ -163,6 +202,7 @@ runs:
       env:
         ENVIRONMENT: ${{ inputs.environment }}
         IMAGE_TAG: ${{ inputs.image_tag }}
+        MIGRATION_IMAGE: ${{ steps.digest.outputs.migrate_image }}
       run: |
         set -euo pipefail
 
@@ -187,6 +227,7 @@ runs:
           -n "veervrat-$ENVIRONMENT-migrate" -g "veervrat-$ENVIRONMENT" \
           --query "properties.template.containers[0].image" -o tsv)
         EXPECTED="veervratacr.azurecr.io/veervrat-api-migrate:$IMAGE_TAG"
+        if [ -n "$MIGRATION_IMAGE" ]; then EXPECTED="$MIGRATION_IMAGE"; fi
         if [ "$CONFIGURED" != "$EXPECTED" ]; then
           echo "::error::migrate job is on $CONFIGURED but this deploy is $EXPECTED"
           echo "::error::step 1's terraform apply should have moved it — not starting the job"
@@ -194,6 +235,7 @@ runs:
         fi
         echo "migrate job image confirmed: $CONFIGURED"
 
+        MIGRATION_STARTED=$(date -u +%Y-%m-%dT%H:%M:%SZ)
         EXEC=$(az containerapp job start \
           -n "veervrat-$ENVIRONMENT-migrate" -g "veervrat-$ENVIRONMENT" \
           --query name -o tsv)
@@ -220,7 +262,7 @@ runs:
               QUERY_OK=0
               for _ in $(seq 1 18); do
                 if OUT=$(az monitor log-analytics query -w "$WS" --analytics-query \
-                  "ContainerAppConsoleLogs_CL | where TimeGenerated > ago(20m) | where ContainerName_s == 'migrate' | project TimeGenerated, Log_s | order by TimeGenerated asc" \
+                  "ContainerAppConsoleLogs_CL | where TimeGenerated >= datetime($MIGRATION_STARTED) | where ContainerGroupName_s startswith '$EXEC' | where ContainerName_s == 'migrate' | project TimeGenerated, Log_s | order by TimeGenerated asc" \
                   --query "[].Log_s" -o tsv 2>/dev/null); then
                   QUERY_OK=1
                   if echo "$OUT" | grep -q "migrations found in prisma/migrations"; then
@@ -231,12 +273,10 @@ runs:
                 sleep 10
               done
 
-              # Never block a deploy on an observability problem: if the query itself could
-              # not run, we have no evidence either way, so warn loudly and continue. Only a
-              # working query that found no prisma output proves the no-op case.
+              # Missing evidence must not authorize the application rollout.
               if [ "$QUERY_OK" -eq 0 ]; then
-                echo "::warning::could not read job logs — migration NOT verified, only its exit code"
-                exit 0
+                echo "::error::could not read job logs — migration NOT verified; stopping deployment"
+                exit 1
               fi
 
               echo "::error::job reported Succeeded but produced no prisma output"
@@ -264,7 +304,14 @@ runs:
       if: inputs.deploy_apps == 'true'
       shell: bash
       working-directory: infra/terraform/envs/${{ inputs.environment }}
+      env:
+        DIGEST_VARS: ${{ steps.digest.outputs.final_vars }}
       run: |
+        set -euo pipefail
+        if [ -n "$DIGEST_VARS" ]; then
+          bash "$GITHUB_WORKSPACE/.github/scripts/apply-image-stage.sh" "$DIGEST_VARS"
+          exit 0
+        fi
         terraform apply -input=false -auto-approve \
           -var="image_tag=${{ inputs.image_tag }}" \
           -var="deploy_apps=true"
@@ -273,7 +320,7 @@ runs:
     # managed identity, networking and schema are all correct together. `/health` would only
     # prove the process started.
     - name: Verify /ready
-      if: inputs.deploy_apps == 'true'
+      id: ready
       shell: bash
       env:
         ENVIRONMENT: ${{ inputs.environment }}
@@ -284,7 +331,10 @@ runs:
         # Retry: min_replicas=0 means the first request after idle pays a cold start.
         for i in $(seq 1 20); do
           CODE=$(curl -s -o /tmp/ready.json -w '%{http_code}' --max-time 60 "https://$FQDN/ready" || echo 000)
-          if [ "$CODE" = "200" ]; then cat /tmp/ready.json; echo; echo "ready"; exit 0; fi
+          if [ "$CODE" = "200" ] && jq -e '.data.status == "ok" and .data.checks.database == "up" and .data.checks.redis == "up"' /tmp/ready.json >/dev/null; then
+            echo 'passed=true' >> "$GITHUB_OUTPUT"
+            echo "ready"; exit 0
+          fi
           echo "attempt $i: HTTP $CODE"; sleep 15
         done
         echo "::error::api never became ready"; cat /tmp/ready.json 2>/dev/null || true; exit 1
@@ -305,7 +355,7 @@ runs:
     # the pre-existing proxy path. This change deletes that proxy, so the probe 404'd and the
     # check failed on its very first run — testing an architecture that no longer exists.)
     - name: Verify the web tier points at THIS environment's api
-      if: inputs.deploy_apps == 'true'
+      id: wiring
       shell: bash
       env:
         ENVIRONMENT: ${{ inputs.environment }}
@@ -350,3 +400,4 @@ runs:
         fi
 
         echo "wiring ok — $ENVIRONMENT web advertises $EXPECTED_API_HOST"
+        echo 'passed=true' >> "$GITHUB_OUTPUT"

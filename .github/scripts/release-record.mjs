@@ -67,6 +67,21 @@ export function canonicalJson(value) {
   return encoded;
 }
 
+export function validateImages(images) {
+  object(images, imageNames, 'Image set');
+  for (const name of imageNames) {
+    const repo = name === 'migrate' ? 'api-migrate' : name;
+    requireValue(
+      typeof images[name] === 'string' &&
+        new RegExp(`^veervratacr\\.azurecr\\.io/veervrat-${repo}@sha256:[a-f0-9]{64}$`).test(
+          images[name],
+        ),
+      `Digest-pinned ${name} image required`,
+    );
+  }
+  return images;
+}
+
 export function validateReceipt(receipt) {
   object(
     receipt,
@@ -83,17 +98,7 @@ export function validateReceipt(receipt) {
   );
   run(receipt.run);
   timestamp(receipt.completedAt);
-  object(receipt.images, imageNames, 'Image set');
-  for (const name of imageNames) {
-    const repo = name === 'migrate' ? 'api-migrate' : name;
-    requireValue(
-      typeof receipt.images[name] === 'string' &&
-        new RegExp(`^veervratacr\\.azurecr\\.io/veervrat-${repo}@sha256:[a-f0-9]{64}$`).test(
-          receipt.images[name],
-        ),
-      `Digest-pinned ${name} image required`,
-    );
-  }
+  validateImages(receipt.images);
   requireValue(
     Array.isArray(receipt.checks) && receipt.checks.length === requiredChecks.length,
     'Exact required checks needed',

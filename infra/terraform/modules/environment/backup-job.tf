@@ -59,7 +59,7 @@ resource "azurerm_container_app_job" "backup" {
   template {
     container {
       name   = "backup"
-      image  = "${data.azurerm_container_registry.shared.login_server}/veervrat-backup:${var.image_tag}"
+      image  = local.backup_image_ref
       cpu    = 0.5
       memory = "1Gi"
 

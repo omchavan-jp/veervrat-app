@@ -170,6 +170,7 @@ jobs:
       # Cache lives in GitHub Actions cache, not the registry: ACR Basic has a 10GB quota and
       # no purge policy yet (O17), so pushing cache layers there would quietly consume it.
       - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        id: image
         with:
           context: .
           file: ${{ matrix.dockerfile }}
@@ -181,6 +182,21 @@ jobs:
           build-args: ${{ steps.args.outputs.value }}
           cache-from: type=gha,scope=${{ matrix.image }}
           cache-to: type=gha,scope=${{ matrix.image }},mode=max
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - name: Record exact build digest
+        env:
+          BUILD_IMAGE: ${{ matrix.image }}
+          BUILD_DIGEST: ${{ steps.image.outputs.digest }}
+        run: node .github/scripts/deploy-image-set.mjs build
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: image-${{ github.run_attempt }}-${{ matrix.image }}
+          path: ${{ runner.temp }}/image.json
+          if-no-files-found: error
+          retention-days: 7
 
   build-docs-web:
     permissions:
@@ -202,6 +218,7 @@ jobs:
       - run: az acr login --name "$REGISTRY"
       - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
       - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        id: image
         with:
           context: .
           file: apps/web/Dockerfile
@@ -212,9 +229,25 @@ jobs:
           cache-from: type=gha,scope=veervrat-web
           cache-to: type=gha,scope=veervrat-web,mode=max
 
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - name: Record exact web build digest
+        env:
+          BUILD_IMAGE: veervrat-web
+          BUILD_DIGEST: ${{ steps.image.outputs.digest }}
+        run: node .github/scripts/deploy-image-set.mjs build
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: image-${{ github.run_attempt }}-veervrat-web
+          path: ${{ runner.temp }}/image.json
+          if-no-files-found: error
+          retention-days: 7
+
   deploy-uat:
     permissions:
       contents: read
+      actions: read
       id-token: write
     needs: [prepare, build, build-docs-web]
     if: >-
@@ -233,11 +266,29 @@ jobs:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
       - uses: ./.github/actions/deploy-environment
+        id: deploy
         with:
           environment: uat
           image_tag: ${{ needs.prepare.outputs.image_tag }}
           deploy_apps: ${{ github.event_name == 'workflow_dispatch' || needs.prepare.outputs.app_changed == 'true' }}
+          digest_images: 'true'
+      # Storage is a separate audience; obtain fresh federation after a long deploy.
+      - uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Save authenticated digest-pinned UAT receipt
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEPLOYMENT_VARS: ${{ steps.deploy.outputs.final_vars }}
+          READY_VERIFIED: ${{ steps.deploy.outputs.ready_verified }}
+          WIRING_VERIFIED: ${{ steps.deploy.outputs.wiring_verified }}
+        run: node .github/scripts/record-uat.mjs
 
   deploy-prod:
     permissions:

@@ -11,7 +11,7 @@ import {
 import { releaseStore } from './release-store.mjs';
 
 const repoId = 1287947867;
-const checkPaths = {
+export const checkPaths = {
   'Lint · Typecheck · Unit · Build': '.github/workflows/ci.yml',
   'API integration (Postgres + Redis)': '.github/workflows/integration.yml',
   'E2E flows (Playwright)': '.github/workflows/e2e.yml',
@@ -69,6 +69,19 @@ export function githubClient(token, request = fetch) {
     return response.json();
   }
   return {
+    async workflowRuns(workflow, commit) {
+      if (
+        !['ci.yml', 'integration.yml', 'e2e.yml'].includes(workflow) ||
+        !/^[a-f0-9]{40}$/.test(commit)
+      )
+        throw new Error('Invalid check selection');
+      const body = await get(
+        `actions/workflows/${workflow}/runs?head_sha=${commit}&branch=main&event=push&per_page=100`,
+      );
+      if (!Array.isArray(body.workflow_runs) || body.total_count > 100)
+        throw new Error('Ambiguous check run inventory');
+      return body.workflow_runs;
+    },
     run(id) {
       return get(`actions/runs/${positiveInteger(id)}`);
     },
@@ -131,7 +144,7 @@ export async function acceptUat({
   return { receiptKey, acceptanceKey: key, receiptDigest: acceptance.receiptDigest };
 }
 
-function azure(args) {
+export function azure(args) {
   try {
     return JSON.parse(
       execFileSync('az', [...args, '--only-show-errors', '-o', 'json'], {
@@ -148,7 +161,7 @@ function azure(args) {
   }
 }
 
-function liveImages() {
+export function liveImages() {
   const images = {};
   for (const [name, kind, resource] of [
     ['api', 'app', 'api'],
@@ -167,11 +180,14 @@ function liveImages() {
       '--query',
       kind === 'job'
         ? '{image:properties.template.containers[0].image}'
-        : '{image:properties.template.containers[0].image,ready:properties.latestReadyRevisionName,latest:properties.latestRevisionName,state:properties.provisioningState}',
+        : '{image:properties.template.containers[0].image,ready:properties.latestReadyRevisionName,latest:properties.latestRevisionName,state:properties.provisioningState,mode:properties.configuration.activeRevisionsMode}',
     ]);
     if (
       kind === 'app' &&
-      (!value.ready || value.ready !== value.latest || value.state !== 'Succeeded')
+      (!value.ready ||
+        value.ready !== value.latest ||
+        value.state !== 'Succeeded' ||
+        value.mode !== 'Single')
     )
       throw new Error('UAT revision not ready');
     images[name] = value.image;

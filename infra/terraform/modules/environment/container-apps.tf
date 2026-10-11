@@ -23,8 +23,12 @@ locals {
   # Apps run `app_image_tag`, which normally equals `image_tag`. They differ for exactly one
   # window: while migrations run, jobs are on the NEW image and the apps are still serving the
   # OLD one. That is what enforces migrate-before-deploy without downtime.
-  app_image = var.app_image_tag != "" ? var.app_image_tag : var.image_tag
-  web_image = var.web_image_tag != "" ? var.web_image_tag : local.app_image
+  app_image         = var.app_image_tag != "" ? var.app_image_tag : var.image_tag
+  web_image         = var.web_image_tag != "" ? var.web_image_tag : local.app_image
+  api_image_ref     = lookup(var.image_refs, "api", "${data.azurerm_container_registry.shared.login_server}/veervrat-api:${local.app_image}")
+  web_image_ref     = lookup(var.image_refs, "web", "${data.azurerm_container_registry.shared.login_server}/veervrat-web:${local.web_image}")
+  migrate_image_ref = lookup(var.image_refs, "migrate", "${data.azurerm_container_registry.shared.login_server}/veervrat-api-migrate:${var.image_tag}")
+  backup_image_ref  = lookup(var.image_refs, "backup", "${data.azurerm_container_registry.shared.login_server}/veervrat-backup:${var.image_tag}")
 
   api_fqdn = "veervrat-${var.environment}-api.${azurerm_container_app_environment.this.default_domain}"
   web_fqdn = "veervrat-${var.environment}-web.${azurerm_container_app_environment.this.default_domain}"
@@ -115,7 +119,7 @@ resource "azurerm_container_app" "api" {
 
     container {
       name   = "api"
-      image  = "${data.azurerm_container_registry.shared.login_server}/veervrat-api:${local.app_image}"
+      image  = local.api_image_ref
       cpu    = 0.25
       memory = "0.5Gi"
 
@@ -378,7 +382,7 @@ resource "azurerm_container_app" "web" {
 
     container {
       name   = "web"
-      image  = "${data.azurerm_container_registry.shared.login_server}/veervrat-web:${local.web_image}"
+      image  = local.web_image_ref
       cpu    = 0.25
       memory = "0.5Gi"
 

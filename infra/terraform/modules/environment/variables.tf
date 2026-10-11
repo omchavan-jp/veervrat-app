@@ -95,6 +95,20 @@ variable "image_tag" {
   default     = ""
 }
 
+variable "image_refs" {
+  description = "Explicit complete image set. Digest references are used by UAT CD; SHA tags are allowed only for preserving existing apps during the initial cutover. Empty retains the legacy path."
+  type        = map(string)
+  default     = {}
+
+  validation {
+    condition = length(var.image_refs) == 0 || (
+      sort(keys(var.image_refs)) == sort(["api", "web", "migrate", "backup"]) &&
+      alltrue([for key, value in var.image_refs : can(regex("^veervratacr\\.azurecr\\.io/veervrat-${key == "migrate" ? "api-migrate" : key}(@sha256:[a-f0-9]{64}|:[a-f0-9]{7,40})$", value))])
+    )
+    error_message = "Provide all four exact repository image references, using a digest or legacy SHA tag; never latest or another registry."
+  }
+}
+
 variable "container_registry_name" {
   type    = string
   default = "veervratacr"

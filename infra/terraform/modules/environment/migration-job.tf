@@ -52,7 +52,7 @@ resource "azurerm_container_app_job" "migrate" {
   template {
     container {
       name   = "migrate"
-      image  = "${data.azurerm_container_registry.shared.login_server}/veervrat-api-migrate:${var.image_tag}"
+      image  = local.migrate_image_ref
       cpu    = 0.5
       memory = "1Gi"
 
