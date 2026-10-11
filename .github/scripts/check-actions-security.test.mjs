@@ -1,10 +1,17 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { checkReferences, checkWorkflow } from './check-actions-security.mjs';
+import { checkReferences, checkWorkflow, checkCompositeAction } from './check-actions-security.mjs';
 
 const sha = 'a'.repeat(40);
 const policy = { patterns_allowed: ['actions/checkout@*'] };
 const workflow = 'permissions:\n  contents: read\n';
+
+test('composite actions receive variables through explicit inputs', () => {
+  assert.deepEqual(checkCompositeAction('client-id: ${{ inputs.client-id }}', 'fixture'), []);
+  for (const expression of ['${{ vars.CLIENT_ID }}', '${{ vars["CLIENT_ID"] }}']) {
+    assert.ok(checkCompositeAction(`client-id: ${expression}`, 'fixture').length);
+  }
+});
 
 test('accepts reviewed SHA pins and local composite actions', () => {
   assert.deepEqual(

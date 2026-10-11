@@ -93,6 +93,16 @@ export function checkWorkflow(text, filename) {
   return errors;
 }
 
+export function checkCompositeAction(text, filename) {
+  return text
+    .split('\n')
+    .filter((line) => !line.trimStart().startsWith('#') && /\$\{\{\s*vars(?:\.|\[|\s)/.test(line))
+    .map(
+      () =>
+        `${filename}: composite actions must receive repository/environment variables as inputs`,
+    );
+}
+
 function yamlFiles(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const file = `${directory}/${entry.name}`;
@@ -115,7 +125,9 @@ export function verifyRepository() {
     const text = readFileSync(file, 'utf8');
     return [
       ...checkReferences(text, file, policy),
-      ...(file.startsWith('.github/workflows/') ? checkWorkflow(text, file) : []),
+      ...(file.startsWith('.github/workflows/')
+        ? checkWorkflow(text, file)
+        : checkCompositeAction(text, file)),
     ];
   });
   if (errors.length) throw new Error(errors.join('\n'));

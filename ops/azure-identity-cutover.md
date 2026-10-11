@@ -1,7 +1,13 @@
 # Scoped Azure deployment identities
 
 Owner: omchavan-jp. Authorization: maintainer chat, 2026-10-11.
-Status: proposed scoped grants and candidate verification; not activated or an isolation claim.
+Status: twelve scoped grants applied; candidate verification in progress, active deployments unchanged.
+PR #352 merged at `7b3ceed5fe8a5de6db14a43b49d0053f151ee5b1` after all seven checks.
+A fresh locked plan applied twelve additions, zero changes/deletions; private state backup preserved.
+Candidate variables are staged on each environment. CD was restored after apply.
+Initial build probe `38122789428` stopped before Azure login because composite-action `vars`
+references were unsupported; explicit input wiring and a regression check repair this without
+changing permissions. No context is declared verified until its live probe passes.
 Terraform state migration is complete; see [evidence](terraform-state-migration.md).
 
 ## Desired permissions
