@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import {
   assertPlanChanges,
   permissionAllowsAction,
+  validateProbeUrl,
   verifyIdentity,
 } from './verify-azure-identity.mjs';
 
@@ -26,17 +27,23 @@ function fixture(context, override = () => undefined) {
       }),
     ).toString('base64url')}.signature`;
   const request = async (url, options) => {
+    const parsed = new URL(url);
+    validateProbeUrl(url, options.method);
     methods.push(options.method);
     const changed = override(url, options);
     if (changed) return changed;
-    if (url.includes('blob.core.windows.net')) {
-      const own = context !== 'build' && url.includes(`/tfstate-${context}/`);
+    if (parsed.hostname === 'veervrattfstate.blob.core.windows.net') {
+      const own = context !== 'build' && parsed.pathname.split('/')[1] === `tfstate-${context}`;
       return own
         ? { status: 200, requestId: 'storage-service-request' }
         : { status: 403, storageError: 'AuthorizationPermissionMismatch' };
     }
-    if (url.includes('.vault.azure.net')) {
-      const own = context !== 'build' && url.includes(`veervrat-${context}-kv`);
+    if (
+      parsed.hostname === 'veervrat-uat-kv.vault.azure.net' ||
+      parsed.hostname === 'veervrat-prod-kv.vault.azure.net'
+    ) {
+      const own =
+        context !== 'build' && parsed.hostname === `veervrat-${context}-kv.vault.azure.net`;
       return own
         ? { status: 200, body: { value: [] } }
         : {
@@ -89,7 +96,9 @@ test('unexpected cross-scope success is not a denial', async () => {
 test('authentication and network-policy failures are not permission denials', async () => {
   for (const storageError of ['AuthenticationFailed', 'AuthorizationFailure']) {
     const { options } = fixture('build', (url) =>
-      url.includes('blob.core.windows.net') ? { status: 403, storageError } : undefined,
+      new URL(url).hostname === 'veervrattfstate.blob.core.windows.net'
+        ? { status: 403, storageError }
+        : undefined,
     );
     await assert.rejects(verifyIdentity(options), /explicit permission denial/);
   }
@@ -114,6 +123,34 @@ test('permission union respects exclusions per grant and case-insensitive wildca
   assert.equal(permissionAllowsAction([contributor], action), false);
   assert.equal(permissionAllowsAction([contributor, { actions: [action] }], action), true);
   assert.equal(permissionAllowsAction([{ actions: ['*/read'] }], action), false);
+});
+
+test('probe origins reject substring spoofing, redirects and credential-bearing URLs', () => {
+  for (const url of [
+    'https://attacker.invalid/?target=blob.core.windows.net',
+    'https://veervrattfstate.blob.core.windows.net.attacker.invalid/tfstate-prod/prod.tfstate',
+    'https://attacker.invalid/.vault.azure.net',
+    'http://management.azure.com/resource',
+    'https://user:password@management.azure.com/resource',
+  ])
+    assert.throws(() => validateProbeUrl(url, 'HEAD'), /Unexpected probe/);
+  assert.throws(
+    () =>
+      validateProbeUrl(
+        'https://veervrattfstate.blob.core.windows.net/tfstate-prod/prod.tfstate',
+        'GET',
+      ),
+    /never fetch contents/,
+  );
+  assert.throws(
+    () =>
+      validateProbeUrl('https://veervrat-prod-kv.vault.azure.net/secrets/session-secret', 'GET'),
+    /not fetch secret values/,
+  );
+  assert.throws(
+    () => validateProbeUrl('https://management.azure.com/resource', 'PUT'),
+    /never issue writes/,
+  );
 });
 test('missing effective-permission evidence fails closed', async () => {
   const { options } = fixture('build', (url) =>

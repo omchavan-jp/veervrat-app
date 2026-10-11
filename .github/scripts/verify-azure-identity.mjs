@@ -74,8 +74,35 @@ export function validateToken(token, audience, expected) {
   assert.ok(claims.exp > Date.now() / 1000, 'Expired Azure token');
 }
 
+export function validateProbeUrl(url, method) {
+  const parsed = new URL(url);
+  const hosts = new Set([
+    'management.azure.com',
+    'veervrattfstate.blob.core.windows.net',
+    'veervrat-uat-kv.vault.azure.net',
+    'veervrat-prod-kv.vault.azure.net',
+  ]);
+  assert.ok(parsed.protocol === 'https:' && hosts.has(parsed.hostname), 'Unexpected probe origin');
+  assert.ok(!parsed.username && !parsed.password && !parsed.port, 'Unexpected probe URL authority');
+  assert.ok(['GET', 'HEAD'].includes(method), 'Verification must never issue writes');
+  if (parsed.hostname === 'veervrattfstate.blob.core.windows.net') {
+    assert.equal(method, 'HEAD', 'State verification must never fetch contents');
+  }
+  if (
+    parsed.hostname === 'veervrat-uat-kv.vault.azure.net' ||
+    parsed.hostname === 'veervrat-prod-kv.vault.azure.net'
+  ) {
+    assert.equal(parsed.pathname, '/secrets', 'Vault verification must not fetch secret values');
+  }
+}
+
 async function azureRequest(url, options) {
-  const response = await fetch(url, { ...options, signal: AbortSignal.timeout(30000) });
+  validateProbeUrl(url, options.method);
+  const response = await fetch(url, {
+    ...options,
+    redirect: 'error',
+    signal: AbortSignal.timeout(30000),
+  });
   return {
     status: response.status,
     requestId: response.headers.get('x-ms-request-id'),
