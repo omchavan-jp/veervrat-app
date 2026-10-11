@@ -133,8 +133,9 @@ The practical consequences:
 - This is why state lives in a private storage account behind Azure AD RBAC, with no
   account keys, and never in git.
 - Historical deployment-identity account-wide access was removed during the verified
-  2026-10-11 cutover. Shared/UAT/prod use separate state containers, and each deployment
-  identity is scoped to its own state container. UAT also writes non-secret release records
+  2026-10-11 cutover. Shared/UAT/prod use separate state containers. UAT/prod identities access
+  only their respective environment state; build has no state access, and shared state is a
+  maintainer boundary. UAT also writes non-secret release records
   in a separate private container; it does not gain production-state access. See
   [cutover evidence](../ops/azure-identity-cutover.md) and
   [release records](../ops/release-controls-rollout.md). Maintainer access is a separate boundary.

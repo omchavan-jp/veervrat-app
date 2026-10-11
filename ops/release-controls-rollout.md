@@ -102,6 +102,8 @@ The read-only identity/plan verifier must preserve the exact four deployed refer
 including independent backup images, and read commit metadata separately from a digest.
 The follow-up compatibility fix handles both SHA tags and digests; UAT still requires a
 zero-change plan, and the known production-only baseline guard remains unchanged.
+A fresh [read-only regression 38160537973](https://github.com/omchavan-jp/veervrat-app/actions/runs/38160537973)
+passed on the deployed digests, reporting `allowedBaselineChanges: []`; no apply was performed.
 Receipt persistence proves automated evidence/configuration, not that every backup/maintenance
 job was exercised or that someone tested every feature. Full documentation reconciliation and
 production promotion/rollback remain separate steps.
