@@ -18,6 +18,12 @@ on:
     branches: [main]
     tags: ['prod-*']
   workflow_dispatch:
+    inputs:
+      operation:
+        description: Deploy UAT, or verify a candidate identity without deployment
+        type: choice
+        default: deploy
+        options: [deploy, verify-build, verify-uat, verify-prod]
 
 # Never run two deploys at the same ref concurrently, and never cancel one midway — a
 # half-applied Terraform run or a partially-applied migration is worse than a slow queue.
@@ -37,17 +43,12 @@ jobs:
   # jobs can start with a *fresh* Azure login. Azure's OIDC assertion is valid for only ~5
   # minutes; a single long job outlives its own credentials mid-run (AADSTS700024).
   prepare:
+    if: github.event_name != 'workflow_dispatch' || inputs.operation == 'deploy'
     permissions:
       contents: read
-      id-token: write
     runs-on: ubuntu-latest
-    # Declared so the OIDC subject is `environment:build` regardless of whether this run was
-    # triggered by a branch push or a tag. Without it the subject differs between the two and
-    # tag-triggered (production) runs fail at the first job. Gates nothing.
-    environment: build
     outputs:
       image_tag: ${{ steps.meta.outputs.sha }}
-      uat_domain: ${{ steps.meta.outputs.domain }}
       app_changed: ${{ steps.changes.outputs.app_changed }}
       docs_changed: ${{ steps.changes.outputs.docs_changed }}
     steps:
@@ -57,21 +58,12 @@ jobs:
           # Full history, not the default single-commit shallow clone — `changes` below diffs
           # against the pre-push SHA, which a depth-1 checkout wouldn't have locally.
           fetch-depth: 0
-      - uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2
-        with:
-          client-id: ${{ vars.AZURE_CLIENT_ID }}
-          tenant-id: ${{ vars.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       - id: meta
         run: |
           set -euo pipefail
           # One checkout, one SHA, every image — the invariant broken by hand when committing
           # between builds produced three images on three different tags.
           echo "sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
-          # Still resolved because the post-deploy wiring check compares against it; the web
-          # image no longer needs it, since per-environment URLs are runtime config now.
-          echo "domain=$(az containerapp env show -n veervrat-uat-cae -g veervrat-uat \
-            --query properties.defaultDomain -o tsv)" >> "$GITHUB_OUTPUT"
       # Only meaningful for branch pushes to main. Tag pushes always build app
       # images, and manual dispatch has no `before` SHA to diff against. The
       # shared classifier defaults unknown paths to app-relevant.
@@ -95,7 +87,7 @@ jobs:
     # output (tag push, workflow_dispatch) is treated as "build" — `!= 'false'`, not `== 'true'`.
     if: startsWith(github.ref, 'refs/tags/prod-') || needs.prepare.outputs.app_changed != 'false'
     runs-on: ubuntu-latest
-    environment: build # same reason as `prepare` — a stable OIDC subject across triggers
+    environment: build # stable OIDC subject across branch and tag triggers
     strategy:
       fail-fast: true
       matrix:
@@ -263,3 +255,51 @@ jobs:
         with:
           environment: prod
           image_tag: ${{ needs.prepare.outputs.image_tag }}
+
+  verify-build:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.operation == 'verify-build'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: build
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/verify-azure-identity
+        with:
+          context: build
+
+  verify-uat:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.operation == 'verify-uat'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: uat
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/verify-azure-identity
+        with:
+          context: uat
+
+  verify-prod:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.operation == 'verify-prod'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: prod
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/verify-azure-identity
+        with:
+          context: prod

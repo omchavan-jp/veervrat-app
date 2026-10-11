@@ -68,6 +68,7 @@ jobs:
       - name: Check Actions security policy
         run: |
           node --test .github/scripts/check-actions-security.test.mjs
+          node --test .github/scripts/verify-azure-identity.test.mjs
           node .github/scripts/check-actions-security.mjs
 
       - name: Install pinned D2 for product design validation
@@ -100,8 +101,10 @@ jobs:
           terraform_wrapper: false
 
       # No Azure login, backend, state read or apply in a PR job.
-      - name: Validate shared infrastructure configuration
+      - name: Validate infrastructure configurations
         run: |
           terraform fmt -check -recursive infra/terraform
-          terraform -chdir=infra/terraform/envs/shared init -backend=false -input=false -lockfile=readonly
-          terraform -chdir=infra/terraform/envs/shared validate
+          for environment in shared uat prod; do
+            terraform -chdir="infra/terraform/envs/$environment" init -backend=false -input=false -lockfile=readonly
+            terraform -chdir="infra/terraform/envs/$environment" validate
+          done

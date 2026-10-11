@@ -350,6 +350,11 @@ The identities have no new role grants; native state copies into dedicated conta
 verified, with backend cutover/rollout status in [migration evidence](terraform-state-migration.md).
 Live workflow credentials remain unchanged; legacy account-wide state access remains broad.
 
+Scoped replacement grants and read-only candidate verification are being implemented;
+their [cutover record](azure-identity-cutover.md) distinguishes proposed, applied, tested
+and active credentials. Do not copy the legacy subscription-wide or UAA grants to new identities.
+New role assignments and subscription provider registration remain explicit maintainer operations.
+
 ⚠️ **If Azure CLI hangs with zero output/error, check IPv6 before anything else** — it looks
 identical to a stuck login prompt. `curl -6 https://login.microsoftonline.com/` timing out
 while `curl -4` succeeds is the signature. Fix: `sudo networksetup -setv6off Wi-Fi` (machine

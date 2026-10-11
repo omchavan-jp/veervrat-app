@@ -25,7 +25,7 @@ or inspected during the Azure CLI assessment; only resource/permission metadata 
 Terraform planning necessarily reads the private shared state internally. Save any plan and
 diagnostics under restricted local permissions; never commit or upload them as public artifacts.
 
-## This PR: staging, not activation
+## Completed foundation scope (#349): staging, not activation
 
 - Declare three new identities, each trusting only its own existing GitHub environment subject.
 - Declare four private containers in the existing account: `tfstate-shared`, `tfstate-uat`,
@@ -38,7 +38,10 @@ diagnostics under restricted local permissions; never commit or upload them as p
 
 Expected staged footprint: three identities, three federated credentials and four containers.
 Validate and review an actual plan before applying; an expected count is not live-plan evidence.
-No production tag, deployment or permission-change test is authorized by this PR.
+The foundation PR itself did not authorize production tags, deployments or permission tests.
+Subsequent maintainer authorization covers scoped grant/candidate testing in the
+[identity cutover record](azure-identity-cutover.md), including temporary protected-main
+production verification without a production release.
 
 Assessment verification: Terraform 1.15.8, pinned AzureRM 4.81.0, formatting and validation
 passed. A private, read-only observation plan showed exactly 10 additions, zero changes and
