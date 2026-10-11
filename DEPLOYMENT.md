@@ -10,7 +10,20 @@ gates from mechanisms actually implemented and verified.
 
 ---
 
-## Current state (2026-09-02)
+## Delivery controls verified (2026-10-11)
+
+GitHub environment configuration was read back after activation: `build` permits branch
+`main` and tags `prod-*`; `uat` permits only branch `main`; `prod` permits only tags
+`prod-*` and requires `omchavan-jp` approval, with administrator bypass disabled.
+Owner self-approval remains allowed. Desired settings live in
+[environment-policy.json](.github/environment-policy.json). Production approval has not
+been exercised by creating a test release. All jobs still share the legacy Azure identity;
+this approval gate does **not** establish cloud permission isolation.
+
+## Historical deployment snapshot (2026-09-02)
+
+The following image, health, login and resource observations describe that date, not a
+fresh certification of today's deployment. Refresh live observations before operating.
 
 **Both environments are live** on image `3037e87` (BullMQ hash-tag fix, PR #293).
 `/ready` green on all four tiers. The `/api/v1` rewrite proxy is gone — browsers call the api
@@ -64,7 +77,7 @@ The following describes that path; it does not certify the new release policy as
 merge PR to main  →  classify paths  →  build changed app/web image set
                   →  deploy to UAT (app migrations only for app changes)
 
-tag prod-YYYY-MM-DD  →  rebuild and deploy app images to prod
+tag prod-YYYY-MM-DD  →  rebuild → owner environment approval → deploy to prod
 ```
 
 The production workflow currently rebuilds app images on a `prod-*` tag. The
@@ -81,10 +94,9 @@ to an app build. `prod-*` tag pushes are never filtered and retain the docs runt
 Details and the reasoning for not making UAT tag-gated instead:
 `documentation/21_Infrastructure-Conventions.md` §16.
 
-The agreed policy adds recorded UAT acceptance and explicit production approval to tag-triggered
-release preparation. Public-repository deployment approval is available; the earlier private-plan
-explanation does not apply to this repository's current visibility. Check rollout status before
-treating a tag push as safe: until the workflow/control changes are active it can still deploy.
+Explicit production environment approval is configured. Recorded UAT acceptance,
+accepted-digest promotion without rebuilding, release eligibility checks and isolated
+cloud authority remain pending; a tag alone does not prove UAT acceptance. See rollout status.
 
 Fumadocs builds a static export from canonical `product-design/` sources inside
 the web image. It is copied outside the public directory. Browsers enter at

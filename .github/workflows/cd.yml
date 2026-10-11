@@ -245,16 +245,10 @@ jobs:
     needs: [prepare, build]
     if: startsWith(github.ref, 'refs/tags/prod-')
     runs-on: ubuntu-latest
-    # ⚠️ The gate here is the TAG, not a reviewer prompt. GitHub's "required reviewers"
-    # protection rule needs a paid plan on private repos (422: "billing plan supports the
-    # required reviewers protection rule"), so this environment carries no protection rule.
-    #
-    # Acceptable rather than ideal: cutting and pushing a `prod-YYYY-MM-DD` tag is already a
-    # deliberate, traceable act — nobody pushes one by accident — and a self-approval prompt
-    # is a rubber stamp for a single maintainer. The environment still scopes the OIDC
-    # federated credential subject.
-    #
-    # Revisit with a second maintainer, or if the repo moves to an org on a paid plan.
+    # Native prod protection requires omchavan-jp approval, permits only prod-* tags,
+    # and disables administrator bypass. Owner self-approval is allowed for now.
+    # Desired settings: .github/environment-policy.json. Verify live settings separately.
+    # Shared Azure authority and tag-triggered rebuilds still need the planned cutover.
     environment: prod
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4

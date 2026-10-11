@@ -9,6 +9,8 @@ path filter. On Node 24 it installs the root pnpm workspace, generates Prisma,
 then runs lint, typecheck, API and web unit tests, and the workspace build. It
 also tests the CD path classifier, validates canonical `product-design/` MDX,
 JSON, links and D2 with a pinned D2 CLI, and builds the Fumadocs static export.
+Shared Terraform is formatted and validated with backend initialization disabled,
+read-only provider locking and no Azure login. The lock includes Linux CI and macOS ARM checksums.
 
 `integration.yml` runs API integration tests with PostgreSQL and Redis service
 containers. `e2e.yml` runs Playwright. Their triggers and scope are unchanged
@@ -38,9 +40,12 @@ No separate docs Container App or docs image is built. The static export is
 served only through the protected web route.
 
 The current production tag workflow **rebuilds** app images. The agreed governance policy
-requires promotion of accepted digests without rebuild and approval before all production
-changes. Those workflow changes are separate implementation tasks; this documentation PR
-does not implement them.
+requires promotion of accepted digests without rebuild. Native prod environment approval
+is now configured for omchavan-jp (owner self-approval allowed, admin bypass disabled).
+Build permits main/prod-* tags, UAT only main, prod only prod-* tags; desired settings are
+in [environment-policy.json](../environment-policy.json). Read-back is verified, but no
+production test tag was created. Acceptance records, digest promotion and Azure isolation
+remain separate implementation tasks.
 
 CI lint does not apply fixes. Repo-wide `format:check` is not a CI gate.
 

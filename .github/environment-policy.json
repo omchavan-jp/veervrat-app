@@ -1,0 +1,23 @@
+{
+  "build": {
+    "can_admins_bypass": false,
+    "prevent_self_review": false,
+    "reviewers": [],
+    "refs": [
+      { "type": "branch", "name": "main" },
+      { "type": "tag", "name": "prod-*" }
+    ]
+  },
+  "uat": {
+    "can_admins_bypass": false,
+    "prevent_self_review": false,
+    "reviewers": [],
+    "refs": [{ "type": "branch", "name": "main" }]
+  },
+  "prod": {
+    "can_admins_bypass": false,
+    "prevent_self_review": false,
+    "reviewers": [{ "type": "User", "id": 317451750 }],
+    "refs": [{ "type": "tag", "name": "prod-*" }]
+  }
+}

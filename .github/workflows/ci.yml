@@ -92,3 +92,16 @@ jobs:
       - name: Build Fumadocs renderer
         working-directory: product-design/tooling
         run: corepack pnpm build --webpack
+
+      - name: Setup Terraform for static validation
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
+        with:
+          terraform_version: 1.15.8
+          terraform_wrapper: false
+
+      # No Azure login, backend, state read or apply in a PR job.
+      - name: Validate shared infrastructure configuration
+        run: |
+          terraform fmt -check -recursive infra/terraform
+          terraform -chdir=infra/terraform/envs/shared init -backend=false -input=false -lockfile=readonly
+          terraform -chdir=infra/terraform/envs/shared validate

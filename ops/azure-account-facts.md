@@ -322,7 +322,9 @@ one per GitHub Environment (`build`, `uat`, `prod`) — see
 no wildcards.
 
 Roles: Contributor (it creates resource groups itself), AcrPush, Storage Blob Data Contributor
-on `veervrattfstate`, Key Vault Secrets Officer — all subscription-scoped. **Plus, since
+on `veervrattfstate`, Key Vault Secrets Officer. Read back on 2026-10-11:
+Contributor and Secrets Officer are subscription-scoped; AcrPush is registry-scoped;
+Blob Data Contributor is scoped to the state storage account. **Plus, since
 2026-08-24, User Access Administrator scoped to the `veervrat-uat`/`veervrat-prod`
 resource groups** — CD needed to create its first new role assignment and discovered
 Contributor alone cannot. The first product-docs rollout on 2026-10-04 found a second
@@ -334,8 +336,13 @@ identity were retired after docs moved into the web image; environment Terraform
 removes their `AcrPull`, then shared Terraform removes the temporary delegation.
 See `21_Infrastructure-Conventions.md` §15.
 
-No paid-plan reviewer gate exists (422 on this account). The prod gate is the `prod-*` tag
-itself; the `prod` GitHub Environment carries no protection rule.
+GitHub protections were activated and read back on 2026-10-11 for the currently public repo:
+`prod` requires `omchavan-jp` approval, accepts only `prod-*` tags and disables admin bypass.
+Owner self-approval is allowed. `uat` accepts only `main`; `build` accepts `main` and
+`prod-*` tags to preserve current release preparation. The earlier private-plan 422 is
+historical, not the current configuration. No production test tag was created.
+These gates do not isolate the shared Azure identity. The additive three-identity/four-container
+foundation in PR #349 is configuration only, not applied; roles and state remain unchanged.
 
 ⚠️ **If Azure CLI hangs with zero output/error, check IPv6 before anything else** — it looks
 identical to a stuck login prompt. `curl -6 https://login.microsoftonline.com/` timing out
