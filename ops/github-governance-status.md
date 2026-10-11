@@ -1,7 +1,8 @@
 # STATE — GitHub Governance Rollout
 
 Owner: `omchavan-jp`.
-Last verified: 2026-10-10 for permission read-back, security settings and the initial CodeQL baseline.
+Latest scoped identity/state/approval evidence: 2026-10-11; see the identity cutover record.
+Initial baseline: 2026-10-10 for permission read-back, security settings and CodeQL.
 Main remained at `9529b60bc6c1451ec887b0c56c681ec38c6af57a` during the permission tests;
 PR #317 then merged at `cb9eaadab2c5cb48eff6df33f911448a098574de`, which the CodeQL baseline analyzed.
 Refresh when: a governance PR merges, settings/cloud permissions change, a gate is tested,
@@ -23,7 +24,7 @@ Implementation work: [OpenSpec tasks](../openspec/changes/github-governance/task
 | UAT acceptance and release manifests          | Implementation and verification pending                                                                                                                                          |
 | Production reviewer gate | Configured/read back 2026-10-11: omchavan-jp required; self-approval allowed; admin bypass disabled; prod-* tags only. Real production approval test deferred |
 | Digest promotion | Pending; current production preparation rebuilds on tags; recorded UAT acceptance and release eligibility checks also pending |
-| Separate production cloud authority | Three identity probes passed; environment clients switched and real scoped UAT publishing/deploy passed (38124662672). Production verified read-only only. Legacy trust/grant retirement staged, not applied; see identity cutover evidence |
+| Separate production cloud authority | Three identity probes passed; environment clients switched, scoped UAT publishing/deploy passed (38124662672), six legacy grants/three FICs removed and fresh old federation rejected (38133195235). Production writes intentionally await a planned release |
 | Dependency/code security controls             | Dependabot alerts/security updates and CodeQL are enabled; existing findings recorded; grouped version-update config merged in #319; remaining remediation is tracked separately |
 | Private vulnerability reporting               | Enabled and verified by API; SECURITY.md links to the confidential GitHub reporting form                                                                                         |
 

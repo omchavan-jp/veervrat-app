@@ -15,7 +15,8 @@ gates from mechanisms actually implemented and verified.
 Terraform state copies have been verified in dedicated shared/UAT/production containers.
 The backend configuration merged in #350 and CD was restored. See
 [state cutover evidence](ops/terraform-state-migration.md) before operating:
-deployment verification is separate from the copy, and legacy permissions remain broad.
+deployment verification is separate from the copy; scoped client activation and legacy
+retirement are now recorded in the identity cutover evidence.
 
 GitHub environment configuration was read back after activation: `build` permits branch
 `main` and tags `prod-*`; `uat` permits only branch `main`; `prod` permits only tags
@@ -23,8 +24,9 @@ GitHub environment configuration was read back after activation: `build` permits
 Owner self-approval remains allowed. Desired settings live in
 [environment-policy.json](.github/environment-policy.json). Production approval has
 been tested using an explicitly authorized read-only identity probe, not a production release.
-Active build/deployment paths now use separate verified identities. The old identity's remaining
-trusts/grants are staged for removal; do not claim isolation until retirement evidence is recorded.
+Active build/deployment paths now use separate verified identities. Legacy trusts/grants were
+removed, and fresh federation to the old client was explicitly rejected. Build/UAT writes are
+verified; production writes remain for a deliberate UAT-approved release.
 
 The [scoped identity cutover](ops/azure-identity-cutover.md) stages candidate grants and
 read-only verification before replacing active deployment credentials. Provisioning a new
