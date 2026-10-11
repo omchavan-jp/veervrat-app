@@ -60,7 +60,7 @@ Neither probe deployed an application or created acceptance.
 
 ## Digest deployment and receipt integration
 
-The next checked PR enables UAT only. Four build records (or web only for docs work) carry
+Checked PRs #361/#362 enabled UAT only. Four build records (or web only for docs work) carry
 digest/full commit/run/attempt identity and are consumed from that same workflow attempt.
 Deployment uses full references, keeps old apps through migration, plans before each apply,
 and forbids deletion/replacement. All migration-based maintenance jobs use the migration
@@ -80,7 +80,24 @@ migration output, readiness and wiring, but failed the receipt's revision metada
 No receipt/acceptance success is claimed for that failed run. The follow-up verifies the actual
 sole active healthy revision and its exact image, waits boundedly for convergence, then repeats
 public readiness/wiring before storing a receipt. Read/auth failures are not retried as readiness.
-Successful end-to-end receipt verification is pending. Human acceptance has not been performed.
+Successful end-to-end receipt verification:
+[38142359832](https://github.com/omchavan-jp/veervrat-app/actions/runs/38142359832), attempt 1,
+commit `4fad255e6ba982066dd876e3ca91fa90c349e6dd`. All four build jobs and `deploy-uat`
+succeeded; `deploy-prod` and `accept-uat` were skipped. Migration execution
+`veervrat-uat-migrate-vesqzlf` produced verified output. Readiness and exact served runtime API
+URL checks passed. The receipt waited through the old/new active revision transition before
+requiring the sole latest Healthy revision on each exact app image. It was conditionally
+created and read back at `receipts/uat/38142359832/1.json`.
+
+| Component | Exact digest (registry repository prefix omitted)                       |
+| --------- | ----------------------------------------------------------------------- |
+| api       | sha256:f4fc0adede2ec861abd3e6078d26c95d0854b1d866d2f5a2d4d3e8b4beb7e808 |
+| web       | sha256:abeb23ef4b52a443682dc5db4d783fd28770ab5295f9ccd7174fd77e4ac64675 |
+| migrate   | sha256:3c34c70dbcea4cd116fd257ccf1099561b32efc30d60f2800883779096cb695f |
+| backup    | sha256:4301c8d6d6b79b56589d4a0a8cde68be5388c669db687005273d85a41c0d92d4 |
+
+No production tag/deployment or human acceptance was created. Human acceptance is still the
+owner's actual testing decision, not a side effect of these automated checks.
 The read-only identity/plan verifier must preserve the exact four deployed references,
 including independent backup images, and read commit metadata separately from a digest.
 The follow-up compatibility fix handles both SHA tags and digests; UAT still requires a
@@ -91,11 +108,12 @@ production promotion/rollback remain separate steps.
 
 ## Remaining activation sequence
 
-1. Merge and verify UAT digest deployment/receipt generation; owner acceptance consumes
-   those trusted receipts after actual UAT testing.
-2. Verify docs-only preservation and denied paths without manufacturing a human acceptance.
+1. Owner acceptance consumes verified receipts after actual UAT testing; do not manufacture it.
+2. Docs-only preservation is unit-tested; verify its live path when an appropriate real change
+   is available rather than claiming it was exercised by the full-app rollout.
 3. Replace tag builds with accepted-set selection, main-history/exact-check verification,
    pre-deployment GitHub Release/manifest creation, serialized prod approval and outcomes.
+   Ensure historical tagged workflow versions cannot bypass the trusted release controller.
 4. Add deliberate rollback with schema review, new release tag/record and no migration rerun.
 5. Test denied paths and UAT; exercise production writes only during a planned, approved release.
 6. Reconcile the complete deployment/infrastructure documentation after activation.

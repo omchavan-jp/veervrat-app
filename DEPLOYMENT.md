@@ -35,8 +35,11 @@ routine deployment identities do not gain access-management authority to do this
 
 ## Digest-pinned UAT receipts
 
-The UAT digest/receipt integration is staged for checked rollout; live verification evidence
-belongs in [release-control status](ops/release-controls-rollout.md), not an inferred success claim.
+UAT digest deployment and receipt creation are verified in
+[CD run 38142359832](https://github.com/omchavan-jp/veervrat-app/actions/runs/38142359832)
+at commit `4fad255e6ba982066dd876e3ca91fa90c349e6dd`, after checked PRs #361/#362.
+The private receipt is `receipts/uat/38142359832/1.json`. See
+[release-control evidence](ops/release-controls-rollout.md) for limits and remaining work.
 Build jobs export their exact pushed digests with full commit/run/attempt metadata. UAT consumes
 those records, not a later lookup by SHA tag. Migration/maintenance/backup jobs and app images
 use explicit references; apps retain their exact current references until migration succeeds.
@@ -46,7 +49,8 @@ the selected execution, and inability to verify migration output stops app rollo
 After ready revisions, database/Redis readiness, cross-tier wiring and exact-main-commit checks
 pass, CD writes `receipts/uat/<run>/<attempt>.json` in private durable record storage. The set
 includes configured maintenance/backup images; it does not claim every job executed. A docs-only
-deployment changes only web's digest while preserving the rest. The receipt is not human acceptance.
+deployment changes only web's digest while preserving the rest (unit-tested; a separate live
+docs-only rollout has not been claimed). The receipt is not human acceptance.
 
 For an accepted release, the owner selects CD operation `accept-uat` on main and supplies that
 successful run/attempt plus a concrete, **non-secret** verification note. Workflow inputs/logs
