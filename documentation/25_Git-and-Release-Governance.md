@@ -44,6 +44,9 @@ that its corresponding GitHub or Azure control is active.
 
 The historical purge is a separate implementation operation against a freshly enumerated, explicit target list. Implementation branches created for this governance work are not historical cleanup targets until their work is merged.
 
+The initial historical purge completed on 2026-10-11; see [cleanup evidence](../ops/focused-cleanup-2026-10-11.md).
+Current working branches and open dependency-update PR heads remain active work, not historical purge targets.
+
 - Keep conventional commits and the existing meaningful branch prefixes. Use a conventional PR title suitable for the squash commit.
 - Keep PRs small and complete. Incomplete work stays on its working branch or behind an appropriate flag.
 - Retain the existing rebase-based approach for refreshing a working branch against `main`.

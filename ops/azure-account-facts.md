@@ -359,7 +359,9 @@ The replacements have twelve narrowly scoped grants applied in #352; native stat
 verified, with backend cutover/rollout status in [migration evidence](terraform-state-migration.md).
 Active environment client IDs are switched and the repository fallback removed. Legacy account-wide
 state access, subscription Contributor/Secrets Officer, registry push and UAA grants were removed.
-The old identity object is retained for audit without managed grants or federated trust.
+The old identity object has no managed grants or federated trust; its removal is authorized
+and tracked in [focused cleanup](focused-cleanup-2026-10-11.md). Historical identifiers remain
+in audit/cutover records, not an active deployment configuration.
 
 Read-only candidate verification and deployment client-ID cutover are complete;
 their [cutover record](azure-identity-cutover.md) distinguishes proposed, applied, tested

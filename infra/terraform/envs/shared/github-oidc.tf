@@ -9,18 +9,6 @@
 # credentials work on both, but this needs no Entra app-registration permissions and is managed
 # by the same provider as everything else.
 
-resource "azurerm_user_assigned_identity" "github_actions" {
-  name                = "veervrat-github-actions"
-  resource_group_name = data.azurerm_resource_group.shared.name
-  location            = var.location
-  tags                = var.tags
-
-  # Retain the legacy object for audit/recovery; retirement removes every trust and grant.
-  lifecycle {
-    prevent_destroy = true
-  }
-}
-
 # One credential per trusted context. `subject` must match GitHub's token exactly — a mismatch
 # fails at login with a generic "no matching federated identity record found", so keep these
 # aligned with the workflow's triggers and environment names.
@@ -59,8 +47,3 @@ locals {
 }
 
 data "azurerm_subscription" "current" {}
-
-output "github_actions_client_id" {
-  description = "Legacy identity retained only for audit/recovery after trust/grant retirement. Never restore it as a deployment variable."
-  value       = azurerm_user_assigned_identity.github_actions.client_id
-}

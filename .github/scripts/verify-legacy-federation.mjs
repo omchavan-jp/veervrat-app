@@ -97,8 +97,12 @@ export async function verifyLegacyRevoked({
     [400, 401].includes(legacy.status),
     'Legacy federation still succeeds or failed for an unverified reason',
   );
-  assert.equal(legacy.body?.error, 'invalid_client', 'Unexpected legacy federation failure class');
-  const accepted = new Set([70025, 700213]);
+  assert.ok(
+    ['invalid_client', 'unauthorized_client'].includes(legacy.body?.error),
+    'Unexpected legacy federation failure class',
+  );
+  // The reviewed cleanup deletes the obsolete MI; its known client ID may now be absent in Entra.
+  const accepted = new Set([70025, 700213, 700016]);
   assert.ok(
     Array.isArray(legacy.body?.error_codes) &&
       legacy.body.error_codes.some((code) => accepted.has(code)),
