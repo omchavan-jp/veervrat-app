@@ -47,6 +47,11 @@ variable "deploy_apps" {
   default     = false
 }
 
+variable "image_refs" {
+  type    = map(string)
+  default = {}
+}
+
 # Set by CD to hold the apps on the image they are currently serving while migrations run
 # against the new one. Empty = follow image_tag.
 variable "app_image_tag" {
@@ -119,6 +124,7 @@ module "environment" {
   bootstrap_admin_allow_unverified = var.bootstrap_admin_allow_unverified
 
   image_tag       = var.image_tag
+  image_refs      = var.image_refs
   app_image_tag   = var.app_image_tag
   web_image_tag   = var.web_image_tag
   deploy_apps     = var.deploy_apps

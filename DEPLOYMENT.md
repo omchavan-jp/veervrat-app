@@ -33,6 +33,32 @@ read-only verification before replacing active deployment credentials. Provision
 resource group, subscription provider or IAM assignment requires a maintainer bootstrap apply;
 routine deployment identities do not gain access-management authority to do this automatically.
 
+## Digest-pinned UAT receipts
+
+The UAT digest/receipt integration is staged for checked rollout; live verification evidence
+belongs in [release-control status](ops/release-controls-rollout.md), not an inferred success claim.
+Build jobs export their exact pushed digests with full commit/run/attempt metadata. UAT consumes
+those records, not a later lookup by SHA tag. Migration/maintenance/backup jobs and app images
+use explicit references; apps retain their exact current references until migration succeeds.
+Routine digest CD plans first and refuses deletion/replacement. Migration logs are scoped to
+the selected execution, and inability to verify migration output stops app rollout.
+
+After ready revisions, database/Redis readiness, cross-tier wiring and exact-main-commit checks
+pass, CD writes `receipts/uat/<run>/<attempt>.json` in private durable record storage. The set
+includes configured maintenance/backup images; it does not claim every job executed. A docs-only
+deployment changes only web's digest while preserving the rest. The receipt is not human acceptance.
+
+For an accepted release, the owner selects CD operation `accept-uat` on main and supplies that
+successful run/attempt plus a concrete, **non-secret** verification note. Workflow inputs/logs
+may be public. Acceptance verifies the live exact set and evidence, then stores a separate
+decision. Do not fabricate notes or accept on the owner's behalf. Production promotion/rollback
+remain pending integration; creating a production tag is not a test of this UAT-only increment.
+
+Build handoff artifacts expire after seven days, but durable receipts/acceptance do not depend
+on their later availability. A failed-only rerun cannot reuse a build artifact from a different
+run attempt: rerun the full UAT workflow deliberately to produce a consistent attempt, never
+silently relax artifact identity checks. A later deployment cannot overwrite historical receipts.
+
 ## Historical deployment snapshot (2026-09-02)
 
 The following image, health, login and resource observations describe that date, not a
