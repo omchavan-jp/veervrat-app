@@ -66,6 +66,16 @@ maintenance window, never let old and new backends both become writable active a
 After restoration, verify a legitimate UAT deployment uses the new backend. Production
 state verification must not create a release tag or deploy production merely as a test.
 
+Existing operator checkouts must fetch the merged backend change and select the already
+verified destination with `terraform init -reconfigure`; do **not** repeat the copy from
+stale source state. Here reconfiguration is allowed only after the verified native migration,
+not as a substitute for migration. Do not run old checkouts or dispatch/re-run workflows
+from pre-cutover production tags: those versions still name the original container.
+Preserved release tags are historical references, not a safe rollback procedure. The owner
+must reject such production approval requests until current-workflow artifact recovery and
+scoped RBAC prevent stale-backend access. This is an interim operator restriction, not
+a claim that legacy account-wide credentials are technically fenced.
+
 ## Recovery and remaining boundary
 
 If cutover cannot complete, keep deployments paused and select a single authoritative
