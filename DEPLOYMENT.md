@@ -22,7 +22,7 @@ GitHub environment configuration was read back after activation: `build` permits
 `prod-*` and requires `omchavan-jp` approval, with administrator bypass disabled.
 Owner self-approval remains allowed. Desired settings live in
 [environment-policy.json](.github/environment-policy.json). Production approval has not
-been exercised by creating a test release. All jobs still share the legacy Azure identity;
+been exercised by creating a test release. Active build/deployment paths still use the legacy Azure identity;
 this approval gate does **not** establish cloud permission isolation.
 
 The [scoped identity cutover](ops/azure-identity-cutover.md) stages candidate grants and

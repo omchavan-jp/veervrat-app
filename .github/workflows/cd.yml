@@ -271,6 +271,10 @@ jobs:
       - uses: ./.github/actions/verify-azure-identity
         with:
           context: build
+          client-id: ${{ vars.AZURE_CANDIDATE_CLIENT_ID }}
+          principal-id: ${{ vars.AZURE_CANDIDATE_PRINCIPAL_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
   verify-uat:
     if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.operation == 'verify-uat'
@@ -287,6 +291,10 @@ jobs:
       - uses: ./.github/actions/verify-azure-identity
         with:
           context: uat
+          client-id: ${{ vars.AZURE_CANDIDATE_CLIENT_ID }}
+          principal-id: ${{ vars.AZURE_CANDIDATE_PRINCIPAL_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
   verify-prod:
     if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.operation == 'verify-prod'
@@ -303,3 +311,7 @@ jobs:
       - uses: ./.github/actions/verify-azure-identity
         with:
           context: prod
+          client-id: ${{ vars.AZURE_CANDIDATE_CLIENT_ID }}
+          principal-id: ${{ vars.AZURE_CANDIDATE_PRINCIPAL_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
