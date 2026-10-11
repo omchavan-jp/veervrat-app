@@ -132,9 +132,13 @@ The practical consequences:
   read access to `veervrattfstate` as equivalent to Key Vault admin.
 - This is why state lives in a private storage account behind Azure AD RBAC, with no
   account keys, and never in git.
-- Blast radius is currently wider than ideal: the Blob Data Contributor role is granted at
-  **storage-account scope**, so anyone who can read UAT state can also read prod state once
-  it exists. Narrow this to per-container scope when a second person deploys.
+- Historical deployment-identity account-wide access was removed during the verified
+  2026-10-11 cutover. Shared/UAT/prod use separate state containers. UAT/prod identities access
+  only their respective environment state; build has no state access, and shared state is a
+  maintainer boundary. UAT also writes non-secret release records
+  in a separate private container; it does not gain production-state access. See
+  [cutover evidence](../ops/azure-identity-cutover.md) and
+  [release records](../ops/release-controls-rollout.md). Maintainer access is a separate boundary.
 - Rotating a secret means rotating it in Azure *and* accepting the old value remains in
   state history (blob versioning keeps 30 days of prior versions).
 
