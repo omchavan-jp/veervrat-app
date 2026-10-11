@@ -9,7 +9,7 @@ path filter. On Node 24 it installs the root pnpm workspace, generates Prisma,
 then runs lint, typecheck, API and web unit tests, and the workspace build. It
 also tests the CD path classifier, validates canonical `product-design/` MDX,
 JSON, links and D2 with a pinned D2 CLI, and builds the Fumadocs static export.
-Shared Terraform is formatted and validated with backend initialization disabled,
+Shared, UAT and production Terraform are formatted and validated with backend initialization disabled,
 read-only provider locking and no Azure login. The lock includes Linux CI and macOS ARM checksums.
 
 `integration.yml` runs API integration tests with PostgreSQL and Redis service
@@ -19,6 +19,13 @@ by the product docs deployment.
 `cd.yml` runs on pushes to `main`, `prod-*` tags, and manual dispatch. On main,
 its `prepare` job classifies one changed-file list with
 `.github/scripts/classify-changes.sh`:
+
+Preparation no longer logs into Azure or requests OIDC; the unused UAT-domain lookup was
+removed. Manual `operation=verify-build|verify-uat|verify-prod` selects a candidate
+read-only permission/plan job and skips normal build/deployment jobs. The default manual
+operation remains `deploy` (UAT). Verification is protected-main-only and uses separate
+environment candidate variables, not the active deployment client ID. See the
+[identity cutover record](../../ops/azure-identity-cutover.md) for scope and live status.
 
 | Change on main                                                                     | UAT action                                                                                                    |
 | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |

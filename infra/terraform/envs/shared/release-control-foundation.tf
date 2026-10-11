@@ -1,4 +1,4 @@
-# Additive staging only. No workflows or RBAC grants switch to these identities yet.
+# Identities and containers were created before scoped grants and credential cutover.
 # The legacy identity stays intact until the reviewed cutover and denial tests pass.
 locals {
   staged_release_contexts = toset(["build", "uat", "prod"])
@@ -61,7 +61,7 @@ output "staged_release_identities" {
 }
 
 output "staged_release_container_scopes" {
-  description = "ARM container scopes for future RBAC; existing state has not been moved."
+  description = "ARM container scopes for scoped RBAC; state migration evidence is in ops/terraform-state-migration.md."
   value = {
     for context, container in azurerm_storage_container.staged_release : context => container.resource_manager_id
   }

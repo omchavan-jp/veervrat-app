@@ -24,6 +24,8 @@ terraform {
 }
 
 provider "azurerm" {
+  # Subscription bootstrap/registration belongs to the maintainer, not this RG-scoped deployer.
+  resource_provider_registrations = "none"
   features {
     key_vault {
       purge_soft_delete_on_destroy = true

@@ -25,6 +25,11 @@ Owner self-approval remains allowed. Desired settings live in
 been exercised by creating a test release. All jobs still share the legacy Azure identity;
 this approval gate does **not** establish cloud permission isolation.
 
+The [scoped identity cutover](ops/azure-identity-cutover.md) stages candidate grants and
+read-only verification before replacing active deployment credentials. Provisioning a new
+resource group, subscription provider or IAM assignment requires a maintainer bootstrap apply;
+routine deployment identities do not gain access-management authority to do this automatically.
+
 ## Historical deployment snapshot (2026-09-02)
 
 The following image, health, login and resource observations describe that date, not a
