@@ -245,7 +245,7 @@ in UAT could reach in prod**:
 | Resource | Shared? | Why |
 |---|---|---|
 | Container registry (`veervratacr`) | **Yes — correct** | Promotion requires the *same image* be tested in UAT and shipped to prod. Separate registries mean either rebuilding (you'd ship bits you never tested) or copying between registries for no benefit. Images are artifacts, not secrets. |
-| State storage account (`veervrattfstate`) | **Account shared, state files separate** | The isolation boundary is the state *file*, not the account — `shared.tfstate`, later `uat.tfstate`, `prod.tfstate`. Terraform in one env cannot see another's resources. Note RBAC is granted at account scope, so anyone who can write UAT state can write prod state; revisit with separate containers when more than one person deploys. |
+| State storage account (`veervrattfstate`) | **Account shared, containers separate** | Shared/UAT/prod use `tfstate-shared`/`tfstate-uat`/`tfstate-prod`, retaining their respective `.tfstate` keys. Container-scoped RBAC is the intended access boundary; separate files alone are not permission isolation. Native copies were verified 2026-10-11; see `ops/terraform-state-migration.md` for cutover evidence. Legacy account-wide grants still allow cross-environment access until explicitly narrowed. |
 | Key Vault | **No** | Secrets are exactly where a shared store breaks the environment boundary: a compromised or misconfigured UAT app could read the production database password. Per D11 beta testers with real personal data live on prod, so those credentials protect real users. |
 
 **Resolved 2026-08-16 (Phase 2A):** the original shared `veervrat-kv` was deleted (confirmed

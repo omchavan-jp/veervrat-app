@@ -23,7 +23,7 @@ Implementation work: [OpenSpec tasks](../openspec/changes/github-governance/task
 | UAT acceptance and release manifests          | Implementation and verification pending                                                                                                                                          |
 | Production reviewer gate | Configured/read back 2026-10-11: omchavan-jp required; self-approval allowed; admin bypass disabled; prod-* tags only. Real production approval test deferred |
 | Digest promotion | Pending; current production preparation rebuilds on tags; recorded UAT acceptance and release eligibility checks also pending |
-| Separate production cloud authority | Three staged identities and four private containers applied 2026-10-11 (#349); no new role grants. State migration, scoped permissions and credential cutover pending |
+| Separate production cloud authority | Three staged identities and four private containers applied 2026-10-11 (#349); native state copies verified (#350); no new role grants. Backend merge/rollout, scoped permissions and credential cutover pending |
 | Dependency/code security controls             | Dependabot alerts/security updates and CodeQL are enabled; existing findings recorded; grouped version-update config merged in #319; remaining remediation is tracked separately |
 | Private vulnerability reporting               | Enabled and verified by API; SECURITY.md links to the confidential GitHub reporting form                                                                                         |
 

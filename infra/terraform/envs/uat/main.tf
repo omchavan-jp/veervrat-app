@@ -12,13 +12,12 @@ terraform {
     }
   }
 
-  # Same storage account as envs/shared (bootstrap/create-state-backend.sh), but its own
-  # file — `key` is what keeps UAT's state (and therefore blast radius) separate from
-  # shared's and, later, prod's.
+  # A dedicated container allows independently scoped state access at the RBAC cutover.
+  # Separate keys alone do not prevent an account-wide identity reading other states.
   backend "azurerm" {
     resource_group_name  = "veervrat-shared"
     storage_account_name = "veervrattfstate"
-    container_name       = "tfstate"
+    container_name       = "tfstate-uat"
     key                  = "uat.tfstate"
     use_azuread_auth     = true
   }

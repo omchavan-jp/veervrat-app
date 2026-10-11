@@ -12,12 +12,12 @@ terraform {
     }
   }
 
-  # Same storage account as envs/shared and envs/uat, but its own state file — `key` is what
-  # keeps prod's blast radius separate: Terraform here has no knowledge of UAT's resources.
+  # A dedicated container prepares independently scoped production state access.
+  # Account-wide legacy access remains until the explicit RBAC/credential cutover.
   backend "azurerm" {
     resource_group_name  = "veervrat-shared"
     storage_account_name = "veervrattfstate"
-    container_name       = "tfstate"
+    container_name       = "tfstate-prod"
     key                  = "prod.tfstate"
     use_azuread_auth     = true
   }

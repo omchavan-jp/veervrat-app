@@ -6,6 +6,14 @@ Terraform figures out the Azure API calls needed to make reality match. It
 keeps a **state file** (in `veervrattfstate`, see `bootstrap/`) recording what
 it created, so the next run knows what changed instead of guessing.
 
+Shared/UAT/production state now has dedicated container configuration:
+`tfstate-shared`/`tfstate-uat`/`tfstate-prod`; the keys remain
+`shared.tfstate`/`uat.tfstate`/`prod.tfstate`. Read
+[cutover status and recovery checkpoints](../../ops/terraform-state-migration.md)
+before backend initialization on an existing checkout. Do not use `-reconfigure` as a
+substitute for copying an existing state. Containers do not yet isolate permissions:
+the legacy identity retains account-wide access until the scoped-role cutover.
+
 Three commands you'll use, always in this order, always from inside an
 `envs/<name>/` directory:
 

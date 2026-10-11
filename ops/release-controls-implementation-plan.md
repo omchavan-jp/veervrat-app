@@ -5,7 +5,8 @@ Authority: [Git and Release Governance](../documentation/25_Git-and-Release-Gove
 Status: additive foundation applied 2026-10-11; not a completed security boundary.
 PR #349 merged at `92367abd44ce6f66ef6e5cf39ca367e09da76fd7`. A fresh locked saved
 plan applied with 10 additions, zero changes/deletions and no new RBAC grants.
-State migration and authority cutover remain pending; see
+Native state copies were verified into dedicated containers; backend merge/rollout and
+authority cutover remain pending; see
 [state migration checkpoints](terraform-state-migration.md).
 
 ## Verified starting point

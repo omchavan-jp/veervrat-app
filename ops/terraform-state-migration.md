@@ -1,7 +1,26 @@
 # Terraform state container cutover
 
 Owner: omchavan-jp. Authorization recorded in the maintainer chat on 2026-10-11.
-Status: foundation applied; state migration not yet performed.
+Status: native state copies verified on 2026-10-11; backend PR/checks and CD restoration pending.
+
+## Migration evidence
+
+The owner confirmed no other operator would run Terraform. The prior CD workflow state
+was `active`; CD was temporarily disabled after run `38117835338` completed successfully
+and no queued/running CD runs remained. Terraform found no destination state in any new
+backend before the explicit copy confirmation. State locks were used throughout.
+
+| Root | Destination container | Unchanged key | Serial before → after |
+| --- | --- | --- | --- |
+| shared | `tfstate-shared` | `shared.tfstate` | 26 → 27 |
+| UAT | `tfstate-uat` | `uat.tfstate` | 276 → 277 |
+| production | `tfstate-prod` | `prod.tfstate` | 51 → 52 |
+
+All three retain their lineage, full resource data and outputs. Comparison allowed only
+the native migration's one-step serial increase and ordering of validation check records;
+canonical state content otherwise matched. Provider versions were not upgraded. Private
+backups and logs were preserved outside Git. The shared post-migration plan has no changes;
+UAT/production plan review and backend-PR merge remain pending. No production release occurred.
 
 ## Applied foundation
 
@@ -31,8 +50,9 @@ Use Terraform's native `init -migrate-state` with state locking, not `-reconfigu
 Explicitly confirm the reviewed source/destination copy. See the
 [HashiCorp init reference](https://developer.hashicorp.com/terraform/cli/commands/init).
 
-Pull destination state privately and assert matching lineage, serial and complete resource
-inventory. Compare canonical state JSON without printing secrets. Stop if anything differs.
+Pull destination state privately and assert matching lineage and complete resource inventory.
+Verify the native migration's serial increment; canonicalize validation-check ordering before
+comparison. All other state content must match. Never print secrets. Stop on unexplained differences.
 Review a normally locked plan with deployment inputs pinned to the actual deployed image
 set; do not apply a default-image plan or treat drift as part of this backend-only change.
 
