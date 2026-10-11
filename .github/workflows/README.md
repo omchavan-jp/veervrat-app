@@ -63,7 +63,10 @@ The checked-in Action references use full commit SHAs and the reviewed repositor
 [policy checker](../scripts/check-actions-security.mjs) and its negative fixtures. Workflow tokens
 default to `contents: read`; only CD jobs that use Azure login request `id-token: write`.
 Public-fork runs require maintainer approval and ordinary PR jobs have no deployment OIDC grant.
-This does not yet split the shared Azure identity; that remains separate release-control work.
+Active client IDs now use separate verified identities. Legacy-trust retirement is tracked in
+[identity cutover evidence](../../ops/azure-identity-cutover.md); source removal alone is not an apply.
+Manual `verify-legacy-revoked` authenticates the replacement as a positive control before checking
+that fresh GitHub federation to the old client is specifically rejected. It does not deploy.
 
 GitHub-managed CodeQL default setup analyzes Actions, JavaScript/TypeScript and Python on pushes,
 PRs and its weekly schedule. It has no checked-in CodeQL workflow. The native main ruleset

@@ -21,9 +21,10 @@ GitHub environment configuration was read back after activation: `build` permits
 `main` and tags `prod-*`; `uat` permits only branch `main`; `prod` permits only tags
 `prod-*` and requires `omchavan-jp` approval, with administrator bypass disabled.
 Owner self-approval remains allowed. Desired settings live in
-[environment-policy.json](.github/environment-policy.json). Production approval has not
-been exercised by creating a test release. Active build/deployment paths still use the legacy Azure identity;
-this approval gate does **not** establish cloud permission isolation.
+[environment-policy.json](.github/environment-policy.json). Production approval has
+been tested using an explicitly authorized read-only identity probe, not a production release.
+Active build/deployment paths now use separate verified identities. The old identity's remaining
+trusts/grants are staged for removal; do not claim isolation until retirement evidence is recorded.
 
 The [scoped identity cutover](ops/azure-identity-cutover.md) stages candidate grants and
 read-only verification before replacing active deployment credentials. Provisioning a new
