@@ -342,7 +342,9 @@ Owner self-approval is allowed. `uat` accepts only `main`; `build` accepts `main
 `prod-*` tags to preserve current release preparation. The earlier private-plan 422 is
 historical, not the current configuration. No production test tag was created.
 These gates do not isolate the shared Azure identity. The additive three-identity/four-container
-foundation in PR #349 is configuration only, not applied; roles and state remain unchanged.
+foundation in PR #349 was applied on 2026-10-11: 10 additions, zero changes/deletions.
+The identities have no new role grants; state remains in the original container pending
+[controlled migration](terraform-state-migration.md). Live workflow credentials remain unchanged.
 
 ⚠️ **If Azure CLI hangs with zero output/error, check IPv6 before anything else** — it looks
 identical to a stuck login prompt. `curl -6 https://login.microsoftonline.com/` timing out
