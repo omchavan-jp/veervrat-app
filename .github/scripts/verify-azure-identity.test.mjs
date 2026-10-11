@@ -5,6 +5,7 @@ import {
   assertPlanChanges,
   permissionAllowsAction,
   validateProbeUrl,
+  validateToken,
   verifyIdentity,
 } from './verify-azure-identity.mjs';
 
@@ -14,6 +15,31 @@ const ids = {
   tenantId: '00000000-0000-4000-8000-000000000003',
   subscriptionId: '00000000-0000-4000-8000-000000000004',
 };
+
+test('API-specific v2 GUID audiences remain strict about resource, client, principal and tenant', () => {
+  const mappings = [
+    ['https://management.azure.com/', '797f4846-ba00-4fd7-ba43-dac1f8f63013'],
+    ['https://storage.azure.com/', 'e406a681-f3d4-42a8-90b6-c2b029497af1'],
+    ['https://vault.azure.net', 'cfa8b339-82a2-471a-a3c9-0fc0be7a4093'],
+  ];
+  const token = (aud) =>
+    `header.${Buffer.from(JSON.stringify({ aud, azp: ids.clientId, oid: ids.principalId, tid: ids.tenantId, exp: Math.floor(Date.now() / 1000) + 3600 })).toString('base64url')}.signature`;
+  for (const [uri, app] of mappings) {
+    assert.doesNotThrow(() => validateToken(token(app), uri, ids));
+    assert.throws(
+      () => validateToken(token(ids.clientId), uri, ids),
+      /Unexpected Azure token audience/,
+    );
+    assert.throws(
+      () => validateToken(token(app), uri, { ...ids, principalId: ids.clientId }),
+      /candidate principal/,
+    );
+  }
+  assert.throws(
+    () => validateToken(token(mappings[1][1]), mappings[0][0], ids),
+    /Unexpected Azure token audience/,
+  );
+});
 function fixture(context, override = () => undefined) {
   const methods = [];
   const tokenFor = (audience) =>

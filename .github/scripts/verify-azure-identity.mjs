@@ -10,6 +10,13 @@ const audiences = {
   storage: 'https://storage.azure.com/',
   vault: 'https://vault.azure.net',
 };
+// Entra v2 uses the API's application GUID, not necessarily its resource URI.
+// https://learn.microsoft.com/en-us/entra/identity-platform/access-token-claims-reference
+const audienceApplicationIds = {
+  arm: '797f4846-ba00-4fd7-ba43-dac1f8f63013',
+  storage: 'e406a681-f3d4-42a8-90b6-c2b029497af1',
+  vault: 'cfa8b339-82a2-471a-a3c9-0fc0be7a4093',
+};
 
 export function permissionAllowsAction(permissions, action) {
   const matches = (pattern) =>
@@ -55,10 +62,16 @@ export function validateToken(token, audience, expected) {
       .replace(/\/$/, '')
       .toLowerCase();
   const allowedAudiences = [audience];
+  const kind = Object.keys(audiences).find(
+    (key) => normalize(audiences[key]) === normalize(audience),
+  );
+  assert.ok(kind, 'Unknown intended Azure API audience');
+  assert.equal(typeof claims.aud, 'string', 'Azure audience claim must be a string');
+  allowedAudiences.push(audienceApplicationIds[kind]);
   if (audience === audiences.arm) allowedAudiences.push('https://management.core.windows.net/');
   assert.ok(
     allowedAudiences.some((allowed) => normalize(allowed) === normalize(claims.aud)),
-    'Unexpected Azure token audience',
+    `Unexpected Azure token audience for ${kind}; observed ${guid.test(claims.aud) ? claims.aud : 'nonmatching resource URI'}`,
   );
   assert.equal(
     normalize(claims.appid ?? claims.azp),
@@ -165,7 +178,12 @@ export async function verifyIdentity({
         'x-ms-date': new Date().toUTCString(),
       },
     });
-    validate(response);
+    try {
+      validate(response);
+    } catch (error) {
+      // Only fixed check labels and HTTP status, never bodies, assertion values or tokens.
+      throw new Error(`${label} (HTTP ${response.status}): ${error.message.split('\n')[0]}`);
+    }
     results.push({ check: label, status: 'passed' });
   };
   const subscription = `/subscriptions/${subscriptionId}`;
