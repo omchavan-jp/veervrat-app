@@ -23,7 +23,7 @@ Implementation work: [OpenSpec tasks](../openspec/changes/github-governance/task
 | UAT acceptance and release manifests          | Implementation and verification pending                                                                                                                                          |
 | Production reviewer gate | Configured/read back 2026-10-11: omchavan-jp required; self-approval allowed; admin bypass disabled; prod-* tags only. Real production approval test deferred |
 | Digest promotion | Pending; current production preparation rebuilds on tags; recorded UAT acceptance and release eligibility checks also pending |
-| Separate production cloud authority | Three identity probes passed; environment clients switched and real scoped UAT publishing/deploy passed (38124662672). Production verified read-only only. Legacy trust/grant retirement staged, not applied; see identity cutover evidence |
+| Separate production cloud authority | Three identity probes passed; environment clients switched, scoped UAT publishing/deploy passed (38124662672), six legacy grants/three FICs removed and fresh old federation rejected (38133195235). Production writes intentionally await a planned release |
 | Dependency/code security controls             | Dependabot alerts/security updates and CodeQL are enabled; existing findings recorded; grouped version-update config merged in #319; remaining remediation is tracked separately |
 | Private vulnerability reporting               | Enabled and verified by API; SECURITY.md links to the confidential GitHub reporting form                                                                                         |
 

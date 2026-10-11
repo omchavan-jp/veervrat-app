@@ -321,7 +321,8 @@ Each of these cost real time and would recur. Full detail in
 Active deployments now use separate `veervrat-github-build`, `veervrat-github-uat` and
 `veervrat-github-prod` identities, with the scoped matrix and verification in
 [identity cutover evidence](azure-identity-cutover.md). Build/UAT writes were verified in
-run `38124662672`; production was verified read-only, not deployed. Legacy retirement is staged.
+run `38124662672`; production was verified read-only, not deployed. Legacy retirement applied
+in #355: six old grants and three old FICs removed; fresh federation rejected in `38133195235`.
 
 **Historical legacy setup (not the replacement's permissions):** one identity,
 `veervrat-github-actions`, previously shared by CD jobs. No stored
@@ -350,12 +351,13 @@ GitHub protections were activated and read back on 2026-10-11 for the currently 
 Owner self-approval is allowed. `uat` accepts only `main`; `build` accepts `main` and
 `prod-*` tags to preserve current release preparation. The earlier private-plan 422 is
 historical, not the current configuration. No production test tag was created.
-These gates do not isolate the shared Azure identity. The additive three-identity/four-container
+Environment names alone did not isolate the former shared identity. The additive three-identity/four-container
 foundation in PR #349 was applied on 2026-10-11: 10 additions, zero changes/deletions.
 The replacements have twelve narrowly scoped grants applied in #352; native state copies into dedicated containers are
 verified, with backend cutover/rollout status in [migration evidence](terraform-state-migration.md).
 Active environment client IDs are switched and the repository fallback removed. Legacy account-wide
-state access and other grants still exist until the reviewed retirement plan is applied.
+state access, subscription Contributor/Secrets Officer, registry push and UAA grants were removed.
+The old identity object is retained for audit without managed grants or federated trust.
 
 Read-only candidate verification and deployment client-ID cutover are complete;
 their [cutover record](azure-identity-cutover.md) distinguishes proposed, applied, tested

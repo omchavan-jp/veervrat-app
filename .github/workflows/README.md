@@ -63,8 +63,9 @@ The checked-in Action references use full commit SHAs and the reviewed repositor
 [policy checker](../scripts/check-actions-security.mjs) and its negative fixtures. Workflow tokens
 default to `contents: read`; only CD jobs that use Azure login request `id-token: write`.
 Public-fork runs require maintainer approval and ordinary PR jobs have no deployment OIDC grant.
-Active client IDs now use separate verified identities. Legacy-trust retirement is tracked in
-[identity cutover evidence](../../ops/azure-identity-cutover.md); source removal alone is not an apply.
+Active client IDs now use separate verified identities. Legacy trusts/grants were removed by
+reviewed apply, with fresh-federation rejection in [identity cutover evidence](../../ops/azure-identity-cutover.md).
+Source removal alone is not an apply.
 Manual `verify-legacy-revoked` authenticates the replacement as a positive control before checking
 that fresh GitHub federation to the old client is specifically rejected. It does not deploy.
 

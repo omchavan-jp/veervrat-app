@@ -1,8 +1,8 @@
 # Scoped Azure deployment identities
 
 Owner: omchavan-jp. Authorization: maintainer chat, 2026-10-11.
-Status: all three candidates verified, environment clients switched, scoped UAT rollout successful;
-legacy trust/grant retirement is staged, not yet applied.
+Status: all three candidates verified, environment clients switched, scoped UAT rollout successful,
+legacy grants/trusts removed and fresh legacy federation rejected.
 PR #352 merged at `7b3ceed5fe8a5de6db14a43b49d0053f151ee5b1` after all seven checks.
 A fresh locked plan applied twelve additions, zero changes/deletions; private state backup preserved.
 Candidate variables are staged on each environment. CD was restored after apply.
@@ -29,11 +29,19 @@ Terraform state migration is complete; see [evidence](terraform-state-migration.
   four image builds published, UAT applied and passed readiness/wiring checks, production skipped.
 
 Production application writes have **not** been exercised. Verify those only during a deliberate
-UAT-approved release. The remaining legacy trusts/grants still form a bypass until retirement applies.
+UAT-approved release. Retirement merged in #355 at `ddf9bc82e7b4585c513858b8c33327b5f4091bf5` after
+all seven checks. A fresh locked plan applied zero additions/changes and exactly nine removals:
+six old grants and three old FICs. Private recovery state preserved; replacement grants/apps/data
+untouched. State read-back confirmed zero managed legacy grants/FICs, twelve replacement assignments
+and the retained, guarded legacy identity object. CD restored to active afterward.
 
-Retirement preview: zero additions/changes, exactly nine deletions (six legacy grants and three
-legacy FICs). The roleless/trustless identity object is retained with a destroy guard for audit,
-not as an active credential. Apply only after checked source merges and the successful UAT evidence.
+Fresh federation regression [38133195235](https://github.com/omchavan-jp/veervrat-app/actions/runs/38133195235)
+passed: same-assertion replacement authentication succeeded and the old client returned
+`AADSTS70025` (no configured federated credentials). Both deployment jobs were skipped.
+
+Retirement review/apply contained zero additions/changes and exactly nine deletions. The
+roleless/trustless identity object is retained with a destroy guard for audit,
+not as an active credential. The apply followed checked source and successful scoped UAT evidence.
 Post-apply `verify-legacy-revoked` uses the same fresh GitHub assertion to successfully authenticate
 the replacement and require a specific missing/mismatched-trust error from the old client.
 It never logs tokens or performs production writes. Already-issued tokens and Azure propagation
