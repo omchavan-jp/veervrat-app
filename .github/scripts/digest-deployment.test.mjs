@@ -3,7 +3,8 @@ import test from 'node:test';
 import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { buildImageRecord, selectImageSet } from './deploy-image-set.mjs';
-import { collectChecks, recordUat } from './record-uat.mjs';
+import { assertUatWiring, collectChecks, recordUat, verifyUatHealth } from './record-uat.mjs';
+import { assertServingRevision } from './accept-uat.mjs';
 import { imageNames, requiredChecks, validateImages } from './release-record.mjs';
 
 const context = {
@@ -191,4 +192,87 @@ test('migration proof is execution-scoped and observability failure cannot allow
   assert.ok(!action.includes('::warning::could not read job logs'));
   assert.ok(action.includes('.data.checks.database == "up"'));
   assert.ok(action.includes('.data.checks.redis == "up"'));
+});
+
+test('read-only verification accepts real digest sets and legacy SHA tags without treating digest as commit', () => {
+  const action = readFileSync('.github/actions/verify-azure-identity/action.yml', 'utf8');
+  const loop = action.slice(action.indexOf('for entry in API'), action.indexOf('API_COMMIT='));
+  const refs = selectImageSet(records(), old, context, true).desired;
+  const env = {
+    ...process.env,
+    API_IMAGE: refs.api,
+    WEB_IMAGE: refs.web,
+    JOB_IMAGE: refs.migrate,
+    BACKUP_IMAGE: refs.backup,
+  };
+  execFileSync('bash', ['-ec', loop], { env });
+  const legacy = {
+    ...env,
+    API_IMAGE: old.api,
+    WEB_IMAGE: old.web,
+    JOB_IMAGE: 'veervratacr.azurecr.io/veervrat-api-migrate:abc1234',
+    BACKUP_IMAGE: 'veervratacr.azurecr.io/veervrat-backup:def5678',
+  };
+  execFileSync('bash', ['-ec', loop], { env: legacy });
+  for (const image of [
+    'attacker.invalid/api:abc1234',
+    'veervratacr.azurecr.io/veervrat-api:latest',
+    'veervratacr.azurecr.io/veervrat-api@sha256:short',
+  ])
+    assert.throws(() =>
+      execFileSync('bash', ['-ec', loop], { env: { ...env, API_IMAGE: image }, stdio: 'ignore' }),
+    );
+  assert.ok(action.includes('-var="image_tag=$API_COMMIT"'));
+  assert.ok(action.includes('-var="image_refs=$IMAGE_REFS"'));
+});
+
+test('serving proof needs one latest healthy active revision on the exact configured image', () => {
+  const value = { state: 'Succeeded', mode: 'Single', latest: 'app-new', image: 'digest-new' };
+  const revisions = [{ name: 'app-new', health: 'Healthy', image: 'digest-new' }];
+  assertServingRevision(value, revisions, 'api');
+  for (const bad of [
+    [],
+    [...revisions, revisions[0]],
+    [{ ...revisions[0], name: 'app-old' }],
+    [{ ...revisions[0], health: 'Unhealthy' }],
+    [{ ...revisions[0], image: 'digest-old' }],
+  ])
+    assert.throws(() => assertServingRevision(value, bad, 'api'), /UAT_REVISION_PENDING/);
+  assert.throws(() => assertServingRevision({ ...value, mode: 'Multiple' }, revisions, 'web'));
+  assert.throws(() => assertServingRevision({ ...value, state: 'Updating' }, revisions, 'web'));
+});
+
+test('fresh post-revision probes require HTTP success, DB/Redis up and the UAT API URL', async () => {
+  const html = (url) =>
+    `<script>self.__next_f.push(${JSON.stringify([1, JSON.stringify({ apiBaseUrl: url })])})</script>`;
+  const good = { data: { status: 'ok', checks: { database: 'up', redis: 'up' } } };
+  const request = async (url) =>
+    new Response(
+      url.endsWith('/ready')
+        ? JSON.stringify(good)
+        : html('https://api.uat.veervrat.jnanaprabodhini.org/api/v1'),
+    );
+  assert.deepEqual(await verifyUatHealth(request), { ready: true, wiring: true });
+  await assert.rejects(verifyUatHealth(async () => new Response('', { status: 500 })));
+  await assert.rejects(verifyUatHealth(async () => new Response('{}')));
+  await assert.rejects(
+    verifyUatHealth(
+      async (url) =>
+        new Response(
+          url.endsWith('/ready')
+            ? JSON.stringify(good)
+            : html('https://api.veervrat.jnanaprabodhini.org/api/v1'),
+        ),
+    ),
+  );
+  for (const bad of [
+    'https://attacker.invalid/?url=https://api.uat.veervrat.jnanaprabodhini.org/api/v1',
+    'https://api.uat.veervrat.jnanaprabodhini.org.attacker.invalid/api/v1',
+    'https://user:password@api.uat.veervrat.jnanaprabodhini.org/api/v1',
+    'https://api.uat.veervrat.jnanaprabodhini.org/api/v1?bad=1',
+  ])
+    assert.throws(() => assertUatWiring(html(bad)));
+  assert.throws(() =>
+    assertUatWiring('<!-- https://api.uat.veervrat.jnanaprabodhini.org/api/v1 -->'),
+  );
 });

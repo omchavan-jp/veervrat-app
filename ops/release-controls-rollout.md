@@ -75,7 +75,16 @@ time after deployment health checks, not a claim that the containing workflow al
 Owner acceptance subsequently requires that workflow/attempt and deploy job to finish successfully.
 Latest failed checks, read/auth errors, digest drift or storage failure refuse receipt/acceptance.
 
-Live digest rollout verification is pending. Human UAT acceptance has not been performed.
+First rollout `38140315628` deployed all four digest references, verified execution-scoped
+migration output, readiness and wiring, but failed the receipt's revision metadata check.
+No receipt/acceptance success is claimed for that failed run. The follow-up verifies the actual
+sole active healthy revision and its exact image, waits boundedly for convergence, then repeats
+public readiness/wiring before storing a receipt. Read/auth failures are not retried as readiness.
+Successful end-to-end receipt verification is pending. Human acceptance has not been performed.
+The read-only identity/plan verifier must preserve the exact four deployed references,
+including independent backup images, and read commit metadata separately from a digest.
+The follow-up compatibility fix handles both SHA tags and digests; UAT still requires a
+zero-change plan, and the known production-only baseline guard remains unchanged.
 Receipt persistence proves automated evidence/configuration, not that every backup/maintenance
 job was exercised or that someone tested every feature. Full documentation reconciliation and
 production promotion/rollback remain separate steps.

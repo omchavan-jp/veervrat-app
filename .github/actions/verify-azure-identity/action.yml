@@ -55,20 +55,27 @@ runs:
         WEB_IMAGE=$(az containerapp show -n "veervrat-$CONTEXT-web" -g "veervrat-$CONTEXT" --query 'properties.template.containers[0].image' -o tsv)
         JOB_IMAGE=$(az containerapp job show -n "veervrat-$CONTEXT-migrate" -g "veervrat-$CONTEXT" --query 'properties.template.containers[0].image' -o tsv)
         BACKUP_IMAGE=$(az containerapp job show -n "veervrat-$CONTEXT-backup" -g "veervrat-$CONTEXT" --query 'properties.template.containers[0].image' -o tsv)
-        for entry in API WEB JOB; do
+        for entry in API WEB JOB BACKUP; do
           case "$entry" in
             API) image="$API_IMAGE"; repository=veervrat-api ;;
             WEB) image="$WEB_IMAGE"; repository=veervrat-web ;;
             JOB) image="$JOB_IMAGE"; repository=veervrat-api-migrate ;;
+            BACKUP) image="$BACKUP_IMAGE"; repository=veervrat-backup ;;
           esac
-          [[ "$image" == "veervratacr.azurecr.io/$repository:"* ]] || { echo 'Unexpected deployed image repository'; exit 1; }
-          [[ "${image##*:}" =~ ^[a-f0-9]{7,40}$ ]] || { echo 'Unexpected deployed image tag'; exit 1; }
+          case "$image" in
+            "veervratacr.azurecr.io/$repository@sha256:"*)
+              [[ "${image##*:}" =~ ^[a-f0-9]{64}$ ]] || { echo 'Unexpected deployed digest'; exit 1; } ;;
+            "veervratacr.azurecr.io/$repository:"*)
+              [[ "${image##*:}" =~ ^[a-f0-9]{7,40}$ ]] || { echo 'Unexpected deployed SHA tag'; exit 1; } ;;
+            *) echo 'Unexpected deployed image repository'; exit 1 ;;
+          esac
         done
-        [[ "$BACKUP_IMAGE" == "veervratacr.azurecr.io/veervrat-backup:${JOB_IMAGE##*:}" ]] || { echo 'Mixed migration/backup tags require a separately reviewed plan'; exit 1; }
+        API_COMMIT=$(az containerapp show -n "veervrat-$CONTEXT-api" -g "veervrat-$CONTEXT" --query "properties.template.containers[0].env[?name=='COMMIT_SHA'].value | [0]" -o tsv)
+        [[ "$API_COMMIT" =~ ^[a-f0-9]{7,40}$ ]] || { echo 'Unexpected deployed commit metadata'; exit 1; }
+        IMAGE_REFS=$(jq -cn --arg api "$API_IMAGE" --arg web "$WEB_IMAGE" --arg migrate "$JOB_IMAGE" --arg backup "$BACKUP_IMAGE" '{api:$api,web:$web,migrate:$migrate,backup:$backup}')
         set +e
         terraform plan -input=false -lock-timeout=30s -no-color -detailed-exitcode \
-          -var="image_tag=${JOB_IMAGE##*:}" -var="app_image_tag=${API_IMAGE##*:}" \
-          -var="web_image_tag=${WEB_IMAGE##*:}" -var=deploy_apps=true \
+          -var="image_tag=$API_COMMIT" -var="image_refs=$IMAGE_REFS" -var=deploy_apps=true \
           -out="$RUNNER_TEMP/candidate-plan.tfplan" > "$RUNNER_TEMP/candidate-plan.log" 2>&1
         result=$?
         set -e

@@ -161,7 +161,31 @@ export function azure(args) {
   }
 }
 
-export function liveImages() {
+export function assertServingRevision(value, revisions, resource) {
+  if (
+    value.state !== 'Succeeded' ||
+    value.mode !== 'Single' ||
+    !value.latest ||
+    !Array.isArray(revisions) ||
+    revisions.length !== 1 ||
+    revisions[0].name !== value.latest ||
+    revisions[0].health !== 'Healthy' ||
+    revisions[0].image !== value.image
+  )
+    throw new Error(
+      `UAT_REVISION_PENDING ${JSON.stringify({
+        resource,
+        state: value.state,
+        mode: value.mode,
+        latest: value.latest,
+        active: Array.isArray(revisions)
+          ? revisions.map(({ name, health }) => ({ name, health }))
+          : null,
+      })}`,
+    );
+}
+
+function readImagesOnce() {
   const images = {};
   for (const [name, kind, resource] of [
     ['api', 'app', 'api'],
@@ -180,19 +204,38 @@ export function liveImages() {
       '--query',
       kind === 'job'
         ? '{image:properties.template.containers[0].image}'
-        : '{image:properties.template.containers[0].image,ready:properties.latestReadyRevisionName,latest:properties.latestRevisionName,state:properties.provisioningState,mode:properties.configuration.activeRevisionsMode}',
+        : '{image:properties.template.containers[0].image,latest:properties.latestRevisionName,state:properties.provisioningState,mode:properties.configuration.activeRevisionsMode}',
     ]);
-    if (
-      kind === 'app' &&
-      (!value.ready ||
-        value.ready !== value.latest ||
-        value.state !== 'Succeeded' ||
-        value.mode !== 'Single')
-    )
-      throw new Error('UAT revision not ready');
+    if (kind === 'app') {
+      const revisions = azure([
+        'containerapp',
+        'revision',
+        'list',
+        '-g',
+        'veervrat-uat',
+        '-n',
+        `veervrat-uat-${resource}`,
+        '--query',
+        '[?properties.active].{name:name,image:properties.template.containers[0].image,health:properties.healthState}',
+      ]);
+      assertServingRevision(value, revisions, resource);
+    }
     images[name] = value.image;
   }
   return images;
+}
+
+export async function liveImages() {
+  for (let attempt = 0; attempt < 12; attempt++) {
+    try {
+      return readImagesOnce();
+    } catch (error) {
+      if (!error.message.startsWith('UAT_REVISION_PENDING')) throw error;
+      console.log(error.message);
+      if (attempt === 11) throw new Error('UAT active healthy revision proof timed out');
+      await new Promise((resolveWait) => setTimeout(resolveWait, 10000));
+    }
+  }
 }
 
 async function main() {
