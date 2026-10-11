@@ -19,8 +19,13 @@ backend before the explicit copy confirmation. State locks were used throughout.
 All three retain their lineage, full resource data and outputs. Comparison allowed only
 the native migration's one-step serial increase and ordering of validation check records;
 canonical state content otherwise matched. Provider versions were not upgraded. Private
-backups and logs were preserved outside Git. The shared post-migration plan has no changes;
-UAT/production plan review and backend-PR merge remain pending. No production release occurred.
+backups and logs were preserved outside Git. Normally locked shared and UAT post-migration
+plans have **no changes** (UAT image set pinned to `92367ab`). Production was pinned to its
+existing `3037e87` images: both the original and migrated backends propose the exact same
+two in-place app configuration updates, zero additions/deletions. The complete proposed
+resource-change objects were compared and matched; these are existing configuration debt,
+not a migration effect, and were **not applied**. Backend-PR merge and CD restoration
+remain pending. No production release occurred.
 
 ## Applied foundation
 
