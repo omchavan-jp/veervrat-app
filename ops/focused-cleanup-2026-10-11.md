@@ -1,10 +1,10 @@
 # Focused Azure, repository and documentation cleanup
 
 Owner: omchavan-jp. Authorized in the maintainer chat on 2026-10-11.
-Status: reviewed identity-removal plan pending apply; historical branch purge completed.
+Status: identity deletion applied and verified; historical branch purge completed.
 
 Remote purge removed exactly 186 inventoried historical refs atomically with expected-SHA leases.
-Post-purge inventory contains main, 16 open Dependabot heads and this active cleanup branch.
+After cleanup PR #357 merged, inventory contains main and 16 open Dependabot heads.
 All tag refs/SHAs compared unchanged before/after. No additional Git backup was created;
 remote ref removal has no guaranteed recovery. Existing local work/objects were not deleted.
 
@@ -21,6 +21,21 @@ the [cutover record](azure-identity-cutover.md) already record its old non-secre
 The negative-federation test accepts a specific absent-application response for that known old
 client, after a successful same-assertion replacement control; unrelated authentication/network
 errors still fail. It is not a production deployment.
+
+## Completion evidence
+
+PR #357 merged at `465da858c7191de3c0a731b7781b6dd804037b54` after all seven checks passed.
+CD was temporarily paused; a private recovery state snapshot and fresh locked plan were
+preserved. The exact old identity ID/client/principal were checked before applying the saved
+plan: zero additions, zero changes, one deletion. State read-back contains no old identity or
+old client output, and preserves three replacement identities, three FICs, twelve replacement
+role assignments and four private containers. A fresh shared plan reports no changes.
+
+CD is active again. Read-only regression
+[38136071955](https://github.com/omchavan-jp/veervrat-app/actions/runs/38136071955)
+succeeded after deletion: the replacement authenticated with the same fresh assertion and the
+legacy client was rejected. Both deployment jobs were skipped. Prod remains tag-only; no
+production tag or application deployment was performed. All original tag refs/SHAs remain unchanged.
 
 ## Remote branch inventory and deletion boundary
 

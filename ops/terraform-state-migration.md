@@ -89,6 +89,6 @@ Retained source state is for controlled recovery only, not an alternative active
 Separate containers alone were preparation, not access isolation. The subsequent
 [identity cutover](azure-identity-cutover.md) applied container-scoped deployment access,
 verified allowed/denied operations, switched client IDs and removed the legacy broad grants/trusts.
-The inert identity object's final removal is tracked in [focused cleanup](focused-cleanup-2026-10-11.md).
+The inert identity object was deleted and verified in [focused cleanup](focused-cleanup-2026-10-11.md).
 Maintainer state access remains an explicit operator boundary; production write verification
 is still reserved for a deliberate UAT-approved release.
