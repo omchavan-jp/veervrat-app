@@ -41,7 +41,7 @@ function fixture(legacy, replacement = { status: 200, body: { access_token: acce
   };
 }
 test('only a specific missing-trust error after a successful replacement proves rejection', async () => {
-  for (const code of [70025, 700213]) {
+  for (const code of [70025, 700213, 700016]) {
     const { options, calls } = fixture({
       status: 400,
       body: { error: 'invalid_client', error_codes: [code] },
@@ -56,7 +56,7 @@ test('only a specific missing-trust error after a successful replacement proves 
 test('legacy token success, unrelated AAD errors and networking failures cannot pass', async () => {
   for (const response of [
     { status: 200, body: { access_token: 'synthetic' } },
-    { status: 400, body: { error: 'invalid_client', error_codes: [700016] } },
+    { status: 400, body: { error: 'invalid_client', error_codes: [700027] } },
     { status: 500, body: { error: 'server_error' } },
   ]) {
     const { options } = fixture(response);
