@@ -346,11 +346,11 @@ Owner self-approval is allowed. `uat` accepts only `main`; `build` accepts `main
 historical, not the current configuration. No production test tag was created.
 These gates do not isolate the shared Azure identity. The additive three-identity/four-container
 foundation in PR #349 was applied on 2026-10-11: 10 additions, zero changes/deletions.
-The identities have no new role grants; native state copies into dedicated containers are
+The replacements have twelve narrowly scoped grants applied in #352; native state copies into dedicated containers are
 verified, with backend cutover/rollout status in [migration evidence](terraform-state-migration.md).
 Live workflow credentials remain unchanged; legacy account-wide state access remains broad.
 
-Scoped replacement grants and read-only candidate verification are being implemented;
+Read-only candidate verification and deployment client-ID cutover are being implemented;
 their [cutover record](azure-identity-cutover.md) distinguishes proposed, applied, tested
 and active credentials. Do not copy the legacy subscription-wide or UAA grants to new identities.
 New role assignments and subscription provider registration remain explicit maintainer operations.
