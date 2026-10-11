@@ -145,7 +145,7 @@ Phase 2A — UAT stateful core — landed 2026-08-16). State backend: storage ac
 auth — no storage key). On 2026-10-11, native locked copies moved the unchanged keys
 `shared.tfstate`, `uat.tfstate`, `prod.tfstate` into `tfstate-shared`, `tfstate-uat`,
 `tfstate-prod` respectively. Lineage, resource data and outputs were verified unchanged.
-Backend configuration merge and deployment restoration are tracked in
+Backend configuration merged in #350 and CD was restored; deployment evidence is tracked in
 [state cutover evidence](terraform-state-migration.md). Do not infer clean live plans from
 historical observations; review each environment's current plan with its deployed images pinned.
 

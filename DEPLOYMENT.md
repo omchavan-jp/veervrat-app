@@ -13,8 +13,9 @@ gates from mechanisms actually implemented and verified.
 ## Delivery controls verified (2026-10-11)
 
 Terraform state copies have been verified in dedicated shared/UAT/production containers.
-See [state cutover status](ops/terraform-state-migration.md) before operating: backend
-merge/rollout verification is separate from the copy, and legacy permissions remain broad.
+The backend configuration merged in #350 and CD was restored. See
+[state cutover evidence](ops/terraform-state-migration.md) before operating:
+deployment verification is separate from the copy, and legacy permissions remain broad.
 
 GitHub environment configuration was read back after activation: `build` permits branch
 `main` and tags `prod-*`; `uat` permits only branch `main`; `prod` permits only tags

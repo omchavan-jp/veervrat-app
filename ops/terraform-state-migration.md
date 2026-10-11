@@ -1,7 +1,11 @@
 # Terraform state container cutover
 
 Owner: omchavan-jp. Authorization recorded in the maintainer chat on 2026-10-11.
-Status: native state copies verified on 2026-10-11; backend PR/checks and CD restoration pending.
+Status: native state migration verified on 2026-10-11; backend configuration merged and CD restored.
+PR #350 passed all seven checks and merged at `e4e0a55ca732c3e205401d97b72d547f2eb68c91`.
+The CD workflow was restored to its prior `active` state, then a legitimate main UAT
+verification run was started: [run 38120027391](https://github.com/omchavan-jp/veervrat-app/actions/runs/38120027391).
+Consult its actual job/health-check outcome before claiming end-to-end deployment verification.
 
 ## Migration evidence
 
@@ -24,8 +28,8 @@ plans have **no changes** (UAT image set pinned to `92367ab`). Production was pi
 existing `3037e87` images: both the original and migrated backends propose the exact same
 two in-place app configuration updates, zero additions/deletions. The complete proposed
 resource-change objects were compared and matched; these are existing configuration debt,
-not a migration effect, and were **not applied**. Backend-PR merge and CD restoration
-remain pending. No production release occurred.
+not a migration effect, and were **not applied**. Backend configuration is merged and
+CD is restored; the resumed UAT run above records deployment evidence. No production release occurred.
 
 ## Applied foundation
 
