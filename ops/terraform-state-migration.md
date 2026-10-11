@@ -86,6 +86,9 @@ If cutover cannot complete, keep deployments paused and select a single authorit
 backend using verified lineage/serial. Do not copy a stale backup over newer state.
 Retained source state is for controlled recovery only, not an alternative active backend.
 
-Separate containers are preparation, not access isolation: the legacy identity still has
-account-wide state access and broad production authority. Scoped RBAC, environment client-ID
-cutover and allowed/denied-operation tests remain required before retiring that identity.
+Separate containers alone were preparation, not access isolation. The subsequent
+[identity cutover](azure-identity-cutover.md) applied container-scoped deployment access,
+verified allowed/denied operations, switched client IDs and removed the legacy broad grants/trusts.
+The inert identity object's final removal is tracked in [focused cleanup](focused-cleanup-2026-10-11.md).
+Maintainer state access remains an explicit operator boundary; production write verification
+is still reserved for a deliberate UAT-approved release.

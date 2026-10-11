@@ -240,7 +240,7 @@ jobs:
     # Native prod protection requires omchavan-jp approval, permits only prod-* tags,
     # and disables administrator bypass. Owner self-approval is allowed for now.
     # Desired settings: .github/environment-policy.json. Verify live settings separately.
-    # Shared Azure authority and tag-triggered rebuilds still need the planned cutover.
+    # Separate Azure identities are active; tag-triggered rebuilds still need digest promotion.
     environment: prod
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
