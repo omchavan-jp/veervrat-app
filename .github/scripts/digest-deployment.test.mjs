@@ -192,3 +192,35 @@ test('migration proof is execution-scoped and observability failure cannot allow
   assert.ok(action.includes('.data.checks.database == "up"'));
   assert.ok(action.includes('.data.checks.redis == "up"'));
 });
+
+test('read-only verification accepts real digest sets and legacy SHA tags without treating digest as commit', () => {
+  const action = readFileSync('.github/actions/verify-azure-identity/action.yml', 'utf8');
+  const loop = action.slice(action.indexOf('for entry in API'), action.indexOf('API_COMMIT='));
+  const refs = selectImageSet(records(), old, context, true).desired;
+  const env = {
+    ...process.env,
+    API_IMAGE: refs.api,
+    WEB_IMAGE: refs.web,
+    JOB_IMAGE: refs.migrate,
+    BACKUP_IMAGE: refs.backup,
+  };
+  execFileSync('bash', ['-ec', loop], { env });
+  const legacy = {
+    ...env,
+    API_IMAGE: old.api,
+    WEB_IMAGE: old.web,
+    JOB_IMAGE: 'veervratacr.azurecr.io/veervrat-api-migrate:abc1234',
+    BACKUP_IMAGE: 'veervratacr.azurecr.io/veervrat-backup:def5678',
+  };
+  execFileSync('bash', ['-ec', loop], { env: legacy });
+  for (const image of [
+    'attacker.invalid/api:abc1234',
+    'veervratacr.azurecr.io/veervrat-api:latest',
+    'veervratacr.azurecr.io/veervrat-api@sha256:short',
+  ])
+    assert.throws(() =>
+      execFileSync('bash', ['-ec', loop], { env: { ...env, API_IMAGE: image }, stdio: 'ignore' }),
+    );
+  assert.ok(action.includes('-var="image_tag=$API_COMMIT"'));
+  assert.ok(action.includes('-var="image_refs=$IMAGE_REFS"'));
+});
