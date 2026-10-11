@@ -318,7 +318,13 @@ Each of these cost real time and would recur. Full detail in
 
 ### CD — GitHub → Azure (2026-08-16)
 
-One user-assigned identity, `veervrat-github-actions`, shared by every CD job. No stored
+Active deployments now use separate `veervrat-github-build`, `veervrat-github-uat` and
+`veervrat-github-prod` identities, with the scoped matrix and verification in
+[identity cutover evidence](azure-identity-cutover.md). Build/UAT writes were verified in
+run `38124662672`; production was verified read-only, not deployed. Legacy retirement is staged.
+
+**Historical legacy setup (not the replacement's permissions):** one identity,
+`veervrat-github-actions`, previously shared by CD jobs. No stored
 secret — GitHub OIDC exchanges a short-lived token at run time. Three federated credentials,
 one per GitHub Environment (`build`, `uat`, `prod`) — see
 `veervrat-app/documentation/21_Infrastructure-Conventions.md` §14–15 for why exactly three,
@@ -348,9 +354,10 @@ These gates do not isolate the shared Azure identity. The additive three-identit
 foundation in PR #349 was applied on 2026-10-11: 10 additions, zero changes/deletions.
 The replacements have twelve narrowly scoped grants applied in #352; native state copies into dedicated containers are
 verified, with backend cutover/rollout status in [migration evidence](terraform-state-migration.md).
-Live workflow credentials remain unchanged; legacy account-wide state access remains broad.
+Active environment client IDs are switched and the repository fallback removed. Legacy account-wide
+state access and other grants still exist until the reviewed retirement plan is applied.
 
-Read-only candidate verification and deployment client-ID cutover are being implemented;
+Read-only candidate verification and deployment client-ID cutover are complete;
 their [cutover record](azure-identity-cutover.md) distinguishes proposed, applied, tested
 and active credentials. Do not copy the legacy subscription-wide or UAA grants to new identities.
 New role assignments and subscription provider registration remain explicit maintainer operations.

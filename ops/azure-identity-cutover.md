@@ -1,18 +1,43 @@
 # Scoped Azure deployment identities
 
 Owner: omchavan-jp. Authorization: maintainer chat, 2026-10-11.
-Status: twelve scoped grants applied; candidate verification in progress, active deployments unchanged.
+Status: all three candidates verified, environment clients switched, scoped UAT rollout successful;
+legacy trust/grant retirement is staged, not yet applied.
 PR #352 merged at `7b3ceed5fe8a5de6db14a43b49d0053f151ee5b1` after all seven checks.
 A fresh locked plan applied twelve additions, zero changes/deletions; private state backup preserved.
 Candidate variables are staged on each environment. CD was restored after apply.
 Initial build probe `38122789428` stopped before Azure login because composite-action `vars`
 references were unsupported; explicit input wiring and a regression check repair this without
-changing permissions. No context is declared verified until its live probe passes.
+changing permissions. Failures below are historical checkpoints, not current candidate status.
 The repaired build probe `38123386860` reached Azure login but stopped on token-audience
 validation. Entra documents resource URI or API application-ID GUID audiences; the verifier
 now accepts only the known corresponding API GUID/URI, never arbitrary audiences. Client,
 principal, tenant, expiry and live resource checks remain mandatory.
 Terraform state migration is complete; see [evidence](terraform-state-migration.md).
+
+## Verified cutover evidence
+
+- Build read-only probe: [38123937499](https://github.com/omchavan-jp/veervrat-app/actions/runs/38123937499), successful.
+- UAT permission/clean-plan probe: [38124084013](https://github.com/omchavan-jp/veervrat-app/actions/runs/38124084013), successful.
+- Production permission/baseline-plan probe: [38124255640](https://github.com/omchavan-jp/veervrat-app/actions/runs/38124255640), successful;
+  normal deployment jobs skipped, owner approval required and explicitly authorized for read-only verification.
+- Temporary prod main-branch policy `62661499` was removed afterward; read-back again showed only
+  `prod-*` tags, required owner review and administrator bypass disabled.
+- Environment `AZURE_CLIENT_ID` values switched to the verified replacements; the repository-level
+  legacy fallback was removed. Candidate principal metadata remains available for regression probes.
+- Real publishing/UAT deployment: [38124662672](https://github.com/omchavan-jp/veervrat-app/actions/runs/38124662672), successful;
+  four image builds published, UAT applied and passed readiness/wiring checks, production skipped.
+
+Production application writes have **not** been exercised. Verify those only during a deliberate
+UAT-approved release. The remaining legacy trusts/grants still form a bypass until retirement applies.
+
+Retirement preview: zero additions/changes, exactly nine deletions (six legacy grants and three
+legacy FICs). The roleless/trustless identity object is retained with a destroy guard for audit,
+not as an active credential. Apply only after checked source merges and the successful UAT evidence.
+Post-apply `verify-legacy-revoked` uses the same fresh GitHub assertion to successfully authenticate
+the replacement and require a specific missing/mismatched-trust error from the old client.
+It never logs tokens or performs production writes. Already-issued tokens and Azure propagation
+caches are separate from proving that fresh federation is rejected; do not overstate immediate expiry.
 
 ## Desired permissions
 

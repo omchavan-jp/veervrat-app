@@ -23,7 +23,7 @@ on:
         description: Deploy UAT, or verify a candidate identity without deployment
         type: choice
         default: deploy
-        options: [deploy, verify-build, verify-uat, verify-prod]
+        options: [deploy, verify-build, verify-uat, verify-prod, verify-legacy-revoked]
 
 # Never run two deploys at the same ref concurrently, and never cancel one midway — a
 # half-applied Terraform run or a partially-applied migration is worse than a slow queue.
@@ -315,3 +315,25 @@ jobs:
           principal-id: ${{ vars.AZURE_CANDIDATE_PRINCIPAL_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+  verify-legacy-revoked:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.operation == 'verify-legacy-revoked'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: build
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - name: Confirm old GitHub federation cannot renew credentials
+        env:
+          NEW_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+          NEW_PRINCIPAL_ID: ${{ vars.AZURE_CANDIDATE_PRINCIPAL_ID }}
+          AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+        run: node .github/scripts/verify-legacy-federation.mjs

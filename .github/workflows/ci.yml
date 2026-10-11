@@ -69,6 +69,7 @@ jobs:
         run: |
           node --test .github/scripts/check-actions-security.test.mjs
           node --test .github/scripts/verify-azure-identity.test.mjs
+          node --test .github/scripts/verify-legacy-federation.test.mjs
           node .github/scripts/check-actions-security.mjs
 
       - name: Install pinned D2 for product design validation

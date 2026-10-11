@@ -804,8 +804,15 @@ diagnosis that costs the most time.
 
 ### Identity and credentials
 
-One user-assigned managed identity, `veervrat-github-actions` (in `veervrat-shared`,
-`infra/terraform/envs/shared/github-oidc.tf`), shared by every CD job. No client secret, no
+Active Azure-login jobs use separate `veervrat-github-build`, `veervrat-github-uat` and
+`veervrat-github-prod` identities. Their scoped grants are declared in
+`infra/terraform/envs/shared/release-identity-permissions.tf`; verify live cutover/retirement
+in [identity evidence](../ops/azure-identity-cutover.md). Preparation has no Azure login/OIDC.
+Resource groups, subscription provider registration and IAM changes are maintainer bootstrap
+operations; routine deployers have no role-management delegation.
+
+**Historical legacy identity:** `veervrat-github-actions` (in `veervrat-shared`,
+`infra/terraform/envs/shared/github-oidc.tf`), previously shared by CD jobs. No client secret, no
 publish profile — GitHub exchanges a short-lived OIDC token for an Azure token at run time.
 
 **Three federated credentials, one per GitHub Environment** (`build`, `uat`, `prod` — see §14
@@ -832,7 +839,7 @@ repo:omchavan-jp@317451750/veervrat-app@1287947867:environment:prod
 Verify what exists: `az identity federated-credential list --identity-name
 veervrat-github-actions -g veervrat-shared -o table`.
 
-### Roles — scoped to the resources that need them
+### Historical legacy roles — not the replacement permission model
 
 | Role | Scope | Why |
 |---|---|---|
@@ -865,13 +872,10 @@ assign or remove only `AcrPull` for service principals. The renderer, its identi
 and that temporary registry grant were retired when the docs became a static export
 inside the existing web image.
 
-The claim this section used to make — **"prod needed zero additional role assignments once its
-resource group existed"** — is no longer true. Both `User Access Administrator` grants apply to
-`veervrat-uat` and `veervrat-prod` identically, so prod does now receive role assignments CD
-creates itself; the situation the old sentence described (subscription-wide grants meaning
-nothing further was ever needed per-environment) stopped being the whole picture the day a
-resource-group-scoped grant was added for the first time. Confirm current reality rather than
-trusting this paragraph: `az role assignment list --assignee <client-id> --all`.
+That historical delegation is superseded: replacement deployers do not create access grants.
+An infrastructure feature requiring new IAM must receive a reviewed maintainer apply first.
+Do not repair a CD authorization error by restoring UAA or subscription Contributor. Legacy
+grant removal must be verified live; deleting declarations does not itself revoke Azure access.
 
 ### Production release policy and authorization boundary
 
