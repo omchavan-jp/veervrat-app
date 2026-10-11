@@ -3,7 +3,8 @@ import test from 'node:test';
 import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { buildImageRecord, selectImageSet } from './deploy-image-set.mjs';
-import { collectChecks, recordUat } from './record-uat.mjs';
+import { collectChecks, recordUat, verifyUatHealth } from './record-uat.mjs';
+import { assertServingRevision } from './accept-uat.mjs';
 import { imageNames, requiredChecks, validateImages } from './release-record.mjs';
 
 const context = {
@@ -223,4 +224,43 @@ test('read-only verification accepts real digest sets and legacy SHA tags withou
     );
   assert.ok(action.includes('-var="image_tag=$API_COMMIT"'));
   assert.ok(action.includes('-var="image_refs=$IMAGE_REFS"'));
+});
+
+test('serving proof needs one latest healthy active revision on the exact configured image', () => {
+  const value = { state: 'Succeeded', mode: 'Single', latest: 'app-new', image: 'digest-new' };
+  const revisions = [{ name: 'app-new', health: 'Healthy', image: 'digest-new' }];
+  assertServingRevision(value, revisions, 'api');
+  for (const bad of [
+    [],
+    [...revisions, revisions[0]],
+    [{ ...revisions[0], name: 'app-old' }],
+    [{ ...revisions[0], health: 'Unhealthy' }],
+    [{ ...revisions[0], image: 'digest-old' }],
+  ])
+    assert.throws(() => assertServingRevision(value, bad, 'api'), /UAT_REVISION_PENDING/);
+  assert.throws(() => assertServingRevision({ ...value, mode: 'Multiple' }, revisions, 'web'));
+  assert.throws(() => assertServingRevision({ ...value, state: 'Updating' }, revisions, 'web'));
+});
+
+test('fresh post-revision probes require HTTP success, DB/Redis up and the UAT API URL', async () => {
+  const good = { data: { status: 'ok', checks: { database: 'up', redis: 'up' } } };
+  const request = async (url) =>
+    new Response(
+      url.endsWith('/ready')
+        ? JSON.stringify(good)
+        : 'https://api.uat.veervrat.jnanaprabodhini.org/api/v1',
+    );
+  assert.deepEqual(await verifyUatHealth(request), { ready: true, wiring: true });
+  await assert.rejects(verifyUatHealth(async () => new Response('', { status: 500 })));
+  await assert.rejects(verifyUatHealth(async () => new Response('{}')));
+  await assert.rejects(
+    verifyUatHealth(
+      async (url) =>
+        new Response(
+          url.endsWith('/ready')
+            ? JSON.stringify(good)
+            : 'https://api.veervrat.jnanaprabodhini.org/api/v1',
+        ),
+    ),
+  );
 });

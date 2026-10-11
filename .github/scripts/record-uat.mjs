@@ -27,7 +27,42 @@ export async function collectChecks(github, commit) {
   return checks;
 }
 
-export async function recordUat({ github, store, run, commit, desired, readImages, health, now }) {
+export async function verifyUatHealth(request = fetch) {
+  const ready = await request('https://api.uat.veervrat.jnanaprabodhini.org/ready', {
+    redirect: 'error',
+    signal: AbortSignal.timeout(60000),
+  });
+  if (ready.status !== 200) throw new Error('Fresh UAT readiness probe failed');
+  const body = await ready.json();
+  if (
+    body.data?.status !== 'ok' ||
+    body.data?.checks?.database !== 'up' ||
+    body.data?.checks?.redis !== 'up'
+  )
+    throw new Error('Fresh UAT database/Redis readiness failed');
+  const web = await request('https://uat.veervrat.jnanaprabodhini.org/login', {
+    redirect: 'error',
+    signal: AbortSignal.timeout(60000),
+  });
+  if (
+    web.status !== 200 ||
+    !(await web.text()).includes('https://api.uat.veervrat.jnanaprabodhini.org/api/v1')
+  )
+    throw new Error('Fresh UAT wiring probe failed');
+  return { ready: true, wiring: true };
+}
+
+export async function recordUat({
+  github,
+  store,
+  run,
+  commit,
+  desired,
+  readImages,
+  health,
+  probeHealth,
+  now,
+}) {
   verifyRun(await github.run(run.id), {
     ...run,
     path: '.github/workflows/cd.yml',
@@ -37,6 +72,8 @@ export async function recordUat({ github, store, run, commit, desired, readImage
   const images = await readImages();
   if (canonicalJson(images) !== canonicalJson(desired))
     throw new Error('Deployed image set does not match exact build digests');
+  if (health.ready !== true || health.wiring !== true)
+    throw new Error('Deployment health evidence missing');
   const receipt = validateReceipt({
     version: 1,
     repository,
@@ -45,7 +82,7 @@ export async function recordUat({ github, store, run, commit, desired, readImage
     completedAt: now(),
     images,
     checks: await collectChecks(github, commit),
-    health,
+    health: probeHealth ? await probeHealth() : health,
   });
   const key = `receipts/uat/${run.id}/${run.attempt}.json`;
   await store.create(key, receipt);
@@ -75,6 +112,7 @@ async function main() {
         commit: process.env.GITHUB_SHA,
         desired,
         readImages: liveImages,
+        probeHealth: verifyUatHealth,
         health: {
           ready: process.env.READY_VERIFIED === 'true',
           wiring: process.env.WIRING_VERIFIED === 'true',
