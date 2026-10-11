@@ -27,6 +27,30 @@ export async function collectChecks(github, commit) {
   return checks;
 }
 
+export function assertUatWiring(html) {
+  const parts = [];
+  for (const match of html.matchAll(/self\.__next_f\.push\((\[[\s\S]*?\])\)<\/script>/g)) {
+    const frame = JSON.parse(match[1]);
+    if (frame[0] === 1 && typeof frame[1] === 'string') parts.push(frame[1]);
+  }
+  const urls = [...parts.join('').matchAll(/"apiBaseUrl"\s*:\s*("(?:\\.|[^"\\])*")/g)].map(
+    (match) => new URL(JSON.parse(match[1])),
+  );
+  if (
+    !urls.length ||
+    urls.some(
+      (url) =>
+        url.origin !== 'https://api.uat.veervrat.jnanaprabodhini.org' ||
+        url.pathname !== '/api/v1' ||
+        url.username ||
+        url.password ||
+        url.search ||
+        url.hash,
+    )
+  )
+    throw new Error('Fresh UAT wiring probe failed');
+}
+
 export async function verifyUatHealth(request = fetch) {
   const ready = await request('https://api.uat.veervrat.jnanaprabodhini.org/ready', {
     redirect: 'error',
@@ -44,11 +68,8 @@ export async function verifyUatHealth(request = fetch) {
     redirect: 'error',
     signal: AbortSignal.timeout(60000),
   });
-  if (
-    web.status !== 200 ||
-    !(await web.text()).includes('https://api.uat.veervrat.jnanaprabodhini.org/api/v1')
-  )
-    throw new Error('Fresh UAT wiring probe failed');
+  if (web.status !== 200) throw new Error('Fresh UAT wiring probe failed');
+  assertUatWiring(await web.text());
   return { ready: true, wiring: true };
 }
 

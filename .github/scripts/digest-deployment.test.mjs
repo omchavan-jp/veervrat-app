@@ -3,7 +3,7 @@ import test from 'node:test';
 import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { buildImageRecord, selectImageSet } from './deploy-image-set.mjs';
-import { collectChecks, recordUat, verifyUatHealth } from './record-uat.mjs';
+import { assertUatWiring, collectChecks, recordUat, verifyUatHealth } from './record-uat.mjs';
 import { assertServingRevision } from './accept-uat.mjs';
 import { imageNames, requiredChecks, validateImages } from './release-record.mjs';
 
@@ -243,12 +243,14 @@ test('serving proof needs one latest healthy active revision on the exact config
 });
 
 test('fresh post-revision probes require HTTP success, DB/Redis up and the UAT API URL', async () => {
+  const html = (url) =>
+    `<script>self.__next_f.push(${JSON.stringify([1, JSON.stringify({ apiBaseUrl: url })])})</script>`;
   const good = { data: { status: 'ok', checks: { database: 'up', redis: 'up' } } };
   const request = async (url) =>
     new Response(
       url.endsWith('/ready')
         ? JSON.stringify(good)
-        : 'https://api.uat.veervrat.jnanaprabodhini.org/api/v1',
+        : html('https://api.uat.veervrat.jnanaprabodhini.org/api/v1'),
     );
   assert.deepEqual(await verifyUatHealth(request), { ready: true, wiring: true });
   await assert.rejects(verifyUatHealth(async () => new Response('', { status: 500 })));
@@ -259,8 +261,18 @@ test('fresh post-revision probes require HTTP success, DB/Redis up and the UAT A
         new Response(
           url.endsWith('/ready')
             ? JSON.stringify(good)
-            : 'https://api.veervrat.jnanaprabodhini.org/api/v1',
+            : html('https://api.veervrat.jnanaprabodhini.org/api/v1'),
         ),
     ),
+  );
+  for (const bad of [
+    'https://attacker.invalid/?url=https://api.uat.veervrat.jnanaprabodhini.org/api/v1',
+    'https://api.uat.veervrat.jnanaprabodhini.org.attacker.invalid/api/v1',
+    'https://user:password@api.uat.veervrat.jnanaprabodhini.org/api/v1',
+    'https://api.uat.veervrat.jnanaprabodhini.org/api/v1?bad=1',
+  ])
+    assert.throws(() => assertUatWiring(html(bad)));
+  assert.throws(() =>
+    assertUatWiring('<!-- https://api.uat.veervrat.jnanaprabodhini.org/api/v1 -->'),
   );
 });
