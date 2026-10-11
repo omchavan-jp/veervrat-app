@@ -2,6 +2,9 @@
 # The legacy identity stays intact until the reviewed cutover and denial tests pass.
 locals {
   staged_release_contexts = toset(["build", "uat", "prod"])
+  # Form the verified ARM ID directly: a storage-account data source can return
+  # access keys, which these private-container declarations neither need nor should store.
+  release_backend_id = "${data.azurerm_subscription.current.id}/resourceGroups/${data.azurerm_resource_group.shared.name}/providers/Microsoft.Storage/storageAccounts/veervrattfstate"
   staged_release_containers = {
     shared  = "tfstate-shared"
     uat     = "tfstate-uat"
@@ -34,17 +37,11 @@ resource "azurerm_federated_identity_credential" "staged_release" {
   subject             = local.github_federated_subjects[each.key]
 }
 
-# This account remains the existing manually bootstrapped backend, not a new resource.
-data "azurerm_storage_account" "release_backend" {
-  name                = "veervrattfstate"
-  resource_group_name = data.azurerm_resource_group.shared.name
-}
-
 resource "azurerm_storage_container" "staged_release" {
   for_each = local.staged_release_containers
 
   name                  = each.value
-  storage_account_id    = data.azurerm_storage_account.release_backend.id
+  storage_account_id    = local.release_backend_id
   container_access_type = "private"
 
   lifecycle {
