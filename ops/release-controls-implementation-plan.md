@@ -2,7 +2,12 @@
 
 Owner: `omchavan-jp`. Assessed: 2026-10-11.
 Authority: [Git and Release Governance](../documentation/25_Git-and-Release-Governance.md).
-Status: proposed additive foundation; not applied, not a completed security boundary.
+Status: additive foundation applied 2026-10-11; not a completed security boundary.
+PR #349 merged at `92367abd44ce6f66ef6e5cf39ca367e09da76fd7`. A fresh locked saved
+plan applied with 10 additions, zero changes/deletions and no new RBAC grants.
+Native state copies were verified into dedicated containers; backend merge/rollout and
+authority cutover remain pending; see
+[state migration checkpoints](terraform-state-migration.md).
 
 ## Verified starting point
 
@@ -102,7 +107,7 @@ Automatically create/update the public GitHub release evidence, keeping private/
 
 ## Verification still required
 
-- Reviewed live plan and explicit apply authorization for this foundation.
+- Post-cutover live plans and verification; foundation plan/apply authorization is complete.
 - Ref restrictions, conditional/scoped RBAC, state migration and denied-operation evidence.
 - Snapshot/acceptance provenance, durable record validation and artifact retention strategy.
 - Exact-digest Terraform/composite deployment inputs for all affected images/jobs.

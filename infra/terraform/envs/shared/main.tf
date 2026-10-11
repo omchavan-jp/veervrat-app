@@ -13,7 +13,7 @@ terraform {
   backend "azurerm" {
     resource_group_name  = "veervrat-shared"
     storage_account_name = "veervrattfstate"
-    container_name       = "tfstate"
+    container_name       = "tfstate-shared"
     key                  = "shared.tfstate"
     use_azuread_auth     = true
   }

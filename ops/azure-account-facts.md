@@ -141,10 +141,13 @@ stopping both environments. `daily_quota_gb` would have capped the damage to ~�
 **Terraform is now live** — `veervrat-app/infra/terraform/` (Phase 1, landed 2026-08-16;
 Phase 2A — UAT stateful core — landed 2026-08-16). State backend: storage account
 `veervrattfstate` in `veervrat-shared` (hand-created once via
-`infra/terraform/bootstrap/create-state-backend.sh`, container `tfstate`, Azure AD auth — no
-storage key), one state file per environment (`shared.tfstate`, `uat.tfstate`, later
-`prod.tfstate`). `terraform plan` in both `envs/shared` and `envs/uat` shows **no changes** —
-state matches reality.
+`infra/terraform/bootstrap/create-state-backend.sh`, originally container `tfstate`, Azure AD
+auth — no storage key). On 2026-10-11, native locked copies moved the unchanged keys
+`shared.tfstate`, `uat.tfstate`, `prod.tfstate` into `tfstate-shared`, `tfstate-uat`,
+`tfstate-prod` respectively. Lineage, resource data and outputs were verified unchanged.
+Backend configuration merge and deployment restoration are tracked in
+[state cutover evidence](terraform-state-migration.md). Do not infer clean live plans from
+historical observations; review each environment's current plan with its deployed images pinned.
 
 ### Resource groups
 
@@ -304,7 +307,7 @@ Each of these cost real time and would recur. Full detail in
 | **An overridden job execution produces no logs** | zero rows in Log Analytics under any container name, so nothing contradicts the false success | same guard — no overrides. Verified on prod 2026-08-21 |
 | **`/health` stays green on a schema-less database** | it is cheap by design so it will not flap on a DB blip; `/ready` pings Postgres, which was genuinely reachable. Nothing probes the **schema** | do not read a green health check as "the app works". Exercise a real write path after a deploy |
 | **Job logs are not where app logs are** | `ContainerAppName_s` is **empty** for jobs; filtering as you would for an app returns nothing and reads as "jobs do not log" | filter on `ContainerName_s`; allow ~2 min for ingestion. `az containerapp job logs show` misses finished jobs — the replica is reaped in seconds |
-| **A killed `terraform apply` leaves an orphaned blob lease** | the next run fails with `state blob is already locked` and — confusingly — `blob metadata "terraformlockid" was empty`, so `force-unlock` has no ID to take. The state write itself usually **did** complete | check no apply is really running (`pgrep -fl terraform` — `terraform-ls` is just the editor), confirm the blob's `lastModified`, then `az storage blob lease break --account-name veervrattfstate --container-name tfstate --blob-name <env>.tfstate --auth-mode login`. Verify with a `plan` expecting `No changes` |
+| **A killed `terraform apply` can leave an orphaned blob lease** | a subsequent operation may fail with `state blob is already locked`; missing lock metadata is not proof that no writer exists | Coordinate with all operators and CD; confirm there is no active writer before any explicitly authorized lease recovery. Resolve the exact current container from the backend (`tfstate-shared`, `tfstate-uat` or `tfstate-prod`) and corresponding key. Never break a lease merely because acquisition timed out. Review a fresh plan after recovery. |
 | **Secrets are in Terraform state in plaintext** | anyone who can read state has every secret for that environment | state lives behind Azure AD RBAC on `veervrattfstate`; treat read access as equivalent to Key Vault admin |
 | **Azure Managed Redis is CLUSTERED — even at the smallest tier** | BullMQ (and any library using Lua scripts across multiple keys) fails with `CROSSSLOT Keys in request don't hash to the same slot` on every operation. The errors are logged, not thrown to the caller, so the queue silently does nothing while flooding Log Analytics | use `{braces}` hash tags in all key prefixes so all keys for a queue land in the same slot. BullMQ: set `prefix: '{email}'` (not `email`). ⚠️ The braces are literal in the prefix string — BullMQ passes them through to Redis, which hashes only the content between the first `{…}` pair. Verified fix: PR #293. See `documentation/21_Infrastructure-Conventions.md` §26 |
 | **Log Analytics bills per GB ingested, not stored** | a logging error loop can spend thousands of rupees in hours. 3.3M lines/hour = ~53 GB/day = ~₹19,230/day at ₹363/GB. Writing the data costs money; the 90GB already stored does not accrue new charges | `daily_quota_gb = 2` on both workspaces. This caps ingestion at the Log Analytics level with zero billing lag. Budget alerts cannot catch this — they run on a 12–24 hour billing pipeline |
@@ -342,7 +345,10 @@ Owner self-approval is allowed. `uat` accepts only `main`; `build` accepts `main
 `prod-*` tags to preserve current release preparation. The earlier private-plan 422 is
 historical, not the current configuration. No production test tag was created.
 These gates do not isolate the shared Azure identity. The additive three-identity/four-container
-foundation in PR #349 is configuration only, not applied; roles and state remain unchanged.
+foundation in PR #349 was applied on 2026-10-11: 10 additions, zero changes/deletions.
+The identities have no new role grants; native state copies into dedicated containers are
+verified, with backend cutover/rollout status in [migration evidence](terraform-state-migration.md).
+Live workflow credentials remain unchanged; legacy account-wide state access remains broad.
 
 ⚠️ **If Azure CLI hangs with zero output/error, check IPv6 before anything else** — it looks
 identical to a stuck login prompt. `curl -6 https://login.microsoftonline.com/` timing out
