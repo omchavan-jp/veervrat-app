@@ -24,12 +24,43 @@ explicit schema-compatibility review; it returns exact images and disables migra
 It does not restore a database, revert Terraform, or automatically recover an outage.
 Verification-note validation checks presence/substance only, not whether testing occurred.
 
+## Durable storage and acceptance integration
+
+CD manual operations now include `accept-uat` and `verify-release-storage`, restricted to
+main and the owner. The script independently checks numeric repository/actor identities,
+including the rerun actor, trusted workflow paths, successful exact run attempts/jobs,
+main ancestry, exact check evidence and the currently ready digest-pinned image set.
+Inputs are passed as environment values, never interpolated into shell commands.
+
+`accept-uat` takes `uat_run_id`, `uat_run_attempt` and `verification_note`. It reads an
+existing private receipt, not caller-supplied JSON. Missing receipts, mutable image tags,
+stale images, skipped deploy jobs and source-check failures refuse acceptance. The acceptance
+workflow run must itself finish successfully before any future promotion may use its record;
+writing a blob alone is insufficient, including if a post-write race check fails.
+
+Storage uses OAuth against the fixed private `release-records` container, conditional
+create (`If-None-Match: *`), bounded JSON reads and exact read-back. Keys include both
+deployment and acceptance run/attempt identifiers. Records do not expire with Actions artifacts.
+The reviewed IAM change is one UAT identity Blob Data Contributor assignment at that container,
+not account-wide access or production state access. This built-in role can overwrite/delete
+records if misused outside the client; conditional create is a workflow guarantee, not WORM.
+Existing account versioning/soft-delete supplies recovery; maintainer/cloud authority remains
+a separate trust boundary. Build/prod receive no record permissions in this increment.
+
+`verify-release-storage` creates one small durable record under `probes/<run>/<attempt>.json`,
+reads it back and confirms conditional overwrite is refused. This is audit evidence, never a
+UAT receipt or acceptance. No app, database or production resource is modified by the probe.
+Do not run `accept-uat` on behalf of the maintainer or invent a verification note.
+
+**Activation limitation:** current tag-based UAT images and absence of digest receipts mean
+acceptance is deliberately fail-closed until the next deployment integration lands. No actual
+UAT acceptance or production promotion has been performed by installing these controls.
+The narrow IAM apply and real storage probe must be recorded separately from source checks.
+
 ## Remaining activation sequence
 
-1. Persist authenticated UAT deployment receipts and owner-only acceptance decisions in the
-   existing private `release-records` container. Add narrowly scoped writer/reader permissions
-   through reviewed Terraform; use unique records, conditional create, and read-back.
-   Validate successful deployment job/run/attempt, exact checks and live deployed digests.
+1. Apply/verify the narrow record-writer grant and storage probe. Produce authenticated UAT
+   receipts after digest-pinned deployment; acceptance consumes those trusted receipts.
 2. Teach Terraform/deployment actions to use explicit digest image references, including
    migration/maintenance/backup jobs and preserving current images during migration ordering.
 3. Replace tag builds with accepted-set selection, main-history/exact-check verification,
@@ -38,5 +69,6 @@ Verification-note validation checks presence/substance only, not whether testing
 5. Test denied paths and UAT; exercise production writes only during a planned, approved release.
 6. Reconcile the complete deployment/infrastructure documentation after activation.
 
-No acceptance/storage writer, promotion job or rollback command is activated by the record
-contract PR. Existing CD behavior is unchanged. OpenSpec and dependency upgrades are excluded.
+The earlier contract PR activated no privileged operations. This integration adds only record
+storage/acceptance operations; normal build/deployment behavior remains unchanged. Production
+promotion and rollback are not yet active. OpenSpec and dependency upgrades are excluded.

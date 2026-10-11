@@ -23,7 +23,16 @@ on:
         description: Deploy UAT, or verify a candidate identity without deployment
         type: choice
         default: deploy
-        options: [deploy, verify-build, verify-uat, verify-prod, verify-legacy-revoked]
+        options: [deploy, verify-build, verify-uat, verify-prod, verify-legacy-revoked, verify-release-storage, accept-uat]
+      uat_run_id:
+        description: Successful UAT CD run to accept (accept-uat only)
+        type: string
+      uat_run_attempt:
+        description: Exact successful deployment attempt (accept-uat only)
+        type: string
+      verification_note:
+        description: What you exercised on that UAT deployment (accept-uat only)
+        type: string
 
 # Never run two deploys at the same ref concurrently, and never cancel one midway — a
 # half-applied Terraform run or a partially-applied migration is worse than a slow queue.
@@ -210,7 +219,7 @@ jobs:
     needs: [prepare, build, build-docs-web]
     if: >-
       always() && github.ref == 'refs/heads/main' && needs.prepare.result == 'success' &&
-      (github.event_name == 'workflow_dispatch' || needs.prepare.outputs.app_changed == 'true' || needs.prepare.outputs.docs_changed == 'true') &&
+      ((github.event_name == 'workflow_dispatch' && inputs.operation == 'deploy') || needs.prepare.outputs.app_changed == 'true' || needs.prepare.outputs.docs_changed == 'true') &&
       (needs.build.result == 'success' || needs.build.result == 'skipped') &&
       (needs.build-docs-web.result == 'success' || needs.build-docs-web.result == 'skipped')
     runs-on: ubuntu-latest
@@ -255,6 +264,40 @@ jobs:
         with:
           environment: prod
           image_tag: ${{ needs.prepare.outputs.image_tag }}
+
+  accept-uat:
+    if: >-
+      github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' &&
+      github.actor_id == '317451750' && github.triggering_actor == 'omchavan-jp' &&
+      (inputs.operation == 'accept-uat' || inputs.operation == 'verify-release-storage')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: uat
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Verify release storage or record owner UAT acceptance
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_OPERATION: ${{ inputs.operation }}
+          UAT_RUN_ID: ${{ inputs.uat_run_id }}
+          UAT_RUN_ATTEMPT: ${{ inputs.uat_run_attempt }}
+          UAT_VERIFICATION_NOTE: ${{ inputs.verification_note }}
+        run: node .github/scripts/accept-uat.mjs
 
   verify-build:
     if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.operation == 'verify-build'
