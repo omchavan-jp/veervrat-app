@@ -8,6 +8,10 @@ Candidate variables are staged on each environment. CD was restored after apply.
 Initial build probe `38122789428` stopped before Azure login because composite-action `vars`
 references were unsupported; explicit input wiring and a regression check repair this without
 changing permissions. No context is declared verified until its live probe passes.
+The repaired build probe `38123386860` reached Azure login but stopped on token-audience
+validation. Entra documents resource URI or API application-ID GUID audiences; the verifier
+now accepts only the known corresponding API GUID/URI, never arbitrary audiences. Client,
+principal, tenant, expiry and live resource checks remain mandatory.
 Terraform state migration is complete; see [evidence](terraform-state-migration.md).
 
 ## Desired permissions
