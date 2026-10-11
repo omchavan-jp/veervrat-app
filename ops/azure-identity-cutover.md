@@ -42,10 +42,11 @@ passed: same-assertion replacement authentication succeeded and the old client r
 Retirement review/apply contained zero additions/changes and exactly nine deletions. The
 roleless/trustless identity object was initially retained for audit, not as an active credential.
 The maintainer subsequently authorized removing that unused object in the
-[focused cleanup](focused-cleanup-2026-10-11.md). Its one-resource removal plan is separate
-from the earlier nine-grant/trust retirement. The apply followed checked source and successful scoped UAT evidence.
+[focused cleanup](focused-cleanup-2026-10-11.md). Checked PR #357 and a fresh guarded plan
+were followed by its one-resource deletion, separate from the earlier nine-grant/trust retirement.
+Post-deletion regression `38136071955` passed and a fresh shared plan reports no changes.
 Post-apply `verify-legacy-revoked` uses the same fresh GitHub assertion to successfully authenticate
-the replacement and require a specific missing/mismatched-trust error from the old client.
+the replacement and require a specific missing/mismatched-trust or absent-application error from the old client.
 It never logs tokens or performs production writes. Already-issued tokens and Azure propagation
 caches are separate from proving that fresh federation is rejected; do not overstate immediate expiry.
 

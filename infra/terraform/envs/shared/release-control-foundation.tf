@@ -1,5 +1,5 @@
 # Identities and containers were created before scoped grants and credential cutover.
-# The legacy identity stays intact until the reviewed cutover and denial tests pass.
+# Scoped credentials are active; the legacy identity was deleted after verified cutover.
 locals {
   staged_release_contexts = toset(["build", "uat", "prod"])
   # Form the verified ARM ID directly: a storage-account data source can return
@@ -50,7 +50,7 @@ resource "azurerm_storage_container" "staged_release" {
 }
 
 output "staged_release_identities" {
-  description = "Non-secret identifiers for a later reviewed environment-variable/RBAC cutover; not active deployment authority."
+  description = "Non-secret identifiers for active, separately scoped GitHub build/UAT/prod identities."
   value = {
     for context, identity in azurerm_user_assigned_identity.staged_release : context => {
       client_id    = identity.client_id
