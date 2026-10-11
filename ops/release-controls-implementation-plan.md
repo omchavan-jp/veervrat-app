@@ -9,8 +9,10 @@ Status: proposed additive foundation; not applied, not a completed security boun
 Azure read-back confirmed one `veervrat-github-actions` identity trusted by the build, UAT
 and production environments. Its live grants are subscription Contributor, subscription
 Key Vault Secrets Officer, account-wide state Blob Data Contributor, registry AcrPush and
-User Access Administrator in both application resource groups. GitHub environments have
-no reviewer or ref restrictions. A production reviewer gate alone cannot isolate this identity.
+User Access Administrator in both application resource groups. Before this iteration,
+GitHub environments had no reviewer or ref restrictions. They now have the restrictions
+in `.github/environment-policy.json`, verified by API read-back on 2026-10-11.
+A production reviewer gate alone cannot isolate this identity.
 
 The existing private `veervrattfstate` account contains the single `tfstate` container.
 Blob versioning and 30-day blob soft deletion are enabled. State content was not downloaded
@@ -45,7 +47,10 @@ validation with `-backend=false`, no Azure login and no extra token permissions.
 1. Protect privileged GitHub environments against untrusted refs. Build/UAT must accept only
    intended main workflows; production must require the owner, authorized release tags and
    no administrator approval bypass. Do not let a branch-dispatched workflow obtain privileged
-   credentials. Introduce tag preparation refs deliberately when the new release workflow exists.
+   credentials. Configured now: build permits main and prod-* tags (transitional existing
+   tag preparation); UAT permits main; prod permits prod-* tags with owner review and
+   admin bypass disabled. Owner self-review is allowed. Native approval behavior has not
+   been production-tested. Main ancestry/UAT acceptance checks remain to be implemented.
 2. Review/apply the additive shared foundation. Existing resources must have no unintended
    changes or destruction. Do not infer that an infrastructure-file merge applies shared Terraform.
 3. Back up/version-pin the current state under restricted operator access; inventory keys and
