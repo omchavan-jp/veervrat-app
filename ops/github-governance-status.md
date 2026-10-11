@@ -1,7 +1,8 @@
 # STATE — GitHub Governance Rollout
 
 Owner: `omchavan-jp`.
-Last verified: 2026-10-10 for permission read-back, security settings and the initial CodeQL baseline.
+Latest scoped identity/state/approval evidence: 2026-10-11; see the identity cutover record.
+Initial baseline: 2026-10-10 for permission read-back, security settings and CodeQL.
 Main remained at `9529b60bc6c1451ec887b0c56c681ec38c6af57a` during the permission tests;
 PR #317 then merged at `cb9eaadab2c5cb48eff6df33f911448a098574de`, which the CodeQL baseline analyzed.
 Refresh when: a governance PR merges, settings/cloud permissions change, a gate is tested,

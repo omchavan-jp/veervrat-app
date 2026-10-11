@@ -4,7 +4,9 @@ Operational reference for Jnana Prabodhini's Microsoft tenant and the Veervrat A
 **This is the base truth.** If something here disagrees with memory, this file wins — and if
 reality diverges from this file, update the file in the same session.
 
-Last verified: **2026-09-02**
+Last overall account/resource snapshot: **2026-09-02**. Terraform state and GitHub deployment
+identity/grant sections were verified and updated **2026-10-11**; see their linked evidence.
+This does not re-certify billing, human tenant roles or every service listed in the older snapshot.
 
 > Sensitive-ish but not secret: tenant/subscription IDs are identifiers, not credentials. No
 > passwords, keys, or card numbers belong in this file — ever.
