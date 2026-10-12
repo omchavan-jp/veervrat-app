@@ -6,10 +6,11 @@ locals {
   # access keys, which these private-container declarations neither need nor should store.
   release_backend_id = "${data.azurerm_subscription.current.id}/resourceGroups/${data.azurerm_resource_group.shared.name}/providers/Microsoft.Storage/storageAccounts/veervrattfstate"
   staged_release_containers = {
-    shared  = "tfstate-shared"
-    uat     = "tfstate-uat"
-    prod    = "tfstate-prod"
-    records = "release-records"
+    shared             = "tfstate-shared"
+    uat                = "tfstate-uat"
+    prod               = "tfstate-prod"
+    records            = "release-records"
+    production_records = "production-release-records"
   }
 }
 
