@@ -27,7 +27,12 @@ export async function collectChecks(github, commit) {
   return checks;
 }
 
-export function assertUatWiring(html) {
+export function assertUatWiring(html, environment = 'uat') {
+  if (!['uat', 'prod'].includes(environment)) throw new Error('Unknown health environment');
+  const expected =
+    environment === 'uat'
+      ? 'https://api.uat.veervrat.jnanaprabodhini.org'
+      : 'https://api.veervrat.jnanaprabodhini.org';
   const parts = [];
   for (const match of html.matchAll(/self\.__next_f\.push\((\[[\s\S]*?\])\)<\/script>/g)) {
     const frame = JSON.parse(match[1]);
@@ -40,7 +45,7 @@ export function assertUatWiring(html) {
     !urls.length ||
     urls.some(
       (url) =>
-        url.origin !== 'https://api.uat.veervrat.jnanaprabodhini.org' ||
+        url.origin !== expected ||
         url.pathname !== '/api/v1' ||
         url.username ||
         url.password ||
@@ -51,8 +56,17 @@ export function assertUatWiring(html) {
     throw new Error('Fresh UAT wiring probe failed');
 }
 
-export async function verifyUatHealth(request = fetch) {
-  const ready = await request('https://api.uat.veervrat.jnanaprabodhini.org/ready', {
+export async function verifyUatHealth(request = fetch, environment = 'uat') {
+  if (!['uat', 'prod'].includes(environment)) throw new Error('Unknown health environment');
+  const api =
+    environment === 'uat'
+      ? 'https://api.uat.veervrat.jnanaprabodhini.org'
+      : 'https://api.veervrat.jnanaprabodhini.org';
+  const site =
+    environment === 'uat'
+      ? 'https://uat.veervrat.jnanaprabodhini.org'
+      : 'https://veervrat.jnanaprabodhini.org';
+  const ready = await request(`${api}/ready`, {
     redirect: 'error',
     signal: AbortSignal.timeout(60000),
   });
@@ -64,12 +78,12 @@ export async function verifyUatHealth(request = fetch) {
     body.data?.checks?.redis !== 'up'
   )
     throw new Error('Fresh UAT database/Redis readiness failed');
-  const web = await request('https://uat.veervrat.jnanaprabodhini.org/login', {
+  const web = await request(`${site}/login`, {
     redirect: 'error',
     signal: AbortSignal.timeout(60000),
   });
   if (web.status !== 200) throw new Error('Fresh UAT wiring probe failed');
-  assertUatWiring(await web.text());
+  assertUatWiring(await web.text(), environment);
   return { ready: true, wiring: true };
 }
 

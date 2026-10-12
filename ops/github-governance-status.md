@@ -1,7 +1,7 @@
 # STATE — GitHub Governance Rollout
 
 Owner: `omchavan-jp`.
-Latest scoped identity/state/approval evidence: 2026-10-11; see the identity cutover record.
+Latest scoped identity/state/approval evidence: 2026-10-12; see the identity cutover and production controller records.
 Initial baseline: 2026-10-10 for permission read-back, security settings and CodeQL.
 Main remained at `9529b60bc6c1451ec887b0c56c681ec38c6af57a` during the permission tests;
 PR #317 then merged at `cb9eaadab2c5cb48eff6df33f911448a098574de`, which the CodeQL baseline analyzed.
@@ -13,20 +13,20 @@ Implementation work: [OpenSpec tasks](../openspec/changes/github-governance/task
 
 ## Distinguish policy from enforcement
 
-| Area                                          | Evidence / implementation state                                                                                                                                                  |
-| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Policy and contributor documentation          | Merged in [PR #315](https://github.com/omchavan-jp/veervrat-app/pull/315); post-merge CI, integration, E2E and UAT deployment passed                                             |
-| CODEOWNERS and PR template                    | Merged in #315; CODEOWNERS has no API-reported errors; required owner review is now active                                                                                       |
-| Main and production tag rulesets              | Five permission rulesets verified; sixth CodeQL security ruleset is active after baseline triage                                                                                 |
-| Merge method / branch deletion settings       | Squash only; automatic source-branch deletion enabled; squash commit uses PR title/body                                                                                          |
-| Historical branch purge | Completed 2026-10-11: 186 historical remote refs removed with SHA leases; main, all tags, 16 open Dependabot heads and active cleanup work preserved; no extra Git backup |
-| Existing automated checks / CD                | PR #317 post-merge checks passed; security PR stages Action pins and job-scoped permissions without changing deployment ordering                                                 |
-| UAT acceptance and release manifests | Contract #359, owner-only acceptance/storage #360 and UAT digest integration #361/#362 merged. Real exact-image receipt creation/read-back verified in 38142359832; human acceptance and production enforcement pending. [Evidence/sequence](release-controls-rollout.md) |
-| Production reviewer gate | Configured/read back 2026-10-11: omchavan-jp required; self-approval allowed; admin bypass disabled; prod-* tags only. Real production approval test deferred |
-| Digest promotion | Pending; current production preparation rebuilds on tags; recorded UAT acceptance and release eligibility checks also pending |
-| Separate production cloud authority | Three identity probes passed; environment clients switched, scoped UAT publishing/deploy passed (38124662672), six legacy grants/three FICs removed and fresh old federation rejected (38133195235). Production writes intentionally await a planned release |
-| Dependency/code security controls             | Dependabot alerts/security updates and CodeQL are enabled; existing findings recorded; grouped version-update config merged in #319; remaining remediation is tracked separately |
-| Private vulnerability reporting               | Enabled and verified by API; SECURITY.md links to the confidential GitHub reporting form                                                                                         |
+| Area                                    | Evidence / implementation state                                                                                                                                                                                                                                                                    |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Policy and contributor documentation    | Merged in [PR #315](https://github.com/omchavan-jp/veervrat-app/pull/315); post-merge CI, integration, E2E and UAT deployment passed                                                                                                                                                               |
+| CODEOWNERS and PR template              | Merged in #315; CODEOWNERS has no API-reported errors; required owner review is now active                                                                                                                                                                                                         |
+| Main and production tag rulesets        | Five permission rulesets verified; sixth CodeQL security ruleset is active after baseline triage                                                                                                                                                                                                   |
+| Merge method / branch deletion settings | Squash only; automatic source-branch deletion enabled; squash commit uses PR title/body                                                                                                                                                                                                            |
+| Historical branch purge                 | Completed 2026-10-11: 186 historical remote refs removed with SHA leases; main, all tags, 16 open Dependabot heads and active cleanup work preserved; no extra Git backup                                                                                                                          |
+| Existing automated checks / CD          | PR #317 post-merge checks passed; security PR stages Action pins and job-scoped permissions without changing deployment ordering                                                                                                                                                                   |
+| UAT acceptance and release manifests    | Contract #359, owner-only acceptance/storage #360 and UAT digest integration #361/#362 merged. Real exact-image receipt creation/read-back verified in 38142359832; human acceptance and production enforcement pending. [Evidence/sequence](release-controls-rollout.md)                          |
+| Production reviewer gate                | #364 boundary activated/read back 2026-10-12: protected main only; owner required, self-approval allowed, admin bypass disabled. Earlier read-only approval probe passed; production-changing approval remains for a planned release                                                               |
+| Digest promotion                        | Protected-main controller implemented with acceptance/provenance checks, prerequisite public manifest, private authorized manifest/claim/outcome and image-only rollback. Source tests pass; post-merge read-only verification and first deliberate production release remain separate checkpoints |
+| Separate production cloud authority     | Three identity probes passed; environment clients switched, scoped UAT publishing/deploy passed (38124662672), six legacy grants/three FICs removed and fresh old federation rejected (38133195235). Production writes intentionally await a planned release                                       |
+| Dependency/code security controls       | Dependabot alerts/security updates and CodeQL are enabled; existing findings recorded; grouped version-update config merged in #319; remaining remediation is tracked separately                                                                                                                   |
+| Private vulnerability reporting         | Enabled and verified by API; SECURITY.md links to the confidential GitHub reporting form                                                                                                                                                                                                           |
 
 ## Read-back commands
 
@@ -97,8 +97,8 @@ The owner exception cannot be limited automatically to owner-authored PRs; polic
   and UAT CD passed under the enforced policy; the three workflow-permission alerts are fixed.
 - [Security remediation status](security-remediation-status.md) records tested dependency/code
   fixes, one evidence-backed false-positive disposition and the unresolved upstream braces alert.
-- Shared build/UAT/production Azure authority, production approval and artifact promotion remain
-  pending release-control work. No production tag or deployment is part of this security batch.
+- Separate build/UAT/production authority is active; production release-controller rollout is
+  tracked in [release controls](release-controls-rollout.md). No production tag/deployment was part of the security batch.
 
 Read-back commands for security activation:
 

@@ -38,7 +38,7 @@ function run(value) {
   requireValue(Number.isSafeInteger(value.attempt) && value.attempt > 0, 'Invalid run attempt');
 }
 
-function note(value) {
+export function note(value) {
   requireValue(
     typeof value === 'string' &&
       value.trim() === value &&
@@ -175,16 +175,20 @@ export function validateAcceptance(receipt, acceptance) {
 export function validateReleaseSelection(receipt, acceptance, selection) {
   validateAcceptance(receipt, acceptance);
   object(selection, ['tag', 'commit', 'onMain'], 'Release selection');
-  const tag =
-    typeof selection.tag === 'string' &&
-    selection.tag.match(/^prod-(\d{4}-\d{2}-\d{2})(?:-([2-9]|[1-9]\d+))?$/);
-  requireValue(tag, 'Invalid production tag');
-  timestamp(`${tag[1]}T00:00:00.000Z`);
+  validateProductionTag(selection.tag);
   requireValue(
     selection.commit === receipt.commit && selection.onMain === true,
     'Tagged commit must match accepted main history',
   );
   return structuredClone(receipt.images);
+}
+
+export function validateProductionTag(value) {
+  const match =
+    typeof value === 'string' && value.match(/^prod-(\d{4}-\d{2}-\d{2})(?:-([2-9]|[1-9]\d+))?$/);
+  requireValue(match, 'Invalid production tag');
+  timestamp(`${match[1]}T00:00:00.000Z`);
+  return value;
 }
 
 export function validateRollback(previous, schemaReview, actorId) {

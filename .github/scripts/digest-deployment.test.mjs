@@ -157,12 +157,13 @@ test('every app/maintenance/backup image uses the explicit set; both wrappers fo
       /image_refs\s*= var\.image_refs/,
     );
   const workflow = readFileSync('.github/workflows/cd.yml', 'utf8');
-  const uat = workflow.split('\n  deploy-uat:\n')[1].split('\n  deploy-prod:\n')[0];
+  const uat = workflow.split('\n  deploy-uat:\n')[1].split('\n  request-production:\n')[0];
   assert.ok(uat.includes("digest_images: 'true'"));
   assert.ok(uat.includes('record-uat.mjs'));
-  const prod = workflow.split('\n  deploy-prod:\n')[1].split('\n  accept-uat:\n')[0];
-  assert.ok(!prod.includes('record-uat.mjs'));
-  assert.ok(!prod.includes("digest_images: 'true'"));
+  assert.ok(!workflow.includes('\n  deploy-prod:'));
+  const prod = readFileSync('.github/workflows/production-release.yml', 'utf8');
+  assert.ok(prod.includes("digest_images: 'true'"));
+  assert.ok(prod.includes('production-release.mjs begin'));
 });
 
 test('plan guard rejects deletion/replacement and accepts ordinary update/create', () => {

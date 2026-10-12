@@ -34,18 +34,20 @@ export function checkReferences(text, filename, policy) {
 
 export function checkWorkflow(text, filename) {
   const errors = [];
+  const controller = filename === '.github/workflows/production-release.yml';
+  const trustedDeploy = filename === '.github/workflows/cd.yml' || controller;
   const acceptsPr = /^\s*(?:pull_request|'pull_request'|"pull_request")\s*:/m.test(text);
   if (!/^permissions:\s*\n[ ]{2}contents: read\s*$/m.test(text)) {
     errors.push(`${filename}: declare workflow-level contents: read`);
   }
   if (/^\s{2}id-token:\s*write\b/m.test(text))
     errors.push(`${filename}: OIDC permission belongs on trusted jobs, not the whole workflow`);
-  if (/^\s*(?:pull_request_target|workflow_run)\s*:/m.test(text))
-    errors.push(`${filename}: privileged PR triggers require a separate security review`);
   if (
-    (filename !== '.github/workflows/cd.yml' || acceptsPr) &&
-    /^\s*id-token:\s*write\b/m.test(text)
-  ) {
+    /^\s*pull_request_target\s*:/m.test(text) ||
+    (!controller && /^\s*workflow_run\s*:/m.test(text))
+  )
+    errors.push(`${filename}: privileged PR triggers require a separate security review`);
+  if ((!trustedDeploy || acceptsPr) && /^\s*id-token:\s*write\b/m.test(text)) {
     errors.push(`${filename}: PR checks must not request deployment OIDC tokens`);
   }
   if (/^(?:on|'on'|"on"):[ \t]*[^ \t#\r\n]/m.test(text)) {
@@ -54,7 +56,32 @@ export function checkWorkflow(text, filename) {
     );
   }
   const lines = text.split('\n');
+  if (controller) {
+    for (const requirement of [
+      /^  workflow_run:\n    workflows: \[CD\]\n    types: \[completed\]/m,
+      /github\.ref == 'refs\/heads\/main'/,
+      /github\.event\.workflow_run\.head_repository\.id == 1287947867/,
+      /ref: \$\{\{ github\.sha \}\}/,
+      /persist-credentials: false/,
+      /production-release\.mjs guard/,
+      /production-release\.mjs begin/,
+    ])
+      if (!requirement.test(text))
+        errors.push(`${filename}: missing reviewed main-controller safeguard`);
+    if (
+      acceptsPr ||
+      /github\.event\.workflow_run\.head_sha|github\.event\.workflow_run\.artifacts|workflow_run\.pull_requests/.test(
+        text,
+      )
+    )
+      errors.push(
+        `${filename}: controller must not execute triggering-run code or consume triggering-run artifacts`,
+      );
+  }
+  let job = '';
   for (let index = 0; index < lines.length; index++) {
+    const jobMatch = lines[index].match(/^  ([\w-]+):\s*$/);
+    if (jobMatch) job = jobMatch[1];
     const block = lines[index].match(
       /^([ ]*)(?:permissions|'permissions'|"permissions"):[ \t]*(.*)$/,
     );
@@ -82,7 +109,15 @@ export function checkWorkflow(text, filename) {
         !(
           grant[1] === 'id-token' &&
           block[1].length >= 4 &&
-          filename === '.github/workflows/cd.yml' &&
+          trustedDeploy &&
+          (!controller || ['prepare', 'deploy'].includes(job)) &&
+          !acceptsPr
+        ) &&
+        !(
+          grant[1] === 'contents' &&
+          controller &&
+          block[1].length === 4 &&
+          ['prepare', 'deploy'].includes(job) &&
           !acceptsPr
         )
       ) {

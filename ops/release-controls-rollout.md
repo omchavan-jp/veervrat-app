@@ -1,7 +1,7 @@
 # Release controls rollout
 
 Policy: [Git and release governance](../documentation/25_Git-and-Release-Governance.md).
-This is incremental implementation, not evidence that production promotion is active.
+This separates incremental implementation, boundary read-back and real production-write evidence.
 
 ## Record contract foundation
 
@@ -45,7 +45,8 @@ The reviewed IAM change is one UAT identity Blob Data Contributor assignment at 
 not account-wide access or production state access. This built-in role can overwrite/delete
 records if misused outside the client; conditional create is a workflow guarantee, not WORM.
 Existing account versioning/soft-delete supplies recovery; maintainer/cloud authority remains
-a separate trust boundary. Build/prod receive no record permissions in this increment.
+a separate trust boundary. Build/prod received no record permissions in that increment;
+#364 subsequently granted production acceptance read access and separate history write access.
 
 `verify-release-storage` creates one small durable record under `probes/<run>/<attempt>.json`,
 reads it back and confirms conditional overwrite is refused. This is audit evidence, never a
@@ -64,8 +65,9 @@ Checked PRs #361/#362 enabled UAT only. Four build records (or web only for docs
 digest/full commit/run/attempt identity and are consumed from that same workflow attempt.
 Deployment uses full references, keeps old apps through migration, plans before each apply,
 and forbids deletion/replacement. All migration-based maintenance jobs use the migration
-reference; backup has its own reference. Empty `image_refs` retains the legacy path for
-production until the separate promotion integration lands; do not assume prod has changed.
+reference; backup has its own reference. Empty `image_refs` retains legacy production state
+compatibility; the protected-main controller uses explicit accepted references. This UAT
+evidence does not claim a production deployment.
 
 UAT health verification covers both app and docs-only paths. Receipt creation re-reads ready
 single-revision app references and configured job images, compares the intended exact set,
@@ -121,5 +123,28 @@ production promotion/rollback remain separate steps.
 6. Reconcile the complete deployment/infrastructure documentation after activation.
 
 The earlier contract PR activated no privileged operations. #360 added storage/acceptance;
-the digest integration updates UAT only. Production promotion and rollback are not yet active.
+the original digest integration updated UAT only. Production controller source and boundary
+activation are described below; production writes still require the planned release.
 OpenSpec and dependency upgrades are excluded.
+
+## Trusted production controller integration
+
+The main-only native prod boundary and private history grants were activated in #364; exact
+plan/apply/read-back evidence is in [controller record](production-controller.md).
+`production-release.yml` checks out its own protected-main SHA, never the triggering tag's
+workflow code/artifacts. Preflight validates exact archived deployment/check/acceptance attempts,
+the full tag/main commit and accepted digests, then creates a prerequisite GitHub Release asset.
+Production admission additionally validates that asset's SHA-256 digest, native exact-run owner
+approval and unchanged baseline before private manifest/claim read-back and app writes.
+
+Rollback needs an owner-recorded request before a new tag, a successful verified prior production
+outcome, and current-schema review. It uses current infrastructure, refuses non-image Terraform
+changes and skips migrations. A malformed outcome, unresolved claim, changed digest, absent
+acceptance or reused tag cannot authorize deployment. Controller reruns are refused because
+GitHub approval history supplies no timestamp/attempt binding; records store observation time.
+Public audit failure is recorded as such; private audit failure leaves an unresolved claim.
+
+Local controller, storage, policy and deployment regression tests pass, along with workflow
+syntax/context validation. Post-merge read-only receipt/history verification, UAT rollout and
+the first deliberate production write are separate checkpoints, not implied by those tests.
+Setup creates no acceptance, production tag, production approval or production deployment.

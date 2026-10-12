@@ -224,7 +224,7 @@ test('verification jobs are main-only manual operations and cannot trigger deplo
   const workflow = readFileSync('.github/workflows/cd.yml', 'utf8');
   assert.match(
     workflow,
-    /prepare:\n\s+if: github.event_name != 'workflow_dispatch' \|\| inputs.operation == 'deploy'/,
+    /prepare:\n\s+if: github.ref == 'refs\/heads\/main' && \(github.event_name != 'workflow_dispatch' \|\| inputs.operation == 'deploy'\)/,
   );
   for (const context of ['build', 'uat', 'prod']) {
     assert.ok(

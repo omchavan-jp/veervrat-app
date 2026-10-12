@@ -285,14 +285,14 @@ through environments by tag, so what you tested is literally what ships.
 
 ### Environments and how code reaches them
 
-| Environment | What runs there | Triggered by |
-|---|---|---|
-| **dev** | local `docker-compose` | nothing — it's your machine, no pipeline touches it |
-| **UAT** | `veervrat-uat` on Azure | automatic on app-relevant merges to `main`; ordinary Markdown-only work is skipped by CD |
-| **prod** | `veervrat-prod` on Azure | release starts with `prod-*`; policy additionally requires recorded UAT acceptance and production approval |
+| Environment | What runs there          | Triggered by                                                                                               |
+| ----------- | ------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| **dev**     | local `docker-compose`   | nothing — it's your machine, no pipeline touches it                                                        |
+| **UAT**     | `veervrat-uat` on Azure  | automatic on app-relevant merges to `main`; ordinary Markdown-only work is skipped by CD                   |
+| **prod**    | `veervrat-prod` on Azure | release starts with `prod-*`; policy additionally requires recorded UAT acceptance and production approval |
 
-Note the name collision: the *environment* called "dev" (D10) is local docker-compose. It
-has nothing to do with the old `dev` *branch*.
+Note the name collision: the _environment_ called "dev" (D10) is local docker-compose. It
+has nothing to do with the old `dev` _branch_.
 
 **Production authorization:** a tag alone is insufficient under the agreed policy. The public
 repository supports the planned native `prod` approval gate; private visibility needs a separate
@@ -300,17 +300,18 @@ plan/control review. Gate every production-changing step, including infrastructu
 Do not assume acceptance, approval or artifact promotion is active until rollout status provides evidence.
 
 ### Release tags
+
 - Format `prod-YYYY-MM-DD`, suffixed `-2`, `-3` for multiple releases in a day.
 - **Deliberately not semver** — semver signals a public API contract this app doesn't have.
-- The tag is a human-readable bookmark. Real traceability is the **container image tagged
-  with the git SHA**.
-- **Desired release invariant: promote, never rebuild.** The current `cd.yml`
-  still rebuilds app images on `prod-*` tags; that discrepancy is tracked as
-  separate deployment debt. Do not assume the invariant is currently enforced.
-  Rebuilding from the same commit usually produces identical bits — but not guaranteed
-  (dependency resolution drifts), and then you'd ship something nobody tested.
+- The tag is a human-readable bookmark. Traceability binds the accepted full commit SHA
+  to the actual image digests, UAT receipt, owner acceptance and production outcome.
+- **Promote, never rebuild.** `cd.yml` handles UAT builds and production tag requests;
+  `production-release.yml` runs protected-main code to promote accepted digests after
+  native owner approval. Consult rollout evidence before claiming live production verification.
+  Production attempts are not rerun with reused approval; assess failure and create a new request.
 
 ### Hotfix
+
 1. Start a fresh fix branch from current `main`; keep the fix complete and reviewable.
 2. Open a PR, pass required checks, and squash merge through the maintainer.
 3. Verify the candidate on UAT, record acceptance, and obtain production approval before release.

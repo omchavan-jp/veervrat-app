@@ -141,6 +141,11 @@ export async function acceptUat({
     throw new Error(
       'UAT changed during acceptance; this acceptance run must not authorize release',
     );
+  await store.create(`accepted/${receipt.commit}/${current.id}/${current.attempt}.json`, {
+    version: 1,
+    receiptKey,
+    acceptanceKey: key,
+  });
   return { receiptKey, acceptanceKey: key, receiptDigest: acceptance.receiptDigest };
 }
 
@@ -185,7 +190,7 @@ export function assertServingRevision(value, revisions, resource) {
     );
 }
 
-function readImagesOnce() {
+function readImagesOnce(environment) {
   const images = {};
   for (const [name, kind, resource] of [
     ['api', 'app', 'api'],
@@ -198,9 +203,9 @@ function readImagesOnce() {
       ...(kind === 'job' ? ['job'] : []),
       'show',
       '-g',
-      'veervrat-uat',
+      `veervrat-${environment}`,
       '-n',
-      `veervrat-uat-${resource}`,
+      `veervrat-${environment}-${resource}`,
       '--query',
       kind === 'job'
         ? '{image:properties.template.containers[0].image}'
@@ -212,9 +217,9 @@ function readImagesOnce() {
         'revision',
         'list',
         '-g',
-        'veervrat-uat',
+        `veervrat-${environment}`,
         '-n',
-        `veervrat-uat-${resource}`,
+        `veervrat-${environment}-${resource}`,
         '--query',
         '[?properties.active].{name:name,image:properties.template.containers[0].image,health:properties.healthState}',
       ]);
@@ -225,14 +230,15 @@ function readImagesOnce() {
   return images;
 }
 
-export async function liveImages() {
+export async function liveImages(environment = 'uat') {
+  if (!['uat', 'prod'].includes(environment)) throw new Error('Unknown deployment environment');
   for (let attempt = 0; attempt < 12; attempt++) {
     try {
-      return readImagesOnce();
+      return readImagesOnce(environment);
     } catch (error) {
       if (!error.message.startsWith('UAT_REVISION_PENDING')) throw error;
       console.log(error.message);
-      if (attempt === 11) throw new Error('UAT active healthy revision proof timed out');
+      if (attempt === 11) throw new Error(`${environment} active healthy revision proof timed out`);
       await new Promise((resolveWait) => setTimeout(resolveWait, 10000));
     }
   }

@@ -10,7 +10,7 @@ in #350 and CD restored. Scoped identity activation, UAT publishing/deploy and l
 trust/grant retirement are verified in [identity cutover evidence](azure-identity-cutover.md); see
 [state migration checkpoints](terraform-state-migration.md).
 
-## Verified starting point
+## Historical starting point (before scoped cutover)
 
 Azure read-back confirmed one `veervrat-github-actions` identity trusted by the build, UAT
 and production environments. Its live grants are subscription Contributor, subscription
@@ -51,7 +51,14 @@ zero deletions, with no RBAC changes and four private containers. The observatio
 Two existing deprecation warnings remain in the shared configuration. CI now repeats static
 validation with `-backend=false`, no Azure login and no extra token permissions.
 
-## Activation sequence and checkpoints
+## Original activation sequence and checkpoints
+
+This sequence describes the staged plan, not current permissions. Scoped identity/state cutover
+and legacy retirement are complete. #364 subsequently activated a main-only production
+controller boundary and separate private production record grants; see
+[controller evidence](production-controller.md). Build retains historical tag compatibility,
+UAT is main-only and prod is main-only with the owner reviewer. Production app writes still
+require a deliberate accepted release. The tag-only references below describe the original stage.
 
 1. Protect privileged GitHub environments against untrusted refs. Build/UAT must accept only
    intended main workflows; production must require the owner, authorized release tags and

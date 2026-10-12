@@ -15,8 +15,14 @@ inputs:
     required: false
     default: 'true'
   digest_images:
-    description: UAT-only exact build digest deployment path.
+    description: Exact build digest deployment or approved production manifest.
     required: false
+    default: 'false'
+  source_directory:
+    description: Verified infrastructure checkout, separate from trusted controller code.
+    default: '.'
+  rollback:
+    description: Restore approved images without rerunning migrations or changing infrastructure.
     default: 'false'
 outputs:
   final_vars:
@@ -81,7 +87,12 @@ runs:
         DEPLOY_ENVIRONMENT: ${{ inputs.environment }}
         IMAGE_TAG: ${{ inputs.image_tag }}
         DEPLOY_APPS: ${{ inputs.deploy_apps }}
-      run: node .github/scripts/deploy-image-set.mjs
+      run: |
+        if [ "$DEPLOY_ENVIRONMENT" = 'prod' ]; then
+          node .github/scripts/deploy-production.mjs prepare
+        else
+          node .github/scripts/deploy-image-set.mjs
+        fi
 
     - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
       with:
@@ -90,7 +101,7 @@ runs:
 
     - name: Terraform init
       shell: bash
-      working-directory: infra/terraform/envs/${{ inputs.environment }}
+      working-directory: ${{ inputs.source_directory }}/infra/terraform/envs/${{ inputs.environment }}
       run: terraform init -input=false
 
     # What image are the apps serving RIGHT NOW? Step 1 pins them to it so they keep serving
@@ -146,7 +157,7 @@ runs:
     - name: Deploy docs-only web image (preserve API, no migration)
       if: inputs.deploy_apps != 'true'
       shell: bash
-      working-directory: infra/terraform/envs/${{ inputs.environment }}
+      working-directory: ${{ inputs.source_directory }}/infra/terraform/envs/${{ inputs.environment }}
       env:
         DIGEST_VARS: ${{ steps.digest.outputs.final_vars }}
       run: |
@@ -172,9 +183,9 @@ runs:
     # updated to the new tag; app *images* stay pinned to the current tag. Terraform can still
     # create an old-image revision when its environment changes (as on the first docs rollout).
     - name: Apply infrastructure (apps stay on the current image)
-      if: inputs.deploy_apps == 'true'
+      if: inputs.deploy_apps == 'true' && inputs.rollback != 'true'
       shell: bash
-      working-directory: infra/terraform/envs/${{ inputs.environment }}
+      working-directory: ${{ inputs.source_directory }}/infra/terraform/envs/${{ inputs.environment }}
       env:
         DIGEST_VARS: ${{ steps.digest.outputs.held_vars }}
       run: |
@@ -197,7 +208,7 @@ runs:
     #
     # Reversed, the app boots and queries columns that do not exist yet.
     - name: Run migrations
-      if: inputs.deploy_apps == 'true'
+      if: inputs.deploy_apps == 'true' && inputs.rollback != 'true'
       shell: bash
       env:
         ENVIRONMENT: ${{ inputs.environment }}
@@ -303,7 +314,7 @@ runs:
     - name: Deploy apps
       if: inputs.deploy_apps == 'true'
       shell: bash
-      working-directory: infra/terraform/envs/${{ inputs.environment }}
+      working-directory: ${{ inputs.source_directory }}/infra/terraform/envs/${{ inputs.environment }}
       env:
         DIGEST_VARS: ${{ steps.digest.outputs.final_vars }}
       run: |

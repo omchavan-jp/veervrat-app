@@ -10,7 +10,7 @@ gates from mechanisms actually implemented and verified.
 
 ---
 
-## Delivery controls verified (2026-10-11)
+## Delivery controls verified (2026-10-12)
 
 Terraform state copies have been verified in dedicated shared/UAT/production containers.
 The backend configuration merged in #350 and CD was restored. See
@@ -19,8 +19,8 @@ deployment verification is separate from the copy; scoped client activation and 
 retirement are now recorded in the identity cutover evidence.
 
 GitHub environment configuration was read back after activation: `build` permits branch
-`main` and tags `prod-*`; `uat` permits only branch `main`; `prod` permits only tags
-`prod-*` and requires `omchavan-jp` approval, with administrator bypass disabled.
+`main` and tags `prod-*`; `uat` permits only branch `main`; `prod` permits only branch
+`main` for the trusted controller and requires `omchavan-jp` approval, with administrator bypass disabled.
 Owner self-approval remains allowed. Desired settings live in
 [environment-policy.json](.github/environment-policy.json). Production approval has
 been tested using an explicitly authorized read-only identity probe, not a production release.
@@ -55,8 +55,9 @@ docs-only rollout has not been claimed). The receipt is not human acceptance.
 For an accepted release, the owner selects CD operation `accept-uat` on main and supplies that
 successful run/attempt plus a concrete, **non-secret** verification note. Workflow inputs/logs
 may be public. Acceptance verifies the live exact set and evidence, then stores a separate
-decision. Do not fabricate notes or accept on the owner's behalf. Production promotion/rollback
-remain pending integration; creating a production tag is not a test of this UAT-only increment.
+decision and an exact-commit acceptance index. Do not fabricate notes or accept on the owner's behalf.
+Production promotion/rollback are implemented by the protected-main controller below; live
+production writes must still be verified in a deliberate accepted release, never a setup test tag.
 
 Build handoff artifacts expire after seven days, but durable receipts/acceptance do not depend
 on their later availability. A failed-only rerun cannot reuse a build artifact from a different
@@ -83,30 +84,30 @@ names the prod domain, the old proxy path returns 404.
 via manual terraform deploy (see "Recovering from the cost guard" below). Root cause: BullMQ
 CROSSSLOT errors flooded Log Analytics at ₹19,230 in 12 hours. Fixed by PR #293.
 
-| Piece | State |
-|---|---|
-| Azure subscription | `veervrat` · Central India · grant-funded (expires 2027-08-14) |
-| Terraform | `infra/terraform/` — `envs/shared`, `envs/uat`, `envs/prod` all applied, plans clean |
-| Container registry | `veervratacr.azurecr.io` — `veervrat-api`, `veervrat-api-migrate`, `veervrat-web` |
-| CI/CD | `ci.yml` + `integration.yml` (PR gates) · `cd.yml` (build → migrate → deploy). GitHub→Azure via OIDC, no stored secrets |
-| UAT Postgres | `veervrat-uat-psql` (v18, Burstable B1ms) — running, **schema migrated** (`pg_trgm` allow-listed via `azure.extensions`) |
-| UAT Redis | `veervrat-uat-redis` (Azure Managed Redis, Balanced_B0) — running |
-| UAT secrets | `veervrat-uat-kv` — `database-url`, `redis-url`, `session-secret`, `postgres-admin-password` |
-| UAT data | ✅ **seeded** — 6 virtues, 35 weaknesses, 226 sentences, 82 exposures, 128 resolutions, 31 challenges |
-| UAT compute | api + web Container Apps **running** in `veervrat-uat-cae`, scale-to-zero when idle |
-| UAT web | https://uat.veervrat.jnanaprabodhini.org (custom domain, live 2026-08-17) — internal: https://veervrat-uat-web.proudcoast-d3aa08a0.centralindia.azurecontainerapps.io |
-| UAT api | https://api.uat.veervrat.jnanaprabodhini.org (custom domain, live 2026-08-17) — **called directly by the browser**; the rewrite proxy was removed 2026-08-17. Internal: https://veervrat-uat-api.proudcoast-d3aa08a0.centralindia.azurecontainerapps.io |
-| prod Postgres | `veervrat-prod-psql` (v18, Burstable B1ms) — running, 35-day backup retention, schema migrated |
-| prod Redis | `veervrat-prod-redis` (Azure Managed Redis, Balanced_B0) — running |
-| prod secrets | `veervrat-prod-kv` — `database-url`, `redis-url`, `session-secret`, `postgres-admin-password` |
-| prod data | seeded (same content set as UAT) |
-| prod compute | api + web Container Apps **running** in `veervrat-prod-cae` on image `3037e87`, scale-to-zero (`min_replicas=0` — revisit once real traffic is expected). ⚠️ Both environments stopped by cost guard 2026-09-02 and restored same day |
-| prod web | https://veervrat.jnanaprabodhini.org (custom domain, live 2026-08-17) — internal: https://veervrat-prod-web.graydesert-a1bc836e.centralindia.azurecontainerapps.io |
-| prod api | https://api.veervrat.jnanaprabodhini.org (custom domain, live 2026-08-17) — **called directly by the browser**; the rewrite proxy was removed 2026-08-17. Internal: https://veervrat-prod-api.graydesert-a1bc836e.centralindia.azurecontainerapps.io |
-| DNS | **live** — per-record (not delegation, see `ops/PROJECT-STATUS.md` D14/O1); both custom domains bound with managed TLS certs as of 2026-08-17 |
-| Email | ✅ **delivering on both environments** — nodemailer over JP IT's relay (`dhoomketu.in:587`, STARTTLS). SMTP password set in both Key Vaults |
-| Object storage | ✅ **Azure Blob wired for uploads** (#139, 2026-08-24) — `StorageProvider` seam with Azure Blob implementation. ⚠️ `content-overrides` still speaks S3 only (separate path) |
-| Search (Meilisearch) | deferred |
+| Piece                | State                                                                                                                                                                                                                                                   |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Azure subscription   | `veervrat` · Central India · grant-funded (expires 2027-08-14)                                                                                                                                                                                          |
+| Terraform            | `infra/terraform/` — `envs/shared`, `envs/uat`, `envs/prod` all applied, plans clean                                                                                                                                                                    |
+| Container registry   | `veervratacr.azurecr.io` — `veervrat-api`, `veervrat-api-migrate`, `veervrat-web`                                                                                                                                                                       |
+| CI/CD                | `ci.yml` + `integration.yml` (PR gates) · `cd.yml` (build → migrate → deploy). GitHub→Azure via OIDC, no stored secrets                                                                                                                                 |
+| UAT Postgres         | `veervrat-uat-psql` (v18, Burstable B1ms) — running, **schema migrated** (`pg_trgm` allow-listed via `azure.extensions`)                                                                                                                                |
+| UAT Redis            | `veervrat-uat-redis` (Azure Managed Redis, Balanced_B0) — running                                                                                                                                                                                       |
+| UAT secrets          | `veervrat-uat-kv` — `database-url`, `redis-url`, `session-secret`, `postgres-admin-password`                                                                                                                                                            |
+| UAT data             | ✅ **seeded** — 6 virtues, 35 weaknesses, 226 sentences, 82 exposures, 128 resolutions, 31 challenges                                                                                                                                                   |
+| UAT compute          | api + web Container Apps **running** in `veervrat-uat-cae`, scale-to-zero when idle                                                                                                                                                                     |
+| UAT web              | https://uat.veervrat.jnanaprabodhini.org (custom domain, live 2026-08-17) — internal: https://veervrat-uat-web.proudcoast-d3aa08a0.centralindia.azurecontainerapps.io                                                                                   |
+| UAT api              | https://api.uat.veervrat.jnanaprabodhini.org (custom domain, live 2026-08-17) — **called directly by the browser**; the rewrite proxy was removed 2026-08-17. Internal: https://veervrat-uat-api.proudcoast-d3aa08a0.centralindia.azurecontainerapps.io |
+| prod Postgres        | `veervrat-prod-psql` (v18, Burstable B1ms) — running, 35-day backup retention, schema migrated                                                                                                                                                          |
+| prod Redis           | `veervrat-prod-redis` (Azure Managed Redis, Balanced_B0) — running                                                                                                                                                                                      |
+| prod secrets         | `veervrat-prod-kv` — `database-url`, `redis-url`, `session-secret`, `postgres-admin-password`                                                                                                                                                           |
+| prod data            | seeded (same content set as UAT)                                                                                                                                                                                                                        |
+| prod compute         | api + web Container Apps **running** in `veervrat-prod-cae` on image `3037e87`, scale-to-zero (`min_replicas=0` — revisit once real traffic is expected). ⚠️ Both environments stopped by cost guard 2026-09-02 and restored same day                   |
+| prod web             | https://veervrat.jnanaprabodhini.org (custom domain, live 2026-08-17) — internal: https://veervrat-prod-web.graydesert-a1bc836e.centralindia.azurecontainerapps.io                                                                                      |
+| prod api             | https://api.veervrat.jnanaprabodhini.org (custom domain, live 2026-08-17) — **called directly by the browser**; the rewrite proxy was removed 2026-08-17. Internal: https://veervrat-prod-api.graydesert-a1bc836e.centralindia.azurecontainerapps.io    |
+| DNS                  | **live** — per-record (not delegation, see `ops/PROJECT-STATUS.md` D14/O1); both custom domains bound with managed TLS certs as of 2026-08-17                                                                                                           |
+| Email                | ✅ **delivering on both environments** — nodemailer over JP IT's relay (`dhoomketu.in:587`, STARTTLS). SMTP password set in both Key Vaults                                                                                                             |
+| Object storage       | ✅ **Azure Blob wired for uploads** (#139, 2026-08-24) — `StorageProvider` seam with Azure Blob implementation. ⚠️ `content-overrides` still speaks S3 only (separate path)                                                                             |
+| Search (Meilisearch) | deferred                                                                                                                                                                                                                                                |
 
 ---
 
@@ -120,12 +121,17 @@ The following describes that path; it does not certify the new release policy as
 merge PR to main  →  classify paths  →  build changed app/web image set
                   →  deploy to UAT (app migrations only for app changes)
 
-tag prod-YYYY-MM-DD  →  rebuild → owner environment approval → deploy to prod
+owner UAT acceptance → immutable prod-YYYY-MM-DD tag request
+                    → protected-main controller validates evidence and publishes manifest
+                    → native owner approval → promote exact digests → durable outcome
 ```
 
-The production workflow currently rebuilds app images on a `prod-*` tag. The
-repository's earlier promote-without-rebuild guidance does not match that
-executable workflow; the discrepancy is tracked separately.
+`production-release.yml` never builds images. It reads the accepted receipt, verifies exact
+archived workflow attempts/checks, and creates the prerequisite GitHub Release/manifest.
+After native `prod` approval it revalidates that published asset's SHA-256 digest and baseline,
+persists the authorized manifest and claim privately, holds apps through migration, then moves
+them to those exact digests. Configured migration/maintenance/backup references are included.
+Historical tag workflow code cannot acquire the now-main-only production environment.
 
 **A merge triggers only the affected UAT image set.** Changes under
 `product-design/` build/deploy only the web image with its static Fumadocs
@@ -133,13 +139,14 @@ export; API and migration images remain on their current tag and no migration
 runs. App changes retain the existing app deployment path; mixed pushes use
 that path. Ordinary doc-only merges (`documentation/`, `ops/`,
 `openspec/`, `spec/`, `.claude/`, any `*.md`) are skipped. Unknown paths default
-to an app build. `prod-*` tag pushes are never filtered and retain the docs runtime gate off.
+to an app build. `prod-*` tags request production preparation, not another build.
 Details and the reasoning for not making UAT tag-gated instead:
 `documentation/21_Infrastructure-Conventions.md` §16.
 
-Explicit production environment approval is configured. Recorded UAT acceptance,
-accepted-digest promotion without rebuilding, release eligibility checks and isolated
-cloud authority remain pending; a tag alone does not prove UAT acceptance. See rollout status.
+Explicit production environment approval and separate cloud identities are configured.
+A tag alone does not prove UAT acceptance or authorize production. Source tests, actual
+UAT receipt verification and the first production-write verification are distinct evidence;
+consult rollout status before claiming all three complete.
 
 Fumadocs builds a static export from canonical `product-design/` sources inside
 the web image. It is copied outside the public directory. Browsers enter at
@@ -199,11 +206,11 @@ Takes ~10 minutes; Redis alone is ~7.
 
 **Decide these before applying — they are immutable after creation:**
 
-| Setting | Why it cannot wait |
-|---|---|
-| `postgres_backup_retention_days` | changing it later **replaces the server** |
-| Key Vault `soft_delete_retention_days` | Azure rejects the change outright once set |
-| Postgres `zone` | assigned by Azure if unset, then shows as permanent drift |
+| Setting                                | Why it cannot wait                                        |
+| -------------------------------------- | --------------------------------------------------------- |
+| `postgres_backup_retention_days`       | changing it later **replaces the server**                 |
+| Key Vault `soft_delete_retention_days` | Azure rejects the change outright once set                |
+| Postgres `zone`                        | assigned by Azure if unset, then shows as permanent drift |
 
 Verify: `terraform plan` again → **No changes**.
 
@@ -497,21 +504,21 @@ identity — never pasted into the portal, never committed.
 
 ### api
 
-| Var | Source | Notes |
-|---|---|---|
-| `DATABASE_URL` | Key Vault `database-url` | generated by Terraform |
-| `REDIS_URL` | Key Vault `redis-url` | generated by Terraform |
-| `SESSION_SECRET` | Key Vault | 32+ random chars |
-| `NODE_ENV` | `production` | |
-| `PORT` | `3001` | |
-| `FRONTEND_URL` | the web app's URL | CORS + cookie origin |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Key Vault | ⚠️ **required at boot** — read via `getOrThrow` and *not* in the Joi schema, so a missing value crash-loops the api with no friendly error |
-| `GOOGLE_CALLBACK_URL` | must match the Google console exactly | ⚠️ also required at boot |
-| `DATABASE_POOL_MAX` | default 10 | ⚠️ the real limit is `POOL_MAX × maxReplicas + headroom ≤ server max_connections`. Burstable Postgres allows few connections; exhausting them fails every request at once, health probes included. |
-| `SHUTDOWN_TIMEOUT_MS` | default 10000 | must stay under the platform's SIGTERM→SIGKILL grace period |
-| `S3_*` | unset for now | uploads degrade gracefully — chat image upload is disabled, nothing else breaks |
-| `MEILI_*` | unset | search deferred |
-| `PRODUCT_DOCS_MODE` | `granted` in UAT, `off` in prod; API enforces `PRODUCT_DOCS_VIEW` per-user grants and forces prod off |
+| Var                                         | Source                                                                                                | Notes                                                                                                                                                                                              |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                              | Key Vault `database-url`                                                                              | generated by Terraform                                                                                                                                                                             |
+| `REDIS_URL`                                 | Key Vault `redis-url`                                                                                 | generated by Terraform                                                                                                                                                                             |
+| `SESSION_SECRET`                            | Key Vault                                                                                             | 32+ random chars                                                                                                                                                                                   |
+| `NODE_ENV`                                  | `production`                                                                                          |                                                                                                                                                                                                    |
+| `PORT`                                      | `3001`                                                                                                |                                                                                                                                                                                                    |
+| `FRONTEND_URL`                              | the web app's URL                                                                                     | CORS + cookie origin                                                                                                                                                                               |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Key Vault                                                                                             | ⚠️ **required at boot** — read via `getOrThrow` and _not_ in the Joi schema, so a missing value crash-loops the api with no friendly error                                                         |
+| `GOOGLE_CALLBACK_URL`                       | must match the Google console exactly                                                                 | ⚠️ also required at boot                                                                                                                                                                           |
+| `DATABASE_POOL_MAX`                         | default 10                                                                                            | ⚠️ the real limit is `POOL_MAX × maxReplicas + headroom ≤ server max_connections`. Burstable Postgres allows few connections; exhausting them fails every request at once, health probes included. |
+| `SHUTDOWN_TIMEOUT_MS`                       | default 10000                                                                                         | must stay under the platform's SIGTERM→SIGKILL grace period                                                                                                                                        |
+| `S3_*`                                      | unset for now                                                                                         | uploads degrade gracefully — chat image upload is disabled, nothing else breaks                                                                                                                    |
+| `MEILI_*`                                   | unset                                                                                                 | search deferred                                                                                                                                                                                    |
+| `PRODUCT_DOCS_MODE`                         | `granted` in UAT, `off` in prod; API enforces `PRODUCT_DOCS_VIEW` per-user grants and forces prod off |
 
 ### web — **runtime**, except the commit SHA
 
@@ -521,23 +528,23 @@ called UAT's api. See `documentation/21_Infrastructure-Conventions.md` §17.
 
 Runtime — set on the Container App, changed with a restart, no rebuild:
 
-| Var | Notes |
-|---|---|
-| `API_BASE_URL` | absolute api URL incl. `/api/v1`. The browser calls the api directly — there is no proxy |
-| `SITE_URL` | og:image / canonical URL base |
-| `FEEDBACK_MODE` | `off` (nobody) or `granted` (holders of the `FEEDBACK_WIDGET` capability). Unrecognised values fail closed. Per-user grants via admin dashboard |
-| `PRODUCT_DOCS_MODE` | `granted` in UAT, `off` in prod. The gateway returns 404 before reading the static export when off; prod also forces off in code. |
+| Var                        | Notes                                                                                                                                                           |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `API_BASE_URL`             | absolute api URL incl. `/api/v1`. The browser calls the api directly — there is no proxy                                                                        |
+| `SITE_URL`                 | og:image / canonical URL base                                                                                                                                   |
+| `FEEDBACK_MODE`            | `off` (nobody) or `granted` (holders of the `FEEDBACK_WIDGET` capability). Unrecognised values fail closed. Per-user grants via admin dashboard                 |
+| `PRODUCT_DOCS_MODE`        | `granted` in UAT, `off` in prod. The gateway returns 404 before reading the static export when off; prod also forces off in code.                               |
 | `PRODUCT_DOCS_STATIC_ROOT` | Set by the web Dockerfile to `/app/product-docs-export`, outside `public`. For local use, defaults to `product-design/tooling/out` relative to the web package. |
 
 Build-time, and only these:
 
-| Var | Notes |
-|---|---|
-| `NEXT_PUBLIC_COMMIT_SHA` | build id attached to feedback reports — describes the *image*, so baking is correct |
-| `CONTENT_EDIT_ENABLED` | runtime gate on api — routes 404 when false. The web side uses `dynamic()` to keep editor code in a chunk nobody on prod fetches. See §23 in infra conventions |
+| Var                      | Notes                                                                                                                                                          |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_COMMIT_SHA` | build id attached to feedback reports — describes the _image_, so baking is correct                                                                            |
+| `CONTENT_EDIT_ENABLED`   | runtime gate on api — routes 404 when false. The web side uses `dynamic()` to keep editor code in a chunk nobody on prod fetches. See §23 in infra conventions |
 
-**The test before adding anything here:** does the value describe the *image*, or the
-*environment the image runs in*? Only the former may be baked.
+**The test before adding anything here:** does the value describe the _image_, or the
+_environment the image runs in_? Only the former may be baked.
 
 ---
 
@@ -691,11 +698,11 @@ rather than living in someone's memory.
 
 **Other outcomes:**
 
-| Output | Meaning |
-|---|---|
-| `nothing to do` | no email configured — the job is safe to start unconfigured |
-| `No user with email ...` (exit 1) | typo, or that account has not signed up here yet |
-| `already an admin — no change` | idempotent; no audit row is written for a non-grant |
+| Output                            | Meaning                                                     |
+| --------------------------------- | ----------------------------------------------------------- |
+| `nothing to do`                   | no email configured — the job is safe to start unconfigured |
+| `No user with email ...` (exit 1) | typo, or that account has not signed up here yet            |
+| `already an admin — no change`    | idempotent; no audit row is written for a non-grant         |
 
 **Keep the job after use.** The day admin access is lost — and the self-lockout guard is
 per-person, so reaching zero admins is possible — this is the only way back in. Idle Container
@@ -727,11 +734,11 @@ accounts, not an empty database.
 
 ### Three guards
 
-| Guard | What it stops |
-|---|---|
-| `wipe_users_confirm` defaults to `""` | the job exists but targets nothing; starting it unconfigured prints `nothing to do` |
+| Guard                                          | What it stops                                                                                                       |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `wipe_users_confirm` defaults to `""`          | the job exists but targets nothing; starting it unconfigured prints `nothing to do`                                 |
 | the confirmation must **name the environment** | a value left set in one environment's config, or carried into another by a copied file, does nothing where it lands |
-| refuses above **50 accounts** | a real user base is not a disposable dataset; past that number the answer is no |
+| refuses above **50 accounts**                  | a real user base is not a disposable dataset; past that number the answer is no                                     |
 
 The second guard is why the variable is a string and not a boolean. `true` means the same thing
 everywhere it appears; `uat` does not.
@@ -772,13 +779,13 @@ terraform apply -var="image_tag=$SHA" -var="deploy_apps=true"
 
 ### Other outcomes
 
-| Output | Meaning |
-|---|---|
-| `WIPE_USERS_CONFIRM is not set — nothing to do.` | unconfigured; safe |
+| Output                                                  | Meaning                                                   |
+| ------------------------------------------------------- | --------------------------------------------------------- |
+| `WIPE_USERS_CONFIRM is not set — nothing to do.`        | unconfigured; safe                                        |
 | `Refusing: ... is "uat" but this environment is "prod"` | the confirmation names somewhere else — the guard working |
-| `Refusing: N accounts exist, which is more than 50` | past the disposable-data threshold |
-| `No users to remove.` | already empty; idempotent |
-| `accounts remain` (exit 1) | the truncation did not take — investigate before retrying |
+| `Refusing: N accounts exist, which is more than 50`     | past the disposable-data threshold                        |
+| `No users to remove.`                                   | already empty; idempotent                                 |
+| `accounts remain` (exit 1)                              | the truncation did not take — investigate before retrying |
 
 **Remove this job once the environment has real users.** Guard 3 will refuse on its own, but a
 loaded mechanism with no legitimate remaining use is not something to leave lying in the
@@ -839,11 +846,11 @@ published.
 
 **The rule the job applies**, per document:
 
-| Database vs image | What happens |
-|---|---|
-| image version **higher** | published, text and title in both languages replaced |
-| **equal** | left alone — this preserves an edit an administrator made through the admin panel without raising the version |
-| database **higher** | **refused**, exit 1 — an older image is deployed, and publishing would roll the live policy backwards |
+| Database vs image        | What happens                                                                                                  |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| image version **higher** | published, text and title in both languages replaced                                                          |
+| **equal**                | left alone — this preserves an edit an administrator made through the admin panel without raising the version |
+| database **higher**      | **refused**, exit 1 — an older image is deployed, and publishing would roll the live policy backwards         |
 
 ```bash
 ENV=uat   # prove it here first
@@ -1112,10 +1119,10 @@ firewall rule. Confirm the **live** server is still `Ready` afterwards.
 
 ### Retention, as configured
 
-| | UAT | Prod |
-|---|---|---|
-| Backup retention | 7 days | **35 days** — the Flexible Server maximum, set at creation because it is immutable afterwards |
-| Geo-redundant | Disabled | Disabled |
+|                  | UAT      | Prod                                                                                          |
+| ---------------- | -------- | --------------------------------------------------------------------------------------------- |
+| Backup retention | 7 days   | **35 days** — the Flexible Server maximum, set at creation because it is immutable afterwards |
+| Geo-redundant    | Disabled | Disabled                                                                                      |
 
 ⚠️ Geo-redundancy is off in both. A regional failure in Central India is not covered by this
 procedure. That is a deliberate beta trade-off, not an oversight — but it should be a stated one.
@@ -1258,23 +1265,31 @@ cost guard (12–24 hour lag) is the only remaining protection against a logging
 
 ## Rollback
 
-Deploy the previous `prod-*` tag's image. Because prod ships a promoted image rather than
-a rebuild, the previous release is a known-good artifact still sitting in the registry.
+Use `Production release` on `main`, operation `register-rollback`, before creating a new tag.
+Supply `release_tag` (new immutable tag name), `rollback_tag` (previous successful
+controller-verified release), `schema_compatible=true` and a concrete `schema_note`.
+The request reads private production evidence; an arbitrary old tag is not an eligible target.
+After the request succeeds, create that new tag at the selected target commit, inspect its
+prepared manifest, and approve its separate native prod gate. The controller keeps current
+infrastructure and permits only image/commit changes; it never reruns migration jobs.
+If configuration drift or incompatible schema prevents this, stop and assess a forward fix.
 
 Database migrations are forward-only and are **not** rolled back — correct them with a new
-migration.
+migration. Do not rerun production controller attempts or move/reuse release tags. If deployment
+or audit fails, inspect the recorded failure and current actual state before a new request.
+An unfinished private claim requires operator reconciliation, not a guessed success or bypass.
 
 ---
 
 ## Known gaps
 
-| Gap | Status |
-|---|---|
-| WebSocket chat | Redis adapter fixed, WS transport not tested end-to-end |
-| ~~Content-editing object storage~~ | **Closed.** `content-overrides` now goes through `StorageProvider`, so it works on Azure Blob as well as S3. It was the last direct S3 consumer; `@aws-sdk/client-s3` is now used only by `S3StorageProvider`. |
-| Search | Meilisearch deferred; three reads being moved to Postgres FTS (#194) |
-| Secret rotation (O12) | GitHub PAT, `SESSION_SECRET`, R2 keys exposed in old `.env.railway` |
-| Off-site backup lives on one laptop | #267 tracks replacing `pull-backups.sh` local-only copy |
+| Gap                                 | Status                                                                                                                                                                                                         |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| WebSocket chat                      | Redis adapter fixed, WS transport not tested end-to-end                                                                                                                                                        |
+| ~~Content-editing object storage~~  | **Closed.** `content-overrides` now goes through `StorageProvider`, so it works on Azure Blob as well as S3. It was the last direct S3 consumer; `@aws-sdk/client-s3` is now used only by `S3StorageProvider`. |
+| Search                              | Meilisearch deferred; three reads being moved to Postgres FTS (#194)                                                                                                                                           |
+| Secret rotation (O12)               | GitHub PAT, `SESSION_SECRET`, R2 keys exposed in old `.env.railway`                                                                                                                                            |
+| Off-site backup lives on one laptop | #267 tracks replacing `pull-backups.sh` local-only copy                                                                                                                                                        |
 
 ---
 
@@ -1286,20 +1301,20 @@ production.** Design: archived openspec change `in-context-content-editor`.
 
 Requires, on top of the normal vars:
 
-| Var | Value |
-|---|---|
-| `NEXT_PUBLIC_CONTENT_EDIT` (web) | `on` — build-time; mounts the editor + i18n overlay |
-| `CONTENT_EDIT_ENABLED` (api) | `true` — master gate; routes 404 when false |
-| `ENVIRONMENT` | `local` \| `uat` \| `prod`. Named explicitly — `NODE_ENV` is `production` on UAT too. `content.edit` is refused outright when this is `prod` (O7) |
-| `FEEDBACK_MODE` | `off` \| `granted`. ⚠️ Must be set on the **api** as well as the web tier, or the widget is hidden rather than denied. `all` mode was removed |
-| `CONTENT_EDIT_GITHUB_TOKEN` | fine-grained PAT, this repo only, Contents + PR write |
-| `CONTENT_EDIT_GITHUB_REPO` | `omchavan-jp/veervrat-app` — confirm against `gh repo view` before setting; the repo has moved owners once already (2026-08-24) and a move to `jnanaprabodhini` is planned (#132) |
-| `CONTENT_EDIT_GITHUB_BASE_BRANCH` | `main` |
+| Var                               | Value                                                                                                                                                                             |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_CONTENT_EDIT` (web)  | `on` — build-time; mounts the editor + i18n overlay                                                                                                                               |
+| `CONTENT_EDIT_ENABLED` (api)      | `true` — master gate; routes 404 when false                                                                                                                                       |
+| `ENVIRONMENT`                     | `local` \| `uat` \| `prod`. Named explicitly — `NODE_ENV` is `production` on UAT too. `content.edit` is refused outright when this is `prod` (O7)                                 |
+| `FEEDBACK_MODE`                   | `off` \| `granted`. ⚠️ Must be set on the **api** as well as the web tier, or the widget is hidden rather than denied. `all` mode was removed                                     |
+| `CONTENT_EDIT_GITHUB_TOKEN`       | fine-grained PAT, this repo only, Contents + PR write                                                                                                                             |
+| `CONTENT_EDIT_GITHUB_REPO`        | `omchavan-jp/veervrat-app` — confirm against `gh repo view` before setting; the repo has moved owners once already (2026-08-24) and a move to `jnanaprabodhini` is planned (#132) |
+| `CONTENT_EDIT_GITHUB_BASE_BRANCH` | `main`                                                                                                                                                                            |
 
 Overrides stage in object storage under `content-overrides/`. **Still genuinely blocked, not
 just historically** — `content-overrides.repository.ts` constructs its own `S3Client` directly
 (`@aws-sdk/client-s3`), independent of `uploads.service.ts`. #139 (2026-08-24) built a
-`StorageProvider` seam and an Azure Blob implementation for the *uploads* path specifically;
+`StorageProvider` seam and an Azure Blob implementation for the _uploads_ path specifically;
 `content-overrides` was not part of that change and still speaks S3 only. Confirm this by
 searching for `@aws-sdk` under `content-overrides/` before assuming otherwise — this note will
 go stale exactly the way the original one did if content-overrides is migrated later without

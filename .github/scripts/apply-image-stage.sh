@@ -19,4 +19,8 @@ if ! terraform show -json "$plan_file" | jq -e '
   echo '::error::routine CD refuses deletion/replacement or unreadable plan; maintainer assessment required'
   exit 1
 fi
+if [ -n "${MANIFEST_FILE:-}" ]; then
+  terraform show -json "$plan_file" > "$plan_file.json"
+  node "$GITHUB_WORKSPACE/.github/scripts/check-production-plan.mjs" "$plan_file.json"
+fi
 terraform apply -input=false -lock-timeout=60s "$plan_file"
