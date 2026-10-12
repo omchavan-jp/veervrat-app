@@ -110,6 +110,12 @@ Creating a tag starts release preparation; it does not alone authorize productio
 
 After eligibility validation, show a release summary and require approval through the existing `prod` environment. Configure the maintainer as reviewer, allow self-review for this iteration, and disable administrator bypass of the normal environment approval gate.
 
+Controller design approved 2026-10-12: the authorized production execution ref is protected
+`main`, while immutable `prod-*` tags remain release identifiers/requests. This separates
+trusted controller code from the selected application commit and blocks historical tagged
+workflows from using production credentials. See [controller design](../ops/production-controller.md)
+and rollout status before treating the boundary or promotion as active.
+
 UAT acceptance means the artifact set was verified. Production approval means that accepted set may be deployed now. These are separate recorded decisions even while the same person makes both.
 
 When another release approver is appointed, update the reviewer configuration and enable prevention of self-review. That future appointment is outside the current iteration.
