@@ -59,8 +59,10 @@ with no migrations. Legacy versions without records need separate operator asses
 
 Build permits main/prod-* tags, UAT only main, prod only main; desired settings are in
 [environment-policy.json](../environment-policy.json). The main-only production boundary and
-container-scoped record grants were activated in #364. Live production writes remain for the
-owner's deliberate UAT-approved release; source implementation is not that verification.
+container-scoped record grants were activated in #364. Live production writes passed in
+owner-approved `prod-2026-10-12`, controller `38262172088/1`, with private/public outcome,
+exact live digest and health verification. See [release evidence](../../ops/release-controls-rollout.md).
+Actual rollback and fresh production browser/Sentry delivery tests were not induced as setup checks.
 
 CI lint does not apply fixes. Repo-wide `format:check` is not a CI gate.
 

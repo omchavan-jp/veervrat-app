@@ -108,7 +108,21 @@ bypass must remain intact. Record the exact temporary policy ID, run the reviewe
 remove that policy and verify the original prod-* tag-only configuration, even if the probe fails.
 This permission test is **not** a production release authorization.
 
-## Cutover and retirement checkpoints
+## Current controller and production proof (2026-10-12)
+
+The later owner-approved controller design permanently changed native prod admission to
+protected `main`; immutable prod tags are release requests, not executable deployment refs.
+The earlier temporary-main/tag-only probe instructions describe the historical cutover stage;
+do not restore tag-only policy after a new probe and break the active main controller.
+Separate identities, state scopes and retired legacy trust remain active. Production write
+verification subsequently passed in deliberate `prod-2026-10-12`, run `38262172088/1`, including
+Terraform, migration, exact-digest promotion, private/public outcome and independent read-back.
+See [release evidence](release-controls-rollout.md). No broad legacy grants were restored.
+Signed attestations are not claimed by this rollout; current record provenance uses protected
+workflow/owner evidence, scoped storage and conditional writes, with the cloud-maintainer
+trust boundary documented separately. Blob conditional writes are not WORM.
+
+## Historical cutover and retirement checkpoints
 
 1. Review/apply an additive live plan with only the twelve expected assignments; preserve a
    private shared-state backup. Unexpected changes/deletions stop the apply.

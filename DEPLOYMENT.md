@@ -23,10 +23,11 @@ GitHub environment configuration was read back after activation: `build` permits
 `main` for the trusted controller and requires `omchavan-jp` approval, with administrator bypass disabled.
 Owner self-approval remains allowed. Desired settings live in
 [environment-policy.json](.github/environment-policy.json). Production approval has
-been tested using an explicitly authorized read-only identity probe, not a production release.
+been verified in the owner-authorized `prod-2026-10-12` release through the native reviewer gate.
 Active build/deployment paths now use separate verified identities. Legacy trusts/grants were
 removed, and fresh federation to the old client was explicitly rejected. Build/UAT writes are
-verified; production writes remain for a deliberate UAT-approved release.
+verified; production Terraform, migration, exact-digest promotion and private record writes
+passed in [release run 38262172088/1](https://github.com/omchavan-jp/veervrat-app/actions/runs/38262172088).
 
 The [scoped identity cutover](ops/azure-identity-cutover.md) stages candidate grants and
 read-only verification before replacing active deployment credentials. Provisioning a new
@@ -56,8 +57,8 @@ For an accepted release, the owner selects CD operation `accept-uat` on main and
 successful run/attempt plus a concrete, **non-secret** verification note. Workflow inputs/logs
 may be public. Acceptance verifies the live exact set and evidence, then stores a separate
 decision and an exact-commit acceptance index. Do not fabricate notes or accept on the owner's behalf.
-Production promotion/rollback are implemented by the protected-main controller below; live
-production writes must still be verified in a deliberate accepted release, never a setup test tag.
+Production promotion is verified in the deliberate accepted release below. Rollback is implemented
+and source-tested, but has not been executed against production merely to test it.
 
 Build handoff artifacts expire after seven days, but durable receipts/acceptance do not depend
 on their later availability. A failed-only rerun cannot reuse a build artifact from a different
@@ -85,10 +86,32 @@ silently relax artifact identity checks. A later deployment cannot overwrite his
    not prove completed release evidence. On failure, stop and assess actual state; do not rerun
    the controller or move/reuse the tag. Deliberate rollback is described below.
 
-The verified setup candidate is #365 commit `b9d5c0c7929908f5835a654e735110c801be4e68`,
-receipt `38231047598/1`; [rollout evidence](ops/release-controls-rollout.md) is a dated snapshot.
-Check for later UAT deployments before using it. Setup has not supplied owner acceptance or
-production approval on your behalf.
+The first verified promotion used #365 commit `b9d5c0c7929908f5835a654e735110c801be4e68`,
+receipt `38231047598/1` and owner acceptance `38261941774/1` for `prod-2026-10-12`.
+For a subsequent release, select/test its actual UAT receipt and use a new tag/approval;
+do not reuse that completed release request. [Rollout evidence](ops/release-controls-rollout.md)
+separates the earlier non-deploying setup tests from this deliberate production deployment.
+
+## Verified production release (2026-10-12)
+
+[Release `prod-2026-10-12`](https://github.com/omchavan-jp/veervrat-app/releases/tag/prod-2026-10-12)
+promoted exactly the accepted UAT digests without rebuilding. The main controller
+`f32e5f9110a9e7a2c85246125000eb7e62049311` deployed application commit
+`b9d5c0c7929908f5835a654e735110c801be4e68` after recorded owner acceptance and native approval.
+Terraform kept old app references through verified migration execution
+`veervrat-prod-migrate-yq6wmgs`, then deployed the approved set. Migration review against
+the actual previous production commit `3037e8757ac3f069c36d2e678c8d18e0e3566f05` found only
+the additive `product_docs_view` capability enum value; no field/data removal was included.
+
+The deploy job and final private/public audit steps succeeded. Independent read-back confirmed
+all four production app/job references match the manifest, sole active healthy app revisions,
+database/Redis readiness, exact served production API wiring and a verified private success
+outcome with its claim closed. Production web has `SENTRY_DSN` configured and
+`PRODUCT_DOCS_MODE=off`; this does not claim a new Sentry delivery test, job execution for
+every maintenance/backup job, or fresh production browser-flow acceptance.
+The manifest/outcome digests and record keys are in [release evidence](ops/release-controls-rollout.md).
+An independent read-only production plan with the exact deployed image references/commit
+metadata returned no changes; no manual follow-up apply was performed.
 
 ## Historical deployment snapshot (2026-09-02)
 

@@ -1,9 +1,9 @@
 # Observability Standard — v1
 
-> **This describes the target state. It is not yet implemented — see issue #79.**
-> Rewritten 2026-08-16: GlitchTip was dropped in favour of Sentry + Azure Application
-> Insights (D8). The logging schema, metrics and privacy rules below survived that swap
-> unchanged — only the tools differ.
+> Instrumentation and verification are distinguished below; alerting and external uptime
+> checks remain separate work. GlitchTip was replaced by Sentry, and Azure Application Insights
+> was subsequently dropped. Logging/privacy conventions do not imply that every target alert
+> is implemented or that configuration presence proves delivery.
 
 ## Tools
 
@@ -14,7 +14,7 @@ the other, and both are free at this scale.
 
 | Concern | Tool | Status |
 |---|---|---|
-| Error tracking (app) | **Sentry** free tier | ✅ **api: live in both UAT and prod. web: live in UAT only** — prod's web container has no `SENTRY_DSN` at all as of 2026-08-24, pending a `prod-*` tag that includes #175. Both verified by triggering a real error and confirming it arrived in Sentry, not by the config looking right. The app logs `Error tracking DISABLED` on startup wherever the DSN is unset, rather than staying silent |
+| Error tracking (app) | **Sentry** | Historical error-delivery verification covers API in UAT/prod and UAT web. Production web `SENTRY_DSN` is configured after `prod-2026-10-12`, confirmed by Azure env-name read-back on 2026-10-12 without exposing its value. Fresh production Sentry delivery was not tested; configuration is not that proof. The disabled-startup diagnostic remains relevant. |
 | Platform telemetry | **Azure Application Insights** | **Dropped, 2026-08-23** — decided against, not merely unstarted. Was the only Azure-coupled piece of this plan; adopting it would mean instrumentation to rewrite the day the platform changes. See the decision section below |
 | Structured logging | Pino (NestJS) + browser console (Next.js) | ✅ Working — Pino → stdout in prod, collected by Container Apps |
 | Alerting (infra) | Azure Monitor metric alerts | ✅ Partially — Postgres `storage_percent > 80%` is live (see `21_Infrastructure-Conventions.md` §13) |
