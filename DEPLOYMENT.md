@@ -64,6 +64,32 @@ on their later availability. A failed-only rerun cannot reuse a build artifact f
 run attempt: rerun the full UAT workflow deliberately to produce a consistent attempt, never
 silently relax artifact identity checks. A later deployment cannot overwrite historical receipts.
 
+## Owner checklist for a planned production release
+
+1. Select an actual successful UAT CD run/attempt, check its receipt and exercise the intended
+   browser flows on [UAT](https://uat.veervrat.jnanaprabodhini.org). Health checks alone are not
+   owner acceptance. Review migrations since production for compatibility, ordering and recovery.
+2. In **Actions → CD → Run workflow**, choose branch `main`, operation `accept-uat`, the exact
+   `uat_run_id`/`uat_run_attempt` and a concrete `verification_note` describing what you actually
+   tested (at least six words, no secrets or personal data). Wait for `accept-uat` to succeed.
+   A newer UAT image set refuses stale acceptance; retest/select the new receipt rather than bypass.
+3. Create a new immutable `prod-YYYY-MM-DD` tag (or `-2`, `-3`, …) at that receipt's full commit
+   SHA, not blindly at latest main: later Markdown-only merges may not represent a new UAT deploy.
+   Push only that tag. The controller creates the GitHub Release and manifest automatically.
+4. In **Actions → Production release**, inspect the prepared tag, application commit, controller
+   commit, accepted digests and UAT note. The workflow runs from `main` even though its release
+   tag may select an older accepted commit. Select **Review deployments → prod → Approve**
+   only when ready for the infrastructure/migration/application changes now.
+5. Require the deploy job, fresh exact-image/health verification and final private/public audit
+   steps to finish successfully. A green endpoint or editable Release description alone does
+   not prove completed release evidence. On failure, stop and assess actual state; do not rerun
+   the controller or move/reuse the tag. Deliberate rollback is described below.
+
+The verified setup candidate is #365 commit `b9d5c0c7929908f5835a654e735110c801be4e68`,
+receipt `38231047598/1`; [rollout evidence](ops/release-controls-rollout.md) is a dated snapshot.
+Check for later UAT deployments before using it. Setup has not supplied owner acceptance or
+production approval on your behalf.
+
 ## Historical deployment snapshot (2026-09-02)
 
 The following image, health, login and resource observations describe that date, not a
