@@ -891,6 +891,13 @@ does not limit a shared identity's permissions. Verify live Azure grants as well
 See [rollout status](../ops/github-governance-status.md); this documentation does not itself
 change the current workflow or Azure role assignments.
 
+The trusted-main production controller is merged in #365. Native prod admission is main-only,
+requires the owner and disallows administrator bypass; immutable tags select the accepted artifact
+set, not executable controller code. Exact manifests/claims/outcomes live in a separate private
+production-record container, with container-scoped read/write roles activated in #364. Source tests
+and read-only allowed/denied controller checks have passed. A first production-changing release
+and any rollback remain separate owner-authorized verification, not implied by a clean shared plan.
+
 ## 16. A doc-only merge used to rebuild and redeploy anyway (2026-08-16)
 
 `cd.yml`'s trigger was `push: branches: [main]`, with no path filter — every merge to `main`

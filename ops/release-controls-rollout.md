@@ -148,3 +148,48 @@ Local controller, storage, policy and deployment regression tests pass, along wi
 syntax/context validation. Post-merge read-only receipt/history verification, UAT rollout and
 the first deliberate production write are separate checkpoints, not implied by those tests.
 Setup creates no acceptance, production tag, production approval or production deployment.
+
+## Controller verification (2026-10-12)
+
+Implementation #365 merged at `b9d5c0c7929908f5835a654e735110c801be4e68` after all seven
+PR checks passed. The 68 local controller/security/storage/deployment/governance tests,
+uncached workspace lint/typecheck and pinned actionlint validation passed.
+
+- [Read-only receipt/history verification](https://github.com/omchavan-jp/veervrat-app/actions/runs/38231137720)
+  verified the authenticated `38142359832/1` UAT receipt, archived exact checks and main history.
+  Production history was readable with zero outcomes/claims; `productionAuthorized=false`,
+  prepare succeeded and deploy was skipped. This did not create owner acceptance.
+- [Absent receipt refusal](https://github.com/omchavan-jp/veervrat-app/actions/runs/38231284277)
+  reached authenticated storage and failed for receipt `1/1` with HTTP404; deploy was skipped.
+  The positive control above used the same private container/identity and succeeded.
+- [Missing acceptance refusal](https://github.com/omchavan-jp/veervrat-app/actions/runs/38232216761)
+  inspected existing immutable tag `prod-2026-08-30` from trusted main code, then refused
+  preparation because no owner UAT acceptance matched it; deploy was skipped. No tag or
+  GitHub Release was created/updated. Its intentional red status is denial evidence, not a failed deployment.
+
+All post-merge main CI, integration, E2E and CodeQL checks passed. Production app/database
+writes, private production-writer proof and rollback execution still require deliberate releases.
+
+[UAT CD 38231047598/1](https://github.com/omchavan-jp/veervrat-app/actions/runs/38231047598)
+completed successfully at the #365 merge commit. `deploy-uat` itself succeeded, verified migration
+execution `veervrat-uat-migrate-cqbvwyx`, database/Redis readiness, runtime web/API wiring and
+sole healthy active revisions on the intended exact digest set. It conditionally created and
+read back `receipts/uat/38231047598/1.json`.
+[Controller read-back](https://github.com/omchavan-jp/veervrat-app/actions/runs/38232797117)
+verified that new receipt and checks, read empty production history and skipped deploy.
+[The ordinary UAT-completion event](https://github.com/omchavan-jp/veervrat-app/actions/runs/38232377593)
+skipped the whole production controller, as required. Public UAT `/ready` independently returned
+database/Redis up; it is not a substitute for owner browser acceptance.
+
+Verified configured/serving images in the receipt:
+
+| Component | Digest (repository prefix is fixed by the receipt validator) |
+| --- | --- |
+| API | `sha256:baf7c6e6cbe531a45e24c76208116f5c5d181c15efe1573426a9d24af25e760a` |
+| Web | `sha256:d79c21fe2d80ac5b433a442075f3eba1ef3f4fdc4eac51ec2f048ba62240af55` |
+| Migration/maintenance | `sha256:b1bbe3dd8a613d0a671cb4e8640e757ec98b34d0b0e152eb6bd509f579757d0d` |
+| Backup | `sha256:ea7f5937135f07028f5cf39634fec63714ccf63108ad93e88d178706b2a7028b` |
+
+No owner acceptance or production tag, approval, manifest claim, app write or database migration
+was created by these tests. The first actual tag-to-controller production release and production
+record-writer operations remain live verification, not claimed by fixture/read-only evidence.

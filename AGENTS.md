@@ -295,7 +295,7 @@ Note the name collision: the _environment_ called "dev" (D10) is local docker-co
 has nothing to do with the old `dev` _branch_.
 
 **Production authorization:** a tag alone is insufficient under the agreed policy. The public
-repository supports the planned native `prod` approval gate; private visibility needs a separate
+repository has the native `prod` approval gate; private visibility needs a separate
 plan/control review. Gate every production-changing step, including infrastructure and migrations.
 Do not assume acceptance, approval or artifact promotion is active until rollout status provides evidence.
 
