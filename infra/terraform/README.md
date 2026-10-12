@@ -11,8 +11,11 @@ Shared/UAT/production state now has dedicated container configuration:
 `shared.tfstate`/`uat.tfstate`/`prod.tfstate`. Read
 [cutover status and recovery checkpoints](../../ops/terraform-state-migration.md)
 before backend initialization on an existing checkout. Do not use `-reconfigure` as a
-substitute for copying an existing state. Containers do not yet isolate permissions:
-the legacy identity retains account-wide access until the scoped-role cutover.
+substitute for copying an existing state. Separately scoped build/UAT/production identities
+are active and legacy trust/grants were removed; see [identity evidence](../../ops/azure-identity-cutover.md).
+UAT writes private acceptance records in `release-records`; production reads those and writes
+private manifests/claims/outcomes in `production-release-records`. UAT has read-only access to
+production history. Grants are at container scope; never broaden them to the storage account.
 
 Three commands you'll use, always in this order, always from inside an
 `envs/<name>/` directory:
@@ -51,7 +54,7 @@ Container App, image tag, managed identity, or registry pull grant.
 ## The one hard rule — for any DNS zone this project ever manages
 
 **Never destroy and re-create a DNS zone that something is delegating to.**
-Azure assigns nameservers per zone, so a re-created zone gets *different*
+Azure assigns nameservers per zone, so a re-created zone gets _different_
 ones — invalidating any published NS delegation and requiring the whole
 request to the DNS operator again. Where a zone is in use, import it rather
 than letting Terraform create it, and give it

@@ -5,7 +5,7 @@ Operational reference for Jnana Prabodhini's Microsoft tenant and the Veervrat A
 reality diverges from this file, update the file in the same session.
 
 Last overall account/resource snapshot: **2026-09-02**. Terraform state and GitHub deployment
-identity/grant sections were verified and updated **2026-10-11**; see their linked evidence.
+identity/grant sections were verified and updated **2026-10-12**; see their linked evidence.
 This does not re-certify billing, human tenant roles or every service listed in the older snapshot.
 
 > Sensitive-ish but not secret: tenant/subscription IDs are identifiers, not credentials. No
@@ -15,63 +15,63 @@ This does not re-certify billing, human tenant roles or every service listed in 
 
 ## 1. Organisation
 
-| Field | Value |
-|---|---|
-| Legal name | **Jnana Prabodhini** |
-| Address | 510, Sadashiv Peth, Pune, MH 411030, India |
-| Phone | 02024207000 |
-| Website | https://www.jnanaprabodhini.org/ |
-| Society registration | Bom/418/Poona/63 (Societies Registration Act, 1860) |
-| Public trust registration | F-254 (Pune) (Maharashtra Public Trusts Act, 1950) |
-| PAN | AAATJ1195M |
-| Tax status | 12A + 80G (80G ref. AAATJ1195MF20214); FCRA; CSR-1 (CSR00002565) |
+| Field                     | Value                                                            |
+| ------------------------- | ---------------------------------------------------------------- |
+| Legal name                | **Jnana Prabodhini**                                             |
+| Address                   | 510, Sadashiv Peth, Pune, MH 411030, India                       |
+| Phone                     | 02024207000                                                      |
+| Website                   | https://www.jnanaprabodhini.org/                                 |
+| Society registration      | Bom/418/Poona/63 (Societies Registration Act, 1860)              |
+| Public trust registration | F-254 (Pune) (Maharashtra Public Trusts Act, 1950)               |
+| PAN                       | AAATJ1195M                                                       |
+| Tax status                | 12A + 80G (80G ref. AAATJ1195MF20214); FCRA; CSR-1 (CSR00002565) |
 
 ---
 
 ## 2. Microsoft tenant
 
-| Field | Value |
-|---|---|
-| Tenant name | Jnana Prabodhini |
-| Tenant ID | `5273b83c-0127-473f-bc58-a6f0d3c75ab1` |
-| Primary domain | `jppune.onmicrosoft.com` |
-| Country / data location | India / **Asia datacenters** |
-| Security defaults | **ON** (enforces MFA for all users) |
-| M365 in use? | **No** — JP runs **Google Workspace** for mail/files. Tenant is Azure-only. |
+| Field                   | Value                                                                       |
+| ----------------------- | --------------------------------------------------------------------------- |
+| Tenant name             | Jnana Prabodhini                                                            |
+| Tenant ID               | `5273b83c-0127-473f-bc58-a6f0d3c75ab1`                                      |
+| Primary domain          | `jppune.onmicrosoft.com`                                                    |
+| Country / data location | India / **Asia datacenters**                                                |
+| Security defaults       | **ON** (enforces MFA for all users)                                         |
+| M365 in use?            | **No** — JP runs **Google Workspace** for mail/files. Tenant is Azure-only. |
 
 ---
 
 ## 3. Nonprofit programme
 
-| Field | Value |
-|---|---|
-| Status | **Approved** |
-| Effective date | **12 September 2025** (~11 months before the grant was claimed — eligibility and grant run on separate clocks) |
-| Registered domain | `jppune.onmicrosoft.com` |
-| Registration type | ITPAN · legal identifier `AAATJ1195M` |
-| Primary contact | Devavrat Munagekar — `devavrat.munagekar@jnanaprabodhini.org` |
-| Portal | `nonprofit.microsoft.com` (requires **Global Admin**) |
+| Field             | Value                                                                                                          |
+| ----------------- | -------------------------------------------------------------------------------------------------------------- |
+| Status            | **Approved**                                                                                                   |
+| Effective date    | **12 September 2025** (~11 months before the grant was claimed — eligibility and grant run on separate clocks) |
+| Registered domain | `jppune.onmicrosoft.com`                                                                                       |
+| Registration type | ITPAN · legal identifier `AAATJ1195M`                                                                          |
+| Primary contact   | Devavrat Munagekar — `devavrat.munagekar@jnanaprabodhini.org`                                                  |
+| Portal            | `nonprofit.microsoft.com` (requires **Global Admin**)                                                          |
 
-Profile also holds: org name, address (510 Sadashiv Peth, Pune, MH 411030, IN), website, phone
-02024207000. ⚠️ **Do not edit name / legal identifier / city / country — triggers re-validation
+Profile also holds: org name, address (510 Sadashiv Peth, Pune, MH 411030, IN), website, phone 02024207000. ⚠️ **Do not edit name / legal identifier / city / country — triggers re-validation
 of eligibility** (see guardrails).
 
 ### Azure grant — verified on the Azure Credits blade
-| Field | Value |
-|---|---|
-| Source | **Azure non-profit sponsorship credit** |
-| Amount | **US$2,000.00 = ₹1,91,300.00** |
-| Effective | **14/08/2026** |
-| **Expires** | **14/08/2027** — ⚠️ does **not** roll over |
-| Used | **~₹20,700** (~10.8%) — ₹19,230 from the Log Analytics ingestion spike of 2026-09-01/02 (see §5 traps table), plus ~₹1,500 normal running costs |
-| Status | Active |
-| Activated by | Devavrat, 2026-08-14 — created the subscription below |
 
-*Local-currency balance is an estimate — Microsoft recalculates it monthly from Thomson Reuters
-benchmark rates, so the ₹ figure drifts while the US$2,000 stays fixed.*
+| Field        | Value                                                                                                                                           |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Source       | **Azure non-profit sponsorship credit**                                                                                                         |
+| Amount       | **US$2,000.00 = ₹1,91,300.00**                                                                                                                  |
+| Effective    | **14/08/2026**                                                                                                                                  |
+| **Expires**  | **14/08/2027** — ⚠️ does **not** roll over                                                                                                      |
+| Used         | **~₹20,700** (~10.8%) — ₹19,230 from the Log Analytics ingestion spike of 2026-09-01/02 (see §5 traps table), plus ~₹1,500 normal running costs |
+| Status       | Active                                                                                                                                          |
+| Activated by | Devavrat, 2026-08-14 — created the subscription below                                                                                           |
 
-*The Credit transactions table shows two "New credit added US$2,000.00" rows, but the running
-balance stays US$2,000.00 — a display artefact, not a double grant.*
+_Local-currency balance is an estimate — Microsoft recalculates it monthly from Thomson Reuters
+benchmark rates, so the ₹ figure drifts while the US$2,000 stays fixed._
+
+_The Credit transactions table shows two "New credit added US$2,000.00" rows, but the running
+balance stays US$2,000.00 — a display artefact, not a double grant._
 
 📅 **Google Calendar reminder created** — 1 July 2027, all-day, on `om.chavan501@gmail.com`
 (email reminder 1 day prior, popup 7 days prior).
@@ -80,53 +80,56 @@ balance stays US$2,000.00 — a display artefact, not a double grant.*
 
 ## 4. Azure subscription
 
-| Field | Value |
-|---|---|
-| Name | **`veervrat`** ✅ (was "Azure subscription 1"; renames take ~10 min to propagate) |
-| Subscription ID | `3ffcc513-dca6-453c-b9ff-83b096ea1381` |
-| Type | Usage based · **Microsoft Azure Plan (MCA)** — *not* legacy Sponsorship |
-| Purchased | 2026-08-14 · Billing frequency **Monthly** · Next invoice 2026-09-09 |
-| Currency | **INR** (~₹95.65/USD per the credit conversion) |
-| Status | Active · **UAT and prod both running** — UAT live 2026-08-16, prod live 2026-08-16 and correctly wired since `prod-2026-08-17`. ⚠️ Both environments were **stopped by the cost guard** on 2026-09-02 (09:51 UTC) and restored the same day via manual terraform deployment of image `3037e87` |
-| Parent management group | Tenant Root Group |
-| Target region | **Central India (Pune)** |
+| Field                   | Value                                                                                                                                                                                                                                                                                          |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name                    | **`veervrat`** ✅ (was "Azure subscription 1"; renames take ~10 min to propagate)                                                                                                                                                                                                              |
+| Subscription ID         | `3ffcc513-dca6-453c-b9ff-83b096ea1381`                                                                                                                                                                                                                                                         |
+| Type                    | Usage based · **Microsoft Azure Plan (MCA)** — _not_ legacy Sponsorship                                                                                                                                                                                                                        |
+| Purchased               | 2026-08-14 · Billing frequency **Monthly** · Next invoice 2026-09-09                                                                                                                                                                                                                           |
+| Currency                | **INR** (~₹95.65/USD per the credit conversion)                                                                                                                                                                                                                                                |
+| Status                  | Active · **UAT and prod both running** — UAT live 2026-08-16, prod live 2026-08-16 and correctly wired since `prod-2026-08-17`. ⚠️ Both environments were **stopped by the cost guard** on 2026-09-02 (09:51 UTC) and restored the same day via manual terraform deployment of image `3037e87` |
+| Parent management group | Tenant Root Group                                                                                                                                                                                                                                                                              |
+| Target region           | **Central India (Pune)**                                                                                                                                                                                                                                                                       |
 
 ### Billing account / profile — both renamed to "Jnana Prabodhini" ✅
 
-| Field | Value |
-|---|---|
-| Billing account ID | `02c7cc3f-d29f-5212-6290-e1fe4979a844:34d2be04-4138-43a2-baec-656226e16130_2019-05-31` |
-| Billing profile ID | **`HMHP-IOEN-BG7-PGB`** |
-| Agreement type | **Microsoft Customer Agreement** (self-service) |
-| Sold-to / Bill-to | Devavrat Munagekar, Jnana Prabodhini, 510 Sadashiv Peth, Pune MH 411030 IN |
-| Tax ID / Registration no. | **None provided** — JP may want its PAN/GSTIN on invoices; ask finance |
+| Field                     | Value                                                                                  |
+| ------------------------- | -------------------------------------------------------------------------------------- |
+| Billing account ID        | `02c7cc3f-d29f-5212-6290-e1fe4979a844:34d2be04-4138-43a2-baec-656226e16130_2019-05-31` |
+| Billing profile ID        | **`HMHP-IOEN-BG7-PGB`**                                                                |
+| Agreement type            | **Microsoft Customer Agreement** (self-service)                                        |
+| Sold-to / Bill-to         | Devavrat Munagekar, Jnana Prabodhini, 510 Sadashiv Peth, Pune MH 411030 IN             |
+| Tax ID / Registration no. | **None provided** — JP may want its PAN/GSTIN on invoices; ask finance                 |
 
 Both were auto-named **"Devavrat Munagekar"** (Azure names them after whoever clicks Activate).
 Renamed 2026-08-15 — the profile name prints on monthly invoices.
 
-⚠️ **Billing email is unverified.** The Properties blade warns *"Email verification required"* and
+⚠️ **Billing email is unverified.** The Properties blade warns _"Email verification required"_ and
 the sold-to address shows `devavrat.munagekar@jnanaprabodhini.org` **Not verified**. Until Devavrat
 verifies it, **important billing notifications may not be delivered**. Chase this.
 
 ### ⚠️ Payment method — and why there is no hard spending cap
-**MasterCard ••••2000 — belongs to Ashutosh Barmukh**, current *sahakaryavah* of Jnana Prabodhini.
+
+**MasterCard ••••2000 — belongs to Ashutosh Barmukh**, current _sahakaryavah_ of Jnana Prabodhini.
 
 **MCA subscriptions do not support a spending limit.** That feature exists only on legacy offers
 (Free Trial, old Pay-As-You-Go, Sponsorship). So when the grant is exhausted or expires on
 2027-08-14, usage **silently bills Ashutosh's card** — there is no toggle that suspends instead.
 
 Mitigations, in order of preference:
+
 1. **Budget → action group → automation** that stops resources at 100%. The genuine hard stop;
    add **before public launch**, not needed while the footprint is near zero.
 2. **Swap the personal card for a JP institutional one** — doesn't change mechanics, but moves
    the exposure from an individual to the organisation. Worth raising with Ashutosh.
-3. Removing the payment method is *not* advised — MCA generally requires one, and its absence can
+3. Removing the payment method is _not_ advised — MCA generally requires one, and its absence can
    suspend the account for non-payment.
 
 Current controls:
+
 1. **Budget alerts** — ₹13,000/mo with alerts at 50/75/100% to five recipients.
 2. **Cost guard** — budget → action group → webhook → `stop-veervrat` runbook (#93), proven 2026-08-26. Fires at 100% of ₹13,000.
-3. **`daily_quota_gb = 2`** on both Log Analytics workspaces — added 2026-09-02 (PR #293). Caps log *ingestion* at 2 GB/day; past it, ingestion stops until midnight UTC while queries still work. **This is the structural guard** — it operates at the Log Analytics level with zero billing lag.
+3. **`daily_quota_gb = 2`** on both Log Analytics workspaces — added 2026-09-02 (PR #293). Caps log _ingestion_ at 2 GB/day; past it, ingestion stops until midnight UTC while queries still work. **This is the structural guard** — it operates at the Log Analytics level with zero billing lag.
 
 ⚠️ **2026-09-02: all three budget-level protections failed.** A BullMQ CROSSSLOT error loop
 generated 3.3M log lines/hour (~53 GB/day ingested at ~₹363/GB), consuming ₹19,230 in ~12
@@ -153,11 +156,11 @@ historical observations; review each environment's current plan with its deploye
 
 ### Resource groups
 
-| Name | Region | Tags | Holds |
-|---|---|---|---|
-| `veervrat-shared` | Central India | `project=veervrat`, `environment=shared` | ACR, tfstate storage account, GitHub OIDC federated credentials (DNS zone removed 2026-08-24, #80) |
-| `veervrat-uat` | Central India | `project=veervrat`, `environment=uat` | Key Vault, Postgres, Redis, Container Apps env + **api/web apps + migration job**, identities, alerting |
-| `veervrat-prod` | Central India | `project=veervrat`, `environment=prod` | mirrors `veervrat-uat` — Key Vault, Postgres (35-day backups), Redis, Container Apps env + api/web + jobs, identities, alerting |
+| Name              | Region        | Tags                                     | Holds                                                                                                                           |
+| ----------------- | ------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `veervrat-shared` | Central India | `project=veervrat`, `environment=shared` | ACR, tfstate storage account, GitHub OIDC federated credentials (DNS zone removed 2026-08-24, #80)                              |
+| `veervrat-uat`    | Central India | `project=veervrat`, `environment=uat`    | Key Vault, Postgres, Redis, Container Apps env + **api/web apps + migration job**, identities, alerting                         |
+| `veervrat-prod`   | Central India | `project=veervrat`, `environment=prod`   | mirrors `veervrat-uat` — Key Vault, Postgres (35-day backups), Redis, Container Apps env + api/web + jobs, identities, alerting |
 
 Environments are split by **resource group**, not by subscription (D12). Shared,
 cross-environment resources live in `veervrat-shared`.
@@ -195,26 +198,26 @@ First successful Azure deploy 2026-08-16. `/ready` returns `database: up, redis:
   addressed **UAT's database** for a day. Per-environment URLs are runtime config now
   (`apps/web/lib/runtime-config.ts`); see conventions §17.
 
-| Resource | Name | Notes |
-|---|---|---|
-| Postgres | `veervrat-uat-psql` | Flexible Server, Burstable `Standard_B1ms`, **v18** (matches the Neon source data — no version conversion at migration), 32GB, **auto-grow ON**, 7-day backups, zone 2 pinned, `lifecycle.prevent_destroy` |
-| ⤷ extensions | `azure.extensions = PG_TRGM` | ⚠️ Azure gates `CREATE EXTENSION` behind a **server-level allow-list** — being DB admin is not enough. Keep in sync with `grep -rhoiE "CREATE EXTENSION[^;]*" apps/api/prisma/migrations/` |
-| Redis | `veervrat-uat-redis` | **Azure Managed Redis** `Balanced_B0`, TLS-only, eviction `AllKeysLRU`, no HA (beta tradeoff). ⚠️ **CLUSTERED** — even at the smallest tier, Azure Managed Redis runs in cluster mode. Any library using Lua scripts across multiple keys (e.g. BullMQ) must use hash tags (`{braces}` in key prefixes) to ensure all keys land in the same slot. See the CROSSSLOT trap below |
-| Key Vault | `veervrat-uat-kv` | RBAC auth, 90-day soft-delete. Secrets, as listed by `az keyvault secret list` on 2026-08-30: `database-url`, `redis-url`, `postgres-admin-password`, `session-secret`, `backup-encryption-key`, `google-client-secret`, `sentry-dsn`, `smtp-password`. The first five are Terraform-generated and never typed by a human; the last three are third-party credentials placed there. This doc listed only four until 2026-08-30. ⚠️ `backup-encryption-key` **must also exist outside Azure** (Bitwarden, shared with a second maintainer): if the subscription is what was lost, a key held only here makes every surviving dump unopenable |
-| Container Apps env | `veervrat-uat-cae` | + Log Analytics `veervrat-uat-logs` (30-day retention, **`daily_quota_gb = 2`** — added 2026-09-02 after the ingestion spike) |
-| api | `veervrat-uat-api` | scale-to-zero → 2 replicas, `DATABASE_POOL_MAX=5`, liveness `/health`, readiness `/ready` |
-| web | `veervrat-uat-web` | scale-to-zero → 2 replicas |
-| Migration job | `veervrat-uat-migrate` | manual trigger only, `replica_retry_limit=0`, runs the **build**-stage image |
-| Seed job | `veervrat-uat-seed` | manual trigger only; reference content, idempotent upserts |
-| Grant-admin job | `veervrat-uat-grant-admin` | manual trigger only. ⚠️ **Can mint an administrator** — targets `bootstrap_admin_email`, empty by default. Refuses unverified addresses unless deliberately overridden. Kept on purpose: it is the only way back in if admin access is lost. See conventions §22 |
-| Wipe-users job | `veervrat-uat-wipe-users` | manual trigger only; deletes all user accounts (age-gate compliance) |
-| Cleanup-expired job | `veervrat-uat-cleanup-expired` | **scheduled** `30 20 * * *` UTC = 02:00 IST; cleans expired sessions and tokens. This doc said "manual trigger only" until 2026-08-30 — it has been on a schedule since it was written |
-| Publish-policies job | `veervrat-uat-publish-policies` | manual trigger only; publishes terms/privacy policy content |
-| **Backup job** | `veervrat-uat-backup` | **scheduled** `30 21 * * *` UTC = 03:00 IST, an hour after cleanup-expired so the dump follows the sweep. Runs its own image (`veervrat-backup`), dumps with `pg_dump -Fc`, encrypts before anything leaves the process, uploads to `veervratuatbackups`, prunes past 30 days. Refuses to upload anything that will not decrypt back byte-identical (#131) |
-| Blob storage | `veervratuatuploads` | StorageV2 account, container for file uploads; api identity has Storage Blob Data Contributor + Reader |
-| **Backup storage** | `veervratuatbackups` | Separate account, container `database-dumps`, **never public at any level**. Encrypted database dumps, 30-day retention. Job identity has Storage Blob Data **Contributor**; humans in `key_vault_administrators` have **Reader** — needed because `scripts/pull-backups.sh` runs as a person, not as the job. ⚠️ Staging only: this is in the same subscription as the database it protects, so it does NOT satisfy #131 on its own |
-| Identities | `veervrat-uat-api-id`, `veervrat-uat-web-id` | user-assigned; AcrPull on the registry, api additionally Key Vault Secrets User. **No registry password or connection string anywhere** |
-| Alerting | `veervrat-uat-ops` + `veervrat-uat-psql-storage` | storage > 80%, hourly → `om.chavan@jnanaprabodhini.org` |
+| Resource             | Name                                             | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| -------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Postgres             | `veervrat-uat-psql`                              | Flexible Server, Burstable `Standard_B1ms`, **v18** (matches the Neon source data — no version conversion at migration), 32GB, **auto-grow ON**, 7-day backups, zone 2 pinned, `lifecycle.prevent_destroy`                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ⤷ extensions         | `azure.extensions = PG_TRGM`                     | ⚠️ Azure gates `CREATE EXTENSION` behind a **server-level allow-list** — being DB admin is not enough. Keep in sync with `grep -rhoiE "CREATE EXTENSION[^;]*" apps/api/prisma/migrations/`                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Redis                | `veervrat-uat-redis`                             | **Azure Managed Redis** `Balanced_B0`, TLS-only, eviction `AllKeysLRU`, no HA (beta tradeoff). ⚠️ **CLUSTERED** — even at the smallest tier, Azure Managed Redis runs in cluster mode. Any library using Lua scripts across multiple keys (e.g. BullMQ) must use hash tags (`{braces}` in key prefixes) to ensure all keys land in the same slot. See the CROSSSLOT trap below                                                                                                                                                                                                                                                              |
+| Key Vault            | `veervrat-uat-kv`                                | RBAC auth, 90-day soft-delete. Secrets, as listed by `az keyvault secret list` on 2026-08-30: `database-url`, `redis-url`, `postgres-admin-password`, `session-secret`, `backup-encryption-key`, `google-client-secret`, `sentry-dsn`, `smtp-password`. The first five are Terraform-generated and never typed by a human; the last three are third-party credentials placed there. This doc listed only four until 2026-08-30. ⚠️ `backup-encryption-key` **must also exist outside Azure** (Bitwarden, shared with a second maintainer): if the subscription is what was lost, a key held only here makes every surviving dump unopenable |
+| Container Apps env   | `veervrat-uat-cae`                               | + Log Analytics `veervrat-uat-logs` (30-day retention, **`daily_quota_gb = 2`** — added 2026-09-02 after the ingestion spike)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| api                  | `veervrat-uat-api`                               | scale-to-zero → 2 replicas, `DATABASE_POOL_MAX=5`, liveness `/health`, readiness `/ready`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| web                  | `veervrat-uat-web`                               | scale-to-zero → 2 replicas                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Migration job        | `veervrat-uat-migrate`                           | manual trigger only, `replica_retry_limit=0`, runs the **build**-stage image                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Seed job             | `veervrat-uat-seed`                              | manual trigger only; reference content, idempotent upserts                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Grant-admin job      | `veervrat-uat-grant-admin`                       | manual trigger only. ⚠️ **Can mint an administrator** — targets `bootstrap_admin_email`, empty by default. Refuses unverified addresses unless deliberately overridden. Kept on purpose: it is the only way back in if admin access is lost. See conventions §22                                                                                                                                                                                                                                                                                                                                                                            |
+| Wipe-users job       | `veervrat-uat-wipe-users`                        | manual trigger only; deletes all user accounts (age-gate compliance)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Cleanup-expired job  | `veervrat-uat-cleanup-expired`                   | **scheduled** `30 20 * * *` UTC = 02:00 IST; cleans expired sessions and tokens. This doc said "manual trigger only" until 2026-08-30 — it has been on a schedule since it was written                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Publish-policies job | `veervrat-uat-publish-policies`                  | manual trigger only; publishes terms/privacy policy content                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| **Backup job**       | `veervrat-uat-backup`                            | **scheduled** `30 21 * * *` UTC = 03:00 IST, an hour after cleanup-expired so the dump follows the sweep. Runs its own image (`veervrat-backup`), dumps with `pg_dump -Fc`, encrypts before anything leaves the process, uploads to `veervratuatbackups`, prunes past 30 days. Refuses to upload anything that will not decrypt back byte-identical (#131)                                                                                                                                                                                                                                                                                  |
+| Blob storage         | `veervratuatuploads`                             | StorageV2 account, container for file uploads; api identity has Storage Blob Data Contributor + Reader                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **Backup storage**   | `veervratuatbackups`                             | Separate account, container `database-dumps`, **never public at any level**. Encrypted database dumps, 30-day retention. Job identity has Storage Blob Data **Contributor**; humans in `key_vault_administrators` have **Reader** — needed because `scripts/pull-backups.sh` runs as a person, not as the job. ⚠️ Staging only: this is in the same subscription as the database it protects, so it does NOT satisfy #131 on its own                                                                                                                                                                                                        |
+| Identities           | `veervrat-uat-api-id`, `veervrat-uat-web-id`     | user-assigned; AcrPull on the registry, api additionally Key Vault Secrets User. **No registry password or connection string anywhere**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Alerting             | `veervrat-uat-ops` + `veervrat-uat-psql-storage` | storage > 80%, hourly → `om.chavan@jnanaprabodhini.org`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 
 ### Prod environment — `veervrat-prod` (2026-08-16) — **app is LIVE**
 
@@ -225,25 +228,25 @@ ones that matter under pressure.
 **URLs** — `https://veervrat.jnanaprabodhini.org` (web), `https://api.veervrat.jnanaprabodhini.org`
 (api). Custom domains bound 2026-08-17 with Azure-managed DigiCert certs.
 
-| Resource | Name | Notes |
-|---|---|---|
-| Postgres | `veervrat-prod-psql` | same SKU as UAT, **35-day backups** (the Flexible Server maximum; set at creation because it is immutable afterwards — UAT's 7 days is fine for disposable content) |
-| Redis | `veervrat-prod-redis` | Azure Managed Redis `Balanced_B0`, TLS-only. ⚠️ **CLUSTERED** — same as UAT; see the hash tag requirement above |
-| Key Vault | `veervrat-prod-kv` | RBAC auth, 90-day soft-delete. Also holds `smtp-password` and `google-client-secret`, both set **out of band** — Terraform creates them with placeholders |
-| Container Apps env | `veervrat-prod-cae` | + Log Analytics `veervrat-prod-logs` (**`daily_quota_gb = 2`** — added 2026-09-02) |
-| api | `veervrat-prod-api` | **scale-to-zero** → 2 replicas, `DATABASE_POOL_MAX=5`. ⚠️ Deliberate: costs nothing idle, but the first request after idle is a **5–20s cold start** (#92). Revisit `min_replicas = 1` (~$14/mo) before beta testers arrive |
-| web | `veervrat-prod-web` | scale-to-zero → 2 replicas |
-| Migration job | `veervrat-prod-migrate` | manual trigger, `replica_retry_limit=0`. ⚠️ Reported success without migrating anything until 2026-08-21 — see the traps table and conventions §21 |
-| Seed job | `veervrat-prod-seed` | reference content, idempotent upserts. First run 2026-08-21: 6 virtues, 33 subvirtues, 35 weaknesses, 226 sentences, 128 resolutions, 82 exposures, 31 challenges |
-| Grant-admin job | `veervrat-prod-grant-admin` | manual trigger. ⚠️ **Can mint an administrator** — targets `bootstrap_admin_email`, empty by default. Refuses unverified addresses unless deliberately overridden. Kept on purpose: the only way back in if admin access is lost. Conventions §22 |
-| Wipe-users job | `veervrat-prod-wipe-users` | manual trigger only; deletes all user accounts (age-gate compliance) |
-| Cleanup-expired job | `veervrat-prod-cleanup-expired` | manual trigger only; cleans expired sessions and tokens |
-| Publish-policies job | `veervrat-prod-publish-policies` | manual trigger only; publishes terms/privacy policy content |
-| Blob storage | `veervratproduploads` | StorageV2 account, container for file uploads; api identity has Storage Blob Data Contributor + Reader |
-| **Backup job** | `veervrat-prod-backup` | Created by `prod-2026-08-30`, not before — the job ships with the environment, so prod had no dump of any kind until that tag. Same schedule and refusals as UAT |
-| **Backup storage** | `veervratprodbackups` | Created by the same tag. Container `database-dumps`, never public at any level, 30-day retention. First dump taken, pulled and verified 2026-08-30 |
-| Identities | `veervrat-prod-api-id`, `veervrat-prod-web-id` | user-assigned; same grants as UAT |
-| Alerting | `veervrat-prod-ops` + `veervrat-prod-psql-storage` | storage > 80% |
+| Resource             | Name                                               | Notes                                                                                                                                                                                                                                             |
+| -------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Postgres             | `veervrat-prod-psql`                               | same SKU as UAT, **35-day backups** (the Flexible Server maximum; set at creation because it is immutable afterwards — UAT's 7 days is fine for disposable content)                                                                               |
+| Redis                | `veervrat-prod-redis`                              | Azure Managed Redis `Balanced_B0`, TLS-only. ⚠️ **CLUSTERED** — same as UAT; see the hash tag requirement above                                                                                                                                   |
+| Key Vault            | `veervrat-prod-kv`                                 | RBAC auth, 90-day soft-delete. Also holds `smtp-password` and `google-client-secret`, both set **out of band** — Terraform creates them with placeholders                                                                                         |
+| Container Apps env   | `veervrat-prod-cae`                                | + Log Analytics `veervrat-prod-logs` (**`daily_quota_gb = 2`** — added 2026-09-02)                                                                                                                                                                |
+| api                  | `veervrat-prod-api`                                | **scale-to-zero** → 2 replicas, `DATABASE_POOL_MAX=5`. ⚠️ Deliberate: costs nothing idle, but the first request after idle is a **5–20s cold start** (#92). Revisit `min_replicas = 1` (~$14/mo) before beta testers arrive                       |
+| web                  | `veervrat-prod-web`                                | scale-to-zero → 2 replicas                                                                                                                                                                                                                        |
+| Migration job        | `veervrat-prod-migrate`                            | manual trigger, `replica_retry_limit=0`. ⚠️ Reported success without migrating anything until 2026-08-21 — see the traps table and conventions §21                                                                                                |
+| Seed job             | `veervrat-prod-seed`                               | reference content, idempotent upserts. First run 2026-08-21: 6 virtues, 33 subvirtues, 35 weaknesses, 226 sentences, 128 resolutions, 82 exposures, 31 challenges                                                                                 |
+| Grant-admin job      | `veervrat-prod-grant-admin`                        | manual trigger. ⚠️ **Can mint an administrator** — targets `bootstrap_admin_email`, empty by default. Refuses unverified addresses unless deliberately overridden. Kept on purpose: the only way back in if admin access is lost. Conventions §22 |
+| Wipe-users job       | `veervrat-prod-wipe-users`                         | manual trigger only; deletes all user accounts (age-gate compliance)                                                                                                                                                                              |
+| Cleanup-expired job  | `veervrat-prod-cleanup-expired`                    | manual trigger only; cleans expired sessions and tokens                                                                                                                                                                                           |
+| Publish-policies job | `veervrat-prod-publish-policies`                   | manual trigger only; publishes terms/privacy policy content                                                                                                                                                                                       |
+| Blob storage         | `veervratproduploads`                              | StorageV2 account, container for file uploads; api identity has Storage Blob Data Contributor + Reader                                                                                                                                            |
+| **Backup job**       | `veervrat-prod-backup`                             | Created by `prod-2026-08-30`, not before — the job ships with the environment, so prod had no dump of any kind until that tag. Same schedule and refusals as UAT                                                                                  |
+| **Backup storage**   | `veervratprodbackups`                              | Created by the same tag. Container `database-dumps`, never public at any level, 30-day retention. First dump taken, pulled and verified 2026-08-30                                                                                                |
+| Identities           | `veervrat-prod-api-id`, `veervrat-prod-web-id`     | user-assigned; same grants as UAT                                                                                                                                                                                                                 |
+| Alerting             | `veervrat-prod-ops` + `veervrat-prod-psql-storage` | storage > 80%                                                                                                                                                                                                                                     |
 
 ⚠️ **`veervrat-prod-kv/backup-encryption-key` must also exist outside Azure**, for the same reason
 as UAT's and with the same trap: **the two keys are different**, and a prod dump will not open with
@@ -253,26 +256,26 @@ corrupt — worse than not checking. `scripts/pull-backups.sh` reads
 
 **Differences from UAT that have bitten or could:**
 
-| | UAT | Prod |
-|---|---|---|
-| `feedback_mode` | `granted` — **mirrors prod deliberately**, so the grant path is exercised before it reaches users | `granted` — per-user, from `/admin/users/[id]` (D20/#40) |
-| `content_edit_enabled` | `true` — Nachiket reviews copy here; WHO may edit is still a per-user grant | `false` — and the API refuses `content.edit` outright when `ENVIRONMENT=prod` (O7) |
-| `ENVIRONMENT` | `uat` | `prod` — `content.edit` is refused outright at the API when this is `prod` (O7), not merely disabled by config |
-| Postgres backups | 7 days | 35 days — **immutable after creation** |
-| Google OAuth client | its own client + secret | its own client + secret; callback on the **api** origin |
-| `COOKIE_DOMAIN` | `uat.veervrat.jnanaprabodhini.org` | `veervrat.jnanaprabodhini.org` — ⚠️ absent until 2026-08-21; without it login succeeds and does not survive a refresh, which reads as a session bug rather than a cookie-scope one |
+|                        | UAT                                                                                               | Prod                                                                                                                                                                               |
+| ---------------------- | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `feedback_mode`        | `granted` — **mirrors prod deliberately**, so the grant path is exercised before it reaches users | `granted` — per-user, from `/admin/users/[id]` (D20/#40)                                                                                                                           |
+| `content_edit_enabled` | `true` — Nachiket reviews copy here; WHO may edit is still a per-user grant                       | `false` — and the API refuses `content.edit` outright when `ENVIRONMENT=prod` (O7)                                                                                                 |
+| `ENVIRONMENT`          | `uat`                                                                                             | `prod` — `content.edit` is refused outright at the API when this is `prod` (O7), not merely disabled by config                                                                     |
+| Postgres backups       | 7 days                                                                                            | 35 days — **immutable after creation**                                                                                                                                             |
+| Google OAuth client    | its own client + secret                                                                           | its own client + secret; callback on the **api** origin                                                                                                                            |
+| `COOKIE_DOMAIN`        | `uat.veervrat.jnanaprabodhini.org`                                                                | `veervrat.jnanaprabodhini.org` — ⚠️ absent until 2026-08-21; without it login succeeds and does not survive a refresh, which reads as a session bug rather than a cookie-scope one |
 
 ⚠️ **Prod's database held no tables from 2026-08-16 to 2026-08-21.** Not a missing migration —
 no schema at all, while `/health` and `/ready` both returned 200. See the traps table.
 
 ### Container registry contents (`veervratacr`)
 
-| Repository | Purpose |
-|---|---|
-| `veervrat-api` | the api runtime image |
-| `veervrat-api-migrate` | **build**-stage image — carries the `prisma` CLI, which is pruned out of the runtime image. Only this one can apply migrations. |
-| `veervrat-web` | Next.js standalone server |
-| `veervrat-backup` | database dump job. Built from `postgres:18-bookworm` rather than a stage of the api image, because `pg_dump` refuses to dump a server newer than itself and Debian ships client 15 against a server on 18. Keeping it separate also leaves `veervrat-api-migrate` — which is on the critical deploy path — untouched |
+| Repository             | Purpose                                                                                                                                                                                                                                                                                                              |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `veervrat-api`         | the api runtime image                                                                                                                                                                                                                                                                                                |
+| `veervrat-api-migrate` | **build**-stage image — carries the `prisma` CLI, which is pruned out of the runtime image. Only this one can apply migrations.                                                                                                                                                                                      |
+| `veervrat-web`         | Next.js standalone server                                                                                                                                                                                                                                                                                            |
+| `veervrat-backup`      | database dump job. Built from `postgres:18-bookworm` rather than a stage of the api image, because `pg_dump` refuses to dump a server newer than itself and Debian ships client 15 against a server on 18. Keeping it separate also leaves `veervrat-api-migrate` — which is on the critical deploy path — untouched |
 
 All four tagged with the release git SHA (currently `3037e87`) plus `latest`.
 ⚠️ **No purge policy.** Automatic retention is **Premium-tier only**; on Basic the path is a
@@ -295,28 +298,27 @@ static outbound IP without VNet integration anyway, so per-IP rules aren't worka
 Each of these cost real time and would recur. Full detail in
 `veervrat-app/documentation/21_Infrastructure-Conventions.md` §14.
 
-| Trap | What happens | Guard |
-|---|---|---|
-| **Docker context includes `infra/`** | `.terraform/` holds ~220MB of provider plugins *per env dir*; context was 139MB and builds appeared to **hang**, not fail | `.dockerignore` excludes `infra`; verify with `ls -la` on the printed `build_archive_*.tar.gz` — should be <1MB |
-| **Building images locally** | Dev machines are arm64, Container Apps is amd64 — the image fails to start with an error resembling corruption | always `az acr build` (builds *in* Azure) |
-| **Images tagged from different commits** | no single tag to deploy or promote; breaks "promote don't rebuild" | one checkout → one SHA → all images. `az acr build` uploads the *working tree*, so the SHA in a tag is a label you choose, not something enforced |
-| **`terraform apply` before the image exists** | api revision fails `MANIFEST_UNKNOWN`; the app is created in `Failed` state but never enters Terraform state, so the **retry is then blocked** by "resource already exists" | wait on the *tag*, not the build task: `until az acr repository show-tags ... \| grep -q "$SHA"; do sleep 20; done` |
-| **Orphaned `Failed` Container App** | blocks re-apply | check `provisioningState`/`latestRevisionName`/`fqdn` first: no FQDN + no revisions ⇒ safe to `az containerapp delete`; otherwise `terraform import` — never delete an app with live revisions |
-| **Postgres extension not allow-listed** | migration fails *after* earlier ones applied, leaving a half-migrated DB | `azure.extensions` server config, kept in sync with the migrations |
-| **A failed Prisma migration blocks all later ones** | `P3018`; every later `migrate deploy` refuses | deliberate override: `-var='migrate_command=migrate resolve --rolled-back <name>'`, then re-run normally. Never an automatic retry — hence `replica_retry_limit=0` |
-| **`NEXT_PUBLIC_*` build args silently dropped** | no warning; the value never arrives and a stale fallback ships | the Dockerfile must declare **both** `ARG` and `ENV`; never default a public URL to a real deployed host |
-| **`job start --image` silently replaces the container** | drops `command`, `args` and `env`; the job runs the image's default entrypoint, does nothing, exits 0, and is recorded **Succeeded**. Prod ran three "successful" migrations against a database with no tables | never override a job execution — change what it runs through Terraform. Conventions §21 |
-| **An overridden job execution produces no logs** | zero rows in Log Analytics under any container name, so nothing contradicts the false success | same guard — no overrides. Verified on prod 2026-08-21 |
-| **`/health` stays green on a schema-less database** | it is cheap by design so it will not flap on a DB blip; `/ready` pings Postgres, which was genuinely reachable. Nothing probes the **schema** | do not read a green health check as "the app works". Exercise a real write path after a deploy |
-| **Job logs are not where app logs are** | `ContainerAppName_s` is **empty** for jobs; filtering as you would for an app returns nothing and reads as "jobs do not log" | filter on `ContainerName_s`; allow ~2 min for ingestion. `az containerapp job logs show` misses finished jobs — the replica is reaped in seconds |
-| **A killed `terraform apply` can leave an orphaned blob lease** | a subsequent operation may fail with `state blob is already locked`; missing lock metadata is not proof that no writer exists | Coordinate with all operators and CD; confirm there is no active writer before any explicitly authorized lease recovery. Resolve the exact current container from the backend (`tfstate-shared`, `tfstate-uat` or `tfstate-prod`) and corresponding key. Never break a lease merely because acquisition timed out. Review a fresh plan after recovery. |
-| **Secrets are in Terraform state in plaintext** | anyone who can read state has every secret for that environment | state lives behind Azure AD RBAC on `veervrattfstate`; treat read access as equivalent to Key Vault admin |
+| Trap                                                             | What happens                                                                                                                                                                                                                                                            | Guard                                                                                                                                                                                                                                                                                                                                                                        |
+| ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Docker context includes `infra/`**                             | `.terraform/` holds ~220MB of provider plugins _per env dir_; context was 139MB and builds appeared to **hang**, not fail                                                                                                                                               | `.dockerignore` excludes `infra`; verify with `ls -la` on the printed `build_archive_*.tar.gz` — should be <1MB                                                                                                                                                                                                                                                              |
+| **Building images locally**                                      | Dev machines are arm64, Container Apps is amd64 — the image fails to start with an error resembling corruption                                                                                                                                                          | always `az acr build` (builds _in_ Azure)                                                                                                                                                                                                                                                                                                                                    |
+| **Images tagged from different commits**                         | no single tag to deploy or promote; breaks "promote don't rebuild"                                                                                                                                                                                                      | one checkout → one SHA → all images. `az acr build` uploads the _working tree_, so the SHA in a tag is a label you choose, not something enforced                                                                                                                                                                                                                            |
+| **`terraform apply` before the image exists**                    | api revision fails `MANIFEST_UNKNOWN`; the app is created in `Failed` state but never enters Terraform state, so the **retry is then blocked** by "resource already exists"                                                                                             | wait on the _tag_, not the build task: `until az acr repository show-tags ... \| grep -q "$SHA"; do sleep 20; done`                                                                                                                                                                                                                                                          |
+| **Orphaned `Failed` Container App**                              | blocks re-apply                                                                                                                                                                                                                                                         | check `provisioningState`/`latestRevisionName`/`fqdn` first: no FQDN + no revisions ⇒ safe to `az containerapp delete`; otherwise `terraform import` — never delete an app with live revisions                                                                                                                                                                               |
+| **Postgres extension not allow-listed**                          | migration fails _after_ earlier ones applied, leaving a half-migrated DB                                                                                                                                                                                                | `azure.extensions` server config, kept in sync with the migrations                                                                                                                                                                                                                                                                                                           |
+| **A failed Prisma migration blocks all later ones**              | `P3018`; every later `migrate deploy` refuses                                                                                                                                                                                                                           | deliberate override: `-var='migrate_command=migrate resolve --rolled-back <name>'`, then re-run normally. Never an automatic retry — hence `replica_retry_limit=0`                                                                                                                                                                                                           |
+| **`NEXT_PUBLIC_*` build args silently dropped**                  | no warning; the value never arrives and a stale fallback ships                                                                                                                                                                                                          | the Dockerfile must declare **both** `ARG` and `ENV`; never default a public URL to a real deployed host                                                                                                                                                                                                                                                                     |
+| **`job start --image` silently replaces the container**          | drops `command`, `args` and `env`; the job runs the image's default entrypoint, does nothing, exits 0, and is recorded **Succeeded**. Prod ran three "successful" migrations against a database with no tables                                                          | never override a job execution — change what it runs through Terraform. Conventions §21                                                                                                                                                                                                                                                                                      |
+| **An overridden job execution produces no logs**                 | zero rows in Log Analytics under any container name, so nothing contradicts the false success                                                                                                                                                                           | same guard — no overrides. Verified on prod 2026-08-21                                                                                                                                                                                                                                                                                                                       |
+| **`/health` stays green on a schema-less database**              | it is cheap by design so it will not flap on a DB blip; `/ready` pings Postgres, which was genuinely reachable. Nothing probes the **schema**                                                                                                                           | do not read a green health check as "the app works". Exercise a real write path after a deploy                                                                                                                                                                                                                                                                               |
+| **Job logs are not where app logs are**                          | `ContainerAppName_s` is **empty** for jobs; filtering as you would for an app returns nothing and reads as "jobs do not log"                                                                                                                                            | filter on `ContainerName_s`; allow ~2 min for ingestion. `az containerapp job logs show` misses finished jobs — the replica is reaped in seconds                                                                                                                                                                                                                             |
+| **A killed `terraform apply` can leave an orphaned blob lease**  | a subsequent operation may fail with `state blob is already locked`; missing lock metadata is not proof that no writer exists                                                                                                                                           | Coordinate with all operators and CD; confirm there is no active writer before any explicitly authorized lease recovery. Resolve the exact current container from the backend (`tfstate-shared`, `tfstate-uat` or `tfstate-prod`) and corresponding key. Never break a lease merely because acquisition timed out. Review a fresh plan after recovery.                       |
+| **Secrets are in Terraform state in plaintext**                  | anyone who can read state has every secret for that environment                                                                                                                                                                                                         | state lives behind Azure AD RBAC on `veervrattfstate`; treat read access as equivalent to Key Vault admin                                                                                                                                                                                                                                                                    |
 | **Azure Managed Redis is CLUSTERED — even at the smallest tier** | BullMQ (and any library using Lua scripts across multiple keys) fails with `CROSSSLOT Keys in request don't hash to the same slot` on every operation. The errors are logged, not thrown to the caller, so the queue silently does nothing while flooding Log Analytics | use `{braces}` hash tags in all key prefixes so all keys for a queue land in the same slot. BullMQ: set `prefix: '{email}'` (not `email`). ⚠️ The braces are literal in the prefix string — BullMQ passes them through to Redis, which hashes only the content between the first `{…}` pair. Verified fix: PR #293. See `documentation/21_Infrastructure-Conventions.md` §26 |
-| **Log Analytics bills per GB ingested, not stored** | a logging error loop can spend thousands of rupees in hours. 3.3M lines/hour = ~53 GB/day = ~₹19,230/day at ₹363/GB. Writing the data costs money; the 90GB already stored does not accrue new charges | `daily_quota_gb = 2` on both workspaces. This caps ingestion at the Log Analytics level with zero billing lag. Budget alerts cannot catch this — they run on a 12–24 hour billing pipeline |
-| **Budget alerts and cost guard have 12–24 hour lag** | a spike that goes from ₹0 to ₹19,000 in 12 hours outruns all three budget-level protections (alerts at 50/75/100%, plus the cost guard webhook). They fire *after* the money is already spent | `daily_quota_gb` is the structural guard — it operates at the Log Analytics level, not the billing pipeline. The two are complementary: the quota limits damage in real time, the cost guard limits damage from other resources |
-| **`daily_quota_gb` blocks CD's migration verification** | CD reads Prisma output from Log Analytics to verify migrations succeeded. When the daily quota is hit, new logs cannot be ingested, so CD sees "job reported Succeeded but produced no prisma output" and correctly refuses to proceed | if the quota is hit and no new migrations exist in the PR, deploy manually via `terraform apply -var="image_tag=<sha>" -var="deploy_apps=true"` after verifying with `git diff HEAD~1..HEAD -- apps/api/prisma/migrations` |
-| **Cost guard stops both environments at once** | the `stop-veervrat` runbook scales all Container Apps to `maxReplicas: 0` across both UAT and prod. Recovery requires re-deploying via terraform (CD may not work if the daily quota is also hit) | after fixing the root cause, deploy via `terraform apply -var="image_tag=<sha>" -var="deploy_apps=true"` in each environment. Verify `/ready` returns 200 on both |
-
+| **Log Analytics bills per GB ingested, not stored**              | a logging error loop can spend thousands of rupees in hours. 3.3M lines/hour = ~53 GB/day = ~₹19,230/day at ₹363/GB. Writing the data costs money; the 90GB already stored does not accrue new charges                                                                  | `daily_quota_gb = 2` on both workspaces. This caps ingestion at the Log Analytics level with zero billing lag. Budget alerts cannot catch this — they run on a 12–24 hour billing pipeline                                                                                                                                                                                   |
+| **Budget alerts and cost guard have 12–24 hour lag**             | a spike that goes from ₹0 to ₹19,000 in 12 hours outruns all three budget-level protections (alerts at 50/75/100%, plus the cost guard webhook). They fire _after_ the money is already spent                                                                           | `daily_quota_gb` is the structural guard — it operates at the Log Analytics level, not the billing pipeline. The two are complementary: the quota limits damage in real time, the cost guard limits damage from other resources                                                                                                                                              |
+| **`daily_quota_gb` blocks CD's migration verification**          | CD reads Prisma output from Log Analytics to verify migrations succeeded. When the daily quota is hit, new logs cannot be ingested, so CD sees "job reported Succeeded but produced no prisma output" and correctly refuses to proceed                                  | if the quota is hit and no new migrations exist in the PR, deploy manually via `terraform apply -var="image_tag=<sha>" -var="deploy_apps=true"` after verifying with `git diff HEAD~1..HEAD -- apps/api/prisma/migrations`                                                                                                                                                   |
+| **Cost guard stops both environments at once**                   | the `stop-veervrat` runbook scales all Container Apps to `maxReplicas: 0` across both UAT and prod. Recovery requires re-deploying via terraform (CD may not work if the daily quota is also hit)                                                                       | after fixing the root cause, deploy via `terraform apply -var="image_tag=<sha>" -var="deploy_apps=true"` in each environment. Verify `/ready` returns 200 on both                                                                                                                                                                                                            |
 
 ### CD — GitHub → Azure (2026-08-16)
 
@@ -348,10 +350,10 @@ identity were retired after docs moved into the web image; environment Terraform
 removes their `AcrPull`, then shared Terraform removes the temporary delegation.
 See `21_Infrastructure-Conventions.md` §15.
 
-GitHub protections were activated and read back on 2026-10-11 for the currently public repo:
-`prod` requires `omchavan-jp` approval, accepts only `prod-*` tags and disables admin bypass.
+GitHub protections were read back on 2026-10-12 for the currently public repo:
+`prod` requires `omchavan-jp` approval, accepts only protected `main` controller execution and disables admin bypass.
 Owner self-approval is allowed. `uat` accepts only `main`; `build` accepts `main` and
-`prod-*` tags to preserve current release preparation. The earlier private-plan 422 is
+`prod-*` tags (historical build compatibility; the new main controller does not rebuild). The earlier private-plan 422 is
 historical, not the current configuration. No production test tag was created.
 Environment names alone did not isolate the former shared identity. The additive three-identity/four-container
 foundation in PR #349 was applied on 2026-10-11: 10 additions, zero changes/deletions.
@@ -362,6 +364,13 @@ state access, subscription Contributor/Secrets Officer, registry push and UAA gr
 The old identity object was deleted after checked PR #357 and a guarded one-resource apply;
 verification is recorded in [focused cleanup](focused-cleanup-2026-10-11.md). Historical identifiers remain
 in audit/cutover records, not an active deployment configuration.
+
+Production-controller foundation #364 applied four additions with no updates/deletions:
+private `production-release-records`, production Blob Data Reader at `release-records`,
+production Blob Data Contributor at `production-release-records`, and UAT Blob Data Reader
+at `production-release-records`. Azure read-back confirmed exact container scopes and no
+public access. Existing UAT record write permission is unchanged. CD was restored active;
+no production app/migration/tag was changed. See [controller evidence](production-controller.md).
 
 Read-only candidate verification and deployment client-ID cutover are complete;
 their [cutover record](azure-identity-cutover.md) distinguishes proposed, applied, tested
@@ -421,26 +430,26 @@ DNS is managed here, when it isn't, was.
 Azure permissions come from three separate systems. **None inherits from another.** This caused
 real confusion during setup; remember it.
 
-| System | Controls | Where assigned |
-|---|---|---|
-| **Entra directory roles** | identity, tenant settings, nonprofit portal | Entra ID → Roles and administrators |
-| **Azure RBAC** | resources — deploy/configure/delete | Subscription → Access control (IAM) |
-| **MCA billing roles** | credits, invoices, payment methods | Cost Management + Billing → billing account → IAM |
+| System                    | Controls                                    | Where assigned                                    |
+| ------------------------- | ------------------------------------------- | ------------------------------------------------- |
+| **Entra directory roles** | identity, tenant settings, nonprofit portal | Entra ID → Roles and administrators               |
+| **Azure RBAC**            | resources — deploy/configure/delete         | Subscription → Access control (IAM)               |
+| **MCA billing roles**     | credits, invoices, payment methods          | Cost Management + Billing → billing account → IAM |
 
 Global Admin grants **neither** RBAC nor billing. RBAC has an "Elevate access" bridge from
 Global Admin; **billing has no back door at all**.
 
 ### Om's complete access inventory (as of 2026-08-15)
 
-| # | Access | Scope | Granted by / when |
-|---|---|---|---|
-| 1 | **Global Administrator** | Entra ID, tenant `jppune.onmicrosoft.com` | Devavrat, 2026-08-15 |
-| 2 | **Owner** (Azure RBAC) | subscription `veervrat` | Devavrat, 2026-08-15 |
-| 3 | **Billing account owner** (MCA) | billing account *Jnana Prabodhini* | Devavrat, 2026-08-15 |
-| 4 | **User Access Administrator** at root `/` | tenant-wide ("Elevate access" toggle) | pre-existing — ⚠️ **should now be turned OFF**, see below |
-| 5 | `om.chavan@jppune.onmicrosoft.com` | Entra account **with M365 licence + Outlook mailbox** | JP IT, 2026-08-14 |
-| 6 | `om.chavan@jnanaprabodhini.org` | **Google Workspace** account (JP daily mail) | JP IT, 2026-08-14 |
-| 7 | Budget-alert + invoice recipient | billing profile | self, 2026-08-15 |
+| #   | Access                                    | Scope                                                 | Granted by / when                                         |
+| --- | ----------------------------------------- | ----------------------------------------------------- | --------------------------------------------------------- |
+| 1   | **Global Administrator**                  | Entra ID, tenant `jppune.onmicrosoft.com`             | Devavrat, 2026-08-15                                      |
+| 2   | **Owner** (Azure RBAC)                    | subscription `veervrat`                               | Devavrat, 2026-08-15                                      |
+| 3   | **Billing account owner** (MCA)           | billing account _Jnana Prabodhini_                    | Devavrat, 2026-08-15                                      |
+| 4   | **User Access Administrator** at root `/` | tenant-wide ("Elevate access" toggle)                 | pre-existing — ⚠️ **should now be turned OFF**, see below |
+| 5   | `om.chavan@jppune.onmicrosoft.com`        | Entra account **with M365 licence + Outlook mailbox** | JP IT, 2026-08-14                                         |
+| 6   | `om.chavan@jnanaprabodhini.org`           | **Google Workspace** account (JP daily mail)          | JP IT, 2026-08-14                                         |
+| 7   | Budget-alert + invoice recipient          | billing profile                                       | self, 2026-08-15                                          |
 
 🧹 **Cleanup due:** #4 was the bootstrap that let access be granted before any RBAC existed.
 Now that #2 is a direct role assignment, root-scope UAA is redundant privilege — switch it off at
@@ -448,8 +457,8 @@ Now that #2 is a direct role assignment, root-scope UAA is redundant privilege �
 
 ### Others
 
-| Person | Account | Roles |
-|---|---|---|
+| Person                 | Account                                                                    | Roles                                                                    |
+| ---------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
 | **Devavrat Munagekar** | `admin@jppune.onmicrosoft.com`<br>`devavrat.munagekar@jnanaprabodhini.org` | Global Administrator · Billing account owner · nonprofit primary contact |
 
 **Two global admins by design** — never drop to one (Microsoft's own guidance is 2–4).
@@ -459,13 +468,13 @@ Continuity is handled by this document, not a dormant account.
 
 ### Contacts and escalation
 
-| Who | Role | For |
-|---|---|---|
-| **Rahul Dharmadhikari** | **JP IT lead** | ⭐ **primary technical contact — route requests through him** |
-| Ashutosh Barmukh | *sahakaryavah*, JP | owns the card on file; institutional/identity decisions |
-| Devavrat Munagekar | tenant admin | Azure billing, nonprofit programme, Entra |
-| Shantanoo Mahajan | DNS operator | `jnanaprabodhini.org` DNS — met directly 2026-08-16, see below |
-| Nachiket Nitsure | Veervrat product owner | product decisions |
+| Who                     | Role                   | For                                                            |
+| ----------------------- | ---------------------- | -------------------------------------------------------------- |
+| **Rahul Dharmadhikari** | **JP IT lead**         | ⭐ **primary technical contact — route requests through him**  |
+| Ashutosh Barmukh        | _sahakaryavah_, JP     | owns the card on file; institutional/identity decisions        |
+| Devavrat Munagekar      | tenant admin           | Azure billing, nonprofit programme, Entra                      |
+| Shantanoo Mahajan       | DNS operator           | `jnanaprabodhini.org` DNS — met directly 2026-08-16, see below |
+| Nachiket Nitsure        | Veervrat product owner | product decisions                                              |
 
 📋 **Communication protocol (set 2026-08-15):** technical/infra requests go to **Rahul**, who
 routes to Shantanoo or others as needed. ⚠️ **Superseded in practice 2026-08-16** — Om met
@@ -536,15 +545,15 @@ Originally raised 2026-08-15: should Veervrat live at **`veervrat.jnanaprabodhin
 
 **Technical recommendation: subdomain.** Not a close call.
 
-| | Subdomain | Path |
-|---|---|---|
-| Setup | one DNS record (or NS delegation) | **reverse proxy** on JP's existing web server |
-| Dependency | none on JP's site | JP's site becomes a **hard dependency** — their outage = our outage |
-| Code | no change | Next.js `basePath` change + asset/route rework |
-| SSL | independent, auto-renewing | managed by JP's host |
-| Cookies | isolated to the subdomain | **shared with the main JP site** — real security concern |
-| Email | SPF/DKIM handled by JP IT on `notifications.jnanaprabodhini.org`, **zero risk to JP's Workspace mail** (D9 — we no longer own any mail records) | records must go on the **root domain** — risks JP's live mail |
-| Debugging | direct | through someone else's proxy |
+|            | Subdomain                                                                                                                                       | Path                                                                |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Setup      | one DNS record (or NS delegation)                                                                                                               | **reverse proxy** on JP's existing web server                       |
+| Dependency | none on JP's site                                                                                                                               | JP's site becomes a **hard dependency** — their outage = our outage |
+| Code       | no change                                                                                                                                       | Next.js `basePath` change + asset/route rework                      |
+| SSL        | independent, auto-renewing                                                                                                                      | managed by JP's host                                                |
+| Cookies    | isolated to the subdomain                                                                                                                       | **shared with the main JP site** — real security concern            |
+| Email      | SPF/DKIM handled by JP IT on `notifications.jnanaprabodhini.org`, **zero risk to JP's Workspace mail** (D9 — we no longer own any mail records) | records must go on the **root domain** — risks JP's live mail       |
+| Debugging  | direct                                                                                                                                          | through someone else's proxy                                        |
 
 The email point alone is close to decisive: path-based hosting would force our mail records onto
 the root domain that carries JP's Google Workspace mail.
@@ -558,15 +567,15 @@ under JP's identity at all (vs a standalone `veervrat.com`) is **institutional �
 
 ## 9. Other providers (still live from the Railway era)
 
-| Service | Purpose | Status |
-|---|---|---|
-| **Neon** | Postgres (us-east-1, PG 18.4) | live — ⚠️ **migration CANCELLED 2026-08-16 (D19)**; dump kept as an archive only. Decommission once nothing references it. |
-| **Upstash** | Redis (us-east-1) | live |
-| **Cloudflare R2** | object storage, bucket `veervrat-uploads-dev` | live, **empty** |
-| **Google Cloud** | OAuth client (Google sign-in) | live — project `veervrat`, owned by the **jnanaprabodhini.org org**, see §9 |
-| ~~**Resend**~~ | transactional email | **not used** — D9 (2026-08-17) moved email to JP IT's SMTP relay; no account was ever created |
-| **Railway** | previous host | **removed** (trial expired) — app currently **down** |
-| **Sentry** | error tracking (app 5xx) | live from 2026-08-23 — org account `veervrat@jnanaprabodhini.org`, team `#jnana-prabodhini`, **Developer (free) tier**. Two projects: `veervrat-uat`, `veervrat-prod`. ⚠️ **Data stored in the EU** — see below |
+| Service           | Purpose                                       | Status                                                                                                                                                                                                          |
+| ----------------- | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Neon**          | Postgres (us-east-1, PG 18.4)                 | live — ⚠️ **migration CANCELLED 2026-08-16 (D19)**; dump kept as an archive only. Decommission once nothing references it.                                                                                      |
+| **Upstash**       | Redis (us-east-1)                             | live                                                                                                                                                                                                            |
+| **Cloudflare R2** | object storage, bucket `veervrat-uploads-dev` | live, **empty**                                                                                                                                                                                                 |
+| **Google Cloud**  | OAuth client (Google sign-in)                 | live — project `veervrat`, owned by the **jnanaprabodhini.org org**, see §9                                                                                                                                     |
+| ~~**Resend**~~    | transactional email                           | **not used** — D9 (2026-08-17) moved email to JP IT's SMTP relay; no account was ever created                                                                                                                   |
+| **Railway**       | previous host                                 | **removed** (trial expired) — app currently **down**                                                                                                                                                            |
+| **Sentry**        | error tracking (app 5xx)                      | live from 2026-08-23 — org account `veervrat@jnanaprabodhini.org`, team `#jnana-prabodhini`, **Developer (free) tier**. Two projects: `veervrat-uat`, `veervrat-prod`. ⚠️ **Data stored in the EU** — see below |
 
 ### Sentry — the one place data leaves India
 
@@ -655,15 +664,15 @@ See `infra-budget-log.md` for the decision trail and budget analysis.
 Set up 2026-08-17 (O23). Recorded in full because the console UI has already been renamed once
 and the settings that matter are not discoverable from the app side.
 
-| Field | Value |
-|---|---|
-| Project name / ID | `veervrat` |
-| Organisation | **`jnanaprabodhini.org`** — institutional, not a personal Google account |
-| Created and owned by | `veervrat@jnanaprabodhini.org` (shared JP mailbox) |
-| Console area | **Google Auth Platform** (formerly "OAuth consent screen") |
-| User type | **External** |
-| Publishing status | **Testing** — capped at 100 test users for the app's lifetime |
-| Scopes | `userinfo.email`, `userinfo.profile`, `openid` — all **non-sensitive** |
+| Field                | Value                                                                    |
+| -------------------- | ------------------------------------------------------------------------ |
+| Project name / ID    | `veervrat`                                                               |
+| Organisation         | **`jnanaprabodhini.org`** — institutional, not a personal Google account |
+| Created and owned by | `veervrat@jnanaprabodhini.org` (shared JP mailbox)                       |
+| Console area         | **Google Auth Platform** (formerly "OAuth consent screen")               |
+| User type            | **External**                                                             |
+| Publishing status    | **Testing** — capped at 100 test users for the app's lifetime            |
+| Scopes               | `userinfo.email`, `userinfo.profile`, `openid` — all **non-sensitive**   |
 
 ### Why each of those, in the terms that will matter later
 
@@ -701,15 +710,15 @@ auto-link on email match by design.
 Split so that a UAT credential leak cannot authenticate against production; Terraform already
 takes the client id and secret per environment.
 
-| Client | Redirect URIs |
-|---|---|
-| `Veervrat — prod` | `https://api.veervrat.jnanaprabodhini.org/api/v1/auth/google/callback` |
+| Client                   | Redirect URIs                                                                                                                      |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `Veervrat — prod`        | `https://api.veervrat.jnanaprabodhini.org/api/v1/auth/google/callback`                                                             |
 | `Veervrat — uat + local` | `https://api.uat.veervrat.jnanaprabodhini.org/api/v1/auth/google/callback` and `http://localhost:3001/api/v1/auth/google/callback` |
 
 ⚠️ **Redirect URIs are on the `api` host, not the web host.** They moved there when the Next.js
 rewrite proxy was removed (see `documentation/21_Infrastructure-Conventions.md` §17); the old
 `https://veervrat.jnanaprabodhini.org/api/v1/...` form now returns 404. A mismatch fails with
-`redirect_uri_mismatch` *after* the user has already approved — the least debuggable point in
+`redirect_uri_mismatch` _after_ the user has already approved — the least debuggable point in
 the flow.
 
 **Authorized JavaScript origins are intentionally empty.** The app uses the server-side

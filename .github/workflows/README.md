@@ -41,18 +41,26 @@ Terraform with API and migration images pinned to the old tag. The composite
 action's `deploy_apps=false` skips migrations; its docs-only Terraform apply
 still passes `deploy_apps=true` to keep the existing app resources in state.
 Normal app deploys read API and web tags separately and hold both through the
-migration step. Production tags rebuild the normal app image set, including the
-static docs bytes, while `PRODUCT_DOCS_MODE=off` keeps the route unavailable.
+migration step. Production promotes the accepted image set, including its static docs bytes,
+while `PRODUCT_DOCS_MODE=off` keeps the route unavailable.
 No separate docs Container App or docs image is built. The static export is
 served only through the protected web route.
 
-The current production tag workflow **rebuilds** app images. The agreed governance policy
-requires promotion of accepted digests without rebuild. Native prod environment approval
-is now configured for omchavan-jp (owner self-approval allowed, admin bypass disabled).
-Build permits main/prod-* tags, UAT only main, prod only prod-* tags; desired settings are
-in [environment-policy.json](../environment-policy.json). Read-back is verified, but no
-production test tag was created. Acceptance records, digest promotion and Azure isolation
-remain separate implementation tasks.
+`production-release.yml` listens to completed CD tag requests, but executes its own protected
+main SHA. Ordinary main/UAT CD completions are ignored. Owner-only manual operations verify
+receipts without deploying, prepare an existing tag, or register a schema-reviewed rollback.
+Preflight verifies trusted exact-run acceptance/checks and creates a GitHub Release with the
+manifest before native prod approval. Deployment revalidates the manifest asset digest, stores
+private manifest/claim records, promotes without rebuilding and publishes durable outcomes.
+No triggering-run artifact or executable is trusted. All production requests share one
+non-cancelling concurrency group; controller reruns, ambiguous approval and reused tags fail closed.
+Rollback requires previous verified production history and changes only images/commit metadata,
+with no migrations. Legacy versions without records need separate operator assessment.
+
+Build permits main/prod-* tags, UAT only main, prod only main; desired settings are in
+[environment-policy.json](../environment-policy.json). The main-only production boundary and
+container-scoped record grants were activated in #364. Live production writes remain for the
+owner's deliberate UAT-approved release; source implementation is not that verification.
 
 CI lint does not apply fixes. Repo-wide `format:check` is not a CI gate.
 
@@ -61,7 +69,9 @@ CI lint does not apply fixes. Repo-wide `format:check` is not a CI gate.
 The checked-in Action references use full commit SHAs and the reviewed repositories in
 [`actions-policy.json`](../actions-policy.json). CI runs the
 [policy checker](../scripts/check-actions-security.mjs) and its negative fixtures. Workflow tokens
-default to `contents: read`; only CD jobs that use Azure login request `id-token: write`.
+default to `contents: read`; only trusted CD/controller cloud jobs request `id-token: write`.
+The reviewed production controller's prepare/deploy jobs alone also receive `contents: write`
+for prerequisite Releases/assets and outcomes. Other workflow write grants remain prohibited.
 Public-fork runs require maintainer approval and ordinary PR jobs have no deployment OIDC grant.
 Active client IDs now use separate verified identities. Legacy trusts/grants were removed by
 reviewed apply, with fresh-federation rejection in [identity cutover evidence](../../ops/azure-identity-cutover.md).

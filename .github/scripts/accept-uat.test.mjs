@@ -96,7 +96,7 @@ test('owner acceptance revalidates trusted runs/jobs, checks, history and live d
   const { options, writes } = fixture();
   const result = await acceptUat(options);
   assert.equal(result.acceptanceKey, 'acceptances/uat/100/1/300/1.json');
-  assert.equal(writes.length, 1);
+  assert.equal(writes.length, 2);
   assert.equal(writes[0].value.actorId, 317451750);
 });
 

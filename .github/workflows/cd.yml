@@ -1,8 +1,7 @@
 # Continuous deployment.
 #
-# Main builds and deploys changed app images to UAT. Product-design changes rebuild web. A prod-* tag rebuilds
-# and deploys app images; the documented artifact-promotion intent differs from
-# that current behavior and is tracked as separate deployment debt.
+# Main builds and deploys changed app images to UAT. Product-design changes rebuild web.
+# Tags request the protected-main production controller; they never build or deploy here.
 #
 # Every step exists because doing it manually went wrong at least once. See
 # documentation/21_Infrastructure-Conventions.md §14 and the traps table in
@@ -23,7 +22,16 @@ on:
         description: Deploy UAT, or verify a candidate identity without deployment
         type: choice
         default: deploy
-        options: [deploy, verify-build, verify-uat, verify-prod, verify-legacy-revoked, verify-release-storage, accept-uat]
+        options:
+          [
+            deploy,
+            verify-build,
+            verify-uat,
+            verify-prod,
+            verify-legacy-revoked,
+            verify-release-storage,
+            accept-uat,
+          ]
       uat_run_id:
         description: Successful UAT CD run to accept (accept-uat only)
         type: string
@@ -52,7 +60,7 @@ jobs:
   # jobs can start with a *fresh* Azure login. Azure's OIDC assertion is valid for only ~5
   # minutes; a single long job outlives its own credentials mid-run (AADSTS700024).
   prepare:
-    if: github.event_name != 'workflow_dispatch' || inputs.operation == 'deploy'
+    if: github.ref == 'refs/heads/main' && (github.event_name != 'workflow_dispatch' || inputs.operation == 'deploy')
     permissions:
       contents: read
     runs-on: ubuntu-latest
@@ -91,10 +99,7 @@ jobs:
       contents: read
       id-token: write
     needs: prepare
-    # Tag pushes always build (never filtered — see the top-of-file comment). Branch pushes
-    # to main build only when `prepare` found an app-relevant path changed; an empty/unset
-    # output (tag push, workflow_dispatch) is treated as "build" — `!= 'false'`, not `== 'true'`.
-    if: startsWith(github.ref, 'refs/tags/prod-') || needs.prepare.outputs.app_changed != 'false'
+    if: github.ref == 'refs/heads/main' && needs.prepare.result == 'success' && needs.prepare.outputs.app_changed != 'false'
     runs-on: ubuntu-latest
     environment: build # stable OIDC subject across branch and tag triggers
     strategy:
@@ -290,31 +295,14 @@ jobs:
           WIRING_VERIFIED: ${{ steps.deploy.outputs.wiring_verified }}
         run: node .github/scripts/record-uat.mjs
 
-  deploy-prod:
+  request-production:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/prod-')
+    runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write
-    needs: [prepare, build]
-    if: startsWith(github.ref, 'refs/tags/prod-')
-    runs-on: ubuntu-latest
-    # Native prod protection requires omchavan-jp approval, permits only prod-* tags,
-    # and disables administrator bypass. Owner self-approval is allowed for now.
-    # Desired settings: .github/environment-policy.json. Verify live settings separately.
-    # Separate Azure identities are active; tag-triggered rebuilds still need digest promotion.
-    environment: prod
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with:
-          persist-credentials: false
-      - uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2
-        with:
-          client-id: ${{ vars.AZURE_CLIENT_ID }}
-          tenant-id: ${{ vars.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-      - uses: ./.github/actions/deploy-environment
-        with:
-          environment: prod
-          image_tag: ${{ needs.prepare.outputs.image_tag }}
+      - name: Hand off release request to protected-main controller
+        run: echo 'Production release controller will validate acceptance and request native owner approval. No images are built or deployed by this tag workflow.'
 
   accept-uat:
     if: >-
