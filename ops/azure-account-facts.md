@@ -325,7 +325,13 @@ Each of these cost real time and would recur. Full detail in
 Active deployments now use separate `veervrat-github-build`, `veervrat-github-uat` and
 `veervrat-github-prod` identities, with the scoped matrix and verification in
 [identity cutover evidence](azure-identity-cutover.md). Build/UAT writes were verified in
-run `38124662672`; production was verified read-only, not deployed. Legacy retirement applied
+run `38124662672`; production writes subsequently passed in owner-authorized release
+`prod-2026-10-12`, controller run `38262172088/1`: guarded Terraform, migration, exact-digest
+promotion and private manifest/claim/outcome writes. Independent read-back verified the private
+successful outcome, closed claim, all four live image references and fresh readiness/wiring.
+Production web has `SENTRY_DSN` configured and `PRODUCT_DOCS_MODE=off`; Sentry delivery and
+production browser flows were not freshly tested by that infrastructure verification.
+See [release evidence](release-controls-rollout.md). Legacy retirement applied
 in #355: six old grants and three old FICs removed; fresh federation rejected in `38133195235`.
 
 **Historical legacy setup (not the replacement's permissions):** one identity,

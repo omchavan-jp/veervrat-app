@@ -168,7 +168,8 @@ uncached workspace lint/typecheck and pinned actionlint validation passed.
   GitHub Release was created/updated. Its intentional red status is denial evidence, not a failed deployment.
 
 All post-merge main CI, integration, E2E and CodeQL checks passed. Production app/database
-writes, private production-writer proof and rollback execution still require deliberate releases.
+writes and private production-writer proof were still pending at that setup checkpoint and
+are now verified by the deliberate release below. Rollback execution has not been fabricated.
 
 [UAT CD 38231047598/1](https://github.com/omchavan-jp/veervrat-app/actions/runs/38231047598)
 completed successfully at the #365 merge commit. `deploy-uat` itself succeeded, verified migration
@@ -191,5 +192,54 @@ Verified configured/serving images in the receipt:
 | Backup | `sha256:ea7f5937135f07028f5cf39634fec63714ccf63108ad93e88d178706b2a7028b` |
 
 No owner acceptance or production tag, approval, manifest claim, app write or database migration
-was created by these tests. The first actual tag-to-controller production release and production
-record-writer operations remain live verification, not claimed by fixture/read-only evidence.
+was created by those setup tests. Actual tag-to-controller production release and record-writer
+operations were subsequently verified separately, not claimed from fixture/read-only evidence.
+
+## First verified production promotion (2026-10-12)
+
+The maintainer reported successful UAT login/logout, weakness selection, assessment, sentence
+selection, journey start and password-reset flows, and explicitly authorized acceptance,
+tag creation and production approval. The recorded note uses only those reported tests.
+[Acceptance 38261941774/1](https://github.com/omchavan-jp/veervrat-app/actions/runs/38261941774)
+verified the live exact UAT set/checks and created the decision plus acceptance index.
+Its key is `acceptances/uat/38231047598/1/38261941774/1.json`; the receipt digest is
+`26e7896021f58254aac1e0c079c7919b3aac55566b9ac8c6fe1d5568f3ec41f5`.
+
+Immutable tag `prod-2026-10-12` selects app commit
+`b9d5c0c7929908f5835a654e735110c801be4e68`.
+[Tag CD request](https://github.com/omchavan-jp/veervrat-app/actions/runs/38262150079)
+succeeded without a build/deploy. [Main controller 38262172088/1](https://github.com/omchavan-jp/veervrat-app/actions/runs/38262172088)
+executed `f32e5f9110a9e7a2c85246125000eb7e62049311`, validated evidence and published the
+prerequisite [GitHub Release](https://github.com/omchavan-jp/veervrat-app/releases/tag/prod-2026-10-12).
+Manifest `manifest-38262172088-1.json` is 78,491 bytes, SHA-256
+`6f305f2815aa406b22ac900c89253c32d7f5dd40958a1ca23bc8a4f27efd289a`.
+The manifest was downloaded/validated before native owner approval under the maintainer's
+explicit instruction; no admin bypass or rerun approval was used.
+
+Production held old app references until verified Prisma execution
+`veervrat-prod-migrate-yq6wmgs`, then applied the exact accepted set without rebuilding.
+The only migration since actual production commit
+`3037e8757ac3f069c36d2e678c8d18e0e3566f05` adds `product_docs_view` to the capability enum;
+there are no schema/data removals in that migration. Recovery remains forward-only and any
+future rollback must reassess compatibility before a new tag/approval.
+
+The controller and deploy job completed successfully, including post-revision exact digest,
+readiness/wiring and private/public audit steps. Outcome `outcome-38262172088-1.json` is
+SHA-256 `449c5948d8a415d9712e5330ca4c0236daf7ffff5f15a8930c0c79dc071c4282`.
+Approval owner ID is 317451750; approval observation time is `2026-10-12T14:22:57.612Z`;
+outcome completion is `2026-10-12T14:30:05.126Z`. These UTC times are observation/record times,
+not an invented native review timestamp. Private keys are:
+
+- `manifests/prod-2026-10-12/38262172088/1.json`
+- `claims/prod-2026-10-12.json`
+- `outcomes/prod-2026-10-12/38262172088/1.json`
+
+Independent private read-back reran the outcome/provenance/approval validator, checked the
+stored manifest and confirmed the claim closes against the successful outcome. Independent live
+Azure reads matched all four accepted digests; public probes verified DB/Redis readiness and
+actual production API URL in served web markup. Web `SENTRY_DSN` is configured and
+`PRODUCT_DOCS_MODE=off`. No fresh production browser-flow, Sentry-delivery or backup-restoration
+test is claimed. Rollback implementation is source-tested, not live-executed by inducing failure.
+An independent authenticated, normally locked production plan used the exact deployed image
+references/commit metadata and completed with exit 0, no changes. It was read-only; no second
+operator apply or production rerun was performed.

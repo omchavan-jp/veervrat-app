@@ -63,7 +63,17 @@ a design the app now implements.
 
 ---
 
-## Current state (2026-09-02)
+## Current deployment checkpoint (2026-10-12)
+
+`prod-2026-10-12` promoted the owner-accepted #365 UAT set without rebuilding through the
+main-only, owner-approved controller. Production run `38262172088/1`, exact live digests,
+DB/Redis readiness, served web/API wiring and private/public outcomes passed verification;
+the exact-ref follow-up production plan is clean. This is not a fresh production browser,
+WebSocket, Sentry delivery or backup-restoration test. See
+[release evidence](release-controls-rollout.md) and the [current runbook](../DEPLOYMENT.md).
+The dated runtime tables below remain historical snapshots, not current image/certification facts.
+
+## Historical state (2026-09-02)
 
 **Both environments are live, correctly wired, signed into, and usable.** Prod was none of
 those last things until 2026-08-21, while appearing to be all of them.

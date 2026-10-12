@@ -62,3 +62,14 @@ administrator bypass is disabled. CD was paused for the transition and restored 
 No production app, migration, release tag or owner acceptance was performed by this activation.
 The authenticated post-apply shared plan completed with exit 0 and no changes after a transient
 local network interruption was resolved; no network-control workaround was used.
+
+## Production-write verification
+
+The maintainer subsequently reported actual UAT testing and authorized the deliberate
+`prod-2026-10-12` release. Acceptance `38261941774/1`, tag request `38262150079` and
+main controller `38262172088/1` succeeded. Native owner approval admitted only the recorded
+manifest. Scoped production Terraform/migration/image and private record writes passed;
+public/private outcomes and exact live images/health were independently verified, with a
+closed claim and clean exact-ref production plan. See [full evidence](release-controls-rollout.md).
+This supersedes the first-write pending checkpoint, not the limits of the earlier setup tests.
+No artificial production failure/rollback or new production browser/Sentry-delivery test was performed.
