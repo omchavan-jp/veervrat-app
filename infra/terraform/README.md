@@ -17,6 +17,13 @@ UAT writes private acceptance records in `release-records`; production reads tho
 private manifests/claims/outcomes in `production-release-records`. UAT has read-only access to
 production history. Grants are at container scope; never broaden them to the storage account.
 
+Routine production changes run through the protected-main `production-release.yml` controller
+after recorded UAT acceptance and native owner approval; `prod-*` tags request promotion of
+exact digests without rebuilding. The first live verification is recorded in
+[release evidence](../../ops/release-controls-rollout.md). The command primer below is not
+authorization for an ad hoc production apply. Bootstrap/IAM and exceptional recovery require
+explicit maintainer review/authorization and must not bypass active release controls.
+
 Three commands you'll use, always in this order, always from inside an
 `envs/<name>/` directory:
 
@@ -47,8 +54,9 @@ bootstrap/
 The web image now includes a build-time Fumadocs static export outside its public
 directory. The web route reads it only after the API grants `PRODUCT_DOCS_VIEW`.
 UAT sets `PRODUCT_DOCS_MODE=granted` on web and API; production sets it to `off`.
-Terraform accepts a separate `web_image_tag` for docs-only UAT deploys, so the
-API and migration job retain their current image. There is no separate docs
+Routine CD passes explicit `image_refs` for API/web/migration/backup; web-only product-docs
+deployments preserve the other deployed component digests. Legacy tag variables remain for
+compatibility, not release identity. There is no separate docs
 Container App, image tag, managed identity, or registry pull grant.
 
 ## The one hard rule — for any DNS zone this project ever manages

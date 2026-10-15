@@ -2,7 +2,11 @@
 
 Owner: `omchavan-jp`. Assessed: 2026-10-11.
 Authority: [Git and Release Governance](../documentation/25_Git-and-Release-Governance.md).
-Status: additive foundation applied 2026-10-11; not a completed security boundary.
+Status: historical foundation/activation plan. The foundation alone was not a completed security
+boundary. Identity/state cutover, legacy retirement and controller promotion subsequently shipped;
+the deliberate `prod-2026-10-12` release verified production writes. Current status and limits:
+[governance rollout](github-governance-status.md) and [release evidence](release-controls-rollout.md).
+The original sequence below is retained for traceability, not as a current action list.
 PR #349 merged at `92367abd44ce6f66ef6e5cf39ca367e09da76fd7`. A fresh locked saved
 plan applied with 10 additions, zero changes/deletions and no new RBAC grants.
 Native state migration was verified into dedicated containers, backend configuration merged
@@ -13,14 +17,14 @@ trust/grant retirement are verified in [identity cutover evidence](azure-identit
 ## Historical starting point (before scoped cutover)
 
 Azure read-back confirmed one `veervrat-github-actions` identity trusted by the build, UAT
-and production environments. Its live grants are subscription Contributor, subscription
+and production environments. Its then-live grants were subscription Contributor, subscription
 Key Vault Secrets Officer, account-wide state Blob Data Contributor, registry AcrPush and
 User Access Administrator in both application resource groups. Before this iteration,
 GitHub environments had no reviewer or ref restrictions. They now have the restrictions
 in `.github/environment-policy.json`, verified by API read-back on 2026-10-11.
 A production reviewer gate alone cannot isolate this identity.
 
-The existing private `veervrattfstate` account contains the single `tfstate` container.
+The private `veervrattfstate` account then contained the single `tfstate` container.
 Blob versioning and 30-day blob soft deletion are enabled. State content was not downloaded
 or inspected during the Azure CLI assessment; only resource/permission metadata was read.
 Terraform planning necessarily reads the private shared state internally. Save any plan and
@@ -111,12 +115,24 @@ Attestation implementation/action allowlist changes require their own tested PR.
 Public-repository attestations use public transparency infrastructure: attest the record digest
 and workflow provenance, never embed private notes or secret material in a public predicate.
 
+Disposition of this original attestation proposal: the delivered controller validates trusted
+archived workflow/attempt, repository/owner identity, exact checks, native approval and scoped
+private records. It does not implement cryptographic artifact attestations. Conditional writes
+are not WORM, and cloud-maintainer authority is a separate trust boundary. Do not describe
+the alternative attestation proposal as delivered or as a remaining automatic authorization to
+change signing infrastructure; see the current controller record for the implemented model.
+
 Production must validate the accepted set before obtaining production-capable credentials,
 show the release summary, require approval and deploy those exact digests without rebuilding.
 Acceptance is a recorded owner decision, not proof of human testing; health/smoke checks supplement it.
 Automatically create/update the public GitHub release evidence, keeping private/sensitive notes out.
 
-## Verification still required
+## Original verification checklist — see current evidence above
+
+These checkpoints were subsequently implemented/read back as recorded in the linked rollout
+documents. Live rollback, fresh delivery/restore drills, signed attestations and a comprehensive
+image-retention policy are not certified by those records. The implemented provenance model
+validates trusted workflow/owner/API evidence; it does not rely on trusting editable JSON fields.
 
 - Post-cutover live plans and verification; foundation plan/apply authorization is complete.
 - Ref restrictions, conditional/scoped RBAC, state migration and denied-operation evidence.

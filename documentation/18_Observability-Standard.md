@@ -7,10 +7,10 @@
 
 ## Tools
 
-**Two tools because they answer different questions.** Sentry answers *"why did this
-request fail"* — a stack trace, the user, the release. App Insights answers *"is the system
-healthy"* — request rates, dependency latency, container restarts. Neither substitutes for
-the other, and both are free at this scale.
+Sentry answers *"why did this request fail"* through error/release context; Pino/stdout and
+Container Apps logs supply operational evidence. Application Insights was considered and
+dropped, not an SDK waiting to be installed. Alerting and external uptime coverage remain
+separate from configured error instrumentation; no blanket free-of-charge claim is made here.
 
 | Concern | Tool | Status |
 |---|---|---|
@@ -21,8 +21,9 @@ the other, and both are free at this scale.
 | Alerting (app errors) | Sentry alert rules | ❌ Pending issue #79 |
 | Uptime | External ping (UptimeRobot free tier or similar) | ❌ Not set up |
 
-⚠️ **Until issue #79 lands there is no application error tracking in any deployed environment.**
-This should close before beta testers reach prod.
+Error tracking is deployed with the evidence/limits above. Do not confuse remaining alert-rule
+or external-uptime work with an absence of Sentry. The maintainer's 2026-10-15 general production
+confirmation is not a separate fresh Sentry-delivery test.
 
 ---
 
@@ -75,10 +76,13 @@ Every log line is JSON with these fields:
 
 ## Key Metrics (v1 baseline)
 
+This is a target coverage matrix, not a list of live alerts. App Insights source suggestions
+were superseded by its removal; use approved logs/instrumentation when implementing these targets.
+
 | Metric | Source | Alert threshold |
 |---|---|---|
-| API request latency p95 | App Insights (platform) | > 2s sustained for 5 min |
-| 5xx error rate | App Insights, cross-checked in Sentry | > 1% of requests in 5 min window |
+| API request latency p95 | Approved request instrumentation/logs; coverage not certified here | > 2s sustained for 5 min |
+| 5xx error rate | Request logs, cross-checked in Sentry; alert coverage not certified here | > 1% of requests in 5 min window |
 | Auth failure rate | Custom counter in auth service | > 50 failures / min (global) |
 | Background job failure | Log-based (job logs error level) | Any failure triggers alert |
 | WebSocket connection count | NestJS Gateway metric | Informational — no alert |
@@ -176,13 +180,12 @@ which can point at any backend — not a provider-specific SDK.
 Recipients must be **`@jnanaprabodhini.org`** addresses — the `@jppune.onmicrosoft.com`
 mailboxes exist but nobody reads them, so an alert delivered there is functionally lost.
 
-## Application Insights configuration (platform health)
+## Application Insights — superseded proposal, not pending configuration
 
-Not yet provisioned. When #79 lands it needs both an `azurerm_application_insights` resource
-in `modules/environment` (so UAT and prod each get their own, like every other stateful
-resource) and the SDK wired in the api. It should answer: request rate and latency,
-dependency calls to Postgres/Redis, container restarts, and cold-start frequency — the last
-one matters because `min_replicas = 0` means every idle period ends in a cold start.
+The earlier resource/SDK proposal was dropped on 2026-08-23. Do not provision it to satisfy
+stale #79 wording. Request/dependency latency, restarts and cold-start monitoring remain
+coverage requirements to assess using the approved portable instrumentation and platform logs;
+listing a target metric below or above does not certify an implemented alert.
 
 ---
 
@@ -200,6 +203,6 @@ one matters because `min_replicas = 0` means every idle period ends in a cold st
 
 ## Incident Response (v1 — lightweight)
 - On alert: check Sentry for the error and its release → correlate logs via `correlationId`
-  (Container Apps logs, or App Insights once wired) → diagnose → fix → ship via CD
+  (Container Apps logs) → diagnose → fix → ship through UAT acceptance and approved production CD
 - No formal runbook in v1 — this section expands as operational maturity grows
 - Post-incident: write a brief summary (what happened, what was the impact, what was fixed) in a `documentation/incidents/` folder

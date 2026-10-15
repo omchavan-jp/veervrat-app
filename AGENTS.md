@@ -93,7 +93,7 @@ veervrat-app/
 - `documentation/15_Design-System.md` — color tokens, typography, spacing, dark mode, component states
 - `documentation/17_Audit-Schema.md` — audit event contract, mandatory events, `@Audited` decorator pattern
 - `documentation/16_Testing-Strategy.md` — what to test, auth matrix tests, E2E flows
-- `documentation/18_Observability-Standard.md` — structured logging schema, Sentry + App Insights, alert thresholds
+- `documentation/18_Observability-Standard.md` — structured logging, Sentry evidence and target alert coverage; App Insights was dropped
 - `documentation/19_Email-Strategy.md` — SMTP (JP IT relay) + React Email, transactional vs notification emails, template structure, bilingual strategy
 - `documentation/21_Infrastructure-Conventions.md` — **read before touching `infra/terraform/`.** Naming rules, the DNS-zone rule, plan-before-apply discipline, import procedure, secrets/access model
 - `documentation/22_Platform-Requirements.md` — what the app needs, provider-agnostic. **Read before any sizing, costing or migration question.** Sizing there is estimated, not measured — say so when quoting it
@@ -340,10 +340,12 @@ Do not assume acceptance, approval or artifact promotion is active until rollout
   must sit behind the release approval gate. This supersedes the blanket ban on automated migrations.
 - Migration PRs state backward compatibility, rollout ordering, irreversible effects and recovery.
   Before application rollback, assess compatibility with the resulting schema; otherwise forward-fix.
-- They run as a one-off job **inside Azure**, using the same container image as the app —
+- They run as a one-off job **inside Azure**, using the accepted migration-stage image digest
+  from the release set (not the runtime API image) —
   not from a laptop. Azure Postgres only accepts connections from Azure services, and
   running from a local machine also risks a Prisma version mismatch with production.
-- Order is always: **build image → run migration job → deploy app.** Reversed, the app
+- UAT order is **build images → run migration job → deploy app**; production promotes the
+  accepted digests without rebuilding, running its approved migration before moving apps. Reversed, the app
   queries columns that don't exist yet.
 - Migrations are forward-only. A bad one is corrected by a new migration, never by
   `migrate reset` against a deployed database.

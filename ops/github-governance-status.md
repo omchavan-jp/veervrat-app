@@ -2,6 +2,8 @@
 
 Owner: `omchavan-jp`.
 Latest scoped identity/state/approval evidence: 2026-10-12; see the identity cutover and production controller records.
+Documentation reconciliation and owner-reported production confirmation: 2026-10-15.
+Coverage, evidence map and remaining limits: [documentation reconciliation](documentation-reconciliation-2026-10-15.md).
 Initial baseline: 2026-10-10 for permission read-back, security settings and CodeQL.
 Main remained at `9529b60bc6c1451ec887b0c56c681ec38c6af57a` during the permission tests;
 PR #317 then merged at `cb9eaadab2c5cb48eff6df33f911448a098574de`, which the CodeQL baseline analyzed.
@@ -22,7 +24,7 @@ Implementation work: [OpenSpec tasks](../openspec/changes/github-governance/task
 | Historical branch purge                 | Completed 2026-10-11: 186 historical remote refs removed with SHA leases; main, all tags, 16 open Dependabot heads and active cleanup work preserved; no extra Git backup                                                                                                                          |
 | Existing automated checks / CD          | PR #317 post-merge checks passed; security PR stages Action pins and job-scoped permissions without changing deployment ordering                                                                                                                                                                   |
 | UAT acceptance and release manifests | Owner-reported UAT tests recorded in acceptance 38261941774/1 for receipt 38231047598/1. Production manifest/outcome and closed claim independently verified for prod-2026-10-12. [Evidence](release-controls-rollout.md) |
-| Production reviewer gate                | #364 boundary activated/read back 2026-10-12: protected main only; owner required, self-approval allowed, admin bypass disabled. Earlier read-only approval probe passed; production-changing approval remains for a planned release                                                               |
+| Production reviewer gate | #364 boundary activated/read back 2026-10-12: protected main only; owner required, self-approval allowed, admin bypass disabled. Actual production-changing approval passed in controller 38262172088/1 for prod-2026-10-12. |
 | Digest promotion | Verified live in controller 38262172088/1: protected-main code promoted all four accepted UAT digests without rebuilding after native owner approval; guarded Terraform, migration proof, health/wiring and private/public outcome passed. Fresh exact-ref production plan is clean. Rollback is source-tested, not deliberately live-executed. |
 | Separate production cloud authority | Separate identities/state scopes and legacy retirement verified earlier. Production Terraform, migration and private record writes now passed in 38262172088/1; independent private/live read-back passed. No broad legacy grants were restored. |
 | Dependency/code security controls       | Dependabot alerts/security updates and CodeQL are enabled; existing findings recorded; grouped version-update config merged in #319; remaining remediation is tracked separately                                                                                                                   |
@@ -45,7 +47,18 @@ gh api repos/omchavan-jp/veervrat-app/actions/permissions/workflow
 
 Record each control's implementation PR, read-back evidence, allowed/denied test, and limitations
 here when verified. Do not mark a gate verified only because documentation or configuration was
-written. This status update records permission verification; it is not a production-release test.
+written. The permission tests below did not deploy production; the later deliberate release
+is recorded separately in [release-control evidence](release-controls-rollout.md).
+
+## Handoff and verification limits (2026-10-15)
+
+The maintainer subsequently reported "Everything is working in prod." This is owner-reported
+production acceptance, not a new automated or independently observed test of every feature.
+Separate WebSocket/Sentry-delivery/backup-restoration and live-rollback drills remain unclaimed.
+The complete non-owner contributor review/merge/UAT walkthrough remains unverified; do not
+infer it from owner-authored or merely open contributor PRs. Dependency remediation and
+recurring access/secret reviews remain separate maintenance work. Organization/teams,
+repository transfer and dev/preview environments were not part of this rollout.
 
 ## Applied rules and permission evidence
 

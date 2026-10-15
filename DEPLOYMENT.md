@@ -113,6 +113,25 @@ The manifest/outcome digests and record keys are in [release evidence](ops/relea
 An independent read-only production plan with the exact deployed image references/commit
 metadata returned no changes; no manual follow-up apply was performed.
 
+### Owner confirmation (2026-10-15)
+
+The maintainer subsequently reported "Everything is working in prod." This is owner-reported
+production acceptance, separate from the automated 2026-10-12 release evidence above.
+It is not an independently observed per-feature browser matrix or a separate WebSocket,
+Sentry-delivery, backup-restoration or live-rollback drill. See the
+[verification limits](ops/release-controls-rollout.md#owner-production-confirmation-2026-10-15).
+
+### Authority of older command examples
+
+The bootstrap and maintenance examples below explain underlying resources, not an alternative
+routine production deployment path. Production releases use the owner checklist above and
+`production-release.yml`; do not substitute mutable SHA tags for the accepted four digests.
+Any exceptional bootstrap, secret/configuration repair, migration resolution or data-recovery
+operation needs explicit maintainer authorization, exact deployed image preservation, a reviewed
+normally locked plan when Terraform is involved, and independent outcome evidence. Stop if the
+operation cannot satisfy the active authorization boundary; do not use a laptop apply to bypass
+the native production gate, migration-output proof or release records.
+
 ## Historical deployment snapshot (2026-09-02)
 
 The following image, health, login and resource observations describe that date, not a
@@ -164,7 +183,7 @@ CROSSSLOT errors flooded Log Analytics at ₹19,230 in 12 hours. Fixed by PR #29
 
 The checked-in [CD workflow](.github/workflows/cd.yml) and
 [deploy action](.github/actions/deploy-environment/action.yml) define executable behavior.
-The following describes that path; it does not certify the new release policy as implemented:
+The following describes the active path; live verification is recorded above:
 
 ```
 merge PR to main  →  classify paths  →  build changed app/web image set
@@ -422,10 +441,10 @@ application rollback, explicitly check compatibility with the resulting schema. 
 cannot run safely, use a corrective migration or forward fix. Database restore is a separate,
 owner-authorized recovery decision because it may lose newer writes.
 
-### Agreed release procedure — activate through implementation PRs
+### Active release procedure
 
-This section specifies the required operating sequence, not commands for workflows that have
-already been built. Use [rollout status](ops/github-governance-status.md) to confirm activation.
+This sequence is implemented by the owner checklist and trusted-main controller above.
+Use [rollout status](ops/github-governance-status.md) for activation and verification evidence.
 Do not create a production tag merely to test these gates.
 
 1. Select a successful UAT deployment and its actual API/web/migration/backup image digests.
@@ -457,8 +476,11 @@ The job is defined in `infra/terraform/modules/environment/migration-job.tf` as
 devDependency and is pruned out of runtime, which ships the migration files but not the
 tool that applies them.
 
-**CD does this automatically** (`.github/actions/deploy-environment`). To run it by hand —
-recovering a failed migration, or a one-off:
+**CD does this automatically** (`.github/actions/deploy-environment`). The SHA-tag commands
+below document the historical mechanism, not the current digest-pinned production procedure.
+For an exceptional failed-migration repair, obtain a reviewed recovery plan and explicit owner
+authorization first, preserving all actual deployed digests and the production approval boundary.
+Do not run these examples verbatim against current production or infer authorization from them.
 
 ```bash
 ENV=uat   # or prod
@@ -1253,43 +1275,28 @@ merely completes proves less than one whose contents match something known indep
 
 ## Recovering from the cost guard
 
-The cost guard (`stop-veervrat` runbook, #93) scales all Container Apps to `maxReplicas: 0`
-across both UAT and prod when the budget threshold is hit. Two complications:
+The cost guard (`stop-veervrat` runbook, #93) historically stopped both environments.
+Do not infer its current effect from the requested `maxReplicas: 0` value: that value can be
+rejected by Azure. Inspect actual app/revision state and the automation execution evidence.
+This documentation reconciliation did not execute or recertify the stop mechanism.
 
-1. **The apps were deactivated, not deleted.** Re-deploying is
-   `terraform apply -var="image_tag=<sha>" -var="deploy_apps=true"` in each environment.
-
-2. **CD may not work.** CD verifies migrations by reading Prisma output from Log Analytics. If
-   `daily_quota_gb` is also hit (likely — it exists to limit the same kind of spike), new log
-   ingestion is blocked until midnight UTC, and CD fails with "job reported Succeeded but
-   produced no prisma output". This is CD working correctly.
+CD verifies migrations through execution-scoped Prisma output in Log Analytics. If
+`daily_quota_gb` is also hit, new log ingestion is blocked until midnight UTC and rollout
+correctly stops. An empty last-commit migration diff is not permission to bypass that proof.
 
 ### Procedure
 
-```bash
-# 1. Fix the root cause first. Never redeploy without understanding why the guard fired.
-
-# 2. Get the SHA of the fix:
-SHA=$(git rev-parse --short HEAD)
-
-# 3. Check whether the PR contains new migrations:
-git diff HEAD~1..HEAD -- apps/api/prisma/migrations
-# Empty = no new migrations → safe to deploy manually.
-# Non-empty = wait for midnight UTC (05:30 IST) when the daily quota resets, then let CD
-# handle the deploy normally.
-
-# 4. Deploy manually to each environment:
-for ENV in uat prod; do
-  cd infra/terraform/envs/$ENV
-  terraform apply -var="image_tag=$SHA" -var="deploy_apps=true"
-done
-
-# 5. Verify:
-curl -s https://api.uat.veervrat.jnanaprabodhini.org/ready
-curl -s https://api.veervrat.jnanaprabodhini.org/ready
-# Expect: {"status":"ok","checks":{"database":"up","redis":"up"}}
-# First request may be slow (cold start from min_replicas=0).
-```
+1. Diagnose/fix the cause and inspect current resources, exact image references, migration
+   state and any unfinished release claim. Coordinate with other operators and workflows.
+2. If migration output cannot be verified, wait for ingestion recovery (normally midnight UTC,
+   05:30 IST), then deliberately use the appropriate UAT deployment workflow. Do not skip proof.
+3. Production uses the accepted-release controller. For rollback, use the separate procedure
+   below after current-schema assessment; it deliberately skips migrations by design, not as a
+   workaround for missing migration evidence. Controller attempts must not be rerun.
+4. If actual infrastructure/configuration damage prevents that path, stop and obtain an explicit
+   reviewed recovery decision. Generic direct Terraform applies are not an approved fallback.
+5. Verify `/api/v1/ready` on both API hosts, actual served web/API wiring, exact healthy revisions
+   and image references, and the resulting release/recovery audit. Health alone is insufficient.
 
 ### `daily_quota_gb` — the real-time cost guard for logging
 
@@ -1342,17 +1349,19 @@ An unfinished private claim requires operator reconciliation, not a guessed succ
 
 ---
 
-## Content-editing deployment (dev-only)
+## Content-editing configuration (local/UAT only)
 
-A separate, access-restricted deployment lets a content editor edit UI copy (en/mr)
-in-context and publish changes as a PR. **Off everywhere by default — never enable it on
-production.** Design: archived openspec change `in-context-content-editor`.
+The existing local/UAT app lets an authorized content editor edit UI copy (en/mr) in-context
+and publish changes as a PR. No separate developer environment was introduced by this rollout.
+The runtime `CONTENT_EDIT_ENABLED` gate must be enabled on both tiers, and the person needs
+the server-enforced `CONTENT_EDIT` capability. UAT enables the gate; production disables it
+and refuses content editing. **Never enable it on production.**
 
 Requires, on top of the normal vars:
 
 | Var                               | Value                                                                                                                                                                             |
 | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_CONTENT_EDIT` (web)  | `on` — build-time; mounts the editor + i18n overlay                                                                                                                               |
+| `CONTENT_EDIT_ENABLED` (web) | Runtime gate; must agree with API configuration. Do not use the retired build-time `NEXT_PUBLIC_CONTENT_EDIT` flag. |
 | `CONTENT_EDIT_ENABLED` (api)      | `true` — master gate; routes 404 when false                                                                                                                                       |
 | `ENVIRONMENT`                     | `local` \| `uat` \| `prod`. Named explicitly — `NODE_ENV` is `production` on UAT too. `content.edit` is refused outright when this is `prod` (O7)                                 |
 | `FEEDBACK_MODE`                   | `off` \| `granted`. ⚠️ Must be set on the **api** as well as the web tier, or the widget is hidden rather than denied. `all` mode was removed                                     |
@@ -1360,11 +1369,8 @@ Requires, on top of the normal vars:
 | `CONTENT_EDIT_GITHUB_REPO`        | `omchavan-jp/veervrat-app` — confirm against `gh repo view` before setting; the repo has moved owners once already (2026-08-24) and a move to `jnanaprabodhini` is planned (#132) |
 | `CONTENT_EDIT_GITHUB_BASE_BRANCH` | `main`                                                                                                                                                                            |
 
-Overrides stage in object storage under `content-overrides/`. **Still genuinely blocked, not
-just historically** — `content-overrides.repository.ts` constructs its own `S3Client` directly
-(`@aws-sdk/client-s3`), independent of `uploads.service.ts`. #139 (2026-08-24) built a
-`StorageProvider` seam and an Azure Blob implementation for the _uploads_ path specifically;
-`content-overrides` was not part of that change and still speaks S3 only. Confirm this by
-searching for `@aws-sdk` under `content-overrides/` before assuming otherwise — this note will
-go stale exactly the way the original one did if content-overrides is migrated later without
-updating it here. Which environment content-editing runs in is still open (O7).
+Overrides stage under `content-overrides/` through the injected `StorageProvider`, including
+provider-specific not-found translation inside each adapter. The former direct-S3 blocker is
+resolved; infrastructure conventions §28 records UAT read/write verification on 2026-09-05.
+This reconciliation source-checks that boundary and the runtime configuration; it does not
+claim a new production content-editing test (the feature is deliberately unavailable there).
