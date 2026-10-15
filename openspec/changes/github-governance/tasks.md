@@ -107,7 +107,11 @@ fixture tests passed locally on 2026-10-15. These tests perform no cloud deploym
 - [ ] 5.3 Record remaining unverified production behavior and archive only when implementation and review are complete.
       **Recording complete, archive gate open:** #367 and release rollout explicitly retain
       unverified live rollback, fresh production browser flows, WebSocket delivery, Sentry
-      delivery and backup restoration. Web-only mixed-digest behavior has source tests, not
+      delivery and backup restoration at that verification checkpoint. On 2026-10-15 the
+      maintainer subsequently reported: "Everything is working in prod." Record this as
+      owner-reported production acceptance, not as an independently observed test of every
+      browser flow or a separate WebSocket, Sentry-delivery, backup-restoration or live-rollback
+      drill. Web-only mixed-digest behavior has source tests, not
       a separately claimed live rollout. These limits are not all automatically blockers for
       this governance scope, but cannot be converted into passes. Finish/dispose of 5.2 and
       obtain final review of the reconciled change before considering archival. This update
