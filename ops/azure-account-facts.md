@@ -317,8 +317,8 @@ Each of these cost real time and would recur. Full detail in
 | **Azure Managed Redis is CLUSTERED — even at the smallest tier** | BullMQ (and any library using Lua scripts across multiple keys) fails with `CROSSSLOT Keys in request don't hash to the same slot` on every operation. The errors are logged, not thrown to the caller, so the queue silently does nothing while flooding Log Analytics | use `{braces}` hash tags in all key prefixes so all keys for a queue land in the same slot. BullMQ: set `prefix: '{email}'` (not `email`). ⚠️ The braces are literal in the prefix string — BullMQ passes them through to Redis, which hashes only the content between the first `{…}` pair. Verified fix: PR #293. See `documentation/21_Infrastructure-Conventions.md` §26 |
 | **Log Analytics bills per GB ingested, not stored**              | a logging error loop can spend thousands of rupees in hours. 3.3M lines/hour = ~53 GB/day = ~₹19,230/day at ₹363/GB. Writing the data costs money; the 90GB already stored does not accrue new charges                                                                  | `daily_quota_gb = 2` on both workspaces. This caps ingestion at the Log Analytics level with zero billing lag. Budget alerts cannot catch this — they run on a 12–24 hour billing pipeline                                                                                                                                                                                   |
 | **Budget alerts and cost guard have 12–24 hour lag**             | a spike that goes from ₹0 to ₹19,000 in 12 hours outruns all three budget-level protections (alerts at 50/75/100%, plus the cost guard webhook). They fire _after_ the money is already spent                                                                           | `daily_quota_gb` is the structural guard — it operates at the Log Analytics level, not the billing pipeline. The two are complementary: the quota limits damage in real time, the cost guard limits damage from other resources                                                                                                                                              |
-| **`daily_quota_gb` blocks CD's migration verification**          | CD reads Prisma output from Log Analytics to verify migrations succeeded. When the daily quota is hit, new logs cannot be ingested, so CD sees "job reported Succeeded but produced no prisma output" and correctly refuses to proceed                                  | if the quota is hit and no new migrations exist in the PR, deploy manually via `terraform apply -var="image_tag=<sha>" -var="deploy_apps=true"` after verifying with `git diff HEAD~1..HEAD -- apps/api/prisma/migrations`                                                                                                                                                   |
-| **Cost guard stops both environments at once**                   | the `stop-veervrat` runbook scales all Container Apps to `maxReplicas: 0` across both UAT and prod. Recovery requires re-deploying via terraform (CD may not work if the daily quota is also hit)                                                                       | after fixing the root cause, deploy via `terraform apply -var="image_tag=<sha>" -var="deploy_apps=true"` in each environment. Verify `/ready` returns 200 on both                                                                                                                                                                                                            |
+| **`daily_quota_gb` blocks migration proof** | Missing execution-scoped Prisma output correctly stops rollout. A last-commit migration diff is not proof of database state. | Wait for ingestion recovery; use the authorized workflow. Do not bypass migration evidence with a direct apply. Production attempts are not rerun. See the current recovery runbook. |
+| **Cost-guard recovery** | Historical stops affected both environments; a requested `maxReplicas: 0` can be rejected, so read actual resource/execution state. This pass did not recertify the stop mechanism. | Fix the cause, coordinate operators, preserve exact digests and use the accepted production controller or an explicitly reviewed exceptional recovery decision. A green endpoint alone is not release evidence. |
 
 ### CD — GitHub → Azure (2026-08-16)
 
@@ -331,6 +331,8 @@ promotion and private manifest/claim/outcome writes. Independent read-back verif
 successful outcome, closed claim, all four live image references and fresh readiness/wiring.
 Production web has `SENTRY_DSN` configured and `PRODUCT_DOCS_MODE=off`; Sentry delivery and
 production browser flows were not freshly tested by that infrastructure verification.
+The maintainer subsequently reported "Everything is working in prod" on 2026-10-15;
+this is owner-reported acceptance, not a separate per-feature or operational-drill record.
 See [release evidence](release-controls-rollout.md). Legacy retirement applied
 in #355: six old grants and three old FICs removed; fresh federation rejected in `38133195235`.
 
@@ -339,7 +341,8 @@ in #355: six old grants and three old FICs removed; fresh federation rejected in
 secret — GitHub OIDC exchanges a short-lived token at run time. Three federated credentials,
 one per GitHub Environment (`build`, `uat`, `prod`) — see
 `veervrat-app/documentation/21_Infrastructure-Conventions.md` §14–15 for why exactly three,
-no wildcards.
+no wildcards. The legacy object was subsequently deleted; the current subjects are carried by
+the three replacement identities, not that retired object.
 
 Roles: Contributor (it creates resource groups itself), AcrPush, Storage Blob Data Contributor
 on `veervrattfstate`, Key Vault Secrets Officer. Read back on 2026-10-11:

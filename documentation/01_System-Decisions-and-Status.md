@@ -2,6 +2,11 @@
 
 This is the master reference for all technology and architecture decisions. Read this first to understand where the project stands.
 
+Production follow-up, 2026-10-15: the maintainer reported "Everything is working in prod."
+This is owner-reported acceptance after `prod-2026-10-12`, separate from automated release
+health checks. It does not assert an individually witnessed OAuth/WebSocket/Sentry/restore
+test matrix. See [release evidence and limits](../ops/release-controls-rollout.md).
+
 ## Stack overview
 
 > **Status vocabulary corrected 2026-08-16.** This table read "Scaffolded" across the board
@@ -82,8 +87,10 @@ a test message reached a Gmail inbox rather than spam, before the decision was t
 external Gmail inbox, not spam, which also proved the relay delivers outside JP's own domain
 (never previously tested). nodemailer replaced the Resend SDK.
 
-⚠️ **Prod's Key Vault still holds the placeholder password** — set `smtp-password` there before
-the next prod deploy, or prod will silently log mail to the console instead of sending.
+The August placeholder warning is superseded: the later deployment record documents configured
+SMTP secrets and actual production delivery (#88). Do not replace a live secret with a placeholder.
+Secret configuration, historical delivery and the latest general owner confirmation are different
+evidence; this consistency pass did not send a new diagnostic email.
 
 ⚠️ Two gaps found while verifying: there is **no resend-verification endpoint**, and password
 reset does **not** mark an address verified — so a user who loses the verification email is
@@ -97,7 +104,9 @@ locked out with no self-service route (issue **#74**).
 ### 10. Azure Blob Storage
 **Decision**: ~~S3-compatible API~~ → **Azure Blob Storage** (D7), with managed identity instead of static keys. **Implemented** as #139 (2026-08-24). Strategy pattern: `azure-blob-storage.provider.ts` (cloud) / `s3-storage.provider.ts` (local MinIO). Azure Blob accounts: `veervratuatuploads`, `veervratproduploads`.
 **Why**: app needs file uploads (images, documents). Provider-agnostic abstraction via a strategy interface.
-**Status**: ✅ **Done.** Exercised on UAT 2026-08-24 (real upload + byte-identical read-back). ⚠️ One residual: `content-overrides.repository.ts` still imports `@aws-sdk/client-s3` directly, bypassing the abstraction.
+**Status**: ✅ **Done.** Upload/read-back exercised on UAT 2026-08-24. The former direct-S3
+content-overrides consumer now injects `StorageProvider`; conventions §28 records its UAT
+read/write verification on 2026-09-05. No new production upload/editing drill is claimed.
 
 ### 11. Monorepo with pnpm + Turborepo
 **Decision**: monorepo using pnpm workspaces and Turborepo.
@@ -131,7 +140,7 @@ These are acknowledged but not yet decided in detail:
 | ~~Realtime~~ | ✅ Decided — NestJS Gateway + Socket.IO. See 10_Platform-Engineering-Standard.md |
 | ~~Notifications~~ | ✅ Decided — in-app bell + email (JP IT's SMTP relay; was Resend, see D9). See spec/decisions/25_notifications.md |
 | ~~Testing~~ | ✅ Decided — Vitest + supertest + Playwright. See 16_Testing-Strategy.md |
-| ~~Observability~~ | ✅ Decided 2026-08 — **Sentry** (app errors) + **Azure App Insights** (platform) + Pino structured JSON. **Supersedes the earlier GlitchTip decision** (D8 in `../ops/PROJECT-STATUS.md`). Implementation still pending — see issue **#79**. Standard: 18_Observability-Standard.md |
+| ~~Observability~~ | **Sentry + Pino/stdout** supersede GlitchTip; Application Insights was subsequently dropped, not awaiting implementation. Error-delivery evidence and remaining alerting/uptime work are distinguished in [the observability standard](18_Observability-Standard.md). |
 | ~~Security baseline~~ | ✅ CSRF (double-submit cookie), rate limiting, upload rules, brute force. See 10_Platform-Engineering-Standard.md + 14_Auth-Architecture-Decision.md (§15-16) |
 | ~~Hosting~~ | ✅ Decided 2026-08 — **Azure**, Central India, single cloud + Terraform. Container Apps (not self-run Kubernetes), managed Postgres/Redis, zero VMs. See `../ops/azure-account-facts.md` and `21_Infrastructure-Conventions.md` |
 | ~~Release process~~ | Policy revised 2026-10-10: single main trunk, recorded UAT acceptance, promotion without rebuild, production approval and recovery. See [governance policy](25_Git-and-Release-Governance.md); enforcement evidence lives in [rollout status](../ops/github-governance-status.md). |

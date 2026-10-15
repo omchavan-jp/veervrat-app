@@ -73,3 +73,7 @@ public/private outcomes and exact live images/health were independently verified
 closed claim and clean exact-ref production plan. See [full evidence](release-controls-rollout.md).
 This supersedes the first-write pending checkpoint, not the limits of the earlier setup tests.
 No artificial production failure/rollback or new production browser/Sentry-delivery test was performed.
+
+Owner follow-up, 2026-10-15: "Everything is working in prod." This records owner-reported
+production acceptance, not an independently observed browser matrix or separate delivery,
+restore or live-rollback drill. See [verification limits](release-controls-rollout.md#owner-production-confirmation-2026-10-15).

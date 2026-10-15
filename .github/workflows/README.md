@@ -30,17 +30,17 @@ environment candidate variables, not the active deployment client ID. See the
 | Change on main                                                                     | UAT action                                                                                                    |
 | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | App, API, web, shared, or unknown path                                             | Build four app images; apply Terraform, migrate, deploy apps                                                  |
-| Canonical `product-design/` content or renderer code                               | Build and deploy the web image with its static export; preserve API and migration image tags; skip migrations |
+| Canonical `product-design/` content or renderer code | Build/deploy web with its static export; preserve the other deployed component references; skip migrations |
 | Both app and docs paths                                                            | Build the normal app image set; one serialized UAT deployment                                                 |
 | Ordinary Markdown, `documentation/`, `ops/`, `openspec/`, `spec/`, `.claude/` only | Skip CD builds and UAT deployment                                                                             |
 
 The classifier's fixtures are in `.github/scripts/classify-changes.test.sh`.
 The Fumadocs export is built inside the web image, outside its public directory.
-A docs-only deploy reads the current API tag, builds a new web tag, and applies
-Terraform with API and migration images pinned to the old tag. The composite
+A docs-only deploy reads current deployed component references, builds a new web image, and
+applies Terraform with the other component digests preserved. The composite
 action's `deploy_apps=false` skips migrations; its docs-only Terraform apply
 still passes `deploy_apps=true` to keep the existing app resources in state.
-Normal app deploys read API and web tags separately and hold both through the
+Normal app deploys read API and web references separately and hold both through the
 migration step. Production promotes the accepted image set, including its static docs bytes,
 while `PRODUCT_DOCS_MODE=off` keeps the route unavailable.
 No separate docs Container App or docs image is built. The static export is
@@ -63,6 +63,8 @@ container-scoped record grants were activated in #364. Live production writes pa
 owner-approved `prod-2026-10-12`, controller `38262172088/1`, with private/public outcome,
 exact live digest and health verification. See [release evidence](../../ops/release-controls-rollout.md).
 Actual rollback and fresh production browser/Sentry delivery tests were not induced as setup checks.
+The maintainer subsequently reported production working on 2026-10-15; this is owner acceptance,
+not a separate per-feature or operational-drill certification.
 
 CI lint does not apply fixes. Repo-wide `format:check` is not a CI gate.
 

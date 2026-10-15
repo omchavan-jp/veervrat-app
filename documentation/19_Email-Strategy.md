@@ -254,8 +254,9 @@ delivered, and it also proved the relay handles external domains, which had neve
 - ✅ Credentials exist and are **verified authenticating** against JP's relay (2026-08-17)
 - ✅ Password in **UAT's Key Vault** as `smtp-password`, referenced by the app. Terraform owns
   the secret's existence with `ignore_changes = [value]`; the real value is set out of band, so
-  an apply cannot revert it to the placeholder. **Prod's vault still holds the placeholder** —
-  set it before the next prod deploy.
+  an apply cannot revert it to the placeholder. The old production-placeholder warning was
+  superseded by the later configured-secret deployment and real delivery verification (#88,
+  2026-08-21); do not treat it as an outstanding setup step.
 - ⚠️ **Verification email cannot be resent.** No such endpoint exists, and password reset does
   not mark the address verified — so a user who loses the verification mail is locked out with
   no self-service route. See issue #74.
@@ -268,5 +269,7 @@ records. Nothing on the DNS side is outstanding for email.
 `EmailNotVerifiedException` on login when `emailVerifiedAt` is null, and only a delivered
 verification email can set it. That transport now works, but an account that never received
 one still **cannot recover** — see issue #74. Google OAuth bypasses this (it sets `emailVerifiedAt` on account
-creation) — but prod's Google credentials are placeholders (O23), so today prod has no working
-signup path at all.
+creation). The earlier blanket "no working production signup" claim is superseded by the
+later signup/email/login verification recorded in `ops/PROJECT-STATUS.md`. The owner reported
+UAT password reset working for `prod-2026-10-12`, then production working generally on
+2026-10-15. That general confirmation is not a new diagnostic SMTP/OAuth delivery test.

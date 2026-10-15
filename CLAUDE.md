@@ -52,7 +52,8 @@ along the way.
 - **Before `terraform apply`:** read the plan's summary line. An unexpected non-zero *destroy*
   count means stop, not scroll past.
 - **Before running `terraform plan` or `apply` against `envs/uat` or `envs/prod`:** confirm no
-  CD run is currently deploying that same environment (`gh run list --workflow=cd.yml`). CD's
+  workflow is currently deploying that same environment (inspect both `cd.yml` and
+  `production-release.yml` runs). CD's
   own `deploy-environment` action applies Terraform as its first step; a manual apply landing in
   that window collides on the state lock. Terraform's locking fails one side cleanly rather than
   corrupting anything — but it still means a CD run has to be diagnosed and rerun for a reason

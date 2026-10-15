@@ -28,8 +28,8 @@ Terraform state migration is complete; see [evidence](terraform-state-migration.
 - Real publishing/UAT deployment: [38124662672](https://github.com/omchavan-jp/veervrat-app/actions/runs/38124662672), successful;
   four image builds published, UAT applied and passed readiness/wiring checks, production skipped.
 
-Production application writes have **not** been exercised. Verify those only during a deliberate
-UAT-approved release. Retirement merged in #355 at `ddf9bc82e7b4585c513858b8c33327b5f4091bf5` after
+At that cutover checkpoint production application writes had not been exercised. They later
+passed in the deliberate UAT-approved release recorded below. Retirement merged in #355 at `ddf9bc82e7b4585c513858b8c33327b5f4091bf5` after
 all seven checks. A fresh locked plan applied zero additions/changes and exactly nine removals:
 six old grants and three old FICs. Private recovery state preserved; replacement grants/apps/data
 untouched. State read-back confirmed zero managed legacy grants/FICs, twelve replacement assignments
@@ -50,7 +50,7 @@ the replacement and require a specific missing/mismatched-trust or absent-applic
 It never logs tokens or performs production writes. Already-issued tokens and Azure propagation
 caches are separate from proving that fresh federation is rejected; do not overstate immediate expiry.
 
-## Desired permissions
+## Active base permissions and later release-record grants
 
 | Identity | Role | Scope |
 | --- | --- | --- |
@@ -64,7 +64,11 @@ caches are separate from proving that fresh federation is rejected; do not overs
 | production | Storage Blob Data Contributor | `tfstate-prod` container only |
 | production | Reader + AcrPull | `veervratacr` registry |
 
-Twelve additive assignments; no subscription Contributor/Secrets Officer, shared state access,
+These were the twelve base assignments. #360 subsequently added UAT Blob Data Contributor at
+`release-records`; #364 added production Blob Data Reader there, production Blob Data Contributor
+at `production-release-records`, and UAT Blob Data Reader at production history. These are
+container scopes, not state-account-wide access. See [controller evidence](production-controller.md).
+No subscription Contributor/Secrets Officer, shared state access,
 User Access Administrator or role-management delegation. Reader at the registry supports
 management metadata and existing assignment refresh; pull rights do not grant image publishing.
 Build loses the unused UAT-domain lookup: preparation now needs no Azure login or OIDC.
@@ -75,7 +79,11 @@ provider registration. Routine deployments manage existing resources/grants, not
 A feature needing a new role assignment requires maintainer review/apply before routine CD;
 an access failure must not be worked around with broad roles. IAM grants remain declarative.
 
-## Candidate verification, before credential cutover
+## Historical candidate verification, before credential cutover
+
+The following records the initial cutover procedure and its then-known baseline exceptions.
+It is not a current instruction to restore tag-only prod access or accept old plan drift.
+Current main-only admission and the clean exact-ref production plan are recorded below.
 
 Set non-secret `AZURE_CANDIDATE_CLIENT_ID` and `AZURE_CANDIDATE_PRINCIPAL_ID` on each GitHub
 environment. These do not replace the active deployment `AZURE_CLIENT_ID`.
@@ -137,5 +145,6 @@ trust boundary documented separately. Blob conditional writes are not WORM.
    Verify old credentials no longer provide a bypass and new cross-scope reads remain denied.
 
 Separate identities do not make artifacts immutable: build still has registry publishing
-authority, and exact-digest promotion, signed acceptance, image retention and recovery remain
-separate release-control work. OpenSpec and development-environment design are out of scope.
+authority. Exact-digest promotion, workflow-validated acceptance and deliberate recovery are
+implemented; cryptographically signed attestations and a comprehensive image-retention policy
+are not claimed. OpenSpec and development-environment design were outside the identity rollout.

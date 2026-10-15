@@ -182,9 +182,10 @@ Two things follow from the same rule:
   `rewrites()`, `redirects()` or `headers()`** — that is precisely how the defect above shipped.
 - The test before adding *any* build-time value: **does it describe the image, or where the
   image runs?** `NEXT_PUBLIC_COMMIT_SHA` describes the image and is correctly baked.
-  `NEXT_PUBLIC_CONTENT_EDIT` is the deliberate exception — being inlined lets the bundler drop
-  the editor's code entirely, so dev tooling never ships to users; that is the point of it being
-  build-time, and it is never passed by CD.
+  `NEXT_PUBLIC_CONTENT_EDIT` was a failed exception, now removed: the same promoted image must
+  support local/UAT editing while production refuses it. Use runtime `CONTENT_EDIT_ENABLED`
+  on both tiers and server-enforced per-user capability checks; load editor code dynamically.
+  `apps/web/src/test/no-build-time-env-gates.test.ts` guards against new build-time feature gates.
 
 ## 9. Component conventions
 
