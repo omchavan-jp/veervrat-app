@@ -68,9 +68,19 @@
     {
       "id": "PD-010",
       "title": "Actor inventory and role structure",
-      "status": "confirmed",
+      "status": "superseded",
       "canonical_home": "../02-actors-and-relationships/actor-inventory.mdx",
-      "summary": "Every signed-in user is a Vratarthi; an unsigned-in Public Visitor is not yet a Vratarthi in the product. Vratamitra, Curator, Moderator, and Admin are additional roles/capabilities a Vratarthi may hold; Primary and Journey Vratamitra describe guidance relationships. Identity/account ontology and exact operational permissions remain deferred."
+      "summary": "Every signed-in user is a Vratarthi; an unsigned-in Public Visitor is not yet a Vratarthi in the product. Vratamitra, Curator, Moderator, and Admin are additional roles/capabilities a Vratarthi may hold; Primary and Journey Vratamitra describe guidance relationships. Identity/account ontology and exact operational permissions remain deferred.",
+      "superseded_by": "PD-011",
+      "rationale": "PD-011 preserves the actor purposes and signed-in participation intention while establishing registration-based persistent Vratarthi identity, Public Visitor access while logged out, and granted versus contextual roles."
+    },
+    {
+      "id": "PD-011",
+      "title": "Identity, Participation, and Role Ontology",
+      "status": "confirmed",
+      "canonical_home": "../03-ontology-and-domain-model/identity-participation-and-roles.mdx",
+      "summary": "Each registered account represents exactly one persistent Vratarthi and automatically has a Profile. Login/logout changes authentication/access state, not Vratarthi identity. Multiple accounts per human and authentication methods per account are allowed without real-world uniqueness enforcement or a separate Person entity. Curator/Moderator/Admin are granted capabilities; guidance roles derive from accepted relationships. Invitations may precede recipient registration, which does not itself accept a guidance relationship.",
+      "rationale": "Supersedes PD-010 to clarify persistent registration-based identity while preserving its actor purposes, coexistence, and the intention that every signed-in user is a Vratarthi."
     }
   ]
 }
