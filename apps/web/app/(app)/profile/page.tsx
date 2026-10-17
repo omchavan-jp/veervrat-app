@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ExternalLink, Pencil, RotateCcw } from 'lucide-react';
+import { ExternalLink, LogOut, Pencil, RotateCcw } from 'lucide-react';
 import {
   usersApi,
   type OwnProfile,
@@ -17,6 +17,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { errorMessage } from '@/lib/api/error-message';
+import { useLogout } from '@/hooks/use-auth';
 
 const FIELDS: { key: ProfileField; labelKey: string }[] = [
   { key: 'avatar', labelKey: 'fieldAvatar' },
@@ -30,6 +31,47 @@ const FIELDS: { key: ProfileField; labelKey: string }[] = [
   { key: 'challenges', labelKey: 'fieldChallenges' },
   { key: 'experiences', labelKey: 'fieldExperiences' },
 ];
+
+function SettingsLink() {
+  const t = useTranslations('profile');
+  return (
+    <Link
+      href="/settings"
+      className="inline-flex items-center gap-1.5 rounded-lg border border-border-strong px-3 py-2 text-[13px] transition-colors hover:border-accent"
+    >
+      <Pencil className="h-3.5 w-3.5" />
+      {t('editInSettings')}
+    </Link>
+  );
+}
+
+function MobileLogoutButton() {
+  const tNav = useTranslations('common.nav');
+  const tCommon = useTranslations('common');
+  const { toast } = useToast();
+  const logout = useLogout();
+
+  return (
+    <button
+      type="button"
+      onClick={() =>
+        logout.mutate(undefined, {
+          onError: (err) =>
+            toast({
+              title: errorMessage(err, tCommon('logoutError')),
+              variant: 'destructive',
+            }),
+        })
+      }
+      disabled={logout.isPending}
+      aria-busy={logout.isPending}
+      className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-danger/30 bg-surface px-4 text-[14px] font-medium text-danger transition-colors hover:border-danger/50 hover:bg-danger/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:opacity-50 md:hidden"
+    >
+      <LogOut className="h-4 w-4" aria-hidden="true" />
+      {logout.isPending ? tCommon('loggingOut') : tNav('logout')}
+    </button>
+  );
+}
 
 export default function ProfilePage() {
   const t = useTranslations('profile');
@@ -66,7 +108,15 @@ export default function ProfilePage() {
   if (isError || !profile) {
     return (
       <div className="mx-auto max-w-[680px]">
-        <h1 className="font-display text-[30px] font-medium tracking-tight">{t('title')}</h1>
+        <div className="mb-8 flex flex-col items-start gap-4 sm:flex-row sm:justify-between">
+          <div>
+            <h1 className="font-display text-[30px] font-medium tracking-tight">{t('title')}</h1>
+            <p className="mt-1 text-[14px] text-muted">{t('subtitle')}</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <SettingsLink />
+          </div>
+        </div>
         <EmptyState
           icon={<RotateCcw className="h-5 w-5" />}
           title={t('loadError')}
@@ -77,6 +127,7 @@ export default function ProfilePage() {
             </Button>
           }
         />
+        <MobileLogoutButton />
       </div>
     );
   }
@@ -94,17 +145,8 @@ export default function ProfilePage() {
           <p className="mt-1 text-[14px] text-muted">{t('subtitle')}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link
-            href="/settings"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border-strong px-3 py-2 text-[13px] transition-colors hover:border-accent"
-          >
-            <Pencil className="h-3.5 w-3.5" />
-            {t('editInSettings')}
-          </Link>
-          <Link
-            href={`/u/${p.username}`}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border-strong px-3 py-2 text-[13px] transition-colors hover:border-accent"
-          >
+          <SettingsLink />
+          <Link href={`/u/${p.username}`} className='inline-flex items-center gap-1.5 rounded-lg border border-border-strong px-3 py-2 text-[13px] transition-colors hover:border-accent'>
             <ExternalLink className="h-3.5 w-3.5" />
             {t('viewPublic')}
           </Link>
@@ -139,6 +181,7 @@ export default function ProfilePage() {
             )}
           </div>
         </div>
+        <MobileLogoutButton />
       </section>
 
       {/* Presence + full privacy */}
