@@ -12,8 +12,8 @@ source of truth for *what exists*; this doc covers *how we change it*).
 ## 1. Ground rules
 
 1. **Everything in Terraform.** Any resource created by clicking in the Azure Portal
-   is invisible to the next person and un-reviewable. The only exceptions are the two
-   documented bootstrap resources in §4.
+   is invisible to the next person and un-reviewable. The bootstrap exception is the
+   documented state storage account in §4.
 2. **`plan` before `apply`, every time.** `plan` is read-only. Read its summary line
    (`N to add, N to change, N to destroy`) before proceeding. A non-zero *destroy*
    count you did not expect means stop, not scroll past.
@@ -23,6 +23,10 @@ source of truth for *what exists*; this doc covers *how we change it*).
    covers `*.tfstate`, `.terraform/`, and `*.tfplan`.
 5. **Commit `.terraform.lock.hcl`.** It pins provider versions so a run next month
    behaves like today's.
+6. **Production uses the trusted-main controller.** Older examples in this document record
+   mechanisms and incidents, not an alternative release authorization. Preserve exact deployed
+   digests, native approval and audit evidence; never use a direct apply to bypass those gates.
+   Exceptional bootstrap/recovery requires explicit maintainer authorization and a reviewed plan.
 
 ---
 
@@ -45,7 +49,7 @@ Prefix everything with `veervrat`. Use hyphens where the resource type allows th
 
 **Tags** — every resource carries `project`, `environment`, and `managed-by`. The
 `managed-by` value is meaningful: `terraform` for normal resources,
-`manual-bootstrap` for the two exceptions in §4.
+`manual-bootstrap` for the state-account exception in §4 (the former DNS zone was retired).
 
 ---
 
@@ -61,12 +65,12 @@ infra/terraform/
   envs/
     shared/      Cross-environment: container registry, GitHub OIDC federated credentials.
     uat/         Calls modules/environment. Landed 2026-08-16 (Phase 2A).
-    prod/        Phase 2B — will call the same module.
+    prod/        Calls the same environment module; live production, not a future phase.
 ```
 
 One directory per environment, each with **its own state file**. This is the isolation
-boundary: a mistake while applying UAT cannot reach prod, because Terraform in that
-directory has no knowledge of prod's resources. Environments are separated by resource
+configuration boundary; scoped identities and separate state containers provide the permission
+boundary. A broadly privileged human can still affect both. Environments are separated by resource
 group within a single subscription (decision D12).
 
 ---
@@ -214,9 +218,10 @@ decisions with a deadline.
   Reconsider before the vault holds production secrets.
   (`soft_delete_retention_days` is now `90` — see §10.)
 - **Container registry cleanup.** Automatic retention policies are **Premium-tier only**
-  and we are on Basic, so the path is a scheduled `acr purge` task (supported on Basic)
-  keeping roughly the last 10 tags. Not yet needed — zero images pushed. Becomes
-  relevant as soon as CD pushes on every merge. Basic includes 10 GB.
+  and we are on Basic, so any scheduled `acr purge` task must select
+  only images proven safe to remove. Images are now published by CD; no comprehensive retention
+  policy is certified here. Retain every accepted/promoted digest needed for release and recovery;
+  do not implement a blind "last 10 tags" purge that can erase an eligible rollback artifact.
 - **Budget → action group → automation hard stop.** MCA subscriptions have no spending
   limit; see `azure-account-facts.md` §4.
 - **Postgres/Redis firewall is currently "allow all Azure services," not per-resource.**
@@ -339,7 +344,12 @@ storage" decays; an alert does not.
 
 ---
 
-## 14. Building and shipping images (Phase 2B, 2026-08-16)
+## 14. Historical build/deployment mechanisms (Phase 2B, 2026-08-16)
+
+This section preserves the original bootstrap lessons and tag-based command examples.
+Routine CD now builds on GitHub runners and consumes exact digest records; production never
+rebuilds and uses the trusted-main controller. Do not copy historical tag/apply examples into
+a current production operation. See §15–16 and the current deployment runbook.
 
 ### Build in Azure, not on your machine
 
@@ -572,10 +582,11 @@ Trusted subjects must match GitHub's token **exactly**. A mismatch fails login w
 generic *"no matching federated identity record found"*, so keep them aligned with the
 workflow's triggers and environment names.
 
-What CI can and cannot do, deliberately: Contributor at subscription scope (it creates
-resource groups, so a narrower scope would not work) plus AcrPush, Storage Blob Data
-Contributor on the state account, and Key Vault Secrets Officer. **Contributor cannot grant
-roles** — CI can deploy infrastructure but cannot widen anyone's access, including its own.
+Historically CI held subscription Contributor plus registry, state-account and vault grants.
+Those broad grants and the legacy identity were removed during the scoped cutover. Current
+build/UAT/production identities and container-scoped state/record permissions are documented
+in §15 and [identity evidence](../ops/azure-identity-cutover.md). Resource-group creation,
+provider registration and IAM bootstrap remain maintainer operations, not routine CD powers.
 
 Note the recurring Azure distinction: *Contributor covers the control plane but not data*.
 Blob and Key Vault each need their own data-plane role — the same trap that catches people
@@ -840,8 +851,10 @@ repo:omchavan-jp@317451750/veervrat-app@1287947867:environment:uat
 repo:omchavan-jp@317451750/veervrat-app@1287947867:environment:prod
 ```
 
-Verify what exists: `az identity federated-credential list --identity-name
-veervrat-github-actions -g veervrat-shared -o table`.
+The legacy `veervrat-github-actions` object was deleted after trust/grant retirement; do not
+query it as the active credential source. Read current declarations in `github-oidc.tf` and
+verify credentials separately on `veervrat-github-build`, `veervrat-github-uat` and
+`veervrat-github-prod` in `veervrat-shared`.
 
 ### Historical legacy roles — not the replacement permission model
 
@@ -923,10 +936,11 @@ two environments that differ only in size.
 `github.event.before` against the pushed SHA and sets `app_changed=false` when every changed
 path matches an ignore list (`documentation/`, `ops/`, `openspec/`, `spec/`, `.claude/`, any
 `*.md`). `build` skips when a **branch push** to main found `app_changed=false`; `deploy-uat`
-skips automatically when `build` skips (needs it). **Tag pushes are never filtered** — the
+skips automatically when `build` skips (needs it). **Historically tag pushes built images** — the
 `build` job's condition is `startsWith(github.ref, 'refs/tags/prod-') || app_changed !=
 'false'`, so a `prod-*` tag always builds regardless of what changed. Filtering a rare,
-already-deliberate act would only add a way for a real prod deploy to silently no-op.
+already-deliberate act was originally treated differently. This tag-build condition was removed
+by the trusted-main controller; it is not current executable behavior.
 
 The ignore list is an allow-list of known-safe non-app paths, not a blocklist of app paths —
 an unrecognised new top-level directory defaults to *triggering* a build, not skipping one.
@@ -937,8 +951,9 @@ flags. Canonical `product-design/` content and renderer code
 build/deploy a new web image containing a static Fumadocs export, while API and
 migration job images remain on their deployed tag. App paths retain the app
 image/migration path; mixed pushes use that path. The ordinary documentation
-ignore list above remains. `prod-*` tags still build app images but the docs
-route remains off in production. The former internal UAT renderer was removed
+ignore list above remains. `prod-*` tags now request the production controller and never build
+images; production promotes the accepted digests. The docs route remains off in production.
+The former internal UAT renderer was removed
 after live verification. The shell
 classifier has fixtures in `.github/scripts/classify-changes.test.sh`.
 
@@ -1531,18 +1546,12 @@ hit, migration output cannot be ingested, and CD reports "job reported Succeeded
 no prisma output" — **correctly refusing to proceed**, since it cannot verify the migration
 actually ran.
 
-**When this happens and no new migrations exist in the PR:**
-
-```bash
-# Verify no migrations changed:
-git diff HEAD~1..HEAD -- apps/api/prisma/migrations
-# If empty, deploy manually:
-terraform apply -var="image_tag=$SHA" -var="deploy_apps=true"
-```
-
-**When new migrations DO exist:** wait for midnight UTC when the quota resets, then let CD
-handle the deploy normally. Do not skip migration verification for a PR that contains schema
-changes.
+**Stop rather than bypass verification**, even if the last PR contains no migration files.
+The relevant migration baseline is the actual deployed database/app, not just `HEAD~1`.
+Wait for log ingestion to recover (normally midnight UTC), then deliberately use the appropriate
+workflow. Production controller attempts are not rerun; assess claims/state and use a new
+authorized request. A schema-reviewed rollback has its own no-migration path, not a generic
+permission to deploy manually. See `DEPLOYMENT.md` for recovery and approval requirements.
 
 
 ---

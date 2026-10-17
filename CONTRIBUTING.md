@@ -45,7 +45,7 @@ research and approval requirements. Update applicable specs with implementation 
   Their PR must still pass the mandatory checks. Another account belonging to the same person
   is not independent review.
 - Use squash merge only. Delete the source branch after merging; automatic deletion is the
-  agreed setting, with activation tracked in rollout status. Start subsequent work on a new
+  active setting, verified in rollout status. Start subsequent work on a new
   branch from `main`.
 - For runtime changes, record what was observed on UAT after merge. Other developers' changes
   receive the maintainer's walkthrough; maintainer changes use the explicit self-review exception.
@@ -54,7 +54,8 @@ research and approval requirements. Update applicable specs with implementation 
 
 Merging does not authorize production. Release preparation, UAT acceptance, approval, and recovery
 belong to the maintainer and follow [DEPLOYMENT.md](DEPLOYMENT.md) and the governance policy.
-Until the planned gates are activated, do not use a production tag to experiment with them.
+Recorded acceptance, digest promotion and the native production approval gate are active and
+were exercised by `prod-2026-10-12`. Do not create production tags to experiment with them.
 
 ## Database and infrastructure changes
 

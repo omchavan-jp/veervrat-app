@@ -110,7 +110,12 @@ Receipt persistence proves automated evidence/configuration, not that every back
 job was exercised or that someone tested every feature. Full documentation reconciliation and
 production promotion/rollback remain separate steps.
 
-## Remaining activation sequence
+## Historical activation sequence — implementation delivered
+
+This was the staged plan, not the current pending-work list. Steps 1 and 3–5 were subsequently
+implemented and verified to the limits recorded below; documentation reconciliation follows
+in the 2026-10-15 consistency pass. Step 2's separate live web-only/mixed-digest rollout and a
+deliberate live rollback/failure drill are not claimed. Source tests are not those live drills.
 
 1. Owner acceptance consumes verified receipts after actual UAT testing; do not manufacture it.
 2. Docs-only preservation is unit-tested; verify its live path when an appropriate real change
@@ -124,7 +129,7 @@ production promotion/rollback remain separate steps.
 
 The earlier contract PR activated no privileged operations. #360 added storage/acceptance;
 the original digest integration updated UAT only. Production controller source and boundary
-activation are described below; production writes still require the planned release.
+activation are described below; production writes subsequently passed in the deliberate release.
 OpenSpec and dependency upgrades are excluded.
 
 ## Trusted production controller integration
@@ -243,3 +248,12 @@ test is claimed. Rollback implementation is source-tested, not live-executed by 
 An independent authenticated, normally locked production plan used the exact deployed image
 references/commit metadata and completed with exit 0, no changes. It was read-only; no second
 operator apply or production rerun was performed.
+
+## Owner production confirmation (2026-10-15)
+
+After the release, the maintainer reported: "Everything is working in prod." This closes the
+request for owner-reported production acceptance. It does not retrospectively change the
+2026-10-12 automated evidence or assert a detailed browser test matrix that was not supplied.
+No separate WebSocket-delivery, Sentry-delivery, backup-restoration or live-rollback drill is
+claimed by that general confirmation. Those remain separately scoped operational checks,
+not evidence that the implemented release controls are absent.

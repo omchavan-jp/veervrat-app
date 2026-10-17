@@ -63,7 +63,7 @@ a design the app now implements.
 
 ---
 
-## Current deployment checkpoint (2026-10-12)
+## Current deployment checkpoint (release 2026-10-12; owner follow-up 2026-10-15)
 
 `prod-2026-10-12` promoted the owner-accepted #365 UAT set without rebuilding through the
 main-only, owner-approved controller. Production run `38262172088/1`, exact live digests,
@@ -71,7 +71,13 @@ DB/Redis readiness, served web/API wiring and private/public outcomes passed ver
 the exact-ref follow-up production plan is clean. This is not a fresh production browser,
 WebSocket, Sentry delivery or backup-restoration test. See
 [release evidence](release-controls-rollout.md) and the [current runbook](../DEPLOYMENT.md).
-The dated runtime tables below remain historical snapshots, not current image/certification facts.
+On 2026-10-15 the maintainer reported "Everything is working in prod." This is owner-reported
+production acceptance, not an independently observed per-feature matrix or separate operational
+drill. The dated runtime tables and numbered session log below remain historical snapshots,
+not current image/certification facts. In particular, old SMTP-placeholder, broad state-RBAC,
+direct-S3 content-overrides and rewrite-proxy blockers have been superseded. Current Sentry
+configuration is recorded in the observability standard; fresh delivery/restore/rollback drills
+remain unclaimed. Current release/security status lives in the linked operational records.
 
 ## Historical state (2026-09-02)
 
@@ -209,7 +215,7 @@ dump — **migration cancelled, see D19**; it is an archive, not a source.
 | Prod web | `https://veervrat.jnanaprabodhini.org` — ✅ live and correctly wired since `prod-2026-08-17` |
 | Prod api | `https://api.veervrat.jnanaprabodhini.org` |
 | Terraform | `veervrat-app/infra/terraform/` — `envs/shared`, `envs/uat`, `envs/prod` all applied, plans clean |
-| CD | `.github/workflows/cd.yml` — merge to `main` auto-deploys UAT; `prod-*` tag deploys prod. Both paths proven; doc-only merges skip the build |
+| CD | App-relevant merges to `main` build/deploy UAT; ordinary Markdown skips deployment. `prod-*` requests protected-main `production-release.yml`, which promotes accepted digests after native owner approval; verified in `prod-2026-10-12`. |
 | Images | `veervratacr` — `veervrat-api`, `veervrat-api-migrate`, `veervrat-web` (current tag: `3037e87`), built + cached in CI (GitHub Actions cache, not the registry) |
 | DNS | ✅ **live 2026-08-17** — 4 hostnames (web + api, UAT + prod) on `*.veervrat.jnanaprabodhini.org`, per-record via Shantanoo, managed TLS bound (O1/D14) |
 
@@ -236,7 +242,7 @@ with its guard.
 | D5 | **Managed Postgres** (Flexible Server) | Containers have no durable disk; managed brings backups+PITR, closing the audit gap for ~$5/mo |
 | D6 | **Managed Redis**, drop Upstash | Free under grant; self-hosted needs min-replicas=1 anyway, so same cost + ops |
 | D7 | **Azure Blob**, drop R2 | Migration free today (0 files, 0 stored URLs); managed identity removes static keys |
-| D8 | **Sentry free tier** (SDK already written) + **App Insights** for platform telemetry; **drop GlitchTip** | Different questions: "why did this fail" vs "is the system healthy". Both free. |
+| D8 | **Sentry + Pino/stdout; GlitchTip replaced; Application Insights subsequently dropped 2026-08-23** | Error instrumentation is implemented with documented delivery evidence/limits; target alerts and external uptime are separate. No blanket free-of-charge claim. See the observability standard. |
 | D9 | ~~Resend~~ → **JP's own SMTP relay** (flipped 2026-08-17) | Original reasoning ("Resend is already coded; never use Google Workspace SMTP — risks JP's domain reputation") was sound but its premise dissolved. JP IT provides a relay that sends as **`notifications.jnanaprabodhini.org`** — a purpose-built notifications subdomain, *not* JP's staff mail domain — so the reputation risk D9 was protecting against does not apply. What settled it: **credentials verified working end-to-end** 2026-08-17 (`235 Authentication successful`), and Shantanoo's own test mail landed in a **Gmail inbox, not spam** — real deliverability evidence, which no amount of config review provides. Also removes an external dependency, a third-party account, and Resend's 3,000/mo ceiling that D18 flagged as user-facing. Connection: `dhoomketu.in:587`, **STARTTLS** (`secure: false` + `requireTLS: true` in nodemailer — `secure: true` means implicit TLS on 465 and fails here). From: `Veervrat <do-not-reply-veervrat@notifications.jnanaprabodhini.org>`. Creds at `~/.secrets/veervrat/smtp-jp.env` (600, outside git), destined for Key Vault. Residual risk, accepted: deliverability reputation is now shared with other JP apps using that domain — smaller than the staff-mail risk, and not ours to control. Code swap shipped 2026-08-17. |
 | D10 | **Two deployed environments**: UAT + prod. Local docker-compose is "dev" | A third costs 3× for no user |
 | D11 | **Beta testers live on PROD**, not UAT | ♻️ **Rationale replaced 2026-08-16.** The original reason ("otherwise you must migrate real personal data at launch") died with D19 — there is no data to migrate. The conclusion still holds, for a different and better reason: **UAT is the staging and approval environment**, where Nachiket reviews unreleased changes before they ship. Real beta users cannot live in an environment that is deliberately running unreviewed code. Confirmed in O7. |
@@ -267,10 +273,10 @@ with its guard.
 | O4 | Devavrat to **verify billing email** (shows "Not verified") | Devavrat | billing notifications |
 | O5 | Add JP PAN/GSTIN to billing account (Tax ID empty) | Om → JP finance | invoice compliance |
 | O7 | ✅ **CLOSED 2026-08-16, implemented 2026-08-21** — **UAT:** feedback widget for all users (`FEEDBACK_MODE=all`), content editor per grant. **Prod:** feedback widget for granted users only (`FEEDBACK_MODE=granted`); **content editor never, for anyone** — refused at the API when `ENVIRONMENT=prod`, not merely disabled in config, so a grant that could never take effect cannot be issued. Access is DB-backed (`user_capabilities`) and managed from `/admin/users/[id]` (D20). Shipped as **#40**. ⚠️ Found while implementing: the widget's gating had been **cosmetic** — `FEEDBACK_MODE` was set on the web tier only and `hasPermission` returned true for `feedback.*` for any authenticated user, so the endpoint accepted feedback from anyone signed in. Those permission rows had no test coverage at all. Both fixed; conventions §23 | — | — |
-| O8 | **Chat production-readiness** — own work packet. The gateway is competently built (auth on connect, rooms, sequence numbers, image upload) but **has never once run successfully in production** — the Next.js rewrite proxy blocked WebSocket upgrades from day one, so all real-world behaviour is unverified. Redis adapter now fixed; transport half needs the custom domain. Needs: reconnection, delivery guarantees, offline/unread, push notifications, UX review | later | scaling >1 replica |
+| O8 | **Chat production-readiness** — the old rewrite proxy blocker was removed and API custom domains are live. Redis adapter is implemented. A separate fresh production WebSocket/reconnection/delivery drill is not established by release health checks or the general owner production confirmation. | later | scaling >1 replica |
 | O9 | ✅ **CLOSED 2026-08-15** — Round 1 app fixes shipped (shutdown, distributed throttler, socket adapter, DB pool) | — | — |
 | O10 | ✅ **CLOSED 2026-08-18** — Terraform complete: `envs/shared`, `envs/uat`, `envs/prod` all applied, both environments verify `No changes` against `main`. Phase 2B landed 2026-08-16 and prod has been serving since `prod-2026-08-17` | — | — |
-| O15 | ✅ **CLOSED 2026-08-24** — SDK swap shipped as **#139**. `uploads.service.ts` now uses a strategy pattern: `azure-blob-storage.provider.ts` (cloud) / `s3-storage.provider.ts` (local). Azure Blob accounts provisioned (`veervratuatuploads`, `veervratproduploads`). **Exercised on UAT 2026-08-24** — real upload + byte-identical read-back. ⚠️ One residual: `content-overrides.repository.ts` still imports `@aws-sdk/client-s3` directly, bypassing the abstraction | — | — |
+| O15 | **Closed:** #139 delivered Azure Blob uploads, exercised on UAT 2026-08-24. The later content-overrides fix also uses `StorageProvider`; conventions §28 records UAT read/write verification on 2026-09-05. The former direct-S3 residual is resolved, not pending. | — | — |
 | O16 | ✅ **CLOSED 2026-08-21** — ⚠️ **This was closed wrongly on 2026-08-16 as "built + proven". It was built; it was never proven.** The job had not applied a single migration in any environment, ever. CD started it with `az containerapp job start --image`, which replaces the whole container spec — dropping `command`, `args` and `env`. Each run executed the image's default entrypoint with no `DATABASE_URL`, migrated nothing, printed nothing, and exited 0; Container Apps recorded **Succeeded** and CD reported "migrations applied". Prod's database was created 2026-08-16 and held **no tables at all** until 2026-08-21 — five days, three "successful" migrations. Surfaced only when a real signup returned 500 with `The table 'public.users' does not exist`. Fixed in **#112**: no overrides, the job's configured image asserted first, and prisma's own output **required** before a migration is accepted. Written up as `documentation/21_Infrastructure-Conventions.md` §21, with the general rule — *a success status is a claim, not evidence.* Now genuinely proven: prod migrated 2026-08-21 (`All migrations have been successfully applied.`), and the next prod deploy verified itself through the new guard | — | — |
 | O17 | **ACR purge task** — retention policies are Premium-only; on Basic use a scheduled `acr purge`. Needed once CD pushes an image per merge | Claude | registry cost |
 | O11 | UAT data policy — seeded, never real users (per D11) | settled in principle | — |

@@ -1,0 +1,63 @@
+---
+title: Identity, Participation, and Role Ontology
+description: Persistent registered participation, Profile, authentication, capabilities, and contextual relationships.
+---
+
+# Identity, Participation, and Role Ontology
+
+> **Map:** Each registered Veervrat account represents exactly one persistent Vratarthi identity and automatically has a Profile. Authentication methods establish access to that same account. Curator, Moderator, and Admin are granted capabilities; Vratamitra roles arise through guidance relationships. Registration through an invitation does not accept the guidance relationship.
+
+## PD-011 — Identity, Participation, and Role Ontology
+
+### Registration, identity, and authentication
+
+Every registered Veervrat account represents exactly one Vratarthi. **Vratarthi status begins with registration and persists across login/logout.** Authentication determines whether someone is currently signed in; it neither creates nor removes that status. A registered Vratarthi browsing while logged out has Public Visitor access without losing their underlying Vratarthi identity.
+
+Registration, account identity, participation identity, and authenticated session state are distinct concepts. One account may have multiple authentication methods, all authenticating the same persistent account/Vratarthi identity. Different methods do not inherently create different Vratarthis.
+
+One real-world human may create multiple accounts; each represents an independent Vratarthi. Veervrat does not establish or enforce unique real-world identity per account, impose one account per human, or automatically merge accounts that may belong to the same human. A separate canonical Person entity is not currently needed. The self-Vratamitra prohibition in PD-009 applies at the account/identity level. No identity-verification, merging, or abuse-prevention mechanics follow from this rule.
+
+### Profile
+
+Every registered Vratarthi automatically has a Profile, including when optional personal details have not been supplied. Profile completion is not required for participation. Account identity and Profile are conceptually distinct; this does not require separate database tables. Actual fields, public visibility, editing permissions, and Profile UI remain deferred under DT-014.
+
+### Participation, capabilities, and contextual roles
+
+| Category | Confirmed meaning |
+| --- | --- |
+| Base participation identity | Vratarthi is the base participation identity of every registered Veervrat account. Public Visitor describes unsigned-in public access, including access by an already-registered Vratarthi. |
+| Explicitly granted platform capabilities | Curator, Moderator, and Admin are additional capabilities granted to Vratarthis. They may coexist with Vratarthi participation and with one another. |
+| Contextual, relationship-derived roles | Roles arise from relationships involving people, content, or activities; they do not inherently require separate platform-role assignments. |
+
+The PH-002 actor purposes are preserved:
+
+- **Vratamitra:** a Vratarthi supporting another Vratarthi's development through guidance. No separately granted platform-role membership is required; any Vratarthi may become another's Vratamitra through the relevant relationship.
+- **Primary Vratamitra:** continuing, broad, longitudinal guidance through the accepted Primary relationship in PD-007.
+- **Journey Vratamitra:** Journey-specific guidance under PD-008. Specific-person guidance arises through the accepted Journey relationship; Primary-derived guidance continues to use the accepted Primary relationship without separate Journey acceptance.
+- **Curator:** stewardship of canonical Veervrat knowledge/content and centrally curated resources.
+- **Moderator:** moderation of user-generated/community content and its appropriateness for different platform visibility contexts; exact scopes, visibility rules, actions, and permissions remain deferred.
+- **Admin:** broader operational/product-administration responsibility required to operate Veervrat; exact authority and permissions remain deferred.
+
+PD-007, PD-008, and PD-009 retain their eligibility, cardinality, lifecycle, multiplicity, and coexistence rules. A contextual relationship does not automatically grant unrestricted authority or permissions; those remain separate concerns under DT-002 and related permission records.
+
+**Author** (relationship to content authored) and **Commenter** (relationship to a comment/activity) are illustrative contextual-role examples only. They do not establish blogs, posts, comments, or any specific content feature. Content models remain for PH-005/PH-006.
+
+### Invitations and registration
+
+A person may be invited to join Veervrat. A Vratarthi may also invite someone to become their Primary or specific-person Journey Vratamitra. The intended recipient may already be registered or may not yet have an account, so a Vratamitra invitation may exist before recipient registration. This does not require a separate canonical Person entity.
+
+**Registration through a Vratamitra invitation does not establish the guidance relationship.** The recipient must explicitly accept that relationship invitation, consistently with PD-007 and PD-008. This requirement does not add separate Journey acceptance to Primary-derived guidance.
+
+### Supersession and deferred boundaries
+
+PD-011 supersedes [PD-010 (historical)](../02-actors-and-relationships/actor-inventory.mdx). It preserves the intention that every signed-in user is a Vratarthi and the established actor purposes/coexistence, while correcting the earlier literal implication that signing in creates participation identity or logging out removes it. Registration establishes the persistent identity. It also distinguishes granted capabilities from relationship-derived roles.
+
+DT-010 is resolved by this conceptual cluster. Remaining work is traceable separately: DT-005 covers authentication methods/providers, account-linking and return-to-context flows; DT-011 covers invitation delivery/matching/routing and UX; DT-009 retains invitation expiry; DT-008 retains notifications. DT-012 covers granting authority, scope, revocation, and operational mechanics for granted capabilities; DT-003/004 retain moderation and curation mechanics. DT-013 covers account deactivation/deletion, identity termination, retention, relationship/contribution implications, and account-management UX (PH-008, reconciled in PH-011).
+
+This cluster does not establish account-exit behavior, implementation data models, providers, token/session architecture, APIs, technical IDs, detailed permissions, or screens. Conceptually distinct does not mean separately persisted.
+
+## Explanatory diagram
+
+The D2 source projects selected PD-011 distinctions; MDX remains semantic truth. Boxes denote product concepts, not implementation entities or tables.
+
+<D2Diagram src="/03-ontology-and-domain-model/diagrams/identity-participation-and-roles.d2" alt="Registered account and Vratarthi identity, Profile, authentication methods, granted and contextual roles, and explicit invitation acceptance" />

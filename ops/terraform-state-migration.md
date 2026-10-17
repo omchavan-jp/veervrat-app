@@ -7,6 +7,13 @@ The CD workflow was restored to its prior `active` state, then a legitimate main
 verification run was started: [run 38120027391](https://github.com/omchavan-jp/veervrat-app/actions/runs/38120027391).
 Consult its actual job/health-check outcome before claiming end-to-end deployment verification.
 
+This is the historical copy/cutover record, not a current pending-deployment list. Subsequent
+scoped build/UAT writes, legacy retirement and the deliberate `prod-2026-10-12` production
+release passed; see [identity evidence](azure-identity-cutover.md) and
+[release verification](release-controls-rollout.md). The production configuration debt described
+below was the migration-time baseline; the later exact-ref production plan was clean.
+Original/recovery state remains restricted recovery material, not authorized cleanup clutter.
+
 ## Migration evidence
 
 The owner confirmed no other operator would run Terraform. The prior CD workflow state

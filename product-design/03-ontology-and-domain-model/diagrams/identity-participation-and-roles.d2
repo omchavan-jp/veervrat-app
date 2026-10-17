@@ -1,0 +1,30 @@
+# Explanatory projection of PD-011; MDX is semantic truth.
+# Product concepts, not database entities or persistence boundaries.
+direction: down
+grid-columns: 1
+
+identity: "Persistent identity and authentication" {
+  grid-columns: 2
+  grid-gap: 120
+  methods: "Authentication methods\nMultiple methods may be used" {class: platform}
+  account: "Registered account" {class: core}
+  profile: "Profile\nExists before optional details" {class: outcome}
+  vratarthi: "Vratarthi\nIdentity persists across logout" {class: process}
+  account -> vratarthi: "represents\nexactly one" {class: progression}
+  methods -> account: "authenticate\nsame account" {class: support}
+  vratarthi -> profile: "automatically has" {class: progression}
+}
+
+roles: "Role categories may coexist\nPermissions remain separate" {
+  grid-columns: 2
+  granted: "Granted capabilities\nCurator / Moderator / Admin" {class: process}
+  contextual: "Contextual roles\nArise from relationships\nIncludes Vratamitra guidance" {class: process}
+}
+identity.vratarthi -> roles: "may hold / participate in" {class: support}
+
+invitation: "Registration is distinct from relationship acceptance" {
+  direction: right
+  pending: "Vratamitra invitation\nMay precede recipient registration" {class: platform}
+  accepted: "Guidance relationship\nRegistration alone does not accept" {class: outcome}
+  pending -> accepted: "explicit acceptance" {class: progression}
+}
