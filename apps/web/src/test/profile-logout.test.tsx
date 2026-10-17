@@ -8,39 +8,40 @@ const mockState = vi.hoisted(() => ({
   logoutPending: false,
   toast: vi.fn(),
   queryClient: { setQueryData: vi.fn() },
+  // Flip to true to simulate a profile-load failure.
+  profileError: false,
 }));
 
+const successProfile = {
+  id: 'user-1',
+  email: 'vratarthi@example.com',
+  displayName: 'Vratarthi',
+  username: 'vratarthi',
+  avatarUrl: null,
+  gender: null,
+  dob: null,
+  language: 'en',
+  showLastActive: true,
+  showOnlineIndicator: true,
+  profilePrivate: false,
+  profileVisibility: {},
+  notificationPrefs: {},
+  tourResetAt: null,
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z',
+};
+
 vi.mock('@tanstack/react-query', () => ({
-  useQuery: () => ({
-    data: {
-      id: 'user-1',
-      email: 'vratarthi@example.com',
-      displayName: 'Vratarthi',
-      username: 'vratarthi',
-      avatarUrl: null,
-      gender: null,
-      dob: null,
-      language: 'en',
-      showLastActive: true,
-      showOnlineIndicator: true,
-      profilePrivate: false,
-      profileVisibility: {},
-      notificationPrefs: {},
-      tourResetAt: null,
-      createdAt: '2026-01-01T00:00:00.000Z',
-      updatedAt: '2026-01-01T00:00:00.000Z',
-    },
-    isLoading: false,
-    isError: false,
-    refetch: vi.fn(),
-  }),
+  useQuery: () =>
+    mockState.profileError
+      ? { data: undefined, isLoading: false, isError: true, refetch: vi.fn() }
+      : { data: successProfile, isLoading: false, isError: false, refetch: vi.fn() },
   useMutation: () => ({ mutate: vi.fn(), isPending: false }),
   useQueryClient: () => mockState.queryClient,
 }));
 
 vi.mock('next-intl', () => ({
-  useTranslations: (namespace: string) => (key: string) =>
-    `${namespace}.${key}`,
+  useTranslations: (namespace: string) => (key: string) => `${namespace}.${key}`,
 }));
 
 vi.mock('@/hooks/use-auth', () => ({
@@ -60,6 +61,7 @@ describe('mobile profile logout', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockState.logoutPending = false;
+    mockState.profileError = false;
   });
 
   it('uses the shared logout mutation and stays hidden at the desktop breakpoint', () => {
@@ -98,5 +100,23 @@ describe('mobile profile logout', () => {
       title: 'common.logoutError',
       variant: 'destructive',
     });
+  });
+
+  it('keeps settings and mobile logout available when profile loading fails', () => {
+    mockState.profileError = true;
+    render(<ProfilePage />);
+
+    // Settings link stays available (was previously hidden by the early return).
+    expect(screen.getByRole('link', { name: /profile\.editInSettings/i })).toBeInTheDocument();
+
+    // Mobile logout stays available and is still wired to the shared mutation.
+    const button = screen.getByRole('button', { name: 'common.nav.logout' });
+    expect(button).toHaveClass('md:hidden');
+    fireEvent.click(button);
+
+    expect(mockState.logoutMutate).toHaveBeenCalledWith(
+      undefined,
+      expect.objectContaining({ onError: expect.any(Function) }),
+    );
   });
 });
