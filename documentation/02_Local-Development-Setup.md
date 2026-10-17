@@ -2,9 +2,9 @@
 
 ## Prerequisites
 
-- **Node.js** >= 24
+- **Node.js** >= 20
 - **pnpm** (`npm install -g pnpm`)
-- **Docker** (for the local infrastructure services)
+- **Docker** (for PostgreSQL)
 - **Git**
 
 ## 1. Clone and install
@@ -21,7 +21,7 @@ docker compose up -d
 docker compose ps          # verify all are running
 ```
 
-This starts the local infrastructure services:
+This starts **six** containers, not just Postgres:
 
 | Service | Port | Notes |
 |---|---|---|
@@ -30,6 +30,7 @@ This starts the local infrastructure services:
 | `veervrat-redis` | **6380** | rate limits, account lockout, cache, Socket.IO adapter |
 | `veervrat-meilisearch` | 7700 | search (deployed nowhere — local only) |
 | `veervrat-minio` | 9000/9001 | S3-compatible object storage for uploads |
+| `veervrat-pgadmin` | 5050 | optional DB UI |
 
 ⚠️ **Port 5433, not the Postgres default 5432** — chosen so it does not collide with a
 system Postgres. `DATABASE_URL` in `.env.example` already matches.
@@ -70,16 +71,12 @@ Default mode is `off`, which returns 404 for every docs path.
 
 ## 4. Set up the database
 
-Generate the Prisma client and apply only migrations already checked into the repository:
+Generate the Prisma client and run migrations:
 ```bash
 cd apps/api
 npx prisma generate
-npx prisma migrate deploy
+npx prisma migrate dev
 ```
-
-`migrate deploy` does not create a migration. Do not use `prisma migrate dev` as part of
-initial local setup; it can generate a new migration when the Prisma schema differs from
-the migration history.
 
 Then **seed the reference content** — without it the app runs but is unusable, because there
 are no virtues, weaknesses or sentences to take a test against:
@@ -119,7 +116,7 @@ pnpm --filter api start:dev   # backend only
 | `pnpm format:check` | Check formatting without changing files |
 | `pnpm --filter api start:dev` | Start NestJS in watch mode |
 | `pnpm --filter web dev` | Start Next.js dev server |
-| `docker compose up -d` | Start local infrastructure services |
+| `docker compose up -d` | Start PostgreSQL |
 | `docker compose down` | Stop PostgreSQL (data persists) |
 | `docker compose down -v` | Stop PostgreSQL and delete data |
 
@@ -127,7 +124,7 @@ pnpm --filter api start:dev   # backend only
 | Command | What it does |
 |---|---|
 | `npx prisma generate` | Regenerate Prisma client after schema changes |
-| `npx prisma migrate deploy` | Apply checked-in migrations without creating a new one |
+| `npx prisma migrate dev --name <name>` | Create and apply a new migration |
 | `npx prisma migrate reset` | Reset database (drop all data, reapply migrations) |
 | `npx prisma studio` | Open Prisma Studio (visual DB editor) |
 | `npx prisma db push` | Push schema to DB without creating a migration (dev only) |

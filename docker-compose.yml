@@ -37,16 +37,16 @@ services:
   # MinIO community Docker image was discontinued Oct 2025, repo archived Apr 2026.
   # minio/minio:latest is the last published tag — no new versions but functional for local dev.
   minio:
-    image: bitnamilegacy/minio:latest
+    image: minio/minio:latest
     container_name: veervrat-minio
     restart: unless-stopped
     ports:
       - "9000:9000"
       - "9001:9001"
     environment:
-      MINIO_ACCESS_KEY: veervrat
-      MINIO_SECRET_KEY: veervrat_local
-      MINIO_DATA_DIR: /data
+      MINIO_ROOT_USER: veervrat
+      MINIO_ROOT_PASSWORD: veervrat_local
+    command: server /data --console-address ":9001"
     volumes:
       - minio_data:/data
 
