@@ -1013,6 +1013,7 @@
     "inviteCta": "Invite",
     "searchPlaceholder": "Search by name, username, or email…",
     "searching": "Searching…",
+    "searchError": "Search failed. Please try again.",
     "noResults": "No one found. Enter a full email to invite them to the platform.",
     "inviteByEmail": "Invite {email} to join Veervrat",
     "online": "online",
