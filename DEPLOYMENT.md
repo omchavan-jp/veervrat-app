@@ -784,7 +784,7 @@ Apps jobs cost nothing.
 ## Wiping an environment's users
 
 ⚠️ **The most destructive operation in this repository.** It removes every account and
-everything belonging to one. There is no undo short of a database restore (~10 minutes, and it
+user-linked PostgreSQL data. There is no undo short of a database restore (~10 minutes, and it
 restores to a *new* server — see the restore runbook below).
 
 **What it is for:** resetting a pre-launch environment — clearing test accounts before handing
@@ -802,6 +802,13 @@ transitively. **`cms_pages` is not in it** — `updated_by_id` carries no foreig
 terms and privacy documents survive, as does every seeded reference row (virtues, and the rest
 of the catalogue). After a wipe the environment is a working, content-complete install with no
 accounts, not an empty database.
+
+**Current scope limitation:** this job only truncates PostgreSQL `users` and the tables in its
+foreign-key dependency closure. It does not clear uploaded blobs, Redis data/queues, logs,
+backups, or independent PostgreSQL records outside that closure. It is not a complete
+account-data erasure across the environment. The intended cleanup and retention scope, and
+any resulting job changes, are tracked in [issue #383](https://github.com/omchavan-jp/veervrat-app/issues/383).
+Do not assume retained logs or backups should be deleted as part of a reset.
 
 ### Three guards
 
