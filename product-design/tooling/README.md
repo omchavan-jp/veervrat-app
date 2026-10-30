@@ -59,7 +59,7 @@ The validator checks phase IDs and statuses, move-history phase references and c
 
 See [DIAGRAMS.md](DIAGRAMS.md) for the diagram styling and review workflow.
 
-When `.d2` files exist, validation requires the `d2` CLI. On macOS, install it with `brew install d2`; verify with `d2 version`. The official D2 install script also supports previewing its actions with `curl -fsSL https://d2lang.com/install.sh | sh -s -- --dry-run` before installation.
+When `.d2` files exist, validation renders them if the `d2` CLI is installed. If it is absent, the validator reports a skipped D2 check and can still pass its other checks. Both `pnpm dev` and `pnpm build --webpack` run diagram generation first and require the CLI. The web Dockerfile pins D2 to `v0.9.0`; local generation uses the installed version. On macOS, install it with `brew install d2`; verify with `d2 version`. The official D2 install script also supports previewing its actions with `curl -fsSL https://d2lang.com/install.sh | sh -s -- --dry-run` before installation.
 
 `pnpm build --webpack` generates the diagram assets and manifest automatically. The
 palette and semantic D2 classes live in `scripts/diagram-theme.mjs`; apply a class
@@ -83,3 +83,26 @@ and API apps, set `PRODUCT_DOCS_MODE=granted` in both app environments, and gran
 `PRODUCT_DOCS_VIEW` through `/admin/users/[id]`. The web route reads the local
 export from `product-design/tooling/out` unless `PRODUCT_DOCS_STATIC_ROOT` is
 set. No separate renderer server is needed.
+
+## Code boundaries
+
+- [App](./app/README.md): renderer layouts, routes and diagram viewer.
+- [Library](./lib/README.md): content source and governance JSON helpers.
+- [Scripts](./scripts/README.md): validation, decision references, deferred topics and diagram generation.
+
+## Interface
+
+- The Next configuration enables Fumadocs MDX, a `/product-docs` base path and static export. [next.config.mjs:withMDX] [next.config.mjs:basePath] [next.config.mjs:output]
+- PostCSS loads the Tailwind plugin. [postcss.config.mjs:plugins]
+
+## Invariants
+
+- React strict mode and trailing slashes are enabled for the export. [next.config.mjs:reactStrictMode] [next.config.mjs:trailingSlash]
+
+## Side Effects
+
+- The configuration is consumed by Next and PostCSS during build or development. [next.config.mjs:withMDX] [postcss.config.mjs:plugins]
+
+## Verification
+
+Run `pnpm validate` and `pnpm build --webpack` from this directory when checking the renderer and its sources.
