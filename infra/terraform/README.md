@@ -39,16 +39,17 @@ Three commands you'll use, always in this order, always from inside an
 
 ```
 envs/
-  shared/   Resource group veervrat-shared — container registry, GitHub OIDC
-            federated credentials, tfstate storage account. Cross-environment.
+  shared/   Uses existing veervrat-shared resource group and tfstate storage
+            account; manages registry, GitHub OIDC identities/credentials,
+            state/record containers, scoped grants and cost guard.
             (No key vault: secrets are per-environment. The shared vault created
             in Phase 1 was a mistake and was deleted the same day.)
   uat/      Live since 2026-08-16. Calls modules/environment.
   prod/     Live since 2026-08-17. Calls the same module.
 bootstrap/
-  create-state-backend.sh   One-time setup, already run. Re-running is safe
-                             (every step is create-if-not-exists) but should
-                             not be necessary again.
+  create-state-backend.sh   Legacy one-time setup, already run. Creates the
+                             account and legacy tfstate container; current
+                             scoped containers are managed by envs/shared.
 ```
 
 The web image now includes a build-time Fumadocs static export outside its public
@@ -101,3 +102,9 @@ nameservers, the zone held only its auto-created NS and SOA pair, and all four
 live hostnames resolved — and still resolve — via CNAMEs that never touched it.
 Removing it required deleting the `prevent_destroy` lifecycle block; that
 friction was working as intended.
+
+## Subdirectories & Boundaries
+
+- [Bootstrap](./bootstrap/README.md): state backend setup.
+- [Environments](./envs/README.md): shared, UAT and production roots.
+- [Modules](./modules/README.md): reusable environment resources.
