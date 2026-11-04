@@ -7,6 +7,7 @@ import {
   TestNotSubmittedException,
   AccessDeniedException,
   EntityNotFoundException,
+  ValidationException,
 } from '../../common/exceptions/app.exceptions';
 
 const WEAKNESS_ID = 'wid-1';
@@ -70,6 +71,7 @@ function makeRepo(overrides: Record<string, unknown> = {}) {
   return {
     findDraftByUserAndWeakness: vi.fn().mockResolvedValue(null),
     countSentencesForWeakness: vi.fn().mockResolvedValue(10),
+    findSentenceIdsForWeakness: vi.fn().mockResolvedValue(['s1', 's2']),
     createDraft: vi.fn().mockResolvedValue(DRAFT_TEST),
     findById: vi.fn().mockResolvedValue(OWNED_DRAFT),
     countAnswers: vi.fn().mockResolvedValue(3),
@@ -144,6 +146,81 @@ describe('TestsService — saveAnswers', () => {
     const result = await service.saveAnswers(USER_ID, TEST_ID, answers);
     expect(repo.upsertAnswers).toHaveBeenCalledWith(TEST_ID, answers);
     expect(result.answeredCount).toBe(3);
+  });
+
+  it('NEGATIVE: rejects a sentence outside the weakness and writes nothing', async () => {
+    const repo = makeRepo();
+    const service = makeService(repo);
+    const answers = [
+      { sentenceId: 's1', score: 2 },
+      { sentenceId: 'foreign', score: 1 },
+    ];
+    await expect(service.saveAnswers(USER_ID, TEST_ID, answers)).rejects.toThrow(
+      ValidationException,
+    );
+    expect(repo.upsertAnswers).not.toHaveBeenCalled();
+  });
+
+  it('POSITIVE: accepts a partial batch of sentences inside the weakness', async () => {
+    const repo = makeRepo();
+    const service = makeService(repo);
+    const answers = [{ sentenceId: 's2', score: 4 }];
+    await expect(service.saveAnswers(USER_ID, TEST_ID, answers)).resolves.toEqual({
+      id: TEST_ID,
+      answeredCount: 3,
+    });
+    expect(repo.upsertAnswers).toHaveBeenCalledWith(TEST_ID, answers);
+  });
+
+  it('POSITIVE: accepts duplicate sentence IDs in one batch', async () => {
+    const repo = makeRepo();
+    const service = makeService(repo);
+    const answers = [
+      { sentenceId: 's1', score: 1 },
+      { sentenceId: 's1', score: 3 },
+    ];
+    await expect(service.saveAnswers(USER_ID, TEST_ID, answers)).resolves.toEqual({
+      id: TEST_ID,
+      answeredCount: 3,
+    });
+    expect(repo.upsertAnswers).toHaveBeenCalledWith(TEST_ID, answers);
+  });
+
+  it('POSITIVE: keeps saving a draft whose stored answer left the weakness', async () => {
+    const repo = makeRepo({
+      findById: vi.fn().mockResolvedValue({
+        ...OWNED_DRAFT,
+        answers: [{ id: 'a1', sentenceId: 'moved-out', score: 2 }],
+      }),
+    });
+    const service = makeService(repo);
+    const answers = [
+      { sentenceId: 'moved-out', score: 2 },
+      { sentenceId: 's1', score: 4 },
+    ];
+    await expect(service.saveAnswers(USER_ID, TEST_ID, answers)).resolves.toEqual({
+      id: TEST_ID,
+      answeredCount: 3,
+    });
+    expect(repo.upsertAnswers).toHaveBeenCalledWith(TEST_ID, answers);
+  });
+
+  it('NEGATIVE: rejects a changed score for a stored answer that left the weakness', async () => {
+    const repo = makeRepo({
+      findById: vi.fn().mockResolvedValue({
+        ...OWNED_DRAFT,
+        answers: [{ id: 'a1', sentenceId: 'moved-out', score: 2 }],
+      }),
+    });
+    const service = makeService(repo);
+    const answers = [
+      { sentenceId: 'moved-out', score: 4 },
+      { sentenceId: 's1', score: 4 },
+    ];
+    await expect(service.saveAnswers(USER_ID, TEST_ID, answers)).rejects.toThrow(
+      ValidationException,
+    );
+    expect(repo.upsertAnswers).not.toHaveBeenCalled();
   });
 
   it('NEGATIVE: throws AccessDeniedException for wrong owner', async () => {
