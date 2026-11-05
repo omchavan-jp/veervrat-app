@@ -6,7 +6,7 @@ The primary user of the app — a person working to overcome their weaknesses an
 _Avoid_: user, student, mentee
 
 **Vratmitra**
-A human mentor who guides a vratarthi. Always a real person, never AI. Can be scoped globally (one per vratarthi at a time) or to a specific journey.
+A human mentor who guides a vratarthi. Always a real person, never AI. Can be scoped as primary (one per vratarthi at a time) or to a specific journey.
 _Avoid_: mentor, coach, guide
 
 **Weakness** · मराठी: **उणीव** (sing.) / **उणीवा** (pl.)
@@ -51,12 +51,12 @@ _Avoid_: final test, capstone, milestone
 Collective shorthand for Exposure + Resolution + Challenge. The three content types that make up the active work inside a journey.
 _Avoid_: content, exercises, program items
 
-**Global Vratmitra**
+**Primary Vratmitra**
 The default vratmitra a vratarthi has selected for their account. At most one at a time. Automatically applied to new journeys unless overridden. Changing it triggers a migration UI for existing journeys.
-_Avoid_: default mentor, primary mentor
+_Avoid_: default mentor, global vratmitra, overall vratmitra, primary mentor
 
 **Journey Vratmitra**
-A vratmitra assigned specifically to one journey. Independent of the global VM. Can be the same person or different. Selected by the vratarthi (invitation model).
+A vratmitra assigned specifically to one journey. Independent of the primary VM. Can be the same person or different. Selected by the vratarthi (invitation model).
 _Avoid_: journey mentor, local mentor
 
 **Custom ERC**
@@ -112,7 +112,7 @@ A one-way relationship where one user subscribes to another VA's public activity
 _Avoid_: friend, connect, subscribe
 
 **VM Invitation**
-The act of a vratarthi inviting another user to become their vratmitra (global or journey-scoped). Requires explicit acceptance by the invitee. Relationship is `pending` until accepted, `active` once accepted.
+The act of a vratarthi inviting another user to become their vratmitra (primary or journey-scoped). Requires explicit acceptance by the invitee. Relationship is `pending` until accepted, `active` once accepted.
 _Avoid_: VM request, mentor request
 
 **Dormant**

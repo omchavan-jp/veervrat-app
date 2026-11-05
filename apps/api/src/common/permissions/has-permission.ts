@@ -163,7 +163,7 @@ function checkLayerOne(
       const { attempt, journey } = resource;
       // Own results
       if (attempt.userId === user.id) return true;
-      // Global VM for the test owner
+      // Primary VM for the test owner
       if (isVm(user) && journey !== null && isGlobalVmForJourney(user, journey)) return true;
       // Journey VM (assigned to a journey belonging to the test owner)
       if (isVm(user) && journey !== null && isActiveJourneyVm(user, journey)) return true;
@@ -214,7 +214,7 @@ function checkLayerOne(
       if (log.isDraft) return false;
       // Public, published entries are visible to anyone (incl. guests).
       if (log.visibility === ExperienceVisibility.PUBLIC) return true;
-      // A VM assigned to (or global VM for) the entry's journey can view it (spec/14).
+      // A VM assigned to (or primary VM for) the entry's journey can view it (spec/14).
       if (isVm(user) && journey !== null && isActiveJourneyVm(user, journey)) return true;
       if (isVm(user) && journey !== null && isGlobalVmForJourney(user, journey)) return true;
       // FRIENDS tier = mutual follow (spec/10). The service resolves friendship and
@@ -314,7 +314,7 @@ function checkLayerOne(
       return isVm(user) && resource.relationship.vmId === user.id;
     }
 
-    // ── Weakness / challenge / global VM ────────────────────────────────────
+    // ── Weakness / challenge / primary VM ────────────────────────────────────
 
     case 'weakness.attach': {
       if (resource.type !== 'journey') return false;

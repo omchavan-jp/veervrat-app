@@ -207,7 +207,7 @@ _Last updated: 2026-06-03 | 74 screens_
 ### My Vratmitras Page (`/my-vratmitras`)
 - **Layout:** two-panel — VM list left, detail right
 - **Left panel:** avatar, name, online indicator, scope label per VM. Link to VA Actions at top. No VMs: "Invite a vratmitra" + philosophy modal link.
-- **Right panel (selected):** avatar (large), name, online indicator, last active, Global VM badge, journey list with [Open] links, actions ([View Profile] [Open Chat] [Global VM Settings] [Remove]), chat email toggle.
+- **Right panel (selected):** avatar (large), name, online indicator, last active, Primary VM badge, journey list with [Open] links, actions ([View Profile] [Open Chat] [Primary VM Settings] [Remove]), chat email toggle.
 - **Right panel (none selected):** "Select a vratmitra from the list."
 
 ### Chat Thread Page
@@ -219,12 +219,12 @@ _Last updated: 2026-06-03 | 74 screens_
 
 ### VM Invitation Flow
 - **Entry:** "Invite" from My Vratmitras, user search, or journey settings
-- **Steps:** user search (name/username/email) → select user → choose scope (Global VM / this journey) → send invitation
+- **Steps:** user search (name/username/email) → select user → choose scope (Primary VM / this journey) → send invitation
 - **Non-platform user:** enter email → platform sends invite email with VM context pre-filled → invitee signs up → sees VM invitation to accept
 - **Pending state:** shown in Invitations section with status, "Send reminder" (one allowed), "Cancel" action
 
-### Global VM Swap Migration UI
-- **Entry:** Settings → Vratmitra → "Change global VM", or My Vratmitras → [Global VM Settings] → "Change"
+### Primary VM Swap Migration UI
+- **Entry:** Settings → Vratmitra → "Change primary VM", or My Vratmitras → [Primary VM Settings] → "Change"
 - **Step 1 — Outgoing VM journeys:** list of journeys assigned to outgoing VM. Per-journey: "Keep [name]" / "Remove" radios. Batch: "Keep all" / "Remove all".
 - **Step 2 — Incoming VM assignment:** same journey list. Per-journey: "Assign [new name]" / "Keep current" / "No VM" radios. Batch: "Assign to all" / "Leave as-is".
 - **Confirmation:** change summary before applying. "Confirm changes" button.
@@ -372,7 +372,7 @@ _Last updated: 2026-06-03 | 74 screens_
   2. **Privacy:** last active toggle (everyone/followers/hidden), online indicator toggle, full profile privacy toggle, per-field visibility toggles
   3. **Language:** UI language selector (EN/MR)
   4. **Notifications:** per-event-type email opt-out toggles, chat email global toggle, per-VM chat toggle (links to My Vratmitras)
-  5. **Vratmitra:** current global VM (view/change/remove → migration UI), "Restart UI tour" button
+  5. **Vratmitra:** current primary VM (view/change/remove → migration UI), "Restart UI tour" button
   6. **Account:** change password (credential only), connected accounts (Google connect/disconnect), "Delete account" (→ anonymisation confirmation flow)
 
 ### Email Change Verification

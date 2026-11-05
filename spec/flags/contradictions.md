@@ -2,7 +2,7 @@
 _Last updated: 2026-05-31_
 
 ## Active
-- ⚠ **Global VM scoping** — Permissions R4 — earlier matrix said VM sees "assigned only." Corrected: global VM sees all VA data. Journey-level-only VM sees assigned journeys only. Both can coexist for the same VA.
+- ⚠ **Primary VM scoping** — Permissions R4 — earlier matrix said VM sees "assigned only." Corrected: primary VM sees all VA data. Journey-level-only VM sees assigned journeys only. Both can coexist for the same VA.
 
 
 - ⚠ **"No hierarchy display" vs. "verification mechanism"** — User Roles R1 — unresolved. Stat-based credibility must be surfaced without creating perceived tiers. Deferred.

@@ -6,9 +6,9 @@ Manages global and journey-scoped vratmitra relationships and rosters. [vm-relat
 
 ## Interface
 
-- Session-protected endpoints list a user’s VMs and vratarthis, remove a global VM and withdraw a journey VM. [vm-relationships.controller.ts:VmRelationshipsController]
+- Session-protected endpoints list a user’s VMs and vratarthis, remove a primary VM and withdraw a journey VM. [vm-relationships.controller.ts:VmRelationshipsController]
 - Exports relationship context, assignment and relationship checks for other modules. [vm-relationships.repository.ts:getVratarthiVmContext] [vm-relationships.repository.ts:hasActiveRelationshipBetween]
-- [dto](./dto/README.md): Defines the global VM removal cascade request.
+- [dto](./dto/README.md): Defines the primary VM removal cascade request.
 
 ## Invariants
 

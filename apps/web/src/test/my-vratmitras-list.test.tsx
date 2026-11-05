@@ -54,8 +54,8 @@ describe('MyVratmitrasClient — the people walking alongside you', () => {
   });
 
   // Which kind of relationship someone holds decides what they can see, so the badge is not
-  // decoration — a global vratmitra reaches every journey, a journey one reaches exactly one.
-  it('distinguishes a global vratmitra from a journey-scoped one', async () => {
+  // decoration — a primary vratmitra reaches every journey, a journey one reaches exactly one.
+  it('distinguishes a primary vratmitra from a journey-scoped one', async () => {
     resolveWith([
       vm({ id: 'g', displayName: 'Global Person', username: 'g', scope: 'GLOBAL' }),
       vm({ id: 'j', displayName: 'Journey Person', username: 'j', scope: 'JOURNEY' }),
@@ -67,7 +67,7 @@ describe('MyVratmitrasClient — the people walking alongside you', () => {
     // The domain term, not "Mentor". `spec/CONTEXT.md` is canonical on this, and the onboarding
     // has a whole section titled "Why vratmitra, not mentor" — which the badges used to
     // contradict two screens later.
-    expect(screen.getByText('Global Vratmitra')).toBeInTheDocument();
+    expect(screen.getByText('Primary Vratmitra')).toBeInTheDocument();
     expect(screen.getByText('Journey Vratmitra')).toBeInTheDocument();
   });
 

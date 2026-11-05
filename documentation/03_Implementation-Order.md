@@ -250,10 +250,10 @@ Branch: `feat/vm-relationships`
 **RESEARCH PHASE — do this before anything else:**
 Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
 
-/opsx:propose "Implement the VM relationship system. Backend: POST /api/v1/invitations (send VM or platform invitation — creates invite token, sends email via EmailModule), POST /api/v1/invitations/:token/accept, POST /api/v1/invitations/:token/decline, DELETE /api/v1/invitations/:id (cancel). VmRelationship CRUD: assign global VM, remove global VM (triggers migration payload — decide what to cascade), assign journey VM, remove journey VM. Permission checks: vm_invitation.send, vm_invitation.accept, vm_invitation.cancel, vm_invitation.decline. Follow spec/decisions/13_user-search.md invitation spec and spec/decisions/04_lifecycle.md VM relationship lifecycle."
+/opsx:propose "Implement the VM relationship system. Backend: POST /api/v1/invitations (send VM or platform invitation — creates invite token, sends email via EmailModule), POST /api/v1/invitations/:token/accept, POST /api/v1/invitations/:token/decline, DELETE /api/v1/invitations/:id (cancel). VmRelationship CRUD: assign primary VM, remove primary VM (triggers migration payload — decide what to cascade), assign journey VM, remove journey VM. Permission checks: vm_invitation.send, vm_invitation.accept, vm_invitation.cancel, vm_invitation.decline. Follow spec/decisions/13_user-search.md invitation spec and spec/decisions/04_lifecycle.md VM relationship lifecycle."
 ```
 
-**Implement:** `InvitationsModule`, `VmRelationshipsModule`, invite token generation, email sending, accept/decline/cancel flows, VM migration payload for global VM swap.
+**Implement:** `InvitationsModule`, `VmRelationshipsModule`, invite token generation, email sending, accept/decline/cancel flows, VM migration payload for primary VM swap.
 **Read first:** `spec/04`, `spec/05`, `spec/13`, `spec/01`, `doc/Email-Strategy`, `doc/Backend Conventions`, `doc/Testing-Strategy`
 
 ---
@@ -571,12 +571,12 @@ Branch: `feat/e2e-tests`
 **RESEARCH PHASE — do this before anything else:**
 Read every file listed under "Read first" below, then inspect current state of files the change will touch. Only then run the propose command.
 
-/opsx:propose "Implement the 10 critical E2E flows from documentation/16_Testing-Strategy.md using Playwright. Set up Playwright config, test fixtures (seed test DB before each suite), and implement all 10 flows: (1) signup→onboarding→test→report, (2) journey start→ERC select→check-in, (3) VM invitation→accept→suggest ERC→VA accepts→submit→VM approves, (4) non-platform VM invite→signup via link→accept, (5) global VM swap migration, (6) custom ERC→review→approve, (7) blog create→comment→hide→moderator delete, (8) admin override journey state→verify audit log, (9) guest browse→soft prompt→signup, (10) draft test→resume→complete."
+/opsx:propose "Implement the 10 critical E2E flows from documentation/16_Testing-Strategy.md using Playwright. Set up Playwright config, test fixtures (seed test DB before each suite), and implement all 10 flows: (1) signup→onboarding→test→report, (2) journey start→ERC select→check-in, (3) VM invitation→accept→suggest ERC→VA accepts→submit→VM approves, (4) non-platform VM invite→signup via link→accept, (5) primary VM swap migration, (6) custom ERC→review→approve, (7) blog create→comment→hide→moderator delete, (8) admin override journey state→verify audit log, (9) guest browse→soft prompt→signup, (10) draft test→resume→complete."
 ```
 
 **Implement:** Playwright config, test fixtures, all 10 E2E flows.
 **Read first:** `doc/Testing-Strategy`, `spec/27` (all relevant screens), `doc/Platform-Engineering-Standard`
-**Depends on:** Items 36 & 37 must be built first — E2E flow (5) "global VM swap migration" exercises Item 37, and flows assert email/notification side-effects covered by Item 36.
+**Depends on:** Items 36 & 37 must be built first — E2E flow (5) "primary VM swap migration" exercises Item 37, and flows assert email/notification side-effects covered by Item 36.
 
 ---
 
@@ -604,7 +604,7 @@ git checkout -b feat/notification-email dev
 
 ---
 
-### 37. Global VM change/migration + Restart tour [FULL] ✅ DONE
+### 37. Primary VM change/migration + Restart tour [FULL] ✅ DONE
 Branch: `feat/global-vm-migration`
 Pays back: Deferral Ledger #31 (Account-settings Section 5 — spec/26 §5; cascade rules now pinned in spec/26 R2).
 
@@ -612,7 +612,7 @@ Pays back: Deferral Ledger #31 (Account-settings Section 5 — spec/26 §5; casc
 **RESEARCH PHASE — do this before anything else:**
 Read every file listed under "Read first", then inspect vm-relationships + journeys modules and the settings page. Only then propose.
 
-/opsx:propose "Implement Account Settings Section 5 (Vratmitra settings) per spec/26 R2. Backend: extend global-VM removal into a change/migration flow with an explicit cascade choice (keep | unassign) over the outgoing VM's journey assignments (spec/04: pending approvals left pending); 'change' = remove + send a fresh global invite (explicit acceptance, no silent reassignment); notify outgoing VM + VA via VM_WITHDREW. Add a 'Restart tour' reset (clears the contextual-walkthrough seen-flag without resetting onboardingCompletedAt). Frontend: Section 5 in /settings — view current global VM, change (migration UI with cascade choice), remove, and Restart tour."
+/opsx:propose "Implement Account Settings Section 5 (Vratmitra settings) per spec/26 R2. Backend: extend global-VM removal into a change/migration flow with an explicit cascade choice (keep | unassign) over the outgoing VM's journey assignments (spec/04: pending approvals left pending); 'change' = remove + send a fresh global invite (explicit acceptance, no silent reassignment); notify outgoing VM + VA via VM_WITHDREW. Add a 'Restart tour' reset (clears the contextual-walkthrough seen-flag without resetting onboardingCompletedAt). Frontend: Section 5 in /settings — view current primary VM, change (migration UI with cascade choice), remove, and Restart tour."
 ```
 
 **Implement:** global-VM change/migration endpoint(s) + cascade, restart-tour reset, settings Section 5 UI, tests (auth matrix + cascade branches).

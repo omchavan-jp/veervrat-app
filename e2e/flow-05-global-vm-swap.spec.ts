@@ -9,11 +9,11 @@ import {
   sampleSentenceWeakness,
 } from './helpers/db';
 
-// Flow 5: global VM swap → migration with the keep/unassign cascade choice (Item 37).
-// A VA gets a global VM + a journey assignment from that VM, then removes the global VM with
+// Flow 5: primary VM swap → migration with the keep/unassign cascade choice (Item 37).
+// A VA gets a primary VM + a journey assignment from that VM, then removes the primary VM with
 // cascade=unassign and confirms both the global relationship and the journey assignment end
 // (the migration), and pending approvals are left intact.
-test.describe('Flow 5: global VM swap → migration', () => {
+test.describe('Flow 5: primary VM swap → migration', () => {
   const va = makeUser('f5va');
   let journeyId: string;
 
@@ -23,7 +23,7 @@ test.describe('Flow 5: global VM swap → migration', () => {
 
   test.afterAll(() => deleteUserByEmail(va.email));
 
-  test('VA with a global VM (also a journey VM) removes them with unassign cascade', async () => {
+  test('VA with a primary VM (also a journey VM) removes them with unassign cascade', async () => {
     const { sentenceId, weaknessId } = sampleSentenceWeakness();
     const { ctx, csrf } = await loginApi(va);
 
@@ -78,7 +78,7 @@ test.describe('Flow 5: global VM swap → migration', () => {
       ),
     ).toBe('1');
 
-    // --- The swap: remove the global VM with the unassign cascade (Item 37) ---
+    // --- The swap: remove the primary VM with the unassign cascade (Item 37) ---
     const va2 = await loginApi(va);
     const remove = await va2.ctx.delete('/api/v1/vm-relationships/global', {
       headers: apiHeaders(va2.csrf),

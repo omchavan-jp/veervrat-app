@@ -11,7 +11,7 @@ Guest-accessible platform statistics aggregate four counts with Redis caching. [
 ## Invariants
 
 - Practice check-ins count DONE and PARTIAL; tests count non-drafts. Cache TTL is 3600 seconds and Redis failures fall back to database results. [stats.repository.ts:getPlatformStats] [stats.service.ts:getPlatformStats]
-- VM counts use distinct vmId values from global VM relationships of any state, excluding journey-only assignments. VA role counts do not filter deleted or suspended users. [stats.repository.ts:getPlatformStats]
+- VM counts use distinct vmId values from primary VM relationships of any state, excluding journey-only assignments. VA role counts do not filter deleted or suspended users. [stats.repository.ts:getPlatformStats]
 
 ## Side Effects
 

@@ -27,7 +27,7 @@ VA and VM acting as participants. A user who is also admin holds these only for 
 | Permission | VA (own) | VM (assigned journey) |
 |---|---|---|
 | `journey.create` | ✅ | ❌ |
-| `journey.view` | ✅ own | ✅ assigned only (journey VM) / ✅ all VA's journeys (global VM) |
+| `journey.view` | ✅ own | ✅ assigned only (journey VM) / ✅ all VA's journeys (primary VM) |
 | `journey.pause` | ✅ own | ❌ |
 | `journey.complete` | ✅ own (submit) | ✅ assigned (approve) |
 | `erc.select` | ✅ own journey | ❌ |
@@ -64,7 +64,7 @@ VA and VM acting as participants. A user who is also admin holds these only for 
 | `vm_invitation.cancel` | ✅ (own pending invites) | ❌ |
 | `vm_invitation.decline` | ❌ | ✅ (as invitee) |
 | `vm_relationship.withdraw` | ❌ | ✅ (own assignments) |
-| `global_vm.view_va_guidance` | ❌ | ✅ (assigned VA only, global VM only) |
+| `global_vm.view_va_guidance` | ❌ | ✅ (assigned VA only, primary VM only) |
 | `feedback.create` | ⚙️ capability-gated (see below) | ⚙️ capability-gated (see below) |
 | `feedback.read` | ⚙️ capability-gated (see below) | ⚙️ capability-gated (see below) |
 | `feedback.upvote` | ⚙️ capability-gated (see below), one per item | ⚙️ capability-gated (see below), one per item |
@@ -124,11 +124,11 @@ Acting on platform copy through the dev-only in-context content editor.
 | `content.edit` | Only users holding the `CONTENT_EDIT` capability (`user_capabilities`, granted from `/admin/users/[id]`). **Not** implied by any role, including admin (least privilege for an outside content editor). The environment must also allow it: refused outright when `ENVIRONMENT=prod` (O7), so a grant that could never take effect cannot be issued. Enforced via `hasPermission(user, { type: 'platform', grants, featureMode }, 'content.edit')`; publish actions are audit-logged. Was an env allowlist (`CONTENT_EDITOR_USER_IDS`) until 2026-08-21 — see conventions §23. |
 
 ### Scoping Rules
-- **Global VM**: sees all of a VA's journeys, test results, experience logs — full picture. When also assigned as journey VM for a specific journey, their role in that journey is to interact specifically around it, but their view scope remains global.
-- **Journey-level VM only** (not global VM): sees only the journey(s) they are explicitly assigned to. Nothing else.
-- A VA can have both simultaneously: one global VM (full view) and one or more journey-level VMs (scoped view per journey).
+- **Primary VM**: sees all of a VA's journeys, test results, experience logs — full picture. When also assigned as journey VM for a specific journey, their role in that journey is to interact specifically around it, but their view scope remains global.
+- **Journey-level VM only** (not primary VM): sees only the journey(s) they are explicitly assigned to. Nothing else.
+- A VA can have both simultaneously: one primary VM (full view) and one or more journey-level VMs (scoped view per journey).
 - VM role alone (without assignment) grants nothing.
-- VA test results visible to: VA (own), global VM, journey VMs (for their assigned journey's relevant tests), admin. Not moderators.
+- VA test results visible to: VA (own), primary VM, journey VMs (for their assigned journey's relevant tests), admin. Not moderators.
 - Chat: permanently private between VA and VM. Admin cannot view chat (v1).
 - `admin.override_journey_state` is an emergency escape hatch — all uses audit-logged.
 

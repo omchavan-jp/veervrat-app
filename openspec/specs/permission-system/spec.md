@@ -26,7 +26,7 @@ The system SHALL provide a pure function `hasPermission(user, resource, action)`
 - **WHEN** a VRATMITRA user calls `hasPermission` with action `journey.view` and the journey has no `JourneyVmAssignment` matching the user
 - **THEN** the function returns `false`
 
-#### Scenario: Global VM can view all journeys of their assigned VA
+#### Scenario: Primary VM can view all journeys of their assigned VA
 - **WHEN** a VRATMITRA user calls `hasPermission` with action `journey.view`, a global `VmRelationship` exists with `vmId` equal to the user's `id` and `state = ACTIVE`, and the journey belongs to the VA in that relationship
 - **THEN** the function returns `true`
 
@@ -118,7 +118,7 @@ The system SHALL provide a pure function `hasPermission(user, resource, action)`
 - **WHEN** a VRATARTHI user calls `hasPermission` with action `test.view_results` and the attempt's `userId` equals the user's `id`
 - **THEN** the function returns `true`
 
-#### Scenario: Global VM can view test results of their assigned VA
+#### Scenario: Primary VM can view test results of their assigned VA
 - **WHEN** a VRATMITRA user calls `hasPermission` with action `test.view_results` and a global `VmRelationship` exists linking them to the test attempt's owner
 - **THEN** the function returns `true`
 

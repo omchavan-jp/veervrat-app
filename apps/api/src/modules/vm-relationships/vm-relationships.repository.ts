@@ -119,7 +119,7 @@ export class VmRelationshipsRepository {
   }
 
   // Ends every active journey assignment held by `vmId` on `vratarthiId`'s journeys — the
-  // `unassign` cascade of a global VM removal (spec/26 R2). Pending approvals are left
+  // `unassign` cascade of a primary VM removal (spec/26 R2). Pending approvals are left
   // untouched (no ERC mutation here). Returns the number of assignments ended.
   async endJourneyAssignmentsForVm(vmId: string, vratarthiId: string): Promise<number> {
     const result = await this.prisma.journeyVmAssignment.updateMany({
@@ -133,7 +133,7 @@ export class VmRelationshipsRepository {
     return result.count;
   }
 
-  // Aggregates a vratarthi's VM context: their active global VM (if any) and every
+  // Aggregates a vratarthi's VM context: their active primary VM (if any) and every
   // active journey VM assignment across their journeys. Shaped for permission checks
   // that aren't tied to a single journey (e.g. test result viewing — spec/05
   // test.view_results: owner + their global/journey VMs).
@@ -159,9 +159,9 @@ export class VmRelationshipsRepository {
   }
 
   // Journeys this user is the assigned *journey* VM for. This is the scope of the VM
-  // guidance/approval queue — strictly per-journey assignment, NOT global VM (spec/22
+  // guidance/approval queue — strictly per-journey assignment, NOT primary VM (spec/22
   // flag: "scope the approval queue strictly to journeys this VM is assigned to — not
-  // all VAs"). A global VM views VA data elsewhere; approval requires journey assignment
+  // all VAs"). A primary VM views VA data elsewhere; approval requires journey assignment
   // (erc.approve_closure / journey.complete are "assigned journey VM" in spec/05).
   async getVmAssignedJourneys(vmId: string): Promise<{ journeyId: string; vratarthiId: string }[]> {
     const rows = await this.prisma.journeyVmAssignment.findMany({

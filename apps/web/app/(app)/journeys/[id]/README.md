@@ -13,7 +13,7 @@ Journey detail UI with editable title, state actions, ERC counts, activity, and 
 
 - Title blur saves a trimmed nonempty title only when the raw edit differs from journey.title; Enter triggers blur. [apps/web/app/(app)/journeys/[id]/page.tsx:JourneyDetailPage]
 - Pause is shown for ACTIVE, resume for PAUSED/DORMANT, and completion for ACTIVE with at least one approved ERC item; these are UI conditions. [apps/web/app/(app)/journeys/[id]/page.tsx:JourneyDetailPage]
-- viewerIsVm requires a non-owner authenticated user who matches globalVmRelationship.vmId or an ACTIVE vmAssignment; chat prefers the global VM then the first ACTIVE assignment. [apps/web/app/(app)/journeys/[id]/page.tsx:JourneyDetailPage]
+- viewerIsVm requires a non-owner authenticated user who matches globalVmRelationship.vmId or an ACTIVE vmAssignment; chat prefers the primary VM then the first ACTIVE assignment. [apps/web/app/(app)/journeys/[id]/page.tsx:JourneyDetailPage]
 
 ## Side Effects
 

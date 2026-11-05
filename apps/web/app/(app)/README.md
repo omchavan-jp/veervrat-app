@@ -16,7 +16,7 @@ Localized app layout and client authentication/onboarding guard around AppShell.
 - [journeys](./journeys/README.md): Journey listing with localized sentence/weakness content, state styling, and updated dates. [apps/web/app/(app)/journeys/page.tsx:JourneysPage]
 - [my-vratmitras](./my-vratmitras/README.md): Assigned VM card list with profile, scope, assigned count, invitation and chat links. [apps/web/app/(app)/my-vratmitras/my-vratmitras-client.tsx:MyVratmitrasClient]
 - [profile](./profile/README.md): Client page for the current account profile and profile visibility controls. [apps/web/app/(app)/profile/page.tsx:ProfilePage]
-- [settings](./settings/README.md): Client settings page combining profile, privacy, language, notifications, global vratmitra, export, and account management sections. [apps/web/app/(app)/settings/page.tsx:SettingsPage]
+- [settings](./settings/README.md): Client settings page combining profile, privacy, language, notifications, primary vratmitra, export, and account management sections. [apps/web/app/(app)/settings/page.tsx:SettingsPage]
 - [study](./study/README.md): Client weakness browser grouped by returned clusters. [apps/web/app/(app)/study/page.tsx:StudyBrowserPage]
 - [suggestions](./suggestions/README.md): Suggestion history page and client list renderer. [apps/web/app/(app)/suggestions/page.tsx:MySuggestionsPage] [apps/web/app/(app)/suggestions/my-suggestions-client.tsx:MySuggestionsClient]
 - [u](./u/README.md): Contains documented subdirectories.

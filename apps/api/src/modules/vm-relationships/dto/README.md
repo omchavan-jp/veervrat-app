@@ -2,7 +2,7 @@
 
 ## Overview
 
-Defines the global VM removal cascade request. [remove-global-vm.dto.ts:RemoveGlobalVmDto]
+Defines the primary VM removal cascade request. [remove-global-vm.dto.ts:RemoveGlobalVmDto]
 
 ## Interface
 
