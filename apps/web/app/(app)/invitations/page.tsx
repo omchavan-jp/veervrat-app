@@ -118,7 +118,7 @@ export default function InvitationsPage() {
               </button>
             </div>
             {/* An already-found user is by definition an existing platform member — the
-                only meaningful invite for them is a global vratmitra invite. Platform
+                only meaningful invite for them is a primary vratmitra invite. Platform
                 Invite (a signup link) doesn't apply and used to be offered here by
                 mistake, silently skipping the in-app notification and VM relationship. */}
             <p className="mt-4 text-[13px] text-muted">{t('scopeGlobalOnly')}</p>

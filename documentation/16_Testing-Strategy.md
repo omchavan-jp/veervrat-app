@@ -24,9 +24,9 @@ Test behavior, not implementation. Write tests alongside code — not after. The
 - Journey lifecycle state machine: `not_started → active → completed`, `paused`, `dormant` transitions
 - Challenge suggestion threshold logic: default vs VM override, enabling conditions
 - Suggestion algorithm: lowest-scored sentences from latest test result
-- VM scoping: global VM sees all, journey VM sees assigned only
+- VM scoping: primary VM sees all, journey VM sees assigned only
 - Draft model: test drafts and experience log drafts
-- Invitation: expiry logic, cancellation, edge cases (pending invite + new global VM)
+- Invitation: expiry logic, cancellation, edge cases (pending invite + new primary VM)
 - Account anonymisation: correct fields pseudonymised, content retained
 
 ### Backend — integration (repository layer)
@@ -40,7 +40,7 @@ Test behavior, not implementation. Write tests alongside code — not after. The
 - Permission matrix: **role × action × resource-state matrix tests** — this is the most critical test category
   - VA can/cannot on own journey vs another VA's journey
   - Journey VM can view assigned journey but not others
-  - Global VM can view all of VA's data
+  - Primary VM can view all of VA's data
   - Moderator sees ERC review context but not journey contents
   - Admin override is audit-logged
 - Request validation: invalid DTOs return 400 with field-level errors
@@ -58,7 +58,7 @@ Test behavior, not implementation. Write tests alongside code — not after. The
 2. Start journey from test result → select ERC → start exposure → log check-in
 3. VM invitation → accept → suggest ERC → VA accepts → VA submits for closure → VM approves
 4. VM invitation for non-platform user → signup via invite link → accept VM role
-5. Global VM swap → migration UI → keep/replace per journey
+5. Primary VM swap → migration UI → keep/replace per journey
 6. Custom ERC creation → submit for review → moderator edits and approves → appears in global pool
 7. Blog creation → publish → comment → author hides comment → moderator deletes comment
 8. Admin: override journey state → verify audit log entry
@@ -86,7 +86,7 @@ For each permission in the Layer 1 + Layer 2 matrix (spec/decisions/05_permissio
   - Wrong role CANNOT → 403
   - No session → 401
   - Scoping: own resource → allowed, other's resource → 403
-  - Global VM vs journey VM scoping difference
+  - Primary VM vs journey VM scoping difference
 ```
 
 Minimum: one positive and one negative test per permission row.

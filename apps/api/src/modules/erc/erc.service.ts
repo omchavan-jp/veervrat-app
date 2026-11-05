@@ -148,7 +148,7 @@ export class ErcService {
   }
 
   // Notifies every VM with an active stake in the journey (assigned journey VMs and the
-  // global VM), excluding the actor. Used to signal VA-initiated events like a closure
+  // primary VM), excluding the actor. Used to signal VA-initiated events like a closure
   // submission so the VM knows work is waiting.
   private async notifyJourneyVms(
     journey: {

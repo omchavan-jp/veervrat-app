@@ -48,7 +48,7 @@ _Last updated: 2026-05-31 | Round: R1_
 ### VM Removal Mid-Journey
 - VA can remove a VM from a journey at any time.
 - **VM can also withdraw themselves** from a journey-level assignment — no VA action needed.
-- **Global VM self-withdrawal:** VA is notified and shown the same migration UI as VA-initiated global VM removal (choose what to do with existing journey assignments).
+- **Primary VM self-withdrawal:** VA is notified and shown the same migration UI as VA-initiated primary VM removal (choose what to do with existing journey assignments).
 - On any removal/withdrawal: pending approvals (items in `submitted` state) are **left pending** — not auto-approved, not auto-returned.
 - Incoming VM inherits the pending queue. VA can also revoke their own submissions and self-approve instead.
 

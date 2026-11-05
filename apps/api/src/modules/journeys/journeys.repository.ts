@@ -140,7 +140,7 @@ export class JourneysRepository {
     });
     if (!journey) return null;
 
-    // Fetch global VM + all ERC counts in parallel (was sequential)
+    // Fetch primary VM + all ERC counts in parallel (was sequential)
     const [globalVm, expCounts, resCounts, chalCounts] = await Promise.all([
       this.prisma.vmRelationship.findFirst({
         where: {

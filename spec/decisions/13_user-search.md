@@ -5,7 +5,7 @@ _Last updated: 2026-06-01 | Round: R2_
 
 ### Search Scope
 - Auth-required to use search. Guests can view profiles reached via blogs/experiences (soft prompt to sign up/login when they try).
-- Search is available from multiple entry points: global VM section, journey VM section, general user discovery. Same underlying search, different context determines what action is offered after finding a user.
+- Search is available from multiple entry points: primary VM section, journey VM section, general user discovery. Same underlying search, different context determines what action is offered after finding a user.
 
 ### Search Fields (v1)
 - Searches across: **username**, **display name**, and **email** (email only matches on full exact email — no partial email search).
@@ -27,12 +27,12 @@ Two distinct invitation types, both tracked:
 
 #### 2. VM Invitation (invite as vratmitra)
 - VA invites a specific user (existing on platform or not yet) to act as their VM for a specific scope:
-  - Global VM
+  - Primary VM
   - Journey-specific VM (for a specific journey)
 - If the invitee is not yet on the platform: platform sends an invite link that pre-fills the VM role context ("You've been invited to be the vratmitra of [VA display name] for [scope]"). They must sign up first, then accept.
 - If the invitee is already on the platform: standard VM invitation flow (already specced in lifecycle).
 - VA can also share a platform-independent message (WhatsApp, Instagram, etc.) alongside or instead of the email invite.
-- Tracked: inviter (VA), invitee (email or user ID), scope (global / journey ID), invited at, status (pending / accepted / declined / expired), invitation channel (in-app / email / external).
+- Tracked: inviter (VA), invitee (email or user ID), scope (primary / journey ID), invited at, status (pending / accepted / declined / expired), invitation channel (in-app / email / external).
 
 ### Invite Code / Tracking
 - Every invitation (platform or VM) generates a unique invite token/code.
@@ -47,10 +47,10 @@ Two distinct invitation types, both tracked:
 
 ### Invitation Edge Cases
 
-**A — Global VM invite pending, VA tries to assign a different global VM:**
-- VA is warned that a pending global VM invite exists.
-- VA must cancel the pending invite before a new global VM can be assigned.
-- Only one pending global VM invite allowed at a time.
+**A — Primary VM invite pending, VA tries to assign a different primary VM:**
+- VA is warned that a pending primary VM invite exists.
+- VA must cancel the pending invite before a new primary VM can be assigned.
+- Only one pending primary VM invite allowed at a time.
 
 **B — Journey VM invite pending, journey becomes inactive/completed/deleted:**
 - Invite is auto-cancelled.

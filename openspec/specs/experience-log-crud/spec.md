@@ -67,7 +67,7 @@ TBD - created by archiving change experience-logging. Update Purpose after archi
 
 ### Requirement: Read own list and single entry with visibility enforcement
 
-`GET /api/v1/experience-logs` SHALL return the caller's own entries (drafts + published, excluding soft-deleted). `GET /api/v1/experience-logs/:id` SHALL return a single entry only if the caller may view it: the author always; a Public non-draft entry to anyone; a journey-tagged entry to the assigned/global VM of that journey; a Friends-tier entry to a viewer who mutually follows the author (both follow each other). Entries the caller may not view SHALL be reported as not found (existence not leaked).
+`GET /api/v1/experience-logs` SHALL return the caller's own entries (drafts + published, excluding soft-deleted). `GET /api/v1/experience-logs/:id` SHALL return a single entry only if the caller may view it: the author always; a Public non-draft entry to anyone; a journey-tagged entry to the assigned/primary VM of that journey; a Friends-tier entry to a viewer who mutually follows the author (both follow each other). Entries the caller may not view SHALL be reported as not found (existence not leaked).
 
 #### Scenario: author reads their own draft
 

@@ -43,7 +43,7 @@ Each notification has:
 | Comment reported | Moderator (any) | ❌ (in-app only) |
 | New follower | Followed VA | ❌ (in-app only) |
 | Chat message received | Recipient | configurable per VM (see chat spec) |
-| Global VM withdrawal (VM left) | VA | ✅ |
+| Primary VM withdrawal (VM left) | VA | ✅ |
 | Journey VM withdrawal (VM left) | VA | ✅ |
 
 ### In-App Notification Panel

@@ -92,7 +92,7 @@ describe('Access after a vratmitra relationship ends — integration', () => {
   const viewJourney = (session: string) =>
     getRequest().get(`/api/v1/journeys/${journeyId}`).set('Cookie', `veervrat_session=${session}`);
 
-  it('a current global vratmitra can read the journey', async () => {
+  it('a current primary vratmitra can read the journey', async () => {
     const res = await viewJourney(globalVmSession);
     expect(res.status, JSON.stringify(res.body)).toBe(200);
   });
@@ -102,7 +102,7 @@ describe('Access after a vratmitra relationship ends — integration', () => {
     expect(res.status, JSON.stringify(res.body)).toBe(200);
   });
 
-  it('a global vratmitra who has been removed CANNOT read the journey', async () => {
+  it('a primary vratmitra who has been removed CANNOT read the journey', async () => {
     // endGlobalVm now sets both state and endedAt.
     await prisma().vmRelationship.update({
       where: { id: globalRelId },

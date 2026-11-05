@@ -161,7 +161,7 @@ describe('VmRelationshipsService', () => {
       );
     });
 
-    it('404s when there is no active global VM', async () => {
+    it('404s when there is no active primary VM', async () => {
       mockRepository.findActiveGlobalVm.mockResolvedValue(null);
       await expect(service.removeGlobalVm(mockVaUser)).rejects.toThrow();
       expect(mockRepository.endGlobalVm).not.toHaveBeenCalled();

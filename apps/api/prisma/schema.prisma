@@ -742,7 +742,7 @@ model VmRelationship {
   createdAt  DateTime            @default(now()) @map("created_at")
   updatedAt  DateTime            @updatedAt @map("updated_at")
 
-  // Global VM relationship (not journey-scoped)
+  // Primary VM relationship (not journey-scoped)
   vm User @relation("GlobalVM", fields: [vmId], references: [id])
 
   // The other half of the same relationship. Absent until 2026-08-26, which is why the table had

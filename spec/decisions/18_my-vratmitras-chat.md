@@ -5,12 +5,12 @@ _Last updated: 2026-06-02 | Round: R2_
 
 ### My Vratmitras Page (`/my-vratmitras`)
 - **Two-panel layout:** VM list on the left, VM detail on the right.
-- **Left panel:** list of all VMs. Each entry shows: avatar, display name, online indicator, scope label (Global VM / Journey VM / both). Selecting a VM loads their detail on the right.
+- **Left panel:** list of all VMs. Each entry shows: avatar, display name, online indicator, scope label (Primary VM / Journey VM / both). Selecting a VM loads their detail on the right.
 - **Right panel (VM detail):** full view of the selected VM:
   - Display name, avatar, online indicator, last active
-  - Scope: Global VM badge (if applicable)
+  - Scope: Primary VM badge (if applicable)
   - Journey VM for: list of journey names, each with an [Open] link to that journey
-  - Actions: [View Profile], [Open Chat], [Global VM Settings] (if global VM), [Remove as VM]
+  - Actions: [View Profile], [Open Chat], [Primary VM Settings] (if primary VM), [Remove as VM]
 - Chat is a deliberate action — not the default view. [Open Chat] button opens the persistent thread.
 - Prominent link/CTA to the VA Guidance page (`/guidance`) always visible from this page.
 - Notification settings: VA can toggle email notifications per VM (for chat) or globally for all chat — from settings or inline on this page.
@@ -35,7 +35,7 @@ _Last updated: 2026-06-02 | Round: R2_
   - Journey closure submissions pending VM approval
   - New ERC items available (due to weakness attachment)
   - VM messages flagged as actionable (TBD — implementation detail)
-- **VM view (global VM only):** global VM can see the VA's guidance section — all pending items for the VA they are globally assigned to.
+- **VM view (primary VM only):** primary VM can see the VA's guidance section — all pending items for the VA they are globally assigned to.
 - VM also has their own guidance view showing their pending approvals to action — location TBD (VM Dashboard spec round).
 
 ### What Guidance Is Not Called
@@ -43,7 +43,7 @@ _Last updated: 2026-06-02 | Round: R2_
 
 - **Chat mute:** VA can mute a chat thread with a specific VM — stops notifications, can still read/send. Reversible from settings.
 - **Chat notifications:** in-app (bell) + email. VA can toggle email notifications per VM or globally for all chat — from settings or inline on the My Vratmitras page.
-- **VM removal:** done from the VM detail panel (right panel) — [Remove as VM] action. For journey-level VM, removes from that journey. For global VM, goes to Global VM Settings for the migration flow.
+- **VM removal:** done from the VM detail panel (right panel) — [Remove as VM] action. For journey-level VM, removes from that journey. For primary VM, goes to Primary VM Settings for the migration flow.
 
 ### Chat Access from Journey Page
 - The Chat tab within a journey (Status Overview · Exposures · Resolutions · Challenges · **Chat**) opens the full persistent VA-VM thread.
@@ -58,4 +58,4 @@ _Last updated: 2026-06-02 | Round: R2_
 
 ## Flags
 - ⚠ In-chat referencing spans the entire data model — implementation must use a generic entity reference system, not hardcoded per-type handlers.
-- ⚠ Global VM sees VA's guidance section — permission check: `global_vm.view_va_guidance` must be scoped to VA-VM relationship, not role alone.
+- ⚠ Primary VM sees VA's guidance section — permission check: `global_vm.view_va_guidance` must be scoped to VA-VM relationship, not role alone.

@@ -56,9 +56,9 @@ describe('My Vratarthis roster (#193)', () => {
   });
 
   // A vratmitra who guides someone on one journey stands in a different relation to them than a
-  // global vratmitra does, and the roster has to say which — otherwise the page implies a
+  // primary vratmitra does, and the roster has to say which — otherwise the page implies a
   // standing they may not have.
-  it('distinguishes a journey-scoped vratarthi from a global one', async () => {
+  it('distinguishes a journey-scoped vratarthi from a primary one', async () => {
     getMyVratarthis.mockResolvedValue([
       vratarthi(),
       vratarthi({

@@ -5,7 +5,7 @@ TBD - created by archiving change user-search. Update Purpose after archive.
 ## Requirements
 ### Requirement: Invitation flow UI
 
-The frontend SHALL provide an invitation flow reachable from My Vratmitras (and journey settings): a debounced user search box, result rows showing display name, username, presence, and follow status, selection of a user, a scope choice (Global VM / this journey / platform invite), and a send action. The flow SHALL handle loading, empty (no results), error, and success states; be localized; and be responsive.
+The frontend SHALL provide an invitation flow reachable from My Vratmitras (and journey settings): a debounced user search box, result rows showing display name, username, presence, and follow status, selection of a user, a scope choice (Primary VM / this journey / platform invite), and a send action. The flow SHALL handle loading, empty (no results), error, and success states; be localized; and be responsive.
 
 #### Scenario: search and select a user to invite as VM
 
