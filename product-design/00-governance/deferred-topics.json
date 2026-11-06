@@ -7,10 +7,15 @@
       "title": "Challenge cardinality",
       "status": "resolved",
       "reason": "The North Star intentionally uses neutral Challenge(s) wording and does not decide whether one Journey has exactly one Challenge or may have multiple Challenges.",
-      "target_phase": "PH-004",
+      "target_phase": "PH-003",
+      "moves": [{
+        "from_phase": "PH-004",
+        "to_phase": "PH-003",
+        "reason": "Originally targeted to PH-004, Challenge cardinality was resolved earlier in PH-003 by PD-014. Correct the recorded target to the resolving phase; Challenge lifecycle mechanics remain deferred to PH-004 under DT-007."
+      }],
       "depends_on": ["PD-014"],
       "resolution_artifact": "../03-ontology-and-domain-model/journey-and-undertakings.mdx",
-      "notes": "PD-014 supports multiple Journey-specific undertakings; आव्हान is optional, not exactly one mandatory Challenge. Detailed lifecycle/completion semantics remain DT-007 and DT-015."
+      "notes": "Resolved in PH-003 by PD-014: multiple Journey-specific undertakings are supported; आव्हान is optional, not exactly one mandatory Challenge. The original PH-004 target is preserved in move history. Challenge lifecycle mechanics remain in PH-004 under DT-007; related Journey completion mechanics remain DT-015."
     },
     {
       "id": "DT-002",
@@ -196,7 +201,7 @@
       "reason": "PD-013 confirms the concept and bilingual definition but both names remain provisional.",
       "target_phase": "PH-012",
       "depends_on": ["PD-013"],
-      "notes": "Finalize product-language naming without reopening the agreed concept or making personal statements/catalogs an approved feature."
+      "notes": "PH-012 is the current target for final product-language naming, not a restriction on earlier review: the provisional names may be reconsidered before PH-012. Preserve the agreed concept and do not make personal statements/catalogs an approved feature."
     }
   ]
 }
