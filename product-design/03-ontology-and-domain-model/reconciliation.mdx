@@ -1,0 +1,67 @@
+---
+title: PH-003 reconciliation and pre-closure review
+description: Decision coverage, historical differences, deferred work, and the proposed closure checklist.
+---
+
+# PH-003 reconciliation and pre-closure review
+
+> **Map:** The confirmed ontology is recorded; PH-003 is **open pending human review and explicit closure authorization**. This record separates current truth, historical evidence, and unresolved downstream work. It does not introduce product behavior.
+
+## Confirmed coverage and phase boundary
+
+| Area | Canonical outcome |
+| --- | --- |
+| Identity, participation, relationships | PD-011 remains intact, including its supersession of PD-010 (historical). PD-007, PD-008, and PD-009 guidance semantics remain intact. |
+| Philosophical foundation | PD-012 adds constitutive व्रतपालन / संकल्पपालन and समाजाभिमुखता without replacing PD-001's North Star or PD-002/003's development and संस्कार distinction. PD-004/006 agency constraints remain intact. |
+| Development and assessment | PD-013: shared curated catalogs; उणीव–उपगुण traversal; no direct उणीव–विधान mapping; point-in-time, repeatable assessment of statements, not proof of success under PD-005. |
+| Journey and undertakings | PD-014: one shared विधान, historical discovery contexts, distinct repeat Journeys after completion, catalog versus Journey-specific undertakings, Vratarthi authority, and conceptual completion minimum. |
+| Resources and Profile | PD-015: accessible learning/development material, foundational Handbook/Pothi as Resources, developmental records owned by Vratarthi, and no automatic authored-content promotion. |
+
+The added records supplement rather than silently replace PD-001–PD-011. PD-005's earlier open Challenge question is now explicitly resolved by PD-014; developmental success is still not completion counting or external achievement alone. No new actor permissions, account tables, or application behavior follow from this ontology.
+
+## Deferred reconciliation
+
+| Owner | Traceable remaining work |
+| --- | --- |
+| PH-004 | DT-007 आव्हान workflows; DT-015 Journey/अनुभव/संकल्प lifecycle, completion, recurrence, exceptions, ongoing-Journey reuse, and explicit संकल्प reiteration/refinement; DT-016 assessment scales/scoring/interactions; DT-018 broader progression/readiness. DT-001 cardinality is resolved by PD-014. |
+| PH-005 | DT-004 resource classification/structure, Pothi/श्लोक/sections, developmental links, publishing/curation, and whether/how custom suggestions enter shared catalogs. |
+| PH-006 | DT-017 authored content and participation; Posts/Blogs/feeds remain candidates, with curation reconciliation in DT-004. DT-003 retains moderation mechanics. |
+| PH-008 | DT-002 Journey Vratamitra contributions and feature-level access; DT-012 operational grants/permissions; DT-013 account exit; Profile access via DT-014; content publishing via DT-004/017. DT-006 age/public access remains. |
+| PH-009 / PH-011 | DT-014 remaining Profile fields and experience (moved from PH-003); DT-008 notifications; DT-005/009/011 authentication, invitation expiry, and invitation/mode-switch flows. |
+| PH-012 | DT-019 provisional गुणदर्शक विधान / Virtue Expression naming; the concept is settled. |
+
+No numerical aggregate milestone is approved. Personal उणीवा and personal गुणदर्शक विधाने are uncommitted future candidates, not promised features or obligations to implement later. DT-018 records only the explicitly unresolved broader progression question.
+
+## Evidence and provenance
+
+Authority for PD-012–PD-015 is the user-confirmed PH-003 discussion supplied for this canonicalization. The following material was available locally and inspected as evidence, **not redesign authority**. Parent-workspace material is outside this Git repository and is not bundled into the renderer; paths below are relative to the parent `veervrat/` workspace. No unavailable source is cited as if it were present in this repository.
+
+- `product-design/99-research/CURRENT_PRODUCT_AUDIT.md`, dated 2026-09-28, especially §2 Domain model and relationships. It audits the historical checkout `fe29940c64cccfab1339344a96b887296bb4c145`, not current runtime behavior.
+- `product-design/99-research/PRODUCT_INTENT_DIGEST.md`, §1 Framework and practice model; Assessments, scores and suggestions; Content authorship, community and visibility; Framework/reference content and discovery. “Established” in that digest describes older source/spec intent, not redesign confirmation.
+- `sahitya/shared-resources/extracted-markdown/markdown/intro.md`, “वीरव्रत म्हणजे कर्तृत्वशक्तीचे स्वावलंबन”, “चाचणीनंतर उणीवेवर उपाययोजना — अनुभव, संकल्प व आव्हान!”, and subsequent संकल्प/आव्हान discussion; `handbook.md` discussions of individual initiative and social application; `pothi.md` prayer/social orientation passages and the समाजाभिमुखता quality listing. These are extracted transcriptions, not newly verified editions of the originals.
+- In-repository historical specifications (repository-relative paths, outside the renderer's content boundary): `spec/decisions/02_data-model.md` (Data model), `spec/decisions/19_pothi-redesign.md` (Pothi redesign), and `spec/adr/0007-pothi-shlokas-resources-as-separate-entities.md` (Pothi/श्लोक/Resources ADR).
+
+The literature provides evidence of self-mobilization, cultivation, संकल्पपालन, and social orientation. PD-012's exact synthesis—constitutive व्रतपालन, the distinction between overcoming हृदयदौर्बल्य and the North Star, and the limits of compulsory service/external observability—is **subsequent user-confirmed interpretation**, not wording attributed to those sources. Historical prescriptions or quantities in the literature do not become product rules by citation.
+
+## Material historical differences
+
+| Historical evidence | Current confirmed treatment |
+| --- | --- |
+| Digest/audit retain specific assessment answers, scores, filtering, and latest-attempt suggestion algorithms. | PD-013 records self-understanding and all statements reached through associated उपगुण; scales, scores, and interactions remain DT-016. |
+| Historical pool items are sentence-anchored and weakness-tagged; custom moderation/promotion mechanics are specified. | PD-014 confirms many-to-many suggestion–विधान associations and Journey-specific custom suggestions. No new canonical weakness tagging or automatic promotion; mechanisms remain DT-004. |
+| Historical entry paths route framework discovery through tests; Journey weakness associations are modeled operationally. | PD-014 permits direct Journey starts without assessment/उणीव, preserves 0..many historical contexts, and defers ongoing reuse choices. No universal उणीव–विधान mapping. |
+| Historical approval states, thresholds, check-ins, and Challenge recommendations are concrete. Intro literature also suggests quantities/durations. | Only the confirmed conceptual minimum (completed संकल्प) and optional अनुभव/आव्हान are canonical here. No old thresholds, approval workflow, duration, or numerical milestone is imported. |
+| Historical Pothi, श्लोक, and Resources are separate entities; logs/blogs/comments/profile visibility are specified. | PD-015 treats foundational documents as accessible Resources and defers structure/features/permissions. No separate content entities or public-profile behavior are inferred. |
+| Digest/audit encode VM role grants, cascade/access choices, expiry, and account-exit behavior. | PD-007–PD-011 remain authoritative; DT-002/009/011/012/013 retain the downstream questions. |
+
+## Proposed closure checklist — not yet approved
+
+- [x] Confirmed PH-003 clusters have concise canonical homes, IDs, and explanatory diagrams.
+- [x] North Star/agency and PH-002 relationship semantics reconciled; PD-010 (historical) retained.
+- [x] Incoming DT-010 resolved; DT-014 conceptual boundary captured and remaining scope moved with rationale.
+- [x] Later-phase questions remain traceable; historical implementation and brainstorming quantities are not requirements.
+- [ ] Human review accepts canonical wording, provenance distinctions, diagrams, and deferred ownership.
+- [ ] Any review-identified contradiction or conceptual gap is explicitly resolved or deferred.
+- [ ] Explicit authorization to close PH-003, followed by the formal phase exit/status update.
+
+No additional PH-003 conceptual blocker was identified beyond review acceptance. Provisional names and detailed workflows remain visibly deferred; they must not be silently filled in to obtain closure. **The end review and phase status remain pending/current.**

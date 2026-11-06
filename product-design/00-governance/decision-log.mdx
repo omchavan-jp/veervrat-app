@@ -11,7 +11,7 @@ description: Canonical index and history for product-design decisions.
 
 See [`decision-registry.json`](./decision-registry.json) for the current records and [`decision-registry.schema.json`](./decision-registry.schema.json) for the record shape and allowed statuses.
 
-PD-001 through PD-006 are user-confirmed North Star and agency decisions; PD-006 is a scoped application of PD-004. PD-007 and PD-008 are the confirmed PH-002 Primary and Journey Vratamitra relationship lifecycles; PD-009 records multiplicity, coexistence, and capacity; PD-010 (historical) records the original actor inventory; PD-011 supersedes it with the confirmed Identity, Participation, and Role Ontology, preserving actor purposes. No sources are listed because no repository source has been designated as authoritative for these decisions. Do not treat historical application documentation as automatically authoritative over confirmed redesign decisions.
+PD-001 through PD-006 are user-confirmed North Star and agency decisions; PD-006 is a scoped application of PD-004. PD-007 and PD-008 are the confirmed PH-002 Primary and Journey Vratamitra relationship lifecycles; PD-009 records multiplicity, coexistence, and capacity; PD-010 (historical) records the original actor inventory; PD-011 supersedes it with the confirmed Identity, Participation, and Role Ontology, preserving actor purposes. PD-012–PD-015 capture the subsequent confirmed philosophy and ontology. User confirmation is their authority; historical source evidence and the subsequent interpretations are distinguished in the [PH-003 reconciliation](../03-ontology-and-domain-model/reconciliation.mdx). Historical application documentation does not override redesign decisions.
 
 ## Confirmed decisions
 
@@ -27,6 +27,10 @@ PD-001 through PD-006 are user-confirmed North Star and agency decisions; PD-006
 | `PD-008` | Journey Vratamitra relationship lifecycle | [Actors & Relationships](../02-actors-and-relationships/journey-vratamitra-relationship.mdx#pd-008-journey-vratamitra-relationship-lifecycle) |
 | `PD-009` | Vratamitra multiplicity, coexistence, and capacity | [Actors & Relationships](../02-actors-and-relationships/vratamitra-multiplicity-and-capacity.mdx#pd-009-vratamitra-multiplicity-coexistence-and-capacity) |
 | `PD-011` | Identity, Participation, and Role Ontology | [PH-003](../03-ontology-and-domain-model/identity-participation-and-roles.mdx#pd-011-identity-participation-and-role-ontology) |
+| `PD-012` | व्रतपालन and समाजाभिमुखता within the North Star | [North Star](../01-product-model/north-star.mdx#pd-012-व्रतपालन-and-समाजाभिमुखता-within-the-north-star) |
+| `PD-013` | Developmental catalogs and स्वमूल्यांकन | [Developmental ontology](../03-ontology-and-domain-model/developmental-ontology.mdx) |
+| `PD-014` | Journey and अनुभव / संकल्प / आव्हान ontology | [Journey and undertakings](../03-ontology-and-domain-model/journey-and-undertakings.mdx) |
+| `PD-015` | Resource and personal-information boundaries | [Resources and Profile](../03-ontology-and-domain-model/resources-profile-and-content.mdx) |
 
 ## Superseded decisions
 
@@ -43,6 +47,12 @@ At PH-002 closure, the user explicitly confirmed an addition to PD-008: ending a
 PD-011 explicitly supersedes PD-010 (historical): registration establishes persistent Vratarthi identity; login/logout changes authentication and access state. The implication that every signed-in user is a Vratarthi, actor purposes, and role coexistence are preserved. The original actor inventory remains a historical snapshot, and current references use PD-011.
 
 ## Status meanings
+
+### PH-003 pre-closure canonicalization
+
+The human-led discussion confirms PD-012–PD-015. PD-012 is an explicit additive philosophical refinement, preserving PD-001–PD-006 rather than superseding them. PD-013–PD-015 add conceptual relationships without changing PD-007–PD-011. PD-005's earlier open Challenge cardinality question is resolved by PD-014 (DT-001); its success principle is unchanged. DT-014's conceptual ownership boundary is captured by PD-015 and its remaining scope moves to PH-009 with history. **PH-003 remains open pending review and explicit closure authorization.** See the [proposed checklist](../03-ontology-and-domain-model/reconciliation.mdx).
+
+### Registry statuses
 
 - `confirmed` — explicitly confirmed by the user for the redesign.
 - `proposed` — a candidate outcome awaiting confirmation.

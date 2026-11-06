@@ -1,0 +1,9 @@
+# Projection of PD-013. MDX is semantic truth; no persistence structure implied.
+direction: down
+virtue: "गुण\nShared curated catalog" {class: core}
+subvirtue: "उपगुण\nExactly one गुण\nShared curated catalog" {class: growth}
+expression: "गुणदर्शक विधान (provisional)\nExactly one उपगुण\nShared curated catalog" {class: process}
+lacuna: "उणीव / उणीवा\nDevelopmental discovery\nShared curated catalog" {class: weakness}
+virtue -> subvirtue: {class: progression}
+subvirtue -> expression: {class: progression}
+lacuna <-> subvirtue: "many-to-many" {class: support}
