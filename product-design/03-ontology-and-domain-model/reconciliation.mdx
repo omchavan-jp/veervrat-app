@@ -1,11 +1,19 @@
 ---
-title: PH-003 reconciliation and pre-closure review
-description: Decision coverage, historical differences, deferred work, and the proposed closure checklist.
+title: PH-003 reconciliation and closure
+description: Closure evidence, preserved deferred work, and PH-004 intake readiness.
 ---
 
-# PH-003 reconciliation and pre-closure review
+# PH-003 reconciliation and closure
 
-> **Map:** The confirmed ontology is recorded; PH-003 is **open pending human review and explicit closure authorization**. This record separates current truth, historical evidence, and unresolved downstream work. It does not introduce product behavior.
+> **Map:** **PH-003 COMPLETE.** The user has authorized formal closure after review and UAT deployment. This record preserves decision coverage, historical evidence, deferred boundaries, and PH-004 readiness. The closure update is submitted through a separate review PR and takes effect when that PR is approved and merged; it introduces no product behavior.
+
+## Closure summary and authority
+
+The established scope is PD-011–PD-015, indexed below: persistent participation identity and role categories; the philosophical refinement within the unchanged North Star; shared developmental catalogs and self-assessment; Journey/undertaking concepts; and Resource/Profile/content boundaries. PD-010 (historical) retains its supersession; no approved decision is rewritten by closure.
+
+Deliberately excluded are implementation entities, database/authentication mechanics, detailed lifecycle/permission/UX rules, and unapproved community features. Personal उणीवा and user-created गुणदर्शक विधाने remain uncommitted future candidates; numerical progression milestones are not approved. The deferred reconciliation below remains authoritative for the handoff scope, with the register authoritative for status and targets.
+
+Canonicalization and corrections were reviewed in [PR #404](https://github.com/omchavan-jp/veervrat-app/pull/404), squash-merged as `ba62fd891de701a05c73a0d509bb0f5859d80ce2`, and verified through authenticated UAT documentation access. [Post-merge CD](https://github.com/omchavan-jp/veervrat-app/actions/runs/42187321041) succeeded. On 2026-11-06 the user explicitly authorized this formal closure pass. No PH-003 conceptual blocker remains; approval of this closure PR is a separate merge gate.
 
 ## Confirmed coverage and phase boundary
 
@@ -54,14 +62,29 @@ The literature provides evidence of self-mobilization, cultivation, संकल
 | Historical Pothi, श्लोक, and Resources are separate entities; logs/blogs/comments/profile visibility are specified. | PD-015 treats foundational documents as accessible Resources and defers structure/features/permissions. No separate content entities or public-profile behavior are inferred. |
 | Digest/audit encode VM role grants, cascade/access choices, expiry, and account-exit behavior. | PD-007–PD-011 remain authoritative; DT-002/009/011/012/013 retain the downstream questions. |
 
-## Proposed closure checklist — not yet approved
+## Closure checklist
 
 - [x] Confirmed PH-003 clusters have concise canonical homes, IDs, and explanatory diagrams.
 - [x] North Star/agency and PH-002 relationship semantics reconciled; PD-010 (historical) retained.
 - [x] Incoming DT-010 resolved; DT-014 conceptual boundary captured and remaining scope moved with rationale.
 - [x] Later-phase questions remain traceable; historical implementation and brainstorming quantities are not requirements.
-- [ ] Human review accepts canonical wording, provenance distinctions, diagrams, and deferred ownership.
-- [ ] Any review-identified contradiction or conceptual gap is explicitly resolved or deferred.
-- [ ] Explicit authorization to close PH-003, followed by the formal phase exit/status update.
+- [x] Human review accepts canonical wording, provenance distinctions, diagrams, and deferred ownership; PR #404 and its corrections were approved.
+- [x] Review-identified corrections are reconciled; no unresolved conceptual blocker or open deferred topic remains assigned to PH-003.
+- [x] Canonicalization is merged and deployed; authenticated UAT documentation access verified.
+- [x] Explicit closure authorization received; roadmap, phase/index records, and the phase exit review updated in this closure change.
+- [ ] Dedicated closure PR reviewed, explicitly approved, and merged.
 
-No additional PH-003 conceptual blocker was identified beyond review acceptance. Provisional names and detailed workflows remain visibly deferred; they must not be silently filled in to obtain closure. **The end review and phase status remain pending/current.**
+The registry and all canonical product decisions are unchanged by this closure pass. DT-001 and DT-010 remain resolved; DT-014 remains open in PH-009 with its original reason and move history. All remaining targets are preserved, including DT-019's PH-012 naming target with earlier reconsideration allowed. No new PD/DT IDs are needed.
+
+## PH-004 readiness — design not started
+
+PH-004 is the roadmap's next **current** phase for intake readiness only, preserving its single-current-phase convention. Product-design discussions have **not started** and begin separately after closure approval and merge. Reconfirm this intake against the live deferred register when discussions begin; this handoff does not resolve it or establish practice workflows.
+
+| Incoming topic | Question carried forward |
+| --- | --- |
+| DT-007 | आव्हान lifecycle, iteration, completion, exceptions, and participation workflows; cardinality is already settled under PD-014 / DT-001. |
+| DT-015 | Journey/अनुभव/संकल्प lifecycle, completion, recurrence, exceptions, ongoing Journey reuse, and explicit संकल्प reiteration/refinement. |
+| DT-016 | Self-assessment scales, scoring, presentation, and interactions, with PH-009/PH-011 reconciliation. |
+| DT-018 | Whether broader progression/readiness uses aggregate Journeys or undertakings; no numerical milestone is approved. |
+
+Apply the confirmed PD-012–PD-014 constraints without reopening them. Coordinate Vratamitra contribution permissions with DT-002 (PH-008), shared-suggestion promotion with DT-004 (PH-005), and detailed journey/experience reconciliation with PH-009/PH-011. Later-phase ownership does not move into PH-004 merely because a question intersects practice. No PH-004 product decision is made by this readiness record.
