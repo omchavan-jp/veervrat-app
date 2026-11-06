@@ -5,9 +5,12 @@
     {
       "id": "DT-001",
       "title": "Challenge cardinality",
-      "status": "open",
+      "status": "resolved",
       "reason": "The North Star intentionally uses neutral Challenge(s) wording and does not decide whether one Journey has exactly one Challenge or may have multiple Challenges.",
-      "target_phase": "PH-004"
+      "target_phase": "PH-004",
+      "depends_on": ["PD-014"],
+      "resolution_artifact": "../03-ontology-and-domain-model/journey-and-undertakings.mdx",
+      "notes": "PD-014 supports multiple Journey-specific undertakings; आव्हान is optional, not exactly one mandatory Challenge. Detailed lifecycle/completion semantics remain DT-007 and DT-015."
     },
     {
       "id": "DT-002",
@@ -15,8 +18,8 @@
       "status": "open",
       "reason": "Do not globally enumerate exact visibility, actions, contributions, validation, chat or reference behavior, and permissions before the relevant features are designed. Derive information, access, ownership, Primary versus Journey Vratamitra scope, and historical behavior as each feature is modeled.",
       "target_phase": "PH-008",
-      "depends_on": ["PD-007", "PD-008", "PD-011"],
-      "notes": "Cross-cutting: revisit for chat, Journey evidence, Exposures, Resolutions, Challenges, reassessment, resources, AI summaries, and other feature-design phases. Include exact post-relationship access to feature-specific artifacts after their ownership/participation models and permissions are designed; former-Primary status alone does not grant continuing broad Primary-level access. Do not invent access categories here. Reconcile completed-Journey visibility and post-relationship access for former Journey Vratamitras under PH-008 and PH-011; Journey completion does not itself determine that access.",
+      "depends_on": ["PD-007", "PD-008", "PD-011", "PD-014"],
+      "notes": "Cross-cutting: revisit for chat, Journey evidence, Exposures, Resolutions, Challenges, reassessment, resources, AI summaries, and other feature-design phases. Include exact post-relationship access to feature-specific artifacts after their ownership/participation models and permissions are designed; former-Primary status alone does not grant continuing broad Primary-level access. Do not invent access categories here. Reconcile completed-Journey visibility and post-relationship access for former Journey Vratamitras under PH-008 and PH-011; Journey completion does not itself determine that access. PD-014 confirms Journey Vratamitra custom suggestions and Vratarthi final authority; exact contribution actions and visibility remain for feature-level permissions. References to possible features here do not approve new ontology entities.",
       "reconcile_in": ["PH-011"]
     },
     {
@@ -31,12 +34,12 @@
     },
     {
       "id": "DT-004",
-      "title": "Curated-resource mechanics",
+      "title": "Resource structure, relationships, curation, and promotion",
       "status": "open",
       "reason": "Curators steward centrally curated or endorsed resources, while approval, promotion, featuring, pinning, official status, recommendations, collections, and entity-linking mechanics should be decided per content type.",
       "target_phase": "PH-005",
-      "notes": "Reconcile with PH-006 when resource and community content types overlap. Include stewardship mechanics for canonical Veervrat knowledge/content as well as centrally curated resources; reconcile permission implications in PH-008.",
-      "depends_on": ["PD-011"],
+      "notes": "PH-005 owns Resource classification/internal structure, Pothi/श्लोक/section modeling, potential developmental-concept relationships, and creation/publishing/curation/promotion mechanisms. Also decide whether/how Journey-specific custom suggestions enter shared catalogs; no automatic promotion is established. Reconcile user-authored content entering curated Resources with PH-006 (DT-017) and publishing/access permissions with PH-008. Handbook/Pothi Resource status and format-neutral boundaries are confirmed by PD-015; shared curated developmental catalogs by PD-013.",
+      "depends_on": ["PD-011", "PD-013", "PD-014", "PD-015"],
       "reconcile_in": ["PH-006", "PH-008"]
     },
     {
@@ -62,7 +65,9 @@
       "title": "Challenge application semantics",
       "status": "open",
       "reason": "Challenge(s) contribute to application and evidence of developmental change; lifecycle, repeatability, success and completion semantics, authoring or selection, and relationship to Journey completion remain undecided.",
-      "target_phase": "PH-004"
+      "target_phase": "PH-004",
+      "depends_on": ["PD-014"],
+      "notes": "PD-014 now defines आव्हान and optional/multiple undertaking support; DT-001 is resolved. Keep detailed Challenge lifecycle, iteration, completion, exceptions, and participation workflows open, coordinated with DT-015. Do not restore historical thresholds or assume every Journey requires a Challenge."
     },
     {
       "id": "DT-008",
@@ -134,10 +139,64 @@
       "title": "Profile details, visibility, editing, and presentation",
       "status": "open",
       "reason": "PD-011 establishes an automatic Profile distinct from account identity, including before optional details are supplied; actual fields, public visibility, editing permissions, and Profile UI are not decided.",
-      "target_phase": "PH-003",
-      "reconcile_in": ["PH-008", "PH-009", "PH-011"],
-      "depends_on": ["PD-011"],
-      "notes": "PH-003 owns conceptual Profile structure. Profile visibility and editing permissions belong to PH-008; UI and experience details belong to PH-009 and PH-011. Define Profile details without making Profile completion a participation prerequisite. Conceptual distinction does not require separate persistence. No Profile fields or behavior are established here."
+      "target_phase": "PH-009",
+      "reconcile_in": ["PH-008", "PH-011"],
+      "depends_on": ["PD-011", "PD-015"],
+      "moves": [{
+        "from_phase": "PH-003",
+        "to_phase": "PH-009",
+        "reason": "PD-015 captures the conceptual boundary: Profile information is separate from Vratarthi-owned Journeys and assessments. Remaining Profile fields and experience belong to PH-009, permissions/visibility/editing to PH-008, and user journeys to PH-011; no additional Profile fields or behavior are required to finish this ontology cluster."
+      }],
+      "notes": "Keep remaining Profile fields, visibility, editing, and presentation open. A later Profile page may display developmental records without owning them. Completion remains unnecessary for participation under PD-011. Original deferral reason is retained; PD-015 addresses conceptual ownership without deciding fields, persistence, or page behavior."
+    },
+    {
+      "id": "DT-015",
+      "title": "Journey, अनुभव, and संकल्प lifecycle and participation workflows",
+      "status": "open",
+      "reason": "PD-014 confirms conceptual Journey and undertaking structure, but detailed lifecycle, completion, iteration, recurrence, exceptions, and participation workflows require PH-004 design.",
+      "target_phase": "PH-004",
+      "depends_on": ["PD-014"],
+      "reconcile_in": ["PH-011"],
+      "notes": "Explicitly decide संकल्प completion, reiteration and refinement; ongoing Journey choice/automatic reuse when another उणीव reaches the same विधान; अनुभव/संकल्प workflows; and Journey completion mechanics. Coordinate आव्हान workflows with DT-007 and contribution permissions with DT-002. Preserve completed-संकल्प minimum and optional अनुभव/आव्हान without importing historical states, thresholds, or durations."
+    },
+    {
+      "id": "DT-016",
+      "title": "Self-assessment scales, scoring, and interaction mechanics",
+      "status": "open",
+      "reason": "PD-013 confirms assessment meaning and statement selection, but not rating scales, scoring, presentation, or interactions.",
+      "target_phase": "PH-004",
+      "depends_on": ["PD-013"],
+      "reconcile_in": ["PH-009", "PH-011"],
+      "notes": "Separate assessment from proof of success. Do not inherit historical answer labels, filtering, aggregation, recommendation thresholds, or an independent assessment-definition catalog."
+    },
+    {
+      "id": "DT-017",
+      "title": "User-authored content and community participation concepts",
+      "status": "open",
+      "reason": "PD-015 distinguishes authored content from curated Resources without approving Posts, Blogs, feeds, or other community-content mechanisms.",
+      "target_phase": "PH-006",
+      "depends_on": ["PD-015"],
+      "reconcile_in": ["PH-005", "PH-008"],
+      "notes": "Decide whether such mechanisms exist and their content/participation rules. Coordinate possible authored-content entry into curated Resources with DT-004, moderation with DT-003, and access/publishing permissions with PH-008. Historical Daily Logs and experience posts are not approved redesign features."
+    },
+    {
+      "id": "DT-018",
+      "title": "Broader Veervrat progression, milestones, and readiness",
+      "status": "open",
+      "reason": "Whether multiple Journeys and aggregate completed अनुभव, संकल्प, and आव्हाने contribute to a broader milestone or readiness to formally undertake Veervrat remains undecided.",
+      "target_phase": "PH-004",
+      "depends_on": ["PD-012", "PD-014"],
+      "reconcile_in": ["PH-009", "PH-011"],
+      "notes": "PH-004 owns later progression design and may carry this forward with explicit history. No numerical milestones from brainstorming or historical literature are approved requirements; do not conflate Journey completion with the संस्कार or developmental success."
+    },
+    {
+      "id": "DT-019",
+      "title": "Final name for गुणदर्शक विधान / Virtue Expression",
+      "status": "open",
+      "reason": "PD-013 confirms the concept and bilingual definition but both names remain provisional.",
+      "target_phase": "PH-012",
+      "depends_on": ["PD-013"],
+      "notes": "Finalize product-language naming without reopening the agreed concept or making personal statements/catalogs an approved feature."
     }
   ]
 }

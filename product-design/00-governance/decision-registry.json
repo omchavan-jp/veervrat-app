@@ -81,6 +81,35 @@
       "canonical_home": "../03-ontology-and-domain-model/identity-participation-and-roles.mdx",
       "summary": "Each registered account represents exactly one persistent Vratarthi and automatically has a Profile. Login/logout changes authentication/access state, not Vratarthi identity. Multiple accounts per human and authentication methods per account are allowed without real-world uniqueness enforcement or a separate Person entity. Curator/Moderator/Admin are granted capabilities; guidance roles derive from accepted relationships. Invitations may precede recipient registration, which does not itself accept a guidance relationship.",
       "rationale": "Supersedes PD-010 to clarify persistent registration-based identity while preserving its actor purposes, coexistence, and the intention that every signed-in user is a Vratarthi."
+    },
+    {
+      "id": "PD-012",
+      "title": "व्रतपालन and समाजाभिमुखता within the North Star",
+      "status": "confirmed",
+      "canonical_home": "../01-product-model/north-star.mdx",
+      "summary": "Additive philosophical refinement: व्रतपालन / संकल्पपालन is constitutive of the संस्कार; गुणसंवर्धन is central and दोषापनयन guides development. Overcoming क्षुद्र हृदयदौर्बल्य serves the unchanged North Star. समाजाभिमुखता is essential without compulsory social service or equating observability with social orientation.",
+      "rationale": "Explicit user-confirmed PH-003 interpretation, distinguished from original literature; preserves PD-001 through PD-006."
+    },
+    {
+      "id": "PD-013",
+      "title": "Developmental catalogs and स्वमूल्यांकन",
+      "status": "confirmed",
+      "canonical_home": "../03-ontology-and-domain-model/developmental-ontology.mdx",
+      "summary": "Shared curated गुण, उपगुण, उणीवा, and गुणदर्शक विधाने: each उपगुण has one गुण and each विधान one उपगुण; उणीव–उपगुण is many-to-many with no direct उणीव–विधान mapping. Repeatable point-in-time self-assessment evaluates all statements under the selected उणीव's associated उपगुण, independently of a Journey. Naming is provisional; personal catalogs are uncommitted candidates."
+    },
+    {
+      "id": "PD-014",
+      "title": "Journey and अनुभव / संकल्प / आव्हान ontology",
+      "status": "confirmed",
+      "canonical_home": "../03-ontology-and-domain-model/journey-and-undertakings.mdx",
+      "summary": "A Vratarthi's Journey undertakes one shared विधान, may start without assessment or उणीव, and preserves historical discovery contexts. Shared suggestions relate many-to-many to statements; multiple personal undertakings and custom suggestions retain Vratarthi authority. A completed Journey conceptually requires a completed संकल्प; अनुभव and आव्हान are optional. Lifecycle and broader progression remain deferred."
+    },
+    {
+      "id": "PD-015",
+      "title": "Resource and personal-information boundaries",
+      "status": "confirmed",
+      "canonical_home": "../03-ontology-and-domain-model/resources-profile-and-content.mdx",
+      "summary": "Resources are accessible learning/development material, including foundational Handbook and Pothi; formats do not compel distinct entity types or developmental links. Journeys and assessments belong to the Vratarthi, not Profile. Authored content is not automatically curated Resources; detailed structure, community features, permissions, and presentation remain deferred."
     }
   ]
 }
