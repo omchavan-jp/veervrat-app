@@ -147,6 +147,10 @@ export default function InvitationsPage() {
               <div className="mt-2 space-y-1.5">
                 {search.isLoading ? (
                   <div className="py-4 text-center text-[13px] text-muted">{t('searching')}</div>
+                ) : search.isError ? (
+                  <div role="alert" className="py-4 text-center text-[13px] text-danger">
+                    {t('searchError')}
+                  </div>
                 ) : (search.data?.length ?? 0) > 0 ? (
                   search.data!.map((u) => (
                     <button
