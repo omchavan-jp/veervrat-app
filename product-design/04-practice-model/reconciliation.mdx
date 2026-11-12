@@ -1,11 +1,30 @@
 ---
-title: PH-004 reconciliation and review
-description: Foundation consistency, conceptual scenarios, deferred ownership, and pending closure requirements.
+title: PH-004 reconciliation and closure
+description: Foundation consistency, accepted review/UAT evidence, preserved deferrals, and PH-005 readiness.
 ---
 
-# PH-004 reconciliation and review
+# PH-004 reconciliation and closure
 
-> **Map:** User-confirmed PH-004 outcomes are canonicalized in PD-016–PD-020. Conceptual scenario reconciliation is complete; **PH-004 remains current and pending review, UAT evidence, and separate formal closure authorization**. This is not implementation or an exhaustive PH-011 edge-case specification.
+> **Map:** **PH-004 COMPLETE**, effective on approval and merge of the dedicated closure PR. The user has accepted review, corrections, deployment, and combined UAT evidence and explicitly authorized closure. This record preserves foundation consistency, deferred boundaries, and PH-005 intake readiness without changing product decisions or starting implementation.
+
+## Closure summary and authority
+
+PH-004 establishes PD-016–PD-020: conscious Journey participation and discovery, lifecycle versus engagement, personal undertaking definition/revision/conclusion, parent conclusion and guidance, initial assessment recommendations, and continuous development. Their canonical records and diagrams remain unchanged. The end-of-phase reconciliation below identifies no conceptual blocker against the North Star or PD-001–PD-015, including PD-010 (historical)'s supersession.
+
+Detailed permissions, recording/history mechanisms, UX, inactivity policy, feedback timing, archive/delete policy, Resource curation, and implementation are deliberately excluded and remain with their recorded later-phase owners. Accepted simplifications and uncommitted candidates below remain distinct from open design obligations. On 2026-11-12 the user explicitly authorized formal closure and PH-005 readiness intake after accepting the combined evidence; the dedicated closure PR still requires review, explicit merge approval, and merge.
+
+## Accepted review, deployment, and UAT evidence
+
+| Reviewed change | Merge and deployment evidence |
+| --- | --- |
+| [PR #407](https://github.com/omchavan-jp/veervrat-app/pull/407), including focused review corrections; reviewed head `f63580a130ede323d3cf8f50d79f98df8fda60b2` | Squash merge `086d6a00e15a9a025c3085c9c8256cdbf057af1d`; required CI passed; [UAT deployment succeeded](https://github.com/omchavan-jp/veervrat-app/actions/runs/43191222502). Authenticated UAT covered canonical artifacts/decisions, both diagrams, governance navigation, cross-references, and roadmap refinements, with one pre-existing registry-link defect. |
+| [PR #408](https://github.com/omchavan-jp/veervrat-app/pull/408), registry navigation correction; reviewed head `f204ed441089d426c94939eebd090bda74f1f52d` | Squash merge `649f16af321c2b10a8d3cefc05073a18ec2b76e5`; CI, integration, E2E, and CodeQL passed; [UAT deployment succeeded](https://github.com/omchavan-jp/veervrat-app/actions/runs/43203550497). Revision `veervrat-uat-web--0000133`; receipt `receipts/uat/43203550497/1.json` binds the serving web digest `sha256:026457c32ed2d3068524bf3812bbb9f5fa8693f671384fdabdce6c03f327a977` to that merge. |
+
+Focused authenticated UAT after PR #408 verified registry and schema links from both decision-log URL entry forms, expected JSON content, adjacent deferred-register/sidebar navigation, representative PH-004 MDX, and both expandable SVG diagrams. **The original navigation defect is resolved.** Together with the earlier UAT, this evidence is explicitly accepted for closure.
+
+**Qualification:** the authenticated browser tool did not expose raw HTTP status codes. Trailing-slash entry requests normalized to non-trailing-slash URLs. Actual authenticated navigation and expected JSON content were observed, with deterministic regression coverage of both URL forms; no raw authenticated HTTP-200 capture is claimed. Local supporting notes were inspected at `/tmp/ph004-uat-evidence.md` and `/tmp/product-docs-registry-navigation-uat-evidence.md`; these temporary files are not bundled documentation dependencies, so durable PR/workflow identifiers and the qualification are recorded here.
+
+PR #408 used a separately user-authorized, documented maintainer self-review exception **only for review**; mandatory checks remained enforced. This is a record of that event, not blanket authorization for future PRs. Existing Next.js security advisories remain separately tracked technical work and are not resolved by phase closure.
 
 ## Consistency with PH-001–003
 
@@ -60,11 +79,29 @@ Additional reconciliations distinguish discontinuation's optional feedback reque
 
 Prose-first undertaking definitions, one universal frequency scale despite imperfect fit, simple ordinal recommendations, and continuous individual-Journey development are conscious current-scope choices. More structured tracking, alternative scales, a contextual/history-based recommendation engine, and a separate formal readiness milestone remain uncommitted future candidates. Personal उणीवा/विधाने remain uncommitted under PD-013. None is a deferred feature delivery promise.
 
-## Review and closure boundary
+## Closure checklist
 
-- Confirm coverage and terminology, including engagement versus guidance “Active”.
-- Review diagrams as explanatory projections; review all PD/DT references and downstream targets.
-- Address review corrections, pass required checks, and obtain the required UAT evidence through the normal reviewed merge/deployment flow.
-- Obtain **separate explicit authorization** before formal PH-004 closure; the roadmap end review stays pending.
+- [x] PD-016–PD-020 and explanatory diagrams have canonical homes; review corrections are accepted and merged.
+- [x] North Star and PD-001–PD-015 reconciled; engagement and guidance “Active” remain distinct; no product meaning changes in closure.
+- [x] DT-007/015/016/018 remain resolved with valid artifacts; no open topic targets PH-004.
+- [x] Downstream deferrals, original reasons/targets/move histories, accepted simplifications, and uncommitted candidates preserved.
+- [x] Reviewed merges, successful deployments, combined authenticated UAT, and its evidence qualification accepted by the user.
+- [x] Explicit closure authorization received; roadmap, phase/index records, and PH-005 readiness intake prepared.
+- [ ] Dedicated closure PR reviewed, explicitly approved for merge, and merged; phase-status changes take effect then.
 
-No additional essential conceptual answer is missing within the supplied confirmed scope. Exact mechanics remain intentionally deferred; PH-005 design and implementation have not begun.
+No PH-004 conceptual blocker remains. Decision/deferred registries and all canonical decision text are unchanged by this closure; no new PD/DT IDs are needed. PH-009 completeness review, PH-016 transition planning, and redesign-first evolution after holistic design remain unchanged in the roadmap.
+
+## PH-005 readiness
+
+**Knowledge & Resources Model** becomes current for intake readiness only when this closure PR is approved and merged. PH-005 conceptual design begins separately; this handoff neither resolves DT-004 nor makes Resource or publishing decisions. Reconfirm the live register at the start of discussions.
+
+| Intake / dependency | Confirmed foundation and question carried forward |
+| --- | --- |
+| **DT-004 — sole open primary PH-005 topic** | Resource classification/internal structure; Handbook/Pothi/श्लोक/section modeling; potential developmental-concept relationships; creation, publication, curation, and promotion; shared अनुभव/संकल्प/आव्हान suggestions; whether/how custom Journey suggestions enter shared catalogs. These remain questions, not approved hierarchy, entity, or publishing mechanisms. |
+| PD-011 / PD-013 | Curator stewardship and shared curated developmental catalogs are confirmed; exact capability authority/scopes remain DT-012 in PH-008. No new role grant or permission follows from intake. |
+| PD-014 / PD-017 | Shared catalog suggestions and personal Journey undertakings remain distinct; catalog suggestion–विधान associations are many-to-many; Vratarthi final authority and no automatic promotion remain intact. Later catalog edits must not silently alter personal undertakings. |
+| PD-015 | Resources support understanding/learning/development; Handbook/Pothi are foundational documents and Resources. Formats do not compel separate entity types, and Resources need not have developmental-concept associations. |
+| **DT-017 — PH-006, reconciliation in PH-005/008** | Coordinate user-authored content/community and possible curated Resource promotion with DT-004; authored content is not automatically curated. Posts/Blogs/feeds and communication mechanisms remain unapproved candidates/questions. |
+| **PH-008 dependencies — DT-012 / DT-002 and DT-004's permission reconciliation** | Publishing, contribution, access, curation grants/authority, and operational permissions retain permissions-phase ownership. Do not import them into the Resource ontology by assumption. |
+
+No other open topic primarily targets PH-005. Later experience/navigation and flow work retains PH-009/010/011 ownership. No PH-005 product decision, new content entity, application implementation, or migration is authorized by this readiness record.
