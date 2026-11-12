@@ -1,0 +1,12 @@
+# Selected projection of PD-017. Reasons and outcomes are not lifecycle states.
+direction: down
+planned: "Planned" {class: platform}
+progress: "In Progress" {class: core}
+paused: "Individually Paused / Suspended" {class: process}
+concluded: "Concluded\nReason and outcome distinct\nHonest account for started work" {class: platform}
+planned -> progress: "start" {class: progression}
+progress -> paused: "pause" {class: support}
+paused -> progress: "resume" {class: support}
+progress -> concluded: "honest conclusion" {class: progression}
+paused -> concluded: "honest conclusion" {class: support}
+planned -> concluded: "never started; closed solely\nbecause parent Journey concludes\nno separate written account" {class: support}

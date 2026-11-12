@@ -19,16 +19,28 @@ Areas may overlap or be revisited together as understanding develops. Keep each 
 | `PH-006` | Community & content model | Define community participation and content concepts before feature-level behavior. | planned |
 | `PH-007` | Longitudinal history / self-review / evidence model | Describe how personal history, reflection, and evidence are represented over time. | planned |
 | `PH-008` | Permissions & privacy model | Establish privacy and access principles and feature-level permission decisions. | planned |
-| `PH-009` | Experience architecture | Connect the product’s capabilities into a coherent experience. | planned |
+| `PH-009` | Experience architecture | Connect capabilities into a coherent experience; systematically review the complete product experience across participant types and contexts, identifying missing capabilities, supporting experiences, and unresolved product needs. | planned |
 | `PH-010` | Information architecture / navigation | Organize information, destinations, and navigation. | planned |
 | `PH-011` | Complete user journeys / states / edge cases | Specify user journeys, states, transitions, and important edge cases. | planned |
 | `PH-012` | Brand & design language | Define the product’s verbal and visual design language. | planned |
 | `PH-013` | Design system | Define reusable interface foundations and components. | planned |
 | `PH-014` | Motion & interaction language | Define interaction feedback, transitions, and motion behavior. | planned |
 | `PH-015` | Screen design / prototypes | Design and connect representative screens and prototypes. | planned |
-| `PH-016` | Implementation specification / design QA | Prepare implementation guidance and a design-quality review approach. | planned |
+| `PH-016` | Implementation specification / design QA | Prepare implementation guidance and design QA, including existing-to-target reconciliation, technical feasibility/readiness, incremental sequencing, data migration, compatibility, continuity, and transition planning. | planned |
 
-PH-004 is the next current phase for intake readiness only. Its product-design discussions have not begun and start separately after the PH-003 closure PR is approved and merged.
+PH-004 conceptual discussions and scenario reconciliation have occurred; canonicalization is prepared for review. PH-004 remains current and open, with formal closure separately authorized only after review, corrections, and required UAT evidence. PH-005 work has not begun.
+
+## Confirmed planning direction and scope refinements
+
+**Complete holistic product design through PH-016, then incrementally evolve the existing Veervrat application into the redesigned product.** This is redesign-first, not reuse-first: the approved target determines what implementation should become. The existing application/repository supplies a starting point and continuity context, not a constraint on target design or a default commitment to an unrelated ground-up application.
+
+Evaluate each existing area for **retention, refactoring, redesign, replacement, removal, or supplementation** against the target. Reuse must be justified; redesign does not require indiscriminate rewriting. Existing functionality, architecture, component foundations, authentication, database models/connectivity, infrastructure, stack, and deployment pipelines are **not approved for retention merely because they exist**. Substantial subsystem restructuring remains possible. Incremental evolution does not mean one simultaneous release.
+
+PH-009's completeness review examines participant/context coverage and connections among practice, knowledge, community, history, and guidance. Illustrative considerations include signed-in/public and first/returning experiences, landing, authentication/onboarding/invitations, contextual walkthroughs, help, settings, and account management across Vratarthi, Vratamitra, Curator, Moderator, Admin, and Public Visitor contexts. These are **not a committed or exhaustive feature list**: identify/evaluate needs, then explicitly decide them. Detailed flows/states/exceptions and screen design retain later-phase ownership. No separate capability map, new phase, or parallel governance framework is introduced.
+
+PH-016 plans a credible existing-to-target transition: architecture/feasibility, implementation sequencing/readiness, migration/compatibility, existing-user and historical-data continuity, validation, safe release/recovery, and design QA. DT-020 tracks the remaining plan, including divergent old/new semantics, possible data transformations or legacy-history preservation. PH-016 specifies the transition; actual implementation and migration execution follow afterward. No full implementation or production-data audit is authorized in this PH-004 change.
+
+Earlier phases may consult constraints or perform narrowly scoped feasibility investigation when a material uncertainty affects a product decision. Such investigation is **not authorization for premature implementation**. These refinements do not start PH-009/016 work or alter the confirmed domain model.
 
 ## Deferred-topic reconciliation
 
@@ -39,7 +51,7 @@ Record the intake review before phase work begins and the exit review before mar
 | `PH-001` | complete — register seeded retrospectively; no topics target this phase | complete — no topics target this phase |
 | `PH-002` | complete — no open topics targeted this phase at intake | complete — North Star and PD-007, PD-008, PD-009, PD-010 (historical) reconciled; DT-009 moved to PH-011; no unresolved PH-002 topics; see [phase closure](../02-actors-and-relationships/README.mdx#phase-boundary-reconciliation-and-closure) |
 | `PH-003` | complete — DT-010 intake reviewed; ontology work ready to begin, with no PH-003 decisions made | complete — PD-011–PD-015 reconciled with foundation and relationships; DT-001/010 resolved; DT-014 remaining scope moved with history; no open PH-003 topic; review/UAT and explicit closure authorization recorded in [phase closure](../03-ontology-and-domain-model/reconciliation.mdx) |
-| `PH-004` | complete — readiness intake reviewed; [handoff](../03-ontology-and-domain-model/reconciliation.mdx) identifies open DT-007/015/016/018; reconfirm when discussions begin; no PH-004 decisions made | pending |
+| `PH-004` | complete — readiness intake reviewed; [handoff](../03-ontology-and-domain-model/reconciliation.mdx) identifies open DT-007/015/016/018; reconfirm when discussions begin; no PH-004 decisions made | pending — [canonicalization/reconciliation](../04-practice-model/reconciliation.mdx) prepared; incoming concepts resolved with downstream residuals; review, required UAT evidence, and explicit closure authorization outstanding |
 | `PH-005` | pending | pending |
 | `PH-006` | pending | pending |
 | `PH-007` | pending | pending |
