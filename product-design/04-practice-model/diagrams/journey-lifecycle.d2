@@ -1,0 +1,22 @@
+# Selected projection of PD-016 and PD-018; MDX governs prerequisites and omitted edges.
+direction: down
+grid-columns: 1
+lifecycle: "Journey lifecycle (selected transitions)" {
+  direction: down
+  ongoing: "Ongoing\nConscious choice of one विधान" {class: core}
+  paused: "Deliberately Paused\nExplicit Vratarthi resumption" {class: process}
+  completed: "Completed\nLogical prerequisites + self-review\nPerspective requested when applicable" {class: platform}
+  discontinued: "Discontinued\nSelf-review; no completion claim\nFeedback request optional" {class: platform}
+  ongoing -> paused: "pause" {class: support}
+  paused -> ongoing: "resume" {class: support}
+  ongoing -> completed: "conscious completion" {class: progression}
+  ongoing -> discontinued: "conscious discontinuation" {class: support}
+  paused -> discontinued: "conscious discontinuation" {class: support}
+}
+engagement: "Observed engagement while Ongoing — not guidance status" {
+  direction: right
+  active: "Active\nRecorded Vratarthi engagement" {class: growth}
+  inactive: "Inactive\nNot proof real-world practice stopped" {class: weakness}
+  active -> inactive: "absence of recent\nmeaningful recorded activity" {class: support}
+  inactive -> active: "qualifying Vratarthi activity\nnot views or VM activity alone" {class: support}
+}

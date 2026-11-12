@@ -110,6 +110,42 @@
       "status": "confirmed",
       "canonical_home": "../03-ontology-and-domain-model/resources-profile-and-content.mdx",
       "summary": "Resources are accessible learning/development material, including foundational Handbook and Pothi; formats do not compel distinct entity types or developmental links. Journeys and assessments belong to the Vratarthi, not Profile. Authored content is not automatically curated Resources; detailed structure, community features, permissions, and presentation remain deferred."
+    },
+    {
+      "id": "PD-016",
+      "title": "Journey initiation, discovery, lifecycle, and engagement",
+      "status": "confirmed",
+      "canonical_home": "../04-practice-model/journey-lifecycle.mdx",
+      "summary": "One unconcluded Journey per Vratarthi–विधान; conscious additional discovery contexts. Ongoing/Deliberately Paused/Completed/Discontinued lifecycle is separate from observed Active/Inactive engagement. Explicit pause/resume preserves individual undertaking pause conditions; meaningful recorded Vratarthi activity, not viewing or guide activity alone, clears inactivity."
+    },
+    {
+      "id": "PD-017",
+      "title": "Undertaking lifecycle, definition, revision, and conclusion",
+      "status": "confirmed",
+      "canonical_home": "../04-practice-model/undertakings.mdx",
+      "summary": "Prose-first अनुभव/संकल्प/आव्हान definitions share flexible lifecycle, with reason/outcome distinct. Optional intermediate logging and guide participation, prospective traceable revisions, Vratarthi authority, and honest conclusion accounts preserve agency. Never-started work closed solely by parent conclusion has a narrow account exception."
+    },
+    {
+      "id": "PD-018",
+      "title": "Journey conclusion, self-review, and terminal guidance",
+      "status": "confirmed",
+      "canonical_home": "../04-practice-model/journey-lifecycle.mdx",
+      "summary": "Completion requires a completed संकल्प, appropriate unfinished-work handling, final self-review, and requesting effective Journey Vratamitra perspective when applicable; response/approval is not required. Discontinuation requires self-review but not completion minimum or a feedback request. Both terminal states preserve history and end Journey guidance/pending invitations without ending the underlying Primary relationship.",
+      "rationale": "Explicit additive extension of PD-008's completion consequences to discontinuation; guidance modes and existing relationship semantics are preserved."
+    },
+    {
+      "id": "PD-019",
+      "title": "Initial assessment and recommendation model",
+      "status": "confirmed",
+      "canonical_home": "../04-practice-model/assessment-and-progression.mdx",
+      "summary": "Optional assessment uses Never/Sometimes/Often/Always universally and recommends comparatively lower ratings even when all are Often/Always; any assessed विधान may be chosen. Direct browsing also permits Journey initiation/reuse. Alternative scales and contextual algorithms remain uncommitted candidates."
+    },
+    {
+      "id": "PD-020",
+      "title": "Continuous development without aggregate progression gates",
+      "status": "confirmed",
+      "canonical_home": "../04-practice-model/assessment-and-progression.mdx",
+      "summary": "Current scope is continuous development through individual Journeys, without mandatory aggregate counts/targets, levels, eligibility/readiness thresholds, or a distinct formal undertaking milestone. Such a milestone remains an uncommitted candidate, not a philosophical exclusion from the wider tradition."
     }
   ]
 }

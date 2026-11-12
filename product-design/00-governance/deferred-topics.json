@@ -68,11 +68,12 @@
     {
       "id": "DT-007",
       "title": "Challenge application semantics",
-      "status": "open",
+      "status": "resolved",
       "reason": "Challenge(s) contribute to application and evidence of developmental change; lifecycle, repeatability, success and completion semantics, authoring or selection, and relationship to Journey completion remain undecided.",
       "target_phase": "PH-004",
-      "depends_on": ["PD-014"],
-      "notes": "PD-014 now defines आव्हान and optional/multiple undertaking support; DT-001 is resolved. Keep detailed Challenge lifecycle, iteration, completion, exceptions, and participation workflows open, coordinated with DT-015. Do not restore historical thresholds or assume every Journey requires a Challenge."
+      "depends_on": ["PD-014", "PD-017", "PD-018"],
+      "resolution_artifact": "../04-practice-model/reconciliation.mdx",
+      "notes": "Resolved conceptually in PH-004 by PD-017/018: parameters, flexible lifecycle, prospective revision/new-undertaking judgment, optional guide involvement, honest accounts, and parent conclusion are established. Residual UX/timing/history/permissions remain DT-021/023/025/002; no historical thresholds or mandatory Challenge are imported."
     },
     {
       "id": "DT-008",
@@ -157,22 +158,24 @@
     {
       "id": "DT-015",
       "title": "Journey, अनुभव, and संकल्प lifecycle and participation workflows",
-      "status": "open",
+      "status": "resolved",
       "reason": "PD-014 confirms conceptual Journey and undertaking structure, but detailed lifecycle, completion, iteration, recurrence, exceptions, and participation workflows require PH-004 design.",
       "target_phase": "PH-004",
-      "depends_on": ["PD-014"],
+      "depends_on": ["PD-014", "PD-016", "PD-017", "PD-018"],
       "reconcile_in": ["PH-011"],
-      "notes": "Explicitly decide संकल्प completion, reiteration and refinement; ongoing Journey choice/automatic reuse when another उणीव reaches the same विधान; अनुभव/संकल्प workflows; and Journey completion mechanics. Coordinate आव्हान workflows with DT-007 and contribution permissions with DT-002. Preserve completed-संकल्प minimum and optional अनुभव/आव्हान without importing historical states, thresholds, or durations."
+      "resolution_artifact": "../04-practice-model/reconciliation.mdx",
+      "notes": "Resolved conceptually by PD-016/017/018, including unconcluded uniqueness, conscious contexts, pause propagation, संकल्प fulfilment/revision/refinement, and conclusion prerequisites. Reiteration/refinement interaction details remain DT-021; inactivity DT-022, feedback DT-023, archive/delete DT-024, history DT-025, and permissions DT-002. Original reason and target retained."
     },
     {
       "id": "DT-016",
       "title": "Self-assessment scales, scoring, and interaction mechanics",
-      "status": "open",
+      "status": "resolved",
       "reason": "PD-013 confirms assessment meaning and statement selection, but not rating scales, scoring, presentation, or interactions.",
       "target_phase": "PH-004",
-      "depends_on": ["PD-013"],
+      "depends_on": ["PD-013", "PD-019"],
       "reconcile_in": ["PH-009", "PH-011"],
-      "notes": "Separate assessment from proof of success. Do not inherit historical answer labels, filtering, aggregation, recommendation thresholds, or an independent assessment-definition catalog."
+      "resolution_artifact": "../04-practice-model/assessment-and-progression.mdx",
+      "notes": "PD-019 confirms the initial universal frequency scale and simple lower-rating recommendation order, including all-Often/Always cases. No numerical scoring formula or sophisticated engine is introduced. Count/ties/presentation/interactions remain DT-026; alternate scales/contextual algorithms remain uncommitted candidates."
     },
     {
       "id": "DT-017",
@@ -182,17 +185,18 @@
       "target_phase": "PH-006",
       "depends_on": ["PD-015"],
       "reconcile_in": ["PH-005", "PH-008"],
-      "notes": "Decide whether such mechanisms exist and their content/participation rules. Coordinate possible authored-content entry into curated Resources with DT-004, moderation with DT-003, and access/publishing permissions with PH-008. Historical Daily Logs and experience posts are not approved redesign features."
+      "notes": "Decide whether such mechanisms exist and their content/participation rules. Coordinate possible authored-content entry into curated Resources with DT-004, moderation with DT-003, and access/publishing permissions with PH-008. Historical Daily Logs and experience posts are not approved redesign features. Include communication concepts such as Journey-specific versus general person-to-person chat and comments on specific entities/entries as questions, not approved features; recording/history mechanisms remain PH-007 and access PH-008."
     },
     {
       "id": "DT-018",
       "title": "Broader Veervrat progression, milestones, and readiness",
-      "status": "open",
+      "status": "resolved",
       "reason": "Whether multiple Journeys and aggregate completed अनुभव, संकल्प, and आव्हाने contribute to a broader milestone or readiness to formally undertake Veervrat remains undecided.",
       "target_phase": "PH-004",
-      "depends_on": ["PD-012", "PD-014"],
+      "depends_on": ["PD-012", "PD-014", "PD-020"],
       "reconcile_in": ["PH-009", "PH-011"],
-      "notes": "PH-004 owns later progression design and may carry this forward with explicit history. No numerical milestones from brainstorming or historical literature are approved requirements; do not conflate Journey completion with the संस्कार or developmental success."
+      "resolution_artifact": "../04-practice-model/assessment-and-progression.mdx",
+      "notes": "PD-020 resolves current scope as continuous development through individual Journeys without aggregate counts, targets, levels, readiness thresholds, or a distinct mandatory formal milestone. A separate formal milestone remains only an uncommitted future candidate, not an open obligation or a philosophical rejection of wider tradition."
     },
     {
       "id": "DT-019",
@@ -202,6 +206,73 @@
       "target_phase": "PH-012",
       "depends_on": ["PD-013"],
       "notes": "PH-012 is the current target for final product-language naming, not a restriction on earlier review: the provisional names may be reconsidered before PH-012. Preserve the agreed concept and do not make personal statements/catalogs an approved feature."
+    },
+    {
+      "id": "DT-020",
+      "title": "Existing-to-target architecture and incremental transition plan",
+      "status": "open",
+      "reason": "The confirmed redesign-first direction completes holistic design through PH-016 before incremental implementation in the existing app context; architecture, migration, rollout, and sequencing remain to be designed.",
+      "target_phase": "PH-016",
+      "notes": "Evaluate retention/refactoring/redesign/replacement/removal/supplementation against the approved target, not reuse by default or indiscriminate rewrite. Include feasibility, implementation readiness, existing accounts/auth identities, guidance/invitations, Journeys/undertakings, assessments/catalogs/resources/authored content, historical contributions/access, data transformations or legacy preservation, compatibility, continuity, validation, safe release/recovery, and design QA. Plan/specify here; implementation and migration execution follow afterward. No current architecture, stack, auth, connectivity, infrastructure, or pipelines are approved for retention by existence."
+    },
+    {
+      "id": "DT-021",
+      "title": "Practice experience, navigation, and detailed participation flows",
+      "status": "open",
+      "reason": "PH-004 establishes conceptual practice semantics without fixing indicators, controls, navigation, screens, or detailed flows.",
+      "target_phase": "PH-009",
+      "depends_on": ["PD-016", "PD-017", "PD-018"],
+      "reconcile_in": ["PH-010", "PH-011"],
+      "notes": "Include existing-Journey indicators, conscious discovery-context association, planning/revision/replacement/withdrawal/reiteration/refinement interactions, pause/resume and conclusion controls, and logical prerequisite presentation. PH-011 must address detailed independent cancellation/withdrawal of never-started undertakings; the parent-Journey-conclusion account exception does not apply to those independent cases. Do not reopen settled semantics or impose a rigid self-review/feedback sequence."
+    },
+    {
+      "id": "DT-022",
+      "title": "Journey inactivity thresholds and detailed pause interactions",
+      "status": "open",
+      "reason": "PD-016 distinguishes lifecycle and observed engagement but deliberately leaves inactivity policy details unresolved.",
+      "target_phase": "PH-011",
+      "depends_on": ["PD-016"],
+      "notes": "Decide threshold duration, scope (platform/विधान/Journey/other), configurability and authority, exact qualifying events, and detailed inactivity/pause interactions. Preserve purposeful recorded Vratarthi activity, no reset by views or guide activity alone, no inactivity accumulation during deliberate pause, and no compulsory check-in schedule."
+    },
+    {
+      "id": "DT-023",
+      "title": "Journey completion perspective request timing and interaction",
+      "status": "open",
+      "reason": "PD-018 requires requesting the effective Journey Vratamitra's perspective before completion, without a response requirement or veto, but not an exact wait or interaction order.",
+      "target_phase": "PH-011",
+      "depends_on": ["PD-018"],
+      "reconcile_in": ["PH-007", "PH-009"],
+      "notes": "Set reasonable non-response waiting duration and detailed request/self-review interactions. Preserve meaningful request/response history; do not require feedback on discontinuation or from an unrelated Primary, invent notification mechanics (DT-008), or prescribe self-review ordering prematurely."
+    },
+    {
+      "id": "DT-024",
+      "title": "Journey and undertaking archiving, deletion, retention, and restoration",
+      "status": "open",
+      "reason": "PH-004 distinguishes discontinuation, archiving, and deletion without deciding data-management or visibility policy.",
+      "target_phase": "PH-008",
+      "depends_on": ["PD-017", "PD-018"],
+      "reconcile_in": ["PH-009", "PH-011"],
+      "notes": "Decide archiving, eligible lifecycle states, restoration, deletion, retention, cascading effects, and permissions. Neither universally forbid deletion nor turn archive/delete into lifecycle states. Preserve account-exit ownership separately under DT-013."
+    },
+    {
+      "id": "DT-025",
+      "title": "Practice history, revisions, accounts, and reflection mechanisms",
+      "status": "open",
+      "reason": "PH-004 requires meaningful practice and guidance history but not exact event/history models or recording mechanisms.",
+      "target_phase": "PH-007",
+      "depends_on": ["PD-016", "PD-017", "PD-018"],
+      "reconcile_in": ["PH-008", "PH-011"],
+      "notes": "Model chronological discovery contexts, original/changed commitments and reasons, revisions/replacements/withdrawals, conclusion accounts, and guidance request/response history. Examine reflection, feedback, observations, references, and evidence mechanisms without assuming a specific feature/entity is approved; access remains PH-008 and deletion DT-024."
+    },
+    {
+      "id": "DT-026",
+      "title": "Assessment recommendation count, ties, presentation, and interaction",
+      "status": "open",
+      "reason": "PD-019 settles initial scale and recommendation priorities but not exact recommendation count, tie-breaking, presentation, or interaction mechanics.",
+      "target_phase": "PH-009",
+      "depends_on": ["PD-019"],
+      "reconcile_in": ["PH-011"],
+      "notes": "Keep any assessed विधान selectable and preserve comparatively lower-rated recommendations even when all responses are Often/Always. Do not turn future contextual/history algorithms or alternate scales into implementation requirements."
     }
   ]
 }
