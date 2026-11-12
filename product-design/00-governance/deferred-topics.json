@@ -223,7 +223,7 @@
       "target_phase": "PH-009",
       "depends_on": ["PD-016", "PD-017", "PD-018"],
       "reconcile_in": ["PH-010", "PH-011"],
-      "notes": "Include existing-Journey indicators, conscious discovery-context association, planning/revision/replacement/withdrawal/reiteration/refinement interactions, pause/resume and conclusion controls, and logical prerequisite presentation. Do not reopen settled semantics or impose a rigid self-review/feedback sequence."
+      "notes": "Include existing-Journey indicators, conscious discovery-context association, planning/revision/replacement/withdrawal/reiteration/refinement interactions, pause/resume and conclusion controls, and logical prerequisite presentation. PH-011 must address detailed independent cancellation/withdrawal of never-started undertakings; the parent-Journey-conclusion account exception does not apply to those independent cases. Do not reopen settled semantics or impose a rigid self-review/feedback sequence."
     },
     {
       "id": "DT-022",
