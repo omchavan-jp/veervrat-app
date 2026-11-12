@@ -4,13 +4,7 @@ import defaultMdxComponents from 'fumadocs-ui/mdx';
 import { DocsBody, DocsDescription, DocsPage, DocsTitle } from 'fumadocs-ui/layouts/docs/page';
 import { D2Diagram } from '../../components/d2-diagram';
 import { source } from '../../../lib/source';
-
-function documentHref(href: string | undefined, pageUrl: string): string | undefined {
-  if (!href || !/^\.{1,2}\//.test(href) || !href.split(/[?#]/, 1)[0].endsWith('.mdx')) return href;
-  const target = new URL(href, `https://docs.internal/product-docs${pageUrl}`);
-  target.pathname = target.pathname.replace(/\.mdx$/, '');
-  return target.pathname + target.search + target.hash;
-}
+import { documentHref } from '../../../lib/document-href';
 
 export default async function Page({ params }: { params: Promise<{ slug?: string[] }> }) {
   const { slug } = await params;
