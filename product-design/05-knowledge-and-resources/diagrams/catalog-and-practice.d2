@@ -1,0 +1,11 @@
+# Projection of PD-023. Dashed knowledge reference is prose, not a formal association.
+direction: down
+curator: "Curator\nCreates, maintains, publishes" {class: process}
+catalog: "Undertaking catalog item\nReusable अनुभव / संकल्प / आव्हान" {class: platform}
+expression: "गुणदर्शक विधान\nShared developmental catalog" {class: core}
+personal: "Personal Journey undertaking\nChosen, adapted, or custom\nVratarthi final authority" {class: outcome}
+knowledge: "Resource / Section\nKnowledge and understanding" {class: platform}
+curator -> catalog: "stewards" {class: progression}
+catalog <-> expression: "many-to-many" {class: support}
+catalog -> personal: "Vratarthi may choose / adapt\nRemains distinct after catalog edits" {class: progression}
+catalog -> knowledge: "optional reference in prose\nnot a formal association model" {class: support}
