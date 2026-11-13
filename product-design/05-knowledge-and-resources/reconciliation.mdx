@@ -1,11 +1,30 @@
 ---
-title: PH-005 reconciliation and review
-description: Confirmed knowledge scope, DT-004 resolution, conceptual scenarios, and later-phase ownership.
+title: PH-005 reconciliation and closure
+description: Accepted closure evidence, preserved downstream ownership, and PH-006 readiness intake.
 ---
 
-# PH-005 reconciliation and review
+# PH-005 reconciliation and closure
 
-> **Map:** PD-021–PD-024 capture the user-confirmed PH-005 discussions and final conceptual reconciliation. DT-004 resolves conceptually; bounded experience/policy work remains downstream. PH-005 stays current pending review, accepted validation/UAT, and separate formal closure authorization. No PH-006 design or implementation begins here.
+> **Map:** **PH-005 COMPLETE**, effective only on approval and merge of the dedicated closure PR. PD-021–PD-024, conceptual scenarios, both independent review corrections, deployment and qualified authenticated UAT are accepted by the user. This record preserves evidence, downstream ownership and PH-006 intake readiness without changing product decisions or starting conceptual design/implementation.
+
+## Closure summary and authorization
+
+PH-005 establishes knowledge purpose/standing/stewardship, generic Resources and Sections, classifications/associations and reference continuity, undertaking catalog terminology, and optional विधान descriptions. Canonical PD-021–PD-024 text remains unchanged; the foundation consistency and scenario reconciliation below remain the phase outputs. All PH-001–004 decisions and closure records remain intact. No conceptual blocker remains within PH-005's confirmed scope.
+
+Both focused review findings are addressed: PD-014's registry summary records subsequent conceptual resolution in PH-004, and developmental-catalog stewardship/change implications have explicit PH-007/008/009/011/016 ownership. DT-004 remains resolved with its original reason, target, history and resolution artifact preserved; no open topic primarily targets PH-005. Residuals, simplifications and uncommitted candidates below retain their established meanings.
+
+On 2026-11-13 the user accepted canonicalization, independent review/corrections, merged content, deployment and authenticated UAT with its qualifications, and explicitly authorized preparation of formal closure and PH-006 readiness intake. The dedicated closure PR still requires independent review, separate merge approval and merge before the phase-status changes take effect.
+
+## Accepted merge, deployment and UAT evidence
+
+- [PR #410](https://github.com/omchavan-jp/veervrat-app/pull/410) approved head `edbff1fc2ee7f83f555e48d25b6167dec211ca61` squash-merged as `2bdcdcd4516d664bccad1da261fff460c1eafa63`. Both have identical Git tree `afb7d180ab43514057006cdc3208868a11d95740`; independent review and both corrections are accepted.
+- Post-merge [CI](https://github.com/omchavan-jp/veervrat-app/actions/runs/43420760961), [Integration](https://github.com/omchavan-jp/veervrat-app/actions/runs/43420761038), [E2E](https://github.com/omchavan-jp/veervrat-app/actions/runs/43420761094) and [CodeQL](https://github.com/omchavan-jp/veervrat-app/actions/runs/43420760886) succeeded. [UAT deployment run 43420760924](https://github.com/omchavan-jp/veervrat-app/actions/runs/43420760924), attempt 1, succeeded; production deployment was skipped.
+- UAT revision `veervrat-uat-web--0000135`; receipt `receipts/uat/43420760924/1.json` binds the merge SHA to serving web digest `sha256:f50c9001d92b4f6271b9ff40a5ffb07730df222a92c11bb2c7b5fd449693be0c`.
+- Accepted authenticated documentation UAT covered PD-021–PD-024 content; both new D2 diagrams with expansion/zoom/scrolling; earlier Journey/undertaking diagram terminology; earlier-phase cross-references and PD-024 anchor; registry and schema navigation; deferred ownership; roadmap/current-state wording. Local supporting notes were inspected at `/tmp/ph005-uat-evidence.md`; durable PR/workflow/receipt references and qualifications are recorded here rather than depending on that temporary file.
+
+**Evidence qualification:** the authenticated browser tool did not expose raw HTTP status codes; no raw authenticated HTTP-200 evidence is claimed. Actual navigation, expected rendered content/JSON and diagram behavior were observed. This is documentation UAT, not runtime testing of future Resource features or exhaustive device/flow coverage. The user explicitly accepted these qualifications for closure.
+
+PR #410 used a separately authorized one-time review-only maintainer exception restricted to its approved head. Mandatory protections remained enforced and no rulesets changed. It authorizes no exception for this closure PR or future PRs. Existing Next.js advisories remain separately tracked technical work; closure claims no remediation and changes no dependencies.
 
 ## Authority and foundation consistency
 
@@ -56,11 +75,31 @@ Current scope deliberately uses generic Resources/Sections, extensible types/tag
 
 Separate Collections/ordered reading lists, dedicated Vratarthi submission/promotion workflows, mandatory multi-person editorial approval, mandatory Resource history/snapshots, specialized format-specific entities, a separate undertaking recommendation mechanism, and a formal Resource–Undertaking association model are **not current-scope requirements or deferred delivery obligations**. Collections, elaborate Resource history, and undertaking recommendations may be reconsidered only as uncommitted future candidates if a genuine need emerges. This does not weaken personal-history requirements or grant new permissions.
 
-## Review and closure boundary
+## Closure checklist
 
-- Review canonical coverage, terminology mapping, additive PD-024 provenance, and selected D2 projections.
-- Validate references, registry/deferred consistency, actual D2 rendering, documentation build, and required repository checks.
-- Reconcile independent review corrections and obtain accepted deployed UAT evidence through the normal reviewed merge/deployment workflow.
-- Obtain **separate explicit authorization** for formal PH-005 closure. The roadmap end review remains pending; PH-006 remains planned.
+- [x] PD-021–PD-024 confirmed/canonical; concepts and representative scenarios reconciled against the unchanged foundation.
+- [x] Independent review and both focused corrections accepted; canonicalization merged with identical reviewed/merged trees.
+- [x] DT-004 resolved, no open primary PH-005 target; original DT reasons/targets/histories and downstream ownership preserved.
+- [x] Validation, successful post-merge checks/deployment and qualified authenticated documentation UAT accepted by the user.
+- [x] Explicit authorization for formal closure preparation received; phase/index/roadmap exit review and PH-006 readiness intake prepared.
+- [ ] Dedicated closure PR independently reviewed, separately approved for merge and merged; status changes take effect then.
 
-No application code, data model, API, editor architecture, dependency, or infrastructure implementation is part of this change.
+The decision/deferred registries, all canonical decision text and D2 sources are unchanged by closure. No new PD/DT IDs are needed. Approved PH-009/016 refinements and redesign-first direction remain unchanged.
+
+## PH-006 readiness
+
+**Community & Content Model** becomes current **for readiness intake only** upon approved merge of this closure PR. Conceptual design begins separately after closure verification. Reconfirm the live register before discussions; this handoff identifies questions and constraints without answering them.
+
+| Incoming topic / dependency | Scope and boundary carried forward |
+| --- | --- |
+| **DT-003 — open primary PH-006 intake** | Original reason: PD-011 confirms Moderator purpose while exact moderation scopes, visibility-context rules, actions, reports, restrictions, removal and escalation await content/community modeling. PD-011 dependency and PH-008 reconciliation remain; no moderation authority or action is decided here. |
+| **DT-017 — open primary PH-006 intake** | Original PD-015 boundary distinguishes authored material from curated Resources without approving Posts/Blogs/feeds. Actual authored-content forms, participation/communication mechanisms and exact curated-inclusion relationships remain questions; preserve PH-005/008 reconciliation and its original reason/dependency. |
+| **DT-028 — open PH-008 topic, PH-006/011 reconciliation** | Resource/catalog access/lifecycle policy intersects authored-content privacy and curated inclusion; remains PH-008-owned. DT-012 retains grants/moderation/Curator authority; DT-002 retains feature-level guidance permissions. |
+| PD-011 | Preserve participation identity, actor purposes and granted versus contextual capabilities; infer no new role, unrestricted authority or content permission. |
+| PD-014/016/017/018 | Preserve Journey/personal undertaking and guidance/conclusion/history boundaries; community content does not silently replace or redefine personal practice records. |
+| PD-015/021/022/023; resolved DT-004 | Ordinary authored material is distinct from curated Resources. Curators may consider valuable authored material for curated inclusion; preserve authorship versus curation/official standing, no required dedicated submission/promotion workflow, no automatic promotion or private-content access. Resource/Section and catalog distinctions remain intact. |
+| PH-007 / PH-008 | Coordinate longitudinal history/recording/evidence implications with PH-007 (including relevant DT-025 work); exact privacy, moderation authority, content visibility/access and publishing policy stay PH-008. Do not invent recording or communication features through these dependencies. |
+
+DT-003 and DT-017 are the only open primary PH-006 topics; DT-028 is the additional open record explicitly requiring PH-006 reconciliation. DT-004's PH-006 reconciliation preserves its confirmed boundaries, not an unresolved PH-005 backlog. All registry statuses, owners and histories remain unchanged.
+
+Posts, Blogs, feeds, historical Daily Logs/experience posts, person-to-person or Journey-specific chat, and comments are questions or uncommitted concepts, **not automatically approved features**. No content entity, community mechanism, workflow, permission, PH-006 answer or application implementation is established by this readiness record.
