@@ -40,11 +40,12 @@
     {
       "id": "DT-004",
       "title": "Resource structure, relationships, curation, and promotion",
-      "status": "open",
+      "status": "resolved",
       "reason": "Curators steward centrally curated or endorsed resources, while approval, promotion, featuring, pinning, official status, recommendations, collections, and entity-linking mechanics should be decided per content type.",
       "target_phase": "PH-005",
-      "notes": "PH-005 owns Resource classification/internal structure, Pothi/श्लोक/section modeling, potential developmental-concept relationships, and creation/publishing/curation/promotion mechanisms. Also decide whether/how Journey-specific custom suggestions enter shared catalogs; no automatic promotion is established. Reconcile user-authored content entering curated Resources with PH-006 (DT-017) and publishing/access permissions with PH-008. Handbook/Pothi Resource status and format-neutral boundaries are confirmed by PD-015; shared curated developmental catalogs by PD-013.",
-      "depends_on": ["PD-011", "PD-013", "PD-014", "PD-015"],
+      "notes": "PD-021/022/023 resolve conceptual scope: knowledge standing/stewardship, generic nested Sections, types/tags/developmental associations, current-content references, and Curator-managed undertaking catalog items (earlier shared suggestions). No dedicated Vratarthi submission/promotion workflow, separate Collection, mandatory editorial approval/history, undertaking recommendation engine, or formal Resource–Undertaking association is in current scope. Original reason examples do not approve pinning or other mechanisms. Residual discovery/prominence/authoring/reference experiences are DT-027; authority is DT-012 and access/publishing/deletion policy DT-028. DT-017 retains authored-content/community relationships in PH-006 with PH-008 reconciliation; technical editor/representation choices remain DT-020. No automatic promotion or private-content access is granted.",
+      "depends_on": ["PD-011", "PD-013", "PD-014", "PD-015", "PD-021", "PD-022", "PD-023"],
+      "resolution_artifact": "../05-knowledge-and-resources/reconciliation.mdx",
       "reconcile_in": ["PH-006", "PH-008"]
     },
     {
@@ -128,7 +129,7 @@
       "reason": "PD-011 establishes Curator, Moderator, and Admin as granted platform capabilities, while exact granting authority, permission scopes, revocation, and operational mechanics remain deferred to permissions/privacy design.",
       "target_phase": "PH-008",
       "depends_on": ["PD-011"],
-      "notes": "Extend the existing Admin authority question to exact granting authority, permission scopes, revocation, and operational mechanics for explicitly granted Curator, Moderator, and Admin capabilities. Vratamitra requires no separate platform-role grant under PD-011; contextual roles do not inherently grant unrestricted permissions."
+      "notes": "Extend the existing Admin authority question to exact granting authority, permission scopes, revocation, and operational mechanics for explicitly granted Curator, Moderator, and Admin capabilities. Vratamitra requires no separate platform-role grant under PD-011; contextual roles do not inherently grant unrestricted permissions. Include PH-005 Resource/catalog publishing, editing, withdrawal, foundational/official standing, and centrally managed type/tag authority under PD-021/022/023; exact access/deletion policy is DT-028. Conceptual Curator stewardship does not grant unrestricted authority. Explicitly retain exact authority to create, modify, retire or otherwise maintain entries in all four PD-013 developmental catalogs: गुण, उपगुण, उणीवा and गुणदर्शक विधाने. Coordinate maintenance experiences with DT-027, historical effects with DT-025 and continuity with DT-020; no maintenance mechanics or Resource lifecycle/history semantics are assigned to these catalogs here."
     },
     {
       "id": "DT-013",
@@ -185,7 +186,7 @@
       "target_phase": "PH-006",
       "depends_on": ["PD-015"],
       "reconcile_in": ["PH-005", "PH-008"],
-      "notes": "Decide whether such mechanisms exist and their content/participation rules. Coordinate possible authored-content entry into curated Resources with DT-004, moderation with DT-003, and access/publishing permissions with PH-008. Historical Daily Logs and experience posts are not approved redesign features. Include communication concepts such as Journey-specific versus general person-to-person chat and comments on specific entities/entries as questions, not approved features; recording/history mechanisms remain PH-007 and access PH-008."
+      "notes": "PD-021 confirms ordinary Vratarthi-authored material and Curator consideration for curated inclusion, without a dedicated submission/promotion workflow or private-content access. Actual forms, content types, visibility, participation mechanisms, and exact authored-content/curated-inclusion relationships remain PH-006. Decide whether Posts/Blogs/feeds or other mechanisms exist; coordinate with resolved DT-004, PD-021/023, moderation DT-003, and PH-008 permissions (DT-028). Historical Daily Logs and experience posts remain unapproved. Journey-specific versus person-to-person chat and entity/entry comments remain questions, not approved features; recording/history mechanisms remain PH-007."
     },
     {
       "id": "DT-018",
@@ -213,7 +214,7 @@
       "status": "open",
       "reason": "The confirmed redesign-first direction completes holistic design through PH-016 before incremental implementation in the existing app context; architecture, migration, rollout, and sequencing remain to be designed.",
       "target_phase": "PH-016",
-      "notes": "Evaluate retention/refactoring/redesign/replacement/removal/supplementation against the approved target, not reuse by default or indiscriminate rewrite. Include feasibility, implementation readiness, existing accounts/auth identities, guidance/invitations, Journeys/undertakings, assessments/catalogs/resources/authored content, historical contributions/access, data transformations or legacy preservation, compatibility, continuity, validation, safe release/recovery, and design QA. Plan/specify here; implementation and migration execution follow afterward. No current architecture, stack, auth, connectivity, infrastructure, or pipelines are approved for retention by existence."
+      "notes": "Evaluate retention/refactoring/redesign/replacement/removal/supplementation against the approved target, not reuse by default or indiscriminate rewrite. Include feasibility, implementation readiness, existing accounts/auth identities, guidance/invitations, Journeys/undertakings, assessments/catalogs/resources/authored content, historical contributions/access, data transformations or legacy preservation, compatibility, continuity, validation, safe release/recovery, and design QA. Plan/specify here; implementation and migration execution follow afterward. No current architecture, stack, auth, connectivity, infrastructure, or pipelines are approved for retention by existence. PH-005 leaves technical editor architecture, content representation/storage, and integration undecided; coordinate Markdown versus rich-text/block experience choices with DT-027 and component/interaction/screen design in PH-013–015. Explicitly include data continuity and transition implications when गुण, उपगुण, उणीवा or गुणदर्शक विधान catalog entries change, including existing assessments, Journeys, references and historical records. Coordinate unresolved semantics with DT-025/012/027; do not choose change-propagation or version-history mechanics here."
     },
     {
       "id": "DT-021",
@@ -262,7 +263,7 @@
       "target_phase": "PH-007",
       "depends_on": ["PD-016", "PD-017", "PD-018"],
       "reconcile_in": ["PH-008", "PH-011"],
-      "notes": "Model chronological discovery contexts, original/changed commitments and reasons, revisions/replacements/withdrawals, conclusion accounts, and guidance request/response history. Examine reflection, feedback, observations, references, and evidence mechanisms without assuming a specific feature/entity is approved; access remains PH-008 and deletion DT-024."
+      "notes": "Model chronological discovery contexts, original/changed commitments and reasons, revisions/replacements/withdrawals, conclusion accounts, and guidance request/response history. Examine reflection, feedback, observations, references, and evidence mechanisms without assuming a specific feature/entity is approved; access remains PH-008 and deletion DT-024. Reconcile implications of changes to PD-013's गुण, उपगुण, उणीवा and गुणदर्शक विधान catalogs for existing assessments, Journeys, references and historical records. Exact maintenance authority remains DT-012 (PH-008), authoring/change interactions DT-027 (PH-009/011), and data continuity/transition DT-020 (PH-016). No Resource current-content-reference, lifecycle, snapshot or version-history rule is applied to developmental catalogs by assumption."
     },
     {
       "id": "DT-026",
@@ -273,6 +274,27 @@
       "depends_on": ["PD-019"],
       "reconcile_in": ["PH-011"],
       "notes": "Keep any assessed विधान selectable and preserve comparatively lower-rated recommendations even when all responses are Often/Always. Do not turn future contextual/history algorithms or alternate scales into implementation requirements."
+    },
+    {
+      "id": "DT-027",
+      "title": "Knowledge discovery, authoring, and reference experiences",
+      "status": "open",
+      "reason": "PH-005 confirms knowledge and catalog concepts without deciding discovery, prominence, editor experience, detailed authoring journeys, or reference interactions.",
+      "target_phase": "PH-009",
+      "depends_on": ["PD-021", "PD-022", "PD-023", "PD-024"],
+      "reconcile_in": ["PH-010", "PH-011", "PH-016"],
+      "downstream_phases": ["PH-013", "PH-014", "PH-015"],
+      "notes": "Design browsing/search/navigation, foundational/official/curated standing and prominence, Resource/Section discovery via types/tags/developmental links, relevant undertaking catalog selection, and optional विधान-description presentation in assessment/browsing/Journeys. PH-011 owns detailed create/edit/publish/withdraw, reference and unavailable-reference interactions. Markdown versus rich-text/block editor remains open for experience and PH-016 architecture (DT-020); components, motion/interactions and screens belong to PH-013–015. Evaluate genuine discovery needs without treating old pinning/recommendation examples as approved features or introducing Collections, submission workflows, mandatory Resource history, or an undertaking recommendation engine. Explicitly retain maintenance/authoring experiences and detailed change/retirement interactions for PD-013's गुण, उपगुण, उणीवा and गुणदर्शक विधान catalogs, coordinated with authority in DT-012, assessment/Journey/reference/history implications in DT-025 and data continuity in DT-020. This deferral does not impose Resource lifecycle or version-history semantics on developmental catalogs."
+    },
+    {
+      "id": "DT-028",
+      "title": "Resource and undertaking-catalog access and lifecycle policy",
+      "status": "open",
+      "reason": "PH-005 establishes conceptual Curator stewardship and current-content references without exact audience, contribution, publishing, withdrawal, deletion, retention, or access rules.",
+      "target_phase": "PH-008",
+      "depends_on": ["PD-021", "PD-022", "PD-023"],
+      "reconcile_in": ["PH-006", "PH-011"],
+      "notes": "Set Resource/catalog publishing, editing, withdrawal and access policy, foundational-standing changes, classification/tag management permissions, authored-content privacy and curated inclusion, and Resource deletion/retention/reference-access rules. Coordinate capability grants/authority with DT-012, guidance contribution access with DT-002, authored-content concepts with DT-017 and detailed unavailable-reference interactions with DT-027. No automatic promotion, private-Journey access, permanent retention, unrestricted deletion, mandatory historical snapshot or public-access policy is inferred. Personal practice deletion remains DT-024; account exit DT-013."
     }
   ]
 }

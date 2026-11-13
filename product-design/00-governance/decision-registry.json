@@ -102,7 +102,7 @@
       "title": "Journey and अनुभव / संकल्प / आव्हान ontology",
       "status": "confirmed",
       "canonical_home": "../03-ontology-and-domain-model/journey-and-undertakings.mdx",
-      "summary": "A Vratarthi's Journey undertakes one shared विधान, may start without assessment or उणीव, and preserves historical discovery contexts. Shared suggestions relate many-to-many to statements; multiple personal undertakings and custom suggestions retain Vratarthi authority. A completed Journey conceptually requires a completed संकल्प; अनुभव and आव्हान are optional. Lifecycle and broader progression remain deferred."
+      "summary": "A Vratarthi's Journey undertakes one shared विधान, may start without assessment or उणीव, and preserves historical discovery contexts. Shared undertaking catalog items (earlier shared suggestions, clarified by PD-023) relate many-to-many to statements; multiple personal undertakings and custom suggestions retain Vratarthi authority. A completed Journey conceptually requires a completed संकल्प; अनुभव and आव्हान are optional. Lifecycle and broader progression were deferred at PH-003; their conceptual scope is now resolved by PD-016–PD-020."
     },
     {
       "id": "PD-015",
@@ -146,6 +146,36 @@
       "status": "confirmed",
       "canonical_home": "../04-practice-model/assessment-and-progression.mdx",
       "summary": "Current scope is continuous development through individual Journeys, without mandatory aggregate counts/targets, levels, eligibility/readiness thresholds, or a distinct formal undertaking milestone. Such a milestone remains an uncommitted candidate, not a philosophical exclusion from the wider tradition."
+    },
+    {
+      "id": "PD-021",
+      "title": "Knowledge purpose, standing, and stewardship",
+      "status": "confirmed",
+      "canonical_home": "../05-knowledge-and-resources/purpose-and-stewardship.mdx",
+      "summary": "Knowledge supports understanding Veervrat, personal development, and independent broader learning. Authorship, foundational/official standing, curation, and featuring are distinct; Curators steward curated material through a simple publishing lifecycle without mandatory multi-person approval or a dedicated Vratarthi submission/promotion workflow. Detailed authority and access remain deferred."
+    },
+    {
+      "id": "PD-022",
+      "title": "Resource structure, classification, and reference continuity",
+      "status": "confirmed",
+      "canonical_home": "../05-knowledge-and-resources/resource-model.mdx",
+      "summary": "Generic Resources have optional ordered, nested, individually referenceable Sections. Centrally managed extensible types/tags are distinct from optional explicit many-to-many developmental associations. Internal/external material may coexist. References follow current content without mandatory Resource version history; unavailable material does not erase personal content. No separate Collection is in current scope."
+    },
+    {
+      "id": "PD-023",
+      "title": "Undertaking catalog terminology and stewardship",
+      "status": "confirmed",
+      "canonical_home": "../05-knowledge-and-resources/undertaking-catalogs.mdx",
+      "summary": "Earlier shared/catalog suggestions mean Curator-managed undertaking catalog items, distinct from personal undertakings and recommendations. Relevant catalog access suffices without an undertaking recommendation engine or dedicated Vratarthi submission/promotion workflow. Resources are distinct; optional prose references do not create a formal Resource–Undertaking association model.",
+      "rationale": "Explicit user-confirmed terminology clarification of PD-014/017, preserving their relationships, personal revision history, and Vratarthi authority; PD-019 assessment recommendations are unchanged."
+    },
+    {
+      "id": "PD-024",
+      "title": "Optional explanatory description",
+      "status": "confirmed",
+      "canonical_home": "../03-ontology-and-domain-model/developmental-ontology.mdx",
+      "summary": "A गुणदर्शक विधान may have an optional explanatory description belonging to it, not a separate assessed statement, assessment entity, or required Resource. No mandatory backfill, relationship, assessment-inclusion, scale, or Journey-anchor change is introduced.",
+      "rationale": "Explicit compatible PH-005 addition to PD-013, not supersession of the developmental ontology."
     }
   ]
 }

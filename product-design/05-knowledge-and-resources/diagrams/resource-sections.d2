@@ -1,0 +1,16 @@
+# Selected projection of PD-022. MDX is semantic truth, not a persistence schema.
+direction: down
+resource: "Resource\nIndependently referenceable" {class: core}
+section: "Section\nOriginal Resource; ordered\nIndividually referenceable" {class: process}
+child: "Nested child Section\nParent and order preserved\nNo fixed depth" {class: process}
+types: "Resource / Section Types\nSeparate, extensible classifications" {class: platform}
+tags: "General subject tags\nOptional; centrally managed" {class: growth}
+development: "गुण / उपगुण / विधान / उणीव\nOptional explicit associations\nMany-to-many" {class: platform}
+resource -> section: "0..many parts" {class: progression}
+section -> child: "0..many children" {class: progression}
+resource -> types: "Resource classification" {class: support}
+section -> types: "Section classification" {class: support}
+resource -> tags: {class: support}
+section -> tags: {class: support}
+resource -> development: {class: support}
+section -> development: {class: support}

@@ -1,0 +1,49 @@
+---
+title: Resource and Section model
+description: Generic referenceable knowledge, extensible classifications, optional associations, and current-content references.
+---
+
+# Resource and Section model
+
+> **Map:** One generic Resource can have optional nested Sections belonging to that same Resource. Types, subject tags, and developmental associations are separate. Internal content and external references may coexist. References follow current content; Resource revision history is deliberately simple and distinct from personal developmental history.
+
+## PD-022 — Resource structure, classification, and reference continuity
+
+### Resource and Section
+
+A Resource has **zero or more Sections**. A Section has **zero or more nested child Sections**, without a fixed conceptual depth. Every Section remains part of its original Resource, preserving parent relationship and ordering. Each Section is individually identifiable/referenceable at any depth; the complete Resource is independently referenceable. A short standalone Resource needs no Sections. Moving a Section within its Resource preserves references to that Section.
+
+There is no universal Chapter → Section → Subsection hierarchy. Illustrative structures include Pothi श्लोक/explanations/sections, Handbook chapters/subsections, article/book passages, and video/lecture chapters or timestamp-based segments. A श्लोक may be a Section classified as श्लोक. **These examples do not create specialized domain entities** for श्लोक, Chapter, Explanation, Article, Video, Book, Handbook, or Pothi. Introduce no separate model without future confirmed behavior requiring it. This conceptual hierarchy prescribes no tables, recursive schema, content blocks, or implementation identifiers.
+
+### Four distinct organizing concepts
+
+| Concept | Current rule |
+| --- | --- |
+| Resource Types | Centrally managed, extensible classification; Book, Article, Video, Handbook, Pothi are illustrative, not an exhaustive list to seed. |
+| Section Types | Centrally managed, extensible classification; श्लोक, Chapter, Subsection, Explanation, Passage, Video Segment are illustrative. |
+| General subject tags | Optional shared, centrally managed, extensible tags for Resources and Sections; not unrestricted contributor-created free-form tags. Philosophy, Psychology, History, Science, भारतीय ज्ञानपरंपरा are examples only. |
+| Developmental associations | Optional, explicit many-to-many links from a Resource **or any Section** directly to any combination of गुण, उपगुण, गुणदर्शक विधान, and उणीव. None is required. |
+
+Tags are distinct from types and from links to actual developmental catalog entities. No subject hierarchy, synonyms, automated tagging, or complex taxonomy-management system is established. Central stewardship/extensibility does not choose database catalogs, configuration, enums, or another implementation.
+
+A Section's associations may differ from its Resource's. A parent's explicit association does not automatically assert the same relevance for every child, or vice versa. Keep explicit links distinct from possible later discovery inference; no inference rule is approved here. PD-013 remains unchanged: one गुण per उपगुण, many-to-many उणीव–उपगुण, one उपगुण per विधान, **no direct canonical उणीव–विधान association**. Resource links do not change those relationships.
+
+### Content and simple organization
+
+Resources and Sections may contain internal content, external references, or both. Examples include an internally available foundational document; an external lecture; explanatory information about a recommended book with an external reference; original Veervrat commentary accompanying a lecture; or a Section referencing a specific external segment. Veervrat need not reproduce or host all curated knowledge. No mandatory embedding, ingestion, republication, media processing, or fixed editor format is implied.
+
+**No separate Collection concept in current scope.** Tags and developmental associations suffice for now. Resource–Section hierarchy describes parts of one body of knowledge; tags/associations relate relevant material without creating Collection membership. Deliberately assembled/ordered reading collections are only an uncommitted future candidate. No Collection entity, reading-list workflow, nested Collection, or membership model is approved.
+
+### Current-content references
+
+A reference to an existing Resource/Section points to its **current content**. An edit does not require a new identity merely because content changes. If referenced material no longer exists, indicate unavailability while preserving the Vratarthi's own Journey, reflection, or personal content.
+
+The initial model—including foundational Resources—requires **no mandatory version history, historical snapshot, revision-management system, or full copy solely because someone referenced material**. Elaborate Resource history is an uncommitted future candidate. This does not weaken PD-017's traceable personal undertaking revisions or preservation of original/revised commitments; Resource history and personal developmental history are distinct.
+
+DT-028 (PH-008) retains withdrawal/deletion/retention/access policy; no permanent retention or unrestricted deletion is inferred. DT-027 retains discovery, authoring, and unavailable-reference interactions in PH-009/010/011. DT-012 retains classification/tag management authority. Editor choice and representation remain later experience/implementation work, not ontology.
+
+## Explanatory projection
+
+Selected relationships only; this is not a persistence model or exhaustive taxonomy.
+
+<D2Diagram src="/05-knowledge-and-resources/diagrams/resource-sections.d2" alt="Resource and nested Sections are individually referenceable; types, subject tags, and optional developmental associations remain separate" />
