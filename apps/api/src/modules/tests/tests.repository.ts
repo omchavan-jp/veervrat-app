@@ -18,6 +18,14 @@ export class TestsRepository {
     });
   }
 
+  async findSentenceIdsForWeakness(weaknessId: string): Promise<string[]> {
+    const sentences = await this.prisma.sentence.findMany({
+      where: { subvirtue: { weaknesses: { some: { weaknessId } } } },
+      select: { id: true },
+    });
+    return sentences.map((s) => s.id);
+  }
+
   async createDraft(userId: string, weaknessId: string) {
     return this.prisma.testAttempt.create({
       data: { userId, weaknessId, isDraft: true },
