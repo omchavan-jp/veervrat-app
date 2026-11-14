@@ -6,13 +6,13 @@ The primary user of the app — a person working to overcome their weaknesses an
 _Avoid_: user, student, mentee
 
 **Vratmitra**
-A human mentor who guides a vratarthi. Always a real person, never AI. Can be scoped globally (one per vratarthi at a time) or to a specific journey.
+A human mentor who guides a vratarthi. Always a real person, never AI. Can be scoped as primary (one per vratarthi at a time) or to a specific journey.
 _Avoid_: mentor, coach, guide
 
 **Weakness** · मराठी: **उणीव** (sing.) / **उणीवा** (pl.)
 A named character flaw or behavioural deficit that a vratarthi works to overcome. Linked to one or more subvirtues that address it.
 _Avoid_: lacuna, problem, flaw
-_Avoid in Marathi_: कमजोरी — replaced throughout on 2026-08-21 (confirmed with Nachiket). It reads as "weakness" in the sense of frailty or inadequacy; उणीव carries the intended sense of something lacking that can be filled, which is the whole premise of a journey.
+_Avoid in Marathi_: कमजोरी, दुर्गुण, कमकुवतपणा, दुर्बलता — replaced throughout on 2026-08-21 / corrected 2026-11-05 (confirmed with Nachiket). It reads as "weakness" in the sense of frailty or inadequacy; उणीव carries the intended sense of something lacking that can be filled, which is the whole premise of a journey.
 _Oblique forms_ (Marathi inflects): उणिवेचा / उणिवेवर / उणिवेकडे (sing.), उणिवांचा / उणिवांकडे (pl.)
 
 **Virtue**
@@ -56,7 +56,7 @@ The default vratmitra a vratarthi has selected for their account. At most one at
 _Avoid_: default mentor, primary mentor
 
 **Journey Vratmitra**
-A vratmitra assigned specifically to one journey. Independent of the global VM. Can be the same person or different. Selected by the vratarthi (invitation model).
+A vratmitra assigned specifically to one journey. Independent of the primary VM. Can be the same person or different. Selected by the vratarthi (invitation model).
 _Avoid_: journey mentor, local mentor
 
 **Custom ERC**
@@ -112,7 +112,7 @@ A one-way relationship where one user subscribes to another VA's public activity
 _Avoid_: friend, connect, subscribe
 
 **VM Invitation**
-The act of a vratarthi inviting another user to become their vratmitra (global or journey-scoped). Requires explicit acceptance by the invitee. Relationship is `pending` until accepted, `active` once accepted.
+The act of a vratarthi inviting another user to become their vratmitra (primary or journey-scoped). Requires explicit acceptance by the invitee. Relationship is `pending` until accepted, `active` once accepted.
 _Avoid_: VM request, mentor request
 
 **Dormant**
