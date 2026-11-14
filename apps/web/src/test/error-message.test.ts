@@ -9,11 +9,11 @@ describe('errorMessage — which server text a person is allowed to see', () => 
     const err = new ApiError(
       409,
       'PENDING_GLOBAL_VM_INVITE_EXISTS',
-      'A pending global VM invitation already exists. Cancel it before sending a new one.',
+      'A pending primary VM invitation already exists. Cancel it before sending a new one.',
     );
 
     expect(errorMessage(err, FALLBACK)).toBe(
-      'A pending global VM invitation already exists. Cancel it before sending a new one.',
+      'A pending primary VM invitation already exists. Cancel it before sending a new one.',
     );
   });
 

@@ -360,7 +360,7 @@ Anything noticed but not being worked on right now goes straight to an issue.
 
 - **"Default vratmitra not seen"** — *"Default vratmitra असायला pahije"* (route
   `/journeys/4bf14bfe-…`, aaditya.hasabnis@gmail.com, 2026-07-21). Reads as a feature request:
-  journeys should get a default/global vratmitra automatically. Needs scoping — missing
+  journeys should get a default/primary vratmitra automatically. Needs scoping — missing
   onboarding behaviour, or a new ask?
 - **"Platform Invite"** — *"What does sending platform invite to an email id do?"* (route
   `/invitations`, veervrat@jnanaprabodhini.org, 2026-07-24). The raw-email path (inviting

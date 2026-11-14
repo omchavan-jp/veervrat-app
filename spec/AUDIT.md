@@ -10,7 +10,7 @@ _Date: 2026-06-02 | Status: ✅ All blocking items resolved — see open/questio
 3. **Moderator scope for custom ERC review** (C-02) — moderator simultaneously has "no journey access" and "sees journey context" for review. Contradictory.
 4. **14 missing permissions** in the permissions matrix (PM-01 through PM-14 below).
 5. **9 missing data model entities** (DM-01 through DM-12 below) — all confirmed v1 features.
-6. **VM self-withdrawal flow** — affects pending approval queue, migration UI, global VM behavior. Unresolved.
+6. **VM self-withdrawal flow** — affects pending approval queue, migration UI, primary VM behavior. Unresolved.
 7. **`admin.view_chat` matrix cell** — still shows "TBD" but is resolved in prose. Matrix must be corrected.
 8. **Journey start from Virtues browser (no test context)** — what weakness is attached? ERC filter cannot be built.
 9. **Loose theme tags: managed taxonomy vs free-form** — blocking schema for shlokas and resources.
@@ -41,7 +41,7 @@ _Date: 2026-06-02 | Status: ✅ All blocking items resolved — see open/questio
 → Decision needed: can VA select new pool items mid-journey after weakness attachment, or are they just informed?
 
 **C-05: VM self-removal from global assignment — migration UI unclear**
-- VA-initiated global VM removal triggers migration UI (specced)
+- VA-initiated primary VM removal triggers migration UI (specced)
 - VM self-withdrawal from global assignment — does it also trigger migration UI for the VA?
 → Decision needed
 
@@ -61,7 +61,7 @@ Mentioned in 7+ files. Need: notification data model, bell/badge UX, per-type op
 Only VA profile is specced (`10_public-profile.md`). VM profile fields beyond credibility stat are undefined.
 
 **G-03: Account Settings page — no spec**
-Referenced by: language toggle, online indicator, last active privacy, email notification per-VM, chat mute, global VM settings, profile field toggles. No `decisions/XX_account-settings.md` exists.
+Referenced by: language toggle, online indicator, last active privacy, email notification per-VM, chat mute, primary VM settings, profile field toggles. No `decisions/XX_account-settings.md` exists.
 
 **G-04: Test response scale and scoring formula (BLOCKING)**
 "Sometimes/Never flagged", "lowest-scored sentences" — but the response options, labels, and scoring are never defined.
@@ -100,7 +100,7 @@ Role assignment, suspension, forced deletion, email override, impersonation — 
 `09_guest-access.md` line 39. Infrastructure decision (SSR, meta tags, robots.txt, sitemap.xml) needed before any public page implementation.
 
 **G-18: VM self-withdrawal flow — unresolved**
-`04_lifecycle.md` says VM can withdraw. `22_vm-dashboard.md` says "assumed yes — TBD." Pending approval queue handling, migration UI implications, and global VM withdrawal behavior all undefined.
+`04_lifecycle.md` says VM can withdraw. `22_vm-dashboard.md` says "assumed yes — TBD." Pending approval queue handling, migration UI implications, and primary VM withdrawal behavior all undefined.
 
 ---
 
@@ -124,8 +124,8 @@ Dashboard? Test entry screen? What if weakness content changed since draft was s
 **F-06: Experience log visibility change after publish — can VA change it?**
 Only retroactive behavior on unfollow is specced. VA's own control post-publish is undefined.
 
-**F-07: Cancellation of pending global VM invite — VA flow and invitee notification**
-`13_user-search.md` says VA must cancel before assigning a new global VM. No cancellation UI or notification defined.
+**F-07: Cancellation of pending primary VM invite — VA flow and invitee notification**
+`13_user-search.md` says VA must cancel before assigning a new primary VM. No cancellation UI or notification defined.
 
 **F-08: Journey weakness attachment at start — multiple test contexts (BLOCKING)**
 If a sentence appears in tests for weakness A and weakness B (both taken by VA), and VA starts journey from test A's result — is weakness B also attached at start? What if they navigate from weakness B's result later?

@@ -325,7 +325,7 @@ export class PendingGlobalVmInviteException extends ConflictException {
   constructor() {
     super({
       error: 'PENDING_GLOBAL_VM_INVITE_EXISTS',
-      message: 'A pending global VM invitation already exists. Cancel it before sending a new one.',
+      message: 'A pending primary VM invitation already exists. Cancel it before sending a new one.',
     });
   }
 }

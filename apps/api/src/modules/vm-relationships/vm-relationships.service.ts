@@ -22,7 +22,7 @@ export class VmRelationshipsService {
     private readonly notificationsService: NotificationsService,
   ) {}
 
-  // Remove (or, as the first half of a "change", clear) the VA's active global VM.
+  // Remove (or, as the first half of a "change", clear) the VA's active primary VM.
   // `cascade` controls the outgoing VM's journey assignments (spec/26 R2): `keep` leaves
   // them, `unassign` also ends them. Pending approvals are never auto-resolved (spec/04).
   async removeGlobalVm(user: SessionUser, cascade: GlobalVmCascade = 'keep') {

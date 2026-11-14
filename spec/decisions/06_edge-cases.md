@@ -12,8 +12,8 @@ _Last updated: 2026-05-31 | Round: R1_
 - `approved` is a terminal state for an ERC item — it cannot be reopened or returned to `revisit`.
 
 ### Scoping Invariants
-- A journey-level-only VM (not global VM) can never access any data outside their assigned journeys, regardless of how long they have been a VM or how many journeys they are on.
-- Global VM sees all VA data from the moment they accept the invitation. There is no partial or delayed access.
+- A journey-level-only VM (not primary VM) can never access any data outside their assigned journeys, regardless of how long they have been a VM or how many journeys they are on.
+- Primary VM sees all VA data from the moment they accept the invitation. There is no partial or delayed access.
 
 ### Account Deletion
 - If a VA deletes their account: all personal data is **anonymised**, not permanently deleted. Journey data, ERC logs, test results are retained in anonymised form for platform integrity and research purposes.

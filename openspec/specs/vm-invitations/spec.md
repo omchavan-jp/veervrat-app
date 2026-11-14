@@ -3,7 +3,7 @@
 ### Requirement: VA can send a VM invitation
 A VA SHALL be able to invite another user to become their Vratmitra. The invitation may be global (across all journeys) or journey-scoped (for a specific journey). Sending creates an `Invitation` record with a unique token, status `PENDING`, and an expiry 7 days from creation. A notification email is sent to the invitee.
 
-#### Scenario: VA sends a global VM invitation to an existing platform user
+#### Scenario: VA sends a primary VM invitation to an existing platform user
 - **WHEN** a VA sends `POST /api/v1/invitations` with `{ type: "VM_GLOBAL", inviteeEmail: "<existing user email>" }`
 - **THEN** a PENDING invitation is created with a unique token, `expiresAt = now + 7 days`, and `inviteeId` populated from the matched user; a VM invitation email is sent to the invitee; response is 201 with the invitation record
 
@@ -15,7 +15,7 @@ A VA SHALL be able to invite another user to become their Vratmitra. The invitat
 - **WHEN** a non-VA user (VM-only role) sends `POST /api/v1/invitations`
 - **THEN** response is 403
 
-#### Scenario: Only one pending global VM invite allowed at a time
+#### Scenario: Only one pending primary VM invite allowed at a time
 - **WHEN** a VA sends a VM_GLOBAL invitation while another VM_GLOBAL invitation from them is already PENDING
 - **THEN** response is 409 with error `PENDING_GLOBAL_VM_INVITE_EXISTS`
 
@@ -26,7 +26,7 @@ A VA SHALL be able to invite another user to become their Vratmitra. The invitat
 ### Requirement: Invitee can accept a VM invitation
 The invitee SHALL be able to accept a pending, non-expired VM invitation using its token. On acceptance, the corresponding VM relationship or journey assignment is created with state ACTIVE, and the invitation status is updated to ACCEPTED.
 
-#### Scenario: Invitee accepts a valid global VM invitation
+#### Scenario: Invitee accepts a valid primary VM invitation
 - **WHEN** the invitee sends `POST /api/v1/invitations/:token/accept` and the invitation is PENDING, not expired, and the invitee's user ID matches `inviteeId`
 - **THEN** a `VmRelationship` row is created with state ACTIVE, invitation status is set to ACCEPTED with `acceptedAt = now`, response is 200
 

@@ -43,7 +43,7 @@ export const vmRelationshipsApi = {
   getMyVratarthis: () =>
     api.get<Wrapped<MyVratarthi[]>>('/vm-relationships/my-vratarthis').then((r) => r.data),
 
-  // Remove the active global VM. cascade controls the outgoing VM's journey assignments
+  // Remove the active primary VM. cascade controls the outgoing VM's journey assignments
   // (keep = leave them; unassign = also end them). Used for both "remove" and the first
   // half of "change" (then send a fresh global invite via the invitations flow).
   removeGlobalVm: (cascade: GlobalVmCascade) =>

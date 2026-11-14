@@ -5,7 +5,7 @@ _Last updated: 2026-06-02 | Round: R1_
 
 - **Fully integrated** — not a separate app or account switch. A user who is both VA and VM accesses both views from the same sidebar nav.
 - Route group: `(vratmitra)/` — replaces the previous `(mentor)/` reference in AGENTS.md.
-- Nav items for VM sections are only visible to users who currently hold an active VM assignment (global or journey-level). Hidden entirely for users with no VM assignments.
+- Nav items for VM sections are only visible to users who currently hold an active VM assignment (primary or journey-level). Hidden entirely for users with no VM assignments.
 
 ---
 
@@ -16,13 +16,13 @@ Mirror of My Vratmitras, from the VM's perspective.
 
 **Two-panel layout** (same pattern as My Vratmitras):
 - **Left panel:** list of all VAs the VM is mentoring.
-  - Each entry: VA avatar, display name, online indicator, scope label (Global VM / Journey VM for N journeys).
-  - Global VM assignments shown with a distinct indicator.
+  - Each entry: VA avatar, display name, online indicator, scope label (Primary VM / Journey VM for N journeys).
+  - Primary VM assignments shown with a distinct indicator.
 - **Right panel (VA detail):** on selecting a VA:
   - Display name, avatar, online indicator, last active
-  - Scope: Global VM badge (if applicable)
+  - Scope: Primary VM badge (if applicable)
   - Journeys this VM is assigned to for this VA — each with state indicator (active/paused/dormant) and [Open Journey] link
-  - Actions: [View Profile], [Open Chat], [Remove myself as VM] (for journey-level; global VM removal goes through settings)
+  - Actions: [View Profile], [Open Chat], [Remove myself as VM] (for journey-level; primary VM removal goes through settings)
   - Link to this VA's relevant Guidance items (pending approvals for this VA)
 
 ### 2. VM Guidance Page (`/vratmitra/guidance`) — VM-only, separate from VA guidance

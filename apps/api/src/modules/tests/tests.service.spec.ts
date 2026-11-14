@@ -235,7 +235,7 @@ describe('TestsService — getReport', () => {
     await expect(service.getReport(OWNER, TEST_ID)).rejects.toThrow(TestNotSubmittedException);
   });
 
-  it('AUTH MATRIX POSITIVE: active global VM of the owner can view results', async () => {
+  it('AUTH MATRIX POSITIVE: active primary VM of the owner can view results', async () => {
     const repo = makeRepo();
     const vmRepo = makeVmRepo({
       getVratarthiVmContext: vi.fn().mockResolvedValue({

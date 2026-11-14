@@ -19,7 +19,7 @@ export class TestsService {
   ) {}
 
   // Builds the VM-context "journey" slim used by test.view_results: the test owner's
-  // active global VM + journey VM assignments, collapsed onto one synthetic JourneySlim
+  // active primary VM + journey VM assignments, collapsed onto one synthetic JourneySlim
   // so hasPermission can authorize the owner and their VMs uniformly.
   private async buildOwnerVmContext(ownerId: string): Promise<JourneySlim> {
     const ctx = await this.vmRelationshipsRepository.getVratarthiVmContext(ownerId);

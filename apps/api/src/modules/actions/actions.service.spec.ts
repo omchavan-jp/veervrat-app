@@ -114,7 +114,7 @@ describe('ActionsService', () => {
     });
 
     it('SCOPING: a global-only VM (no journey assignment) gets an empty actionable queue but nav-visible', async () => {
-      // Global VM is view-only (spec/22): hasAssignments true (nav shows) but the
+      // Primary VM is view-only (spec/22): hasAssignments true (nav shows) but the
       // approval queue is empty because no journey is assigned to them.
       const repo = makeRepo({
         findErcItemsByStatus: vi.fn().mockResolvedValue([]),

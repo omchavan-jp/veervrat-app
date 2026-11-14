@@ -115,10 +115,10 @@ describe('journey.view', () => {
   it('journey VM cannot view an unassigned journey', () => {
     expect(hasPermission(VM, own, 'journey.view')).toBe(false);
   });
-  it('global VM can view journeys of their assigned VA', () => {
+  it('primary VM can view journeys of their assigned VA', () => {
     expect(hasPermission(VM, withGlobal, 'journey.view')).toBe(true);
   });
-  it('global VM from a different VA cannot view unrelated journey', () => {
+  it('primary VM from a different VA cannot view unrelated journey', () => {
     // VM is assigned to other-user, not user-1 — should not see own journey
     expect(hasPermission(VM, { type: 'journey', journey: ownJourney }, 'journey.view')).toBe(false);
   });
@@ -341,7 +341,7 @@ describe('test.view_results', () => {
     const res: PermissionResource = { type: 'test_attempt', attempt: otherAttempt, journey: null };
     expect(hasPermission(VA, res, 'test.view_results')).toBe(false);
   });
-  it('global VM can view test results of their assigned VA', () => {
+  it('primary VM can view test results of their assigned VA', () => {
     const res: PermissionResource = {
       type: 'test_attempt',
       attempt: { userId: 'user-1', weaknessId: 'w-1' },
@@ -856,7 +856,7 @@ describe('challenge.configure_threshold', () => {
 });
 
 describe('global_vm.view_va_guidance', () => {
-  it('global VM can view VA guidance', () => {
+  it('primary VM can view VA guidance', () => {
     expect(
       hasPermission(
         VM,
