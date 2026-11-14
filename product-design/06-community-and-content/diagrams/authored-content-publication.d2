@@ -1,0 +1,9 @@
+# Selected projection of PD-025. Audience and removal policy are separate from publication.
+direction: down
+draft: "Draft\nUnpublished" {class: process}
+published: "Published authored content\nSame item; chosen audience" {class: core}
+working: "Optional working draft\nOne unpublished set of edits\nPublished material stays available" {class: platform}
+draft -> published: "publish / republish" {class: progression}
+published -> draft: "unpublish\nNot automatic erasure of discussion" {class: support}
+published -> working: "prepare edits privately" {class: support}
+working -> published: "publish edits\nIdentity retained" {class: progression}
