@@ -218,6 +218,41 @@
       "status": "confirmed",
       "canonical_home": "../06-community-and-content/moderation-and-blocking.mdx",
       "summary": "Moderation protects appropriate engagement and privacy, not philosophical conformity or developmental judgments. Reports lead to review and appropriate actions, without automatic punishment or unrestricted private access. Personal block/unblock is independent; exact access, authority, restrictions, retention and relationship effects remain deferred."
+    },
+    {
+      "id": "PD-031",
+      "title": "Meaningful history and generic developmental entries",
+      "status": "confirmed",
+      "canonical_home": "../07-longitudinal-history/developmental-history.mdx",
+      "summary": "Natural practice history and one prose-first entry concept support understanding, learning and guidance without compliance targets. Entries belong to a Journey or personal undertaking, not an independent journal; references do not change belonging/access. Creation-date chronology, author edits and Vratarthi retrospective entries preserve original conclusions."
+    },
+    {
+      "id": "PD-032",
+      "title": "Contextual guidance dialogue and Journey history sharing",
+      "status": "confirmed",
+      "canonical_home": "../07-longitudinal-history/guidance-and-history-sharing.mdx",
+      "summary": "Vratarthi and relevant guide contribute authored entries and chronological replies through the same concept. No per-entry privacy/audience controls; applicable guidance context remains distinct from community. One optional Journey-level history-sharing control stays within its selected audience, with disclosure and relationship policy deferred."
+    },
+    {
+      "id": "PD-033",
+      "title": "Evidence, final self-review and conclusion continuity",
+      "status": "confirmed",
+      "canonical_home": "../07-longitudinal-history/self-review-and-continuity.mdx",
+      "summary": "Evidence is developmental significance, not a separate proof/submission system. Prose-first final self-review and optional supplied guide perspective preserve authorship and PD-018 prerequisites. A guide may answer an existing active-relationship closure request after completion without reopening or restoring general access; later practice preserves terminal history."
+    },
+    {
+      "id": "PD-034",
+      "title": "Historical assessments and conscious discovery",
+      "status": "confirmed",
+      "canonical_home": "../07-longitudinal-history/assessment-history.mdx",
+      "summary": "Completed assessments and responses remain independent history without automatic progress/regression judgments. Original and consciously associated discovery contexts preserve chronology and relevant responses without copying full assessments. Old or recent assessments and direct discovery can lead to new practice against current non-retired catalog meaning."
+    },
+    {
+      "id": "PD-035",
+      "title": "Historical meaning, semantic versions and catalog continuity",
+      "status": "confirmed",
+      "canonical_home": "../07-longitudinal-history/catalog-continuity.mdx",
+      "summary": "All four developmental catalogs preserve historical meaning and relationship context. Minor corrections edit existing versions; meaningful changes create semantic versions of the same identity. Existing Journeys retain their version; new practice uses current non-retired meaning. Retirement preserves history/practice, prevents new Journeys for retired expressions and requires valid active parent relationships."
     }
   ]
 }
