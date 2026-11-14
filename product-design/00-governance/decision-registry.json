@@ -176,6 +176,48 @@
       "canonical_home": "../03-ontology-and-domain-model/developmental-ontology.mdx",
       "summary": "A गुणदर्शक विधान may have an optional explanatory description belonging to it, not a separate assessed statement, assessment entity, or required Resource. No mandatory backfill, relationship, assessment-inclusion, scale, or Journey-anchor change is introduced.",
       "rationale": "Explicit compatible PH-005 addition to PD-013, not supersession of the developmental ontology."
+    },
+    {
+      "id": "PD-025",
+      "title": "Community purpose and authored content",
+      "status": "confirmed",
+      "canonical_home": "../06-community-and-content/authored-content.mdx",
+      "summary": "Community supports learning, encouragement and meaningful engagement without making popularity or sharing developmental requirements. One generic author-owned content concept supports optional references, no initial tags, a simple publication lifecycle and one optional working draft; audience is independent of publication and curated Resources remain distinct."
+    },
+    {
+      "id": "PD-026",
+      "title": "Discussion, appreciation, and interaction boundaries",
+      "status": "confirmed",
+      "canonical_home": "../06-community-and-content/discussion-and-appreciation.mdx",
+      "summary": "Authored content supports nested discussion and one simple reaction. Only each content/comment/reply author sees their own reaction count; no popularity dynamics or visitor tracking. No direct community comments/reactions on curated Resources/Sections or Journeys/undertakings; guidance obligations remain unchanged."
+    },
+    {
+      "id": "PD-027",
+      "title": "Approved following relationship",
+      "status": "confirmed",
+      "canonical_home": "../06-community-and-content/following-and-visibility.mdx",
+      "summary": "Following is directional, explicitly accepted and independent of guidance. Either party may end it; request/acceptance timing remains available without elaborate past-follow history. No explicit decline notification, friendship relationship or automatic reciprocal following."
+    },
+    {
+      "id": "PD-028",
+      "title": "Item audiences with category defaults",
+      "status": "confirmed",
+      "canonical_home": "../06-community-and-content/following-and-visibility.mdx",
+      "summary": "Private, Followers and Public are conceptual audiences, not account types. Separate Journey and authored-content category defaults support individual overrides. Exact defaults, Public Visitor access, inheritance and relationship-change consequences remain deferred; guidance access is separate."
+    },
+    {
+      "id": "PD-029",
+      "title": "Private communication eligibility and pair continuity",
+      "status": "confirmed",
+      "canonical_home": "../06-community-and-content/private-communication.mdx",
+      "summary": "An approved following relationship in either direction or established guidance independently allows both participants to initiate private communication. One conversation per pair spans contexts; references do not grant access and messages are not automatically developmental history. No unrelated messaging or message-request system by default."
+    },
+    {
+      "id": "PD-030",
+      "title": "Moderation, reporting, and personal blocking",
+      "status": "confirmed",
+      "canonical_home": "../06-community-and-content/moderation-and-blocking.mdx",
+      "summary": "Moderation protects appropriate engagement and privacy, not philosophical conformity or developmental judgments. Reports lead to review and appropriate actions, without automatic punishment or unrestricted private access. Personal block/unblock is independent; exact access, authority, restrictions, retention and relationship effects remain deferred."
     }
   ]
 }
