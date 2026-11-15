@@ -9,6 +9,7 @@ import {
   AccessDeniedException,
   TestAlreadySubmittedException,
   TestNotSubmittedException,
+  ValidationException,
 } from '../../common/exceptions/app.exceptions';
 
 @Injectable()
@@ -90,6 +91,24 @@ export class TestsService {
     if (!test) throw new EntityNotFoundException('TestAttempt', testId);
     if (test.userId !== userId) throw new AccessDeniedException();
     if (!test.isDraft) throw new TestAlreadySubmittedException();
+
+    // Answers must reference the weakness's own sentences. A sentence moved out of the weakness
+    // after the draft started is tolerated only when the client resends its stored score
+    // unchanged (the client resends the whole answer map on every save); a changed score
+    // would overwrite an answer that no longer belongs to this assessment, so it is rejected.
+    // Checked before any write so a rejected batch leaves nothing behind.
+    const permitted = new Set(
+      await this.testsRepository.findSentenceIdsForWeakness(test.weaknessId),
+    );
+    const storedScores = new Map(test.answers.map((a) => [a.sentenceId, a.score]));
+    const foreign = answers.filter(
+      (a) => !permitted.has(a.sentenceId) && storedScores.get(a.sentenceId) !== a.score,
+    );
+    if (foreign.length > 0) {
+      throw new ValidationException('Answers reference sentences outside this assessment', {
+        sentenceIds: foreign.map((a) => a.sentenceId),
+      });
+    }
 
     await this.testsRepository.upsertAnswers(testId, answers);
     const answeredCount = await this.testsRepository.countAnswers(testId);
