@@ -208,7 +208,8 @@
     {
       "id": "PD-029",
       "title": "Private communication eligibility and pair continuity",
-      "status": "confirmed",
+      "status": "superseded",
+      "superseded_by": "PD-037",
       "canonical_home": "../06-community-and-content/private-communication.mdx",
       "summary": "An approved following relationship in either direction or established guidance independently allows both participants to initiate private communication. One conversation per pair spans contexts; references do not grant access and messages are not automatically developmental history. No unrelated messaging or message-request system by default."
     },
@@ -253,6 +254,34 @@
       "status": "confirmed",
       "canonical_home": "../07-longitudinal-history/catalog-continuity.mdx",
       "summary": "All four developmental catalogs preserve historical meaning and relationship context. Minor corrections edit existing versions; meaningful changes create semantic versions of the same identity. Existing Journeys retain their version; new practice uses current non-retired meaning. Retirement preserves history/practice, prevents new Journeys for retired expressions and requires valid active parent relationships."
+    },
+    {
+      "id": "PD-036",
+      "title": "Authority, audiences and guidance",
+      "status": "confirmed",
+      "canonical_home": "../08-permissions-and-privacy/access.mdx",
+      "summary": "Context-specific independent permission bases, public registration boundary, audiences, assessment and guidance scope."
+    },
+    {
+      "id": "PD-037",
+      "title": "Private communication and requests",
+      "status": "confirmed",
+      "canonical_home": "../08-permissions-and-privacy/communication.mdx",
+      "summary": "Adds unrelated message requests and persistent established pair conversations, preserving reference and practice-history boundaries."
+    },
+    {
+      "id": "PD-038",
+      "title": "Community and stewardship authority",
+      "status": "confirmed",
+      "canonical_home": "../08-permissions-and-privacy/stewardship.mdx",
+      "summary": "Community publication, protective actions, unified stewardship, protected standing and catalog deletion eligibility."
+    },
+    {
+      "id": "PD-039",
+      "title": "Deletion, recovery and administration",
+      "status": "confirmed",
+      "canonical_home": "../08-permissions-and-privacy/lifecycle.mdx",
+      "summary": "Common deletion recovery, Solo Journey restoration, account exit, suspension and Admin continuity."
     }
   ]
 }
