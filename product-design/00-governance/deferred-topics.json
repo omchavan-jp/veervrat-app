@@ -20,12 +20,13 @@
     {
       "id": "DT-002",
       "title": "Feature-level Vratamitra information, actions, and permissions",
-      "status": "open",
+      "status": "resolved",
       "reason": "Do not globally enumerate exact visibility, actions, contributions, validation, chat or reference behavior, and permissions before the relevant features are designed. Derive information, access, ownership, Primary versus Journey Vratamitra scope, and historical behavior as each feature is modeled.",
       "target_phase": "PH-008",
       "depends_on": ["PD-007", "PD-008", "PD-011", "PD-014"],
       "notes": "Cross-cutting: revisit for chat, Journey evidence, Exposures, Resolutions, Challenges, reassessment, resources, AI summaries, and other feature-design phases. Include exact post-relationship access to feature-specific artifacts after their ownership/participation models and permissions are designed; former-Primary status alone does not grant continuing broad Primary-level access. Do not invent access categories here. Reconcile completed-Journey visibility and post-relationship access for former Journey Vratamitras under PH-008 and PH-011; Journey completion does not itself determine that access. PD-014 confirms Journey Vratamitra custom suggestions and Vratarthi final authority; exact contribution actions and visibility remain for feature-level permissions. References to possible features here do not approve new ontology entities. PH-007 PD-032/033 confirms relevant-guide entry/reply contributions and limited response after completion to closure feedback requested while guidance was active. Define exact Primary/Journey scope, eligibility, response access and historical/former-guide/post-conclusion permissions without restoring active/general guidance or inferring indefinite access. Coordinate request expiry with DT-023 and history-sharing disclosure protection with DT-029.",
-      "reconcile_in": ["PH-011"]
+      "reconcile_in": ["PH-011"],
+      "resolution_artifact": "../08-permissions-and-privacy/access.mdx"
     },
     {
       "id": "DT-003",
@@ -62,10 +63,11 @@
     {
       "id": "DT-006",
       "title": "Under-18 public access and age-gating details",
-      "status": "open",
+      "status": "resolved",
       "reason": "Sign-up is restricted to age 18+, but public browsing, age declaration or verification, rationale and communication, and related access behavior remain undecided.",
       "target_phase": "PH-008",
-      "notes": "Also reconcile age-gated public journeys and edge cases in PH-011."
+      "notes": "Also reconcile age-gated public journeys and edge cases in PH-011.",
+      "resolution_artifact": "../08-permissions-and-privacy/access.mdx"
     },
     {
       "id": "DT-007",
@@ -126,21 +128,23 @@
     {
       "id": "DT-012",
       "title": "Platform-capability grants, revocation, and Admin authority",
-      "status": "open",
+      "status": "resolved",
       "reason": "PD-011 establishes Curator, Moderator, and Admin as granted platform capabilities, while exact granting authority, permission scopes, revocation, and operational mechanics remain deferred to permissions/privacy design.",
       "target_phase": "PH-008",
       "depends_on": ["PD-011"],
-      "notes": "Extend the existing Admin authority question to exact granting authority, permission scopes, revocation, and operational mechanics for explicitly granted Curator, Moderator, and Admin capabilities. Vratamitra requires no separate platform-role grant under PD-011; contextual roles do not inherently grant unrestricted permissions. Include PH-005 Resource/catalog publishing, editing, withdrawal, foundational/official standing, and centrally managed type/tag authority under PD-021/022/023; exact access/deletion policy is DT-028. Conceptual Curator stewardship does not grant unrestricted authority. Explicitly retain exact authority to create, modify, retire or otherwise maintain entries in all four PD-013 developmental catalogs: गुण, उपगुण, उणीवा and गुणदर्शक विधाने. Coordinate maintenance experiences with DT-027, historical effects with DT-025 and continuity with DT-020; no maintenance mechanics or Resource lifecycle/history semantics are assigned to these catalogs here. For all four developmental catalogs, PH-007 PD-035 additionally requires exact authority for semantic version creation and retirement/reclassification, coordinated with impact/valid-parent handling in DT-027 and historical integrity in DT-020. No editorial hierarchy is inferred."
+      "notes": "Extend the existing Admin authority question to exact granting authority, permission scopes, revocation, and operational mechanics for explicitly granted Curator, Moderator, and Admin capabilities. Vratamitra requires no separate platform-role grant under PD-011; contextual roles do not inherently grant unrestricted permissions. Include PH-005 Resource/catalog publishing, editing, withdrawal, foundational/official standing, and centrally managed type/tag authority under PD-021/022/023; exact access/deletion policy is DT-028. Conceptual Curator stewardship does not grant unrestricted authority. Explicitly retain exact authority to create, modify, retire or otherwise maintain entries in all four PD-013 developmental catalogs: गुण, उपगुण, उणीवा and गुणदर्शक विधाने. Coordinate maintenance experiences with DT-027, historical effects with DT-025 and continuity with DT-020; no maintenance mechanics or Resource lifecycle/history semantics are assigned to these catalogs here. For all four developmental catalogs, PH-007 PD-035 additionally requires exact authority for semantic version creation and retirement/reclassification, coordinated with impact/valid-parent handling in DT-027 and historical integrity in DT-020. No editorial hierarchy is inferred.",
+      "resolution_artifact": "../08-permissions-and-privacy/lifecycle.mdx"
     },
     {
       "id": "DT-013",
       "title": "Account exit and lifecycle policy",
-      "status": "open",
+      "status": "resolved",
       "reason": "Account deactivation and deletion are legitimate concepts to consider, but their behavior is not established by the identity ontology cluster.",
       "target_phase": "PH-008",
       "reconcile_in": ["PH-011"],
       "depends_on": ["PD-011"],
-      "notes": "Decide deactivation, permanent deletion, identity termination, data retention, historical Vratamitra relationship implications, contributions/content after exit, and account-management UX. No exit semantics are established yet. Reconcile PH-007 developmental history/entries, guide contributions, late closure feedback and references under account exit without deciding identity termination, ownership transfer or retention now."
+      "notes": "Decide deactivation, permanent deletion, identity termination, data retention, historical Vratamitra relationship implications, contributions/content after exit, and account-management UX. No exit semantics are established yet. Reconcile PH-007 developmental history/entries, guide contributions, late closure feedback and references under account exit without deciding identity termination, ownership transfer or retention now.",
+      "resolution_artifact": "../08-permissions-and-privacy/lifecycle.mdx"
     },
     {
       "id": "DT-014",
@@ -250,12 +254,13 @@
     {
       "id": "DT-024",
       "title": "Journey and undertaking archiving, deletion, retention, and restoration",
-      "status": "open",
+      "status": "resolved",
       "reason": "PH-004 distinguishes discontinuation, archiving, and deletion without deciding data-management or visibility policy.",
       "target_phase": "PH-008",
       "depends_on": ["PD-017", "PD-018"],
       "reconcile_in": ["PH-009", "PH-011"],
-      "notes": "Decide archiving, eligible lifecycle states, restoration, deletion, retention, cascading effects, and permissions. Neither universally forbid deletion nor turn archive/delete into lifecycle states. Preserve account-exit ownership separately under DT-013. PH-007 extends relevant policy questions to developmental entries/replies, author edits/corrections, preserved conclusion accounts/self-review, late feedback and semantic/history references. Define deletion, retention, restoration, archiving and cascading effects without assuming permanent retention, unrestricted deletion or reopening. Coordinate guide access DT-002, disclosure/community policy DT-029 and account exit DT-013."
+      "notes": "Decide archiving, eligible lifecycle states, restoration, deletion, retention, cascading effects, and permissions. Neither universally forbid deletion nor turn archive/delete into lifecycle states. Preserve account-exit ownership separately under DT-013. PH-007 extends relevant policy questions to developmental entries/replies, author edits/corrections, preserved conclusion accounts/self-review, late feedback and semantic/history references. Define deletion, retention, restoration, archiving and cascading effects without assuming permanent retention, unrestricted deletion or reopening. Coordinate guide access DT-002, disclosure/community policy DT-029 and account exit DT-013.",
+      "resolution_artifact": "../08-permissions-and-privacy/lifecycle.mdx"
     },
     {
       "id": "DT-025",
@@ -292,22 +297,24 @@
     {
       "id": "DT-028",
       "title": "Resource and undertaking-catalog access and lifecycle policy",
-      "status": "open",
+      "status": "resolved",
       "reason": "PH-005 establishes conceptual Curator stewardship and current-content references without exact audience, contribution, publishing, withdrawal, deletion, retention, or access rules.",
       "target_phase": "PH-008",
       "depends_on": ["PD-021", "PD-022", "PD-023"],
       "reconcile_in": ["PH-006", "PH-011"],
-      "notes": "Set Resource/catalog publishing, editing, withdrawal and access policy, foundational-standing changes, classification/tag management permissions, authored-content privacy and curated inclusion, and Resource deletion/retention/reference-access rules. Coordinate capability grants/authority with DT-012, guidance contribution access with DT-002, authored-content concepts with DT-017 and detailed unavailable-reference interactions with DT-027. No automatic promotion, private-Journey access, permanent retention, unrestricted deletion, mandatory historical snapshot or public-access policy is inferred. Personal practice deletion remains DT-024; account exit DT-013. PH-006 / PD-025 reconciles authored content versus curated Resources conceptually, preserving original authorship and no automatic promotion/private access. Exact curated-inclusion/access/publishing policy remains open here; PH-006 working drafts are not imposed on Resources. PH-007 developmental catalog semantic versions and personal-history preservation are distinct from Resource current-content references and undertaking-catalog history. Do not transfer lifecycle/version/retention rules by analogy; supporting references grant no access or mandatory upload capability."
+      "notes": "Set Resource/catalog publishing, editing, withdrawal and access policy, foundational-standing changes, classification/tag management permissions, authored-content privacy and curated inclusion, and Resource deletion/retention/reference-access rules. Coordinate capability grants/authority with DT-012, guidance contribution access with DT-002, authored-content concepts with DT-017 and detailed unavailable-reference interactions with DT-027. No automatic promotion, private-Journey access, permanent retention, unrestricted deletion, mandatory historical snapshot or public-access policy is inferred. Personal practice deletion remains DT-024; account exit DT-013. PH-006 / PD-025 reconciles authored content versus curated Resources conceptually, preserving original authorship and no automatic promotion/private access. Exact curated-inclusion/access/publishing policy remains open here; PH-006 working drafts are not imposed on Resources. PH-007 developmental catalog semantic versions and personal-history preservation are distinct from Resource current-content references and undertaking-catalog history. Do not transfer lifecycle/version/retention rules by analogy; supporting references grant no access or mandatory upload capability.",
+      "resolution_artifact": "../08-permissions-and-privacy/stewardship.mdx"
     },
     {
       "id": "DT-029",
       "title": "Community permissions, privacy, and lifecycle policy",
-      "status": "open",
+      "status": "resolved",
       "reason": "PH-006 confirms community concepts without detailed audience, relationship-access, moderation-authority, blocking or retention policy.",
       "target_phase": "PH-008",
       "depends_on": ["PD-025", "PD-026", "PD-027", "PD-028", "PD-029", "PD-030"],
       "reconcile_in": ["PH-007", "PH-011"],
-      "notes": "Define exact audiences including Public Visitor access; actual initial category defaults and their effects on existing items; inheritance/exceptions across Journeys, undertakings, practice records, discussion and references; following-list visibility, reaction-giver identity visibility, message eligibility restrictions and post-relationship access; blocking/unblocking consequences for pending/active following, guidance, communication and history. Define moderation/report material access, privacy, authority, restrictions and escalation, and authored-content/comment/message/relationship/report removal, retention and restoration policy, including audience changes and unpublish/republish. Coordinate DT-002/012/013/014/024/028 without replacing their guidance, capability, account-exit, Profile, personal-practice or Resource ownership. No permission matrix or mechanics are decided here. PH-007 PD-032 adds one optional Journey-level history-sharing control within its selected audience, without per-entry/undertaking/reply/guide-observation audiences or a new approved category default. Resolve ordinary shared information versus governed history; setting/audience changes and existing guide contributions, contributor audience awareness and protection against unintended disclosure, any needed consent/authorization, historical/former-guide access, and interactions with follows, blocking, references, account exit and retention. No consent workflow or historical-entry exception is selected. Reconcile contextual developmental replies versus community interaction and ordinary private conversation history."
+      "notes": "Define exact audiences including Public Visitor access; actual initial category defaults and their effects on existing items; inheritance/exceptions across Journeys, undertakings, practice records, discussion and references; following-list visibility, reaction-giver identity visibility, message eligibility restrictions and post-relationship access; blocking/unblocking consequences for pending/active following, guidance, communication and history. Define moderation/report material access, privacy, authority, restrictions and escalation, and authored-content/comment/message/relationship/report removal, retention and restoration policy, including audience changes and unpublish/republish. Coordinate DT-002/012/013/014/024/028 without replacing their guidance, capability, account-exit, Profile, personal-practice or Resource ownership. No permission matrix or mechanics are decided here. PH-007 PD-032 adds one optional Journey-level history-sharing control within its selected audience, without per-entry/undertaking/reply/guide-observation audiences or a new approved category default. Resolve ordinary shared information versus governed history; setting/audience changes and existing guide contributions, contributor audience awareness and protection against unintended disclosure, any needed consent/authorization, historical/former-guide access, and interactions with follows, blocking, references, account exit and retention. No consent workflow or historical-entry exception is selected. Reconcile contextual developmental replies versus community interaction and ordinary private conversation history.",
+      "resolution_artifact": "../08-permissions-and-privacy/reconciliation.mdx"
     },
     {
       "id": "DT-030",
@@ -315,10 +322,23 @@
       "status": "open",
       "reason": "PH-006 confirms conceptual community capabilities while deferring discovery, authoring, management and detailed interaction/state rules.",
       "target_phase": "PH-009",
-      "depends_on": ["PD-025", "PD-026", "PD-027", "PD-028", "PD-029", "PD-030"],
+      "depends_on": ["PD-025", "PD-026", "PD-027", "PD-028", "PD-037", "PD-030"],
       "reconcile_in": ["PH-010", "PH-011", "PH-012"],
       "downstream_phases": ["PH-013", "PH-014", "PH-015", "PH-016"],
       "notes": "Cover authored-content creation/discovery and nested discussion; Profile/follower/following/request-management views and timing; contextual private communication; category defaults and individual audiences; publication, optional working drafts, unpublish/republish/removal; reporting/blocking and detailed transitions. Reconcile re-request/expiry/duplicate/blocked-state interactions with DT-029 policy and notifications under DT-008, preserving no explicit follow-decline notification. Final authored-content/appreciation language belongs to PH-012; editor/component/interaction/screens to PH-013–015 and architecture to DT-020. Exact formats/media/attachments are not decided. Evaluate discovery needs without assuming a social feed, recommendation engine or every possible messaging feature. Reconcile PH-007 developmental-entry/reply purpose and one private conversation per pair with community experience, without automatically converting messages/content into practice history. Journey history-sharing experience coordinates DT-021 and policy DT-029; no entry-level audience controls or separate Journey chat."
+    },
+    {
+      "id": "DT-031",
+      "title": "Qualified legal review of permissions, privacy and retention",
+      "status": "open",
+      "reason": "Conceptual PH-008 policy requires qualified legal review before implementation and recheck before production. Review age assurance, declared DOB and under-18 data, author and guide identity disclosure, messaging and moderation, erasure and retention. No legal compliance finding is recorded.",
+      "target_phase": "PH-016",
+      "depends_on": [
+        "PD-036",
+        "PD-037",
+        "PD-038",
+        "PD-039"
+      ]
     }
   ]
 }
