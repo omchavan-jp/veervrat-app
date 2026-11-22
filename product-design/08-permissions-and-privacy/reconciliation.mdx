@@ -4,7 +4,7 @@ title: PH-008 coverage and reconciliation
 
 # PH-008 coverage and reconciliation
 
-> **Map:** Review the user-confirmed policy and the Solo recovery clarification against PH-001–007. PH-008 remains current pending independent review and separate closure.
+> **Map:** Review the user-confirmed policy and the Solo recovery clarification against PH-001–007. PH-008 completion and PH-009 current-for-readiness-intake status take effect only upon independent review, explicit merge approval and merge of this dedicated closure PR.
 
 ## Meaningful operations
 
@@ -83,3 +83,42 @@ This grouped inventory reviews the handoff by actor, authority and restriction. 
 | DT-029 | PD-036/037/038/039 audience, moderation, messaging, recovery and restrictions | DT-030 / PH-009/011, DT-020 enforcement, DT-031 legal review |
 
 DT-014 stays PH-009, DT-023 stays PH-011, DT-027/030 stay PH-009, and DT-020/031 target PH-016. PH-009 full experience architecture, PH-010 navigation, PH-011 detailed flows, PH-012–015 design, and PH-016 technical and transition planning remain open. Qualified legal review is required before implementation and rechecked before production. No legal compliance finding or software behavior is certified by this inventory.
+
+
+## Formal closure authorization and accepted evidence
+
+On 2026-11-22 the user accepted PH-008 canonicalization, independent review, post-merge deployment verification and user-confirmed authenticated documentation UAT, and authorized preparation of this closure PR.
+
+[PR #419](https://github.com/omchavan-jp/veervrat-app/pull/419) was reviewed at HEAD `302f4ffe1681b735c42ae2858f6dfe65f4a06bc9` and squash-merged as `c8e6906ba1b52203eec60107b788da34c261da1e`. Both Git trees are `885644498043b66f6fc7fd5a22e6ad626c4841ca`. All seven pre-merge checks passed. The specifically authorized review-only exception applied only to that HEAD, with mandatory checks enforced and no ruleset changes. It authorizes no exception for this closure PR.
+
+Directly retrieved GitHub records show successful [CI](https://github.com/omchavan-jp/veervrat-app/actions/runs/44946590080), [Integration](https://github.com/omchavan-jp/veervrat-app/actions/runs/44946590085), [E2E](https://github.com/omchavan-jp/veervrat-app/actions/runs/44946590104), [CodeQL](https://github.com/omchavan-jp/veervrat-app/actions/runs/44946590171) and [CD](https://github.com/omchavan-jp/veervrat-app/actions/runs/44946590094). Deployment logs emit receipt `receipts/uat/44946590094/1.json`, binding the merge SHA to web digest `sha256:557a6994501a8c68bcec07170b587820df32baacd4cae45b28248284dfa27f25`. Production was skipped. Automated verify-uat and accept-uat were skipped on this documentation path.
+
+The user confirms authenticated documentation UAT and accepts post-merge verification. Scaffold's browser attempt reached the sign-in gateway. This closure records user-confirmed authenticated UAT without claiming a Scaffold authenticated rerun or raw authenticated HTTP-status evidence. Retained supporting files include `/tmp/ph008-canonicalization-merged.diff` and the deployment log retrieved for this closure at `/tmp/ph008-deployment.log`. Durable PR/workflow references remain the evidence anchors.
+
+PD-036–PD-039, the PD-037 supersession of PD-029 (historical), all earlier decisions and conceptual cross-feature checks are accepted. DT-002/006/012/013/024/028/029 remain resolved, preserving original metadata and downstream ownership. No open primary PH-008 topic remains. No new PD/DT IDs are allocated by closure. Next.js security advisories remain explicitly unresolved separate technical work.
+
+## Closure checklist
+
+- [x] Confirmed policy, bounded corrections, supersession and reconciliation accepted.
+- [x] Seven incoming topics resolved with residual ownership preserved.
+- [x] Review, merge, successful deployment evidence and user-confirmed authenticated documentation UAT accepted.
+- [x] Closure preparation authorized and PH-009 intake reviewed.
+- [ ] Independent closure PR review, separate merge approval and approved merge.
+- [ ] Verify closure deployment/documentation before PH-009 discussions begin.
+
+## PH-009 readiness
+
+PH-009 becomes current for readiness intake only on approved merge of this closure PR. Conceptual design and application implementation have not begun. Reconfirm the live register before separate user-led discussion.
+
+| Open primary topic | Intake scope and confirmed boundaries |
+| --- | --- |
+| DT-008 | Notification and re-engagement events, recipients, channels, urgency, controls and navigation under PD-006. Preserve silent follow/message-request decline and agency. No engagement-pressure mechanism is preapproved. |
+| DT-014 | Determine Profile fields, presentation and associated exposure/editing rules. Basic Profile is public under PD-036. Profile displays rather than owns practice, and protected account DOB stays private. Preserve PH-008/011 reconciliation and move history. |
+| DT-021 | Coherent practice/history, entry/reply, self-review, discovery, recovery and successive-Journey experiences. Preserve owner authority, Solo recovery, record uniqueness and contextual guide scope. PH-010 owns navigation and PH-011 detailed flows. |
+| DT-026 | Assessment recommendation count, ties, presentation, historical discovery and association. Preserve existing scale, ordinal priorities, immutable completed responses and agency to select any assessed विधान. |
+| DT-027 | Knowledge discovery, standing, catalog selection/maintenance, change awareness, authoring and references. Preserve unified authority, semantic continuity, valid dependencies and Resource/catalog distinctions. Editor choice remains later experience/technical work. |
+| DT-030 | Community publication/discussion, approved following, message requests, one pair conversation, visibility/defaults, moderation and recovery experiences. Preserve confirmed policy and evaluate discovery needs without automatically approving feeds or popularity systems. |
+
+Cross-phase DT-023 remains PH-011-owned for closure-feedback waiting, eligibility/expiry and sequencing, with PH-009 reconciliation. DT-005/009/011/022 retain authentication, invitation and inactivity flow ownership. DT-020 and DT-031 remain PH-016-owned for technical representation, configured recovery duration, transition and qualified legal review before implementation and again before production.
+
+PH-009 systematically examines complete participant/context coverage across public/signed-in, first/returning, Vratarthi/guidance and granted-capability contexts, connecting practice, knowledge, community and history. Onboarding, help, walkthroughs and supporting experiences remain needs to evaluate. Existing roadmap completeness review and redesign-first transition direction govern this intake. PH-010 navigation, PH-011 detailed states/flows, PH-012–015 language/design and PH-016 implementation planning keep their ownership. No additional capability map, screen, permission rule or feature is introduced.
