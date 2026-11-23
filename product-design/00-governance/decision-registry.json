@@ -35,7 +35,7 @@
       "title": "Success is demonstrated developmental change",
       "status": "confirmed",
       "canonical_home": "../01-product-model/north-star.mdx",
-      "summary": "Journey success is developmental change in how genuinely, consistently, and independently the chosen Sentence's quality or capability is present in life. Ratings, completion states, and metrics are evidence or proxies, not objectives; Challenge cardinality remains open."
+      "summary": "Journey success is developmental change in how genuinely, consistently, and independently the chosen Sentence's quality or capability is present in life. Ratings, completion states, and metrics are evidence or proxies, not objectives; Challenge cardinality was originally left open here and subsequently resolved by PD-014 (DT-001): a Journey may have multiple optional Challenges."
     },
     {
       "id": "PD-006",
@@ -49,14 +49,14 @@
       "title": "Primary Vratamitra relationship lifecycle",
       "status": "confirmed",
       "canonical_home": "../02-actors-and-relationships/primary-vratamitra-relationship.mdx",
-      "summary": "A Vratarthi has at most one active Primary Vratamitra and one pending invitation. The relationship begins on acceptance; either party may end it independently, preserving history and contributions. Invitation history is retained, and former-Primary status alone grants no continuing broad Primary-level access; feature-specific artifact access remains deferred under DT-002."
+      "summary": "A Vratarthi has at most one active Primary Vratamitra and one pending invitation. The relationship begins on acceptance; either party may end it independently, preserving history and contributions. Invitation history is retained, and former-Primary status alone grants no continuing broad Primary-level access; feature-specific artifact access originally deferred under DT-002 was subsequently resolved conceptually by PD-036, with detailed flows remaining downstream."
     },
     {
       "id": "PD-008",
       "title": "Journey Vratamitra relationship lifecycle",
       "status": "confirmed",
       "canonical_home": "../02-actors-and-relationships/journey-vratamitra-relationship.mdx",
-      "summary": "Journey guidance uses distinct Primary-derived and specific-person modes. Primary-derived guidance follows the current active Primary without separate Journey acceptance; specific-person guidance requires explicit acceptance and persists independently of Primary changes. Active Journeys may switch modes. Ending and completion preserve history and contributions; completed-Journey and artifact access remain deferred under DT-002. Ending a specific-person relationship during an active Journey leaves it unguided/solo without automatic Primary fallback; an explicit later choice may restore guidance."
+      "summary": "Journey guidance uses distinct Primary-derived and specific-person modes. Primary-derived guidance follows the current active Primary without separate Journey acceptance; specific-person guidance requires explicit acceptance and persists independently of Primary changes. Active Journeys may switch modes. Ending and completion preserve history and contributions; completed-Journey and artifact access originally deferred under DT-002 was subsequently resolved conceptually by PD-036. Ending a specific-person relationship during an active Journey leaves it unguided/solo without automatic Primary fallback; an explicit later choice may restore guidance."
     },
     {
       "id": "PD-009",
@@ -203,7 +203,7 @@
       "title": "Item audiences with category defaults",
       "status": "confirmed",
       "canonical_home": "../06-community-and-content/following-and-visibility.mdx",
-      "summary": "Private, Followers and Public are conceptual audiences, not account types. Separate Journey and authored-content category defaults support individual overrides. Exact defaults, Public Visitor access, inheritance and relationship-change consequences remain deferred; guidance access is separate."
+      "summary": "Private, Followers and Public are conceptual audiences, not account types. Separate Journey and authored-content category defaults support individual overrides. Exact defaults, Public Visitor access, inheritance and relationship-change consequences were originally deferred under DT-029; PD-036/038/039 subsequently resolved their conceptual policy, with detailed experience and flows owned downstream. Guidance access is separate."
     },
     {
       "id": "PD-029",
