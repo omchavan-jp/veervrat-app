@@ -42,6 +42,16 @@ PH-016 plans a credible existing-to-target transition: architecture/feasibility,
 
 Earlier phases may consult constraints or perform narrowly scoped feasibility investigation when a material uncertainty affects a product decision. Such investigation is **not authorization for premature implementation**. These refinements do not start PH-009/016 work or alter the confirmed domain model.
 
+## Engineering-design process handoff after PH-015
+
+After PH-015 target product/experience design, **first deliberately review and structure the remaining engineering-design work**, before undertaking detailed PH-016 specifications or implementation. PH-016 is presently an umbrella, not a finalized work breakdown. Decide then whether to retain it as one phase or split it into independently reviewable engineering phases, with clear dependencies, deliverables, validation, and exit criteria.
+
+This planning must comprehensively cover a verified audit of the **actual** existing application, infrastructure, services and deployments; target nonfunctional requirements (including expected and growth scale, reliability, maintainability, performance and cost); architecture, data/storage and security; technology and infrastructure stack choices; test and QA strategy; observability and operations; backups, restoration and disaster recovery; deployment and release controls; migration/compatibility and existing-user/data continuity; and realistic incremental delivery and rollback/recovery. Existing engineering documents provide useful evidence, **not automatic approval to retain their decisions**.
+
+**Reassess the current redesign-first, incrementally-evolve-the-existing-application direction itself**, comparing retention, selective rebuilding, major restructuring, or a fresh implementation and transition on their merits. The current roadmap direction remains the governing plan **unless explicitly reconsidered and changed through the normal decision/review process**; this note neither silently supersedes it nor commits to a rewrite. Do not preserve an unsuitable approach solely for ease of implementation, but treat cost, effort, risk and maintainability as legitimate decision criteria rather than ignoring them.
+
+PH-010–015 proceed without new compulsory engineering checkpoints or premature technology commitments. Investigate technical feasibility earlier **only when a concrete, material design uncertainty emerges**. No stack, deployment architecture, rebuild strategy, detailed engineering phase split or implementation is selected by this planning handoff.
+
 ## Deferred-topic reconciliation
 
 Record the intake review before phase work begins and the exit review before marking a phase completed. A review can say that no deferred topics target the phase. For each incoming topic at exit, update the register to show whether it was resolved, moved to another phase, dropped with a reason, or remains open with an updated reason.
