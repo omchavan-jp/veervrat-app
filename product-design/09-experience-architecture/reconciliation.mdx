@@ -1,11 +1,11 @@
 ---
-title: PH-009 coverage and review-stage reconciliation
-description: Six deferred-topic directions, cross-context coverage and later-phase handoffs.
+title: PH-009 reconciliation and closure
+description: Confirmed experience architecture, accepted review/UAT, preserved deferred handoffs and PH-010 readiness.
 ---
 
-# PH-009 coverage and review-stage reconciliation
+# PH-009 reconciliation and closure
 
-> **Map:** The six incoming PH-009 topics have user-confirmed experience-level directions, reviewed against PH-001–008 and important participant contexts. This is a **canonicalization proposal for review**; it does not close PH-009, verify production behavior or authorize PH-010.
+> **Map:** **PH-009 COMPLETE**, effective only on independent review, explicit separate merge approval and merge of the dedicated closure PR. PD-040–PD-043 and the six incoming topic outcomes have been independently reviewed, corrected, merged and deployed; user-reported documentation UAT is accepted with the limits below. PH-010 becomes current for **readiness intake only** on the approved closure merge. No PH-010 conceptual design or application implementation is authorized.
 
 ## Incoming deferred topics
 
@@ -55,6 +55,54 @@ PH-010 organizes destinations, navigation and specialized workspaces, including 
 
 A cross-Journey synthesis is a **strong future enhancement candidate, not an initial deliverable**. Free-form Profile bio/interests are **outside the approved initial scope**; no additional tags, dedicated attention dashboard, exact feed layout or quantitative recommendation count was authorized. These are intentional limits, not unreviewed gaps.
 
-## Review and closure status
+## PH-009 formal closure and PH-010 readiness
 
-User-confirmed discussions have been consolidated into PD-040, PD-041, PD-042 and PD-043 for independent review. **PH-009 remains current; closure is pending.** Review for omissions, conflicts, traceability and usable documentation; make focused corrections; seek explicit review/merge approval; and perform separate closure/readiness work before moving to PH-010. No application runtime change is included.
+### Authorization and scope
+
+On **2026-11-25**, the user accepted the completed PH-009 conceptual discussion, the independent review and focused re-review, the corrective canonicalization, and the merged/deployed documentation. After confirming that all six PH-009 pages were visible in the deployed documentation, the user accepted documentation UAT and authorized preparation of **formal PH-009 closure and PH-010 readiness**. This is a new administrative phase-boundary change, **not** a new product decision or early authorization to design navigation.
+
+PH-009 completion and PH-010 current-for-intake status become effective **only after independent review, separate explicit merge approval and approved merge of this dedicated closure PR**. Verify the closure documentation deployment before PH-010 design discussions. All existing PD and DT records, their statuses, histories, and canonical designs remain unchanged in this closure change.
+
+### Accepted review, merge, deployment and documentation UAT
+
+- [Canonicalization PR #422](https://github.com/omchavan-jp/veervrat-app/pull/422) was reviewed at initial head `30e36a6fdafba5d7537990cc83b15d63f889767b`. The user-provided independent Astra Pro report found one governance blocker (premature DT closure) and six bounded documentation/completeness findings. A focused correction at head `eb8f5ab39a7a5e4de5b659155af9c2acee31c8d7` preserved all six DTs as **open**, with reasoned moves and live downstream tracking. The subsequent independently supplied read-only re-review found B1 and N1–N6 resolved and recommended **ready for approval**, with no further conceptual correction needed. These Markdown reports were shared in the user conversation; they are **not** formal GitHub approving reviews, and their full contents are not stored in this repository.
+- The owner explicitly authorized the PR's merge process. PR #422 was squash merged as `20b8c96584ce6c177e82d4aea6c613cb8e3337dd`, whose tree `c14b9c3a7671c9faec3e460ca8dc0d6b075453f4` matches the independently re-reviewed head tree. Existing main-branch controls were not changed. The source branch was automatically removed.
+- Post-merge [CI](https://github.com/omchavan-jp/veervrat-app/actions/runs/45591504119), [Integration](https://github.com/omchavan-jp/veervrat-app/actions/runs/45591503906), [E2E](https://github.com/omchavan-jp/veervrat-app/actions/runs/45591504209), [CodeQL](https://github.com/omchavan-jp/veervrat-app/actions/runs/45591502250) and [CD](https://github.com/omchavan-jp/veervrat-app/actions/runs/45591504029) completed successfully for that merge SHA. CD's documentation-only `build-docs-web` and `deploy-uat` jobs succeeded. The `Save authenticated digest-pinned UAT receipt` step succeeded; the actual receipt contents, image digest and revision identity were **not independently extracted here**, so no specific value is asserted. Production release was not part of this documentation verification.
+- The separate automated `verify-uat` and `accept-uat` jobs were **skipped** on this documentation-only CD path, not passed. The user supplied a screenshot showing the expanded **09 experience architecture** navigation and its six pages, then separately confirmed that **all pages are visible** in the deployed documentation. This is accepted user-reported navigation/page-visibility UAT, not an independent authenticated browser rerun, an exhaustive internal-link click audit or a raw HTTP-status capture. The previous PR's successful validator/build and the post-merge workflows provide additional structural evidence; they do not prove untested interactive behavior.
+- No D2 diagram was added in PH-009: these decisions establish experience principles rather than fixed navigation or interaction flows, and the [working method](../00-governance/working-method.mdx) makes D2 an editable format **when a diagram is needed**, not a compulsory per-phase deliverable. PH-008 also needed no new D2 projection. Existing D2 sources remain untouched.
+
+**Evidence boundary:** Reviewed source and workflow outcomes are independently inspectable through the references above; Astra's report conclusions and the user's on-device documentation observations are separately attributed, not overstated as independent browser verification. Successful CD does not equal automated UAT acceptance. No evidence here claims current runtime implementation of future PH-009 capabilities, production release, or remediation of unrelated technical/security advisories.
+
+### Conceptual exit reconciliation
+
+PD-040 establishes coherent Vratarthi participation across public entry and additional responsibility contexts, including intent-preserving continuation, helpful guidance and accessible supporting experiences. PD-041 keeps personal history/assessment and public-facing Profiles distinct, protects agency and excludes developmental scorecards. PD-042 connects purposeful deliberate and global curator-led discovery with Following and voluntary community participation, preserving distinctions between foundational knowledge and authored viewpoints. PD-043 makes attention, voluntary reminders and return after absence support a person's agency rather than pressure engagement.
+
+The [participant/context coverage](./reconciliation.mdx#participant-and-context-completeness) and [specialized-responsibility connections](./reconciliation.mdx#specialized-responsibility-connections) were reviewed for Public Visitors, first/returning Vratarthis, Vratamitras and overlapping Curator/Moderator/Admin capabilities. Earlier PD-001–PD-039 authority, history, permissions, catalog continuity, and the North Star remain intact. No new role-combination dashboard, forced Journey gate, mandatory logging, notification channel algorithm, free-form Profile biography, user-journey sequence, new domain entity or premature screen has been approved.
+
+**Six incoming DTs accounted for:** DT-021, DT-027 and DT-030 moved openly to PH-010 for organization/navigation; DT-008, DT-014 and DT-026 moved openly to PH-011 for detailed notification/Profile/assessment questions. All preserve original reasons, histories and downstream obligations. No open primary PH-009 target remains; the live register, not this historical boundary snapshot, is authoritative for later ownership.
+
+### Closure checklist
+
+- [x] PD-040–PD-043 confirmed and checked against PH-001–008.
+- [x] Six incoming deferred topics accounted for and left actionable with their later owners.
+- [x] Independent canonicalization review and focused re-review accepted, with original findings corrected.
+- [x] PR #422 explicitly approved and squash merged without changing branch protections.
+- [x] Post-merge required workflows and documentation UAT deployment succeeded; automated UAT skips distinguished.
+- [x] User-reported deployed documentation navigation and all six PH-009 pages accepted as qualified UAT.
+- [x] User authorized formal PH-009 closure / PH-010 readiness preparation.
+- [ ] Independently review this **separate closure PR**, then obtain explicit merge approval and merge.
+- [ ] Verify its post-merge deployment/documentation before PH-010 design begins.
+
+## PH-010 readiness intake
+
+PH-010 becomes **current for readiness intake only** on approved merge of the closure PR. This intake decides no destinations, sitemap, top-level navigation, feed tabs, role switchers, walkthrough flow, screens or implementation plan. Reconfirm the live DT register before PH-010 conceptual discussion.
+
+| Open primary PH-010 topic | Intake boundaries inherited from confirmed decisions |
+| --- | --- |
+| DT-021 — Practice and history organization | Connect personal practice/Journeys, meaningful chronological entries and retrospection, assessment/discovery context, Vratamitra guidance and past Journeys without a mandatory logging dashboard. Preserve separate Profile/privacy, Solo recovery, history-sharing and access semantics. PH-011 owns lifecycle and interaction edge cases. |
+| DT-027 — Knowledge/discovery/stewardship organization | Organize deliberate browsing/search, dynamic global curator-led discovery, Resources/Sections, all four developmental catalogs, shared undertaking choices, semantic-change awareness and specialized Curator work. Distinguish foundational standing, ordinary author contributions and protected Admin operations; authorship and subsequent featured-content edit awareness remain bounded. PH-011 owns editorial/dependency/validation detail. |
+| DT-030 — Community and connection organization | Connect Discover, Following, Profiles, authored content, nested discussion, requests, one pair conversation and appropriate moderation/protection access coherently. Avoid a popularity-optimized social feed, public developmental scores and multiple combined-role dashboards. PH-011/012 own detailed flows and language. |
+
+PH-011 already owns open DT-005, DT-008, DT-009, DT-011, DT-014, DT-022, DT-023 and DT-026. PH-012 retains DT-019; PH-016 retains DT-020 and DT-031. PH-010 organization must respect those confirmed constraints without pre-solving flows, wording, feasibility or legal review. The PH-009 handoff remains **design input, not a mandate to duplicate every item as a separate screen**.
+
+**Transition gate:** Complete the independent closure PR review, obtain separate user approval and merge, verify deployment/documentation, then begin PH-010 discussion at its own boundary. Formal PH-009 closure does not by itself constitute PH-010 conceptual design or application implementation.
