@@ -82,14 +82,18 @@
     {
       "id": "DT-008",
       "title": "Notification and re-engagement model",
-      "status": "resolved",
+      "status": "open",
       "reason": "The notification constraint in PD-006 is confirmed; the notification and re-engagement model and its mechanics are intentionally left for later design.",
-      "target_phase": "PH-009",
+      "target_phase": "PH-011",
       "depends_on": ["PD-006", "PD-043"],
       "reconcile_in": ["PH-011"],
       "downstream_phases": ["PH-013", "PH-014", "PH-015", "PH-016"],
-      "notes": "Later decisions include notification-producing events; recipients; urgency and importance; in-app notification center/activity model; reminders and re-engagement; email, push, and in-app channels; timing; batching and deduplication; read, unread, and actioned state; preferences and controls; notification-to-action navigation; ignored or expired notifications; and anti-dependency/anti-nagging behavior. Reconcile the experience in PH-011; carry relevant implications into PH-013 through PH-016. Do not decide these mechanics in this record. PH-006 PD-027 confirms no explicit notification of a declined follow request. Reconcile other confirmed community events under PD-006 without optimizing popularity or dependence; exact notification mechanics remain open. PH-007 history/dialogue and requested late feedback may inform later notification design; no notification mechanism or recording prompt obligation is approved. Preserve PD-006 and the PH-006 follow-decline constraint. PH-009 canonicalization: PH-009 experience direction confirmed under PD-043. PH-011 retains events, channels, schedule, timing, preferences and notification-to-action details; PH-013–015 implement interactions.",
-      "resolution_artifact": "../09-experience-architecture/attention-and-reminders.mdx"
+      "moves": [{
+        "from_phase": "PH-009",
+        "to_phase": "PH-011",
+        "reason": "PH-009 confirmed PD-043's attention and reminder principles; the concrete notification and reminder mechanics remain PH-011 work."
+      }],
+      "notes": "Later decisions include notification-producing events; recipients; urgency and importance; in-app notification center/activity model; reminders and re-engagement; email, push, and in-app channels; timing; batching and deduplication; read, unread, and actioned state; preferences and controls; notification-to-action navigation; ignored or expired notifications; and anti-dependency/anti-nagging behavior. Reconcile the experience in PH-011; carry relevant implications into PH-013 through PH-016. Do not decide these mechanics in this record. PH-006 PD-027 confirms no explicit notification of a declined follow request. Reconcile other confirmed community events under PD-006 without optimizing popularity or dependence; exact notification mechanics remain open. PH-007 history/dialogue and requested late feedback may inform later notification design; no notification mechanism or recording prompt obligation is approved. Preserve PD-006 and the PH-006 follow-decline constraint. PH-009 canonicalization: PH-009 experience direction confirmed under PD-043. PH-011 retains events, channels, schedule, timing, preferences and notification-to-action details; PH-013–015 implement interactions. PH-009 outcome: see ../09-experience-architecture/attention-and-reminders.mdx. Unresolved scope is moved with history to PH-011."
     },
     {
       "id": "DT-009",
@@ -150,18 +154,21 @@
     {
       "id": "DT-014",
       "title": "Profile details, visibility, editing, and presentation",
-      "status": "resolved",
+      "status": "open",
       "reason": "PD-011 establishes an automatic Profile distinct from account identity, including before optional details are supplied; actual fields, public visibility, editing permissions, and Profile UI are not decided.",
-      "target_phase": "PH-009",
+      "target_phase": "PH-011",
       "reconcile_in": ["PH-008", "PH-011"],
       "depends_on": ["PD-011", "PD-015", "PD-041"],
       "moves": [{
         "from_phase": "PH-003",
         "to_phase": "PH-009",
         "reason": "PD-015 captures the conceptual boundary: Profile information is separate from Vratarthi-owned Journeys and assessments. Remaining Profile fields and experience belong to PH-009, permissions/visibility/editing to PH-008, and user journeys to PH-011; no additional Profile fields or behavior are required to finish this ontology cluster."
+      }, {
+        "from_phase": "PH-009",
+        "to_phase": "PH-011",
+        "reason": "PH-009 confirmed PD-041's Profile purpose; minimal fields, privacy explanations, editing and detailed interactions remain PH-011 work."
       }],
-      "notes": "Keep remaining Profile fields, visibility, editing, and presentation open. A later Profile page may display developmental records without owning them. Completion remains unnecessary for participation under PD-011. Original deferral reason is retained; PD-015 addresses conceptual ownership without deciding fields, persistence, or page behavior. PH-007 confirms developmental history remains Vratarthi-owned, not Profile-owned; any later Profile display of entries/history preserves separate privacy and experience boundaries. PH-009 canonicalization: PH-009 Profile purpose, distinct personal experience, no scorecards or excess controls and no required bio/interests confirmed under PD-041. Precise minimal field selection, editing, visibility and layout remain PH-011/015, constrained by PD-036.",
-      "resolution_artifact": "../09-experience-architecture/personal-experience.mdx"
+      "notes": "Keep remaining Profile fields, visibility, editing, and presentation open. A later Profile page may display developmental records without owning them. Completion remains unnecessary for participation under PD-011. Original deferral reason is retained; PD-015 addresses conceptual ownership without deciding fields, persistence, or page behavior. PH-007 confirms developmental history remains Vratarthi-owned, not Profile-owned; any later Profile display of entries/history preserves separate privacy and experience boundaries. PH-009 canonicalization: PH-009 Profile purpose, distinct personal experience, no scorecards or excess controls and bio/interests outside approved initial scope confirmed under PD-041. Precise minimal field selection, editing, visibility and layout remain PH-011/015, constrained by PD-036. PH-009 outcome: see ../09-experience-architecture/personal-experience.mdx. Unresolved scope is moved with history to PH-011."
     },
     {
       "id": "DT-015",
@@ -227,13 +234,17 @@
     {
       "id": "DT-021",
       "title": "Practice experience, navigation, and detailed participation flows",
-      "status": "resolved",
+      "status": "open",
       "reason": "PH-004 establishes conceptual practice semantics without fixing indicators, controls, navigation, screens, or detailed flows.",
-      "target_phase": "PH-009",
+      "target_phase": "PH-010",
       "depends_on": ["PD-016", "PD-017", "PD-018", "PD-041"],
       "reconcile_in": ["PH-010", "PH-011"],
-      "notes": "Include existing-Journey indicators, conscious discovery-context association, planning/revision/replacement/withdrawal/reiteration/refinement interactions, pause/resume and conclusion controls, and logical prerequisite presentation. PH-011 must address detailed independent cancellation/withdrawal of never-started undertakings; the parent-Journey-conclusion account exception does not apply to those independent cases. Do not reopen settled semantics or impose a rigid self-review/feedback sequence. PH-007 PD-031–PD-035 adds coherent chronology, entries/replies, author edit timing, references/supporting-media needs, prose-first final self-review and retrospective/successive-Journey continuity; historical assessment/discovery association and meaningful-version-change awareness. PH-010 owns organization/navigation, PH-011 detailed flows/edge cases including accidental closure. No automatic copy/new Journey/guide restart, general reopen, independent journal or mandatory recording is inferred. History-sharing controls/disclosure-awareness coordinate DT-029/030. PH-009 canonicalization: PH-009 coherent individual-Journey history and return confirmed under PD-041. PH-010/011 own organization, lifecycle, recovery and reflection flows; cross-Journey synthesis is an uncommitted strong future candidate.",
-      "resolution_artifact": "../09-experience-architecture/personal-experience.mdx"
+      "moves": [{
+        "from_phase": "PH-009",
+        "to_phase": "PH-010",
+        "reason": "PH-009 confirmed PD-041's coherent Journey/history experience; PH-010 owns its organization and PH-011 its detailed interactions."
+      }],
+      "notes": "Include existing-Journey indicators, conscious discovery-context association, planning/revision/replacement/withdrawal/reiteration/refinement interactions, pause/resume and conclusion controls, and logical prerequisite presentation. PH-011 must address detailed independent cancellation/withdrawal of never-started undertakings; the parent-Journey-conclusion account exception does not apply to those independent cases. Do not reopen settled semantics or impose a rigid self-review/feedback sequence. PH-007 PD-031–PD-035 adds coherent chronology, entries/replies, author edit timing, references/supporting-media needs, prose-first final self-review and retrospective/successive-Journey continuity; historical assessment/discovery association and meaningful-version-change awareness. PH-010 owns organization/navigation, PH-011 detailed flows/edge cases including accidental closure. No automatic copy/new Journey/guide restart, general reopen, independent journal or mandatory recording is inferred. History-sharing controls/disclosure-awareness coordinate DT-029/030. PH-009 canonicalization: PH-009 coherent individual-Journey history and return confirmed under PD-041. PH-010/011 own organization, lifecycle, recovery and reflection flows; cross-Journey synthesis is an uncommitted strong future candidate. PH-009 outcome: see ../09-experience-architecture/personal-experience.mdx. Unresolved scope is moved with history to PH-010."
     },
     {
       "id": "DT-022",
@@ -279,25 +290,33 @@
     {
       "id": "DT-026",
       "title": "Assessment recommendation count, ties, presentation, and interaction",
-      "status": "resolved",
+      "status": "open",
       "reason": "PD-019 settles initial scale and recommendation priorities but not exact recommendation count, tie-breaking, presentation, or interaction mechanics.",
-      "target_phase": "PH-009",
+      "target_phase": "PH-011",
       "depends_on": ["PD-019", "PD-041"],
       "reconcile_in": ["PH-011"],
-      "notes": "Keep any assessed विधान selectable and preserve comparatively lower-rated recommendations even when all responses are Often/Always. Do not turn future contextual/history algorithms or alternate scales into implementation requirements. PH-007 PD-034/035 adds historical-assessment navigation, preserved response/context presentation, choosing old/recent/direct discovery, conscious association and meaningful catalog-version change awareness before new practice. Coordinate DT-021/027; no latest-assessment gate, compulsory reassessment, automatic regression judgment or new history-based recommendation engine. PH-009 canonicalization: PH-009 manageable highlighted recommendations plus full results confirmed under PD-041; PH-011 retains exact count, ties, order and interaction.",
-      "resolution_artifact": "../09-experience-architecture/personal-experience.mdx"
+      "moves": [{
+        "from_phase": "PH-009",
+        "to_phase": "PH-011",
+        "reason": "PH-009 confirmed PD-041's manageable assessment highlights; counts, ties and presentation within PD-019's fixed priority remain PH-011 work."
+      }],
+      "notes": "Keep any assessed विधान selectable and preserve comparatively lower-rated recommendations even when all responses are Often/Always. Do not turn future contextual/history algorithms or alternate scales into implementation requirements. PH-007 PD-034/035 adds historical-assessment navigation, preserved response/context presentation, choosing old/recent/direct discovery, conscious association and meaningful catalog-version change awareness before new practice. Coordinate DT-021/027; no latest-assessment gate, compulsory reassessment, automatic regression judgment or new history-based recommendation engine. PH-009 canonicalization: PH-009 manageable highlighted recommendations plus full results confirmed under PD-041; PH-011 retains count, ties and display ordering within PD-019's Never → Sometimes → Often → Always priority, plus interactions. PH-009 outcome: see ../09-experience-architecture/personal-experience.mdx. Unresolved scope is moved with history to PH-011."
     },
     {
       "id": "DT-027",
       "title": "Knowledge discovery, authoring, and reference experiences",
-      "status": "resolved",
+      "status": "open",
       "reason": "PH-005 confirms knowledge and catalog concepts without deciding discovery, prominence, editor experience, detailed authoring journeys, or reference interactions.",
-      "target_phase": "PH-009",
+      "target_phase": "PH-010",
       "depends_on": ["PD-021", "PD-022", "PD-023", "PD-024", "PD-042"],
       "reconcile_in": ["PH-010", "PH-011", "PH-016"],
       "downstream_phases": ["PH-013", "PH-014", "PH-015"],
-      "notes": "Design browsing/search/navigation, foundational/official/curated standing and prominence, Resource/Section discovery via types/tags/developmental links, relevant undertaking catalog selection, and optional विधान-description presentation in assessment/browsing/Journeys. PH-011 owns detailed create/edit/publish/withdraw, reference and unavailable-reference interactions. Markdown versus rich-text/block editor remains open for experience and PH-016 architecture (DT-020); components, motion/interactions and screens belong to PH-013–015. Evaluate genuine discovery needs without treating old pinning/recommendation examples as approved features or introducing Collections, submission workflows, mandatory Resource history, or an undertaking recommendation engine. Explicitly retain maintenance/authoring experiences and detailed change/retirement interactions for PD-013's गुण, उपगुण, उणीवा and गुणदर्शक विधान catalogs, coordinated with authority in DT-012, assessment/Journey/reference/history implications in DT-025 and data continuity in DT-020. This deferral does not impose Resource lifecycle or version-history semantics on developmental catalogs. PH-007 PD-035 requires comprehensive maintenance/change-awareness for all four developmental catalogs: identity versus semantic version, minor corrections, retirement/reclassification, dependent active statements and associated lacunae, valid parent relationships, impact before confirmation, validation/errors and historical relationship context. PH-010 owns destinations/authorized navigation; PH-011 dependency handling/invalid-relationship prevention and detailed flows; PH-012 terminology, PH-013–015 design. Awareness of current meaning applies when new practice starts from old assessments. Elaborate version-management/editorial approval systems are not approved by comprehensiveness; authority DT-012 and representation/continuity DT-020 remain separate. PH-009 canonicalization: PH-009 deliberate discovery, global curator-led selections, public authored discoverability and knowledge/catalog stewardship confirmed under PD-042. PH-010/011 and PH-013–016 own navigation, editorial, reference, semantic-change, validation and editor details.",
-      "resolution_artifact": "../09-experience-architecture/discovery-and-community.mdx"
+      "moves": [{
+        "from_phase": "PH-009",
+        "to_phase": "PH-010",
+        "reason": "PH-009 confirmed PD-042's discovery and stewardship direction; PH-010 owns organization, followed by PH-011 authoring and maintenance workflows."
+      }],
+      "notes": "Design browsing/search/navigation, foundational/official/curated standing and prominence, Resource/Section discovery via types/tags/developmental links, relevant undertaking catalog selection, and optional विधान-description presentation in assessment/browsing/Journeys. PH-011 owns detailed create/edit/publish/withdraw, reference and unavailable-reference interactions. Markdown versus rich-text/block editor remains open for experience and PH-016 architecture (DT-020); components, motion/interactions and screens belong to PH-013–015. Evaluate genuine discovery needs without treating old pinning/recommendation examples as approved features or introducing Collections, submission workflows, mandatory Resource history, or an undertaking recommendation engine. Explicitly retain maintenance/authoring experiences and detailed change/retirement interactions for PD-013's गुण, उपगुण, उणीवा and गुणदर्शक विधान catalogs, coordinated with authority in DT-012, assessment/Journey/reference/history implications in DT-025 and data continuity in DT-020. This deferral does not impose Resource lifecycle or version-history semantics on developmental catalogs. PH-007 PD-035 requires comprehensive maintenance/change-awareness for all four developmental catalogs: identity versus semantic version, minor corrections, retirement/reclassification, dependent active statements and associated lacunae, valid parent relationships, impact before confirmation, validation/errors and historical relationship context. PH-010 owns destinations/authorized navigation; PH-011 dependency handling/invalid-relationship prevention and detailed flows; PH-012 terminology, PH-013–015 design. Awareness of current meaning applies when new practice starts from old assessments. Elaborate version-management/editorial approval systems are not approved by comprehensiveness; authority DT-012 and representation/continuity DT-020 remain separate. PH-009 canonicalization: PH-009 deliberate discovery, global curator-led selections, public authored discoverability and knowledge/catalog stewardship confirmed under PD-042. PH-010/011 and PH-013–016 own navigation, editorial, reference, semantic-change, validation and editor details. Curator awareness of later author edits to featured content remains an open experience question; no automatic alert or editorial ownership is implied. PH-009 outcome: see ../09-experience-architecture/discovery-and-community.mdx. Unresolved scope is moved with history to PH-010."
     },
     {
       "id": "DT-028",
@@ -324,14 +343,18 @@
     {
       "id": "DT-030",
       "title": "Community experience, terminology, and detailed flows",
-      "status": "resolved",
+      "status": "open",
       "reason": "PH-006 confirms conceptual community capabilities while deferring discovery, authoring, management and detailed interaction/state rules.",
-      "target_phase": "PH-009",
+      "target_phase": "PH-010",
       "depends_on": ["PD-025", "PD-026", "PD-027", "PD-028", "PD-037", "PD-030", "PD-040", "PD-042"],
       "reconcile_in": ["PH-010", "PH-011", "PH-012"],
       "downstream_phases": ["PH-013", "PH-014", "PH-015", "PH-016"],
-      "notes": "Cover authored-content creation/discovery and nested discussion; Profile/follower/following/request-management views and timing; contextual private communication; category defaults and individual audiences; publication, optional working drafts, unpublish/republish/removal; reporting/blocking and detailed transitions. Reconcile re-request/expiry/duplicate/blocked-state interactions with DT-029 policy and notifications under DT-008, preserving no explicit follow-decline notification. Final authored-content/appreciation language belongs to PH-012; editor/component/interaction/screens to PH-013–015 and architecture to DT-020. Exact formats/media/attachments are not decided. Evaluate discovery needs without assuming a social feed, recommendation engine or every possible messaging feature. Reconcile PH-007 developmental-entry/reply purpose and one private conversation per pair with community experience, without automatically converting messages/content into practice history. Journey history-sharing experience coordinates DT-021 and policy DT-029; no entry-level audience controls or separate Journey chat. PH-009 canonicalization: PH-009 Discover/Following, voluntary participation, meaningful discussion, coherent responsibilities and safety confirmed under PD-040/042. PH-010/011/012 and PH-013–016 own navigation, publishing, messaging, requests, moderation and presentation.",
-      "resolution_artifact": "../09-experience-architecture/discovery-and-community.mdx"
+      "moves": [{
+        "from_phase": "PH-009",
+        "to_phase": "PH-010",
+        "reason": "PH-009 confirmed PD-040 and PD-042's community direction; PH-010 owns organization, with detailed publication, communication and safety flows in PH-011."
+      }],
+      "notes": "Cover authored-content creation/discovery and nested discussion; Profile/follower/following/request-management views and timing; contextual private communication; category defaults and individual audiences; publication, optional working drafts, unpublish/republish/removal; reporting/blocking and detailed transitions. Reconcile re-request/expiry/duplicate/blocked-state interactions with DT-029 policy and notifications under DT-008, preserving no explicit follow-decline notification. Final authored-content/appreciation language belongs to PH-012; editor/component/interaction/screens to PH-013–015 and architecture to DT-020. Exact formats/media/attachments are not decided. Evaluate discovery needs without assuming a social feed, recommendation engine or every possible messaging feature. Reconcile PH-007 developmental-entry/reply purpose and one private conversation per pair with community experience, without automatically converting messages/content into practice history. Journey history-sharing experience coordinates DT-021 and policy DT-029; no entry-level audience controls or separate Journey chat. PH-009 canonicalization: PH-009 Discover/Following, voluntary participation, meaningful discussion, coherent responsibilities and safety confirmed under PD-040/042. PH-010/011/012 and PH-013–016 own navigation, publishing, messaging, requests, moderation and presentation. PH-009 outcome: see ../09-experience-architecture/discovery-and-community.mdx. Unresolved scope is moved with history to PH-010."
     },
     {
       "id": "DT-031",
