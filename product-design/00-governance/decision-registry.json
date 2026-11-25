@@ -282,6 +282,34 @@
       "status": "confirmed",
       "canonical_home": "../08-permissions-and-privacy/lifecycle.mdx",
       "summary": "Common deletion recovery, Solo Journey restoration, account exit, suspension and Admin continuity."
+    },
+    {
+      "id": "PD-040",
+      "title": "Coherent participation and continuity",
+      "status": "confirmed",
+      "canonical_home": "../09-experience-architecture/participation-and-entry.mdx",
+      "summary": "A coherent Vratarthi experience across voluntary learning, practice and additional responsibilities; preserve entry intentions, with contextual introductions and accessible supporting functions."
+    },
+    {
+      "id": "PD-041",
+      "title": "Personal development without scorecards",
+      "status": "confirmed",
+      "canonical_home": "../09-experience-architecture/personal-experience.mdx",
+      "summary": "Profiles support identity, connection and deliberately shared contributions without public developmental scorecards or initial free-form bio/interests; meaningful individual-Journey history and agency-preserving assessment recommendations."
+    },
+    {
+      "id": "PD-042",
+      "title": "Purposeful knowledge and community discovery",
+      "status": "confirmed",
+      "canonical_home": "../09-experience-architecture/discovery-and-community.mdx",
+      "summary": "Deliberate search/exploration plus global curator-led Discover and relationship-led Following; distinct public authored content and purposeful non-compulsive participation."
+    },
+    {
+      "id": "PD-043",
+      "title": "Attention in service of agency",
+      "status": "confirmed",
+      "canonical_home": "../09-experience-architecture/attention-and-reminders.mdx",
+      "summary": "Relevant contextual/cross-context awareness, discovery distinct from notifications, optional low-friction user-selected reminders and no inactivity-pressure re-engagement."
     }
   ]
 }
