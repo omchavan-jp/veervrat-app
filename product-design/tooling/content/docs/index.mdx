@@ -1,1 +1,26 @@
-../../../README.mdx
+---
+title: Veervrat redesign workspace
+description: Start here for the structure and governance of the redesign workspace.
+---
+
+# Veervrat redesign workspace
+
+> **Map:** This is the canonical workspace for redesign decisions and design artifacts. Start with the [product-model map](./01-product-model/README.mdx) and its [confirmed North Star](./01-product-model/north-star.mdx), then the completed [Actors & Relationships](./02-actors-and-relationships/README.mdx) and [ontology/domain model](./03-ontology-and-domain-model/README.mdx) phases. Use the [design roadmap](./00-governance/design-roadmap.mdx), [deferred topics](./00-governance/deferred-topics.mdx), [working method](./00-governance/working-method.mdx), and [decision log](./00-governance/decision-log.mdx) for scope and traceability.
+
+## What lives here
+
+- **Governance** defines how sources, decisions, proposals, and open questions are handled.
+- **Product model** begins with six confirmed North Star and agency decisions. Further product and experience design will be added only as decisions are made and reviewed.
+- **MDX** is the canonical home for readable narrative and structured design notes.
+- **D2** is the canonical visual source for diagrams. Rendered images are outputs, never the source.
+- **Tooling** provides an optional Fumadocs presentation layer and checks. The source files remain usable without it.
+
+## Current state
+
+PH-001–PH-008 are complete. PH-009 is current, with [review-stage experience-architecture canonicalization](./09-experience-architecture/README.mdx) derived from user-confirmed discussions and awaiting independent review; the phase is **not yet closed**. See the [PH-009 reconciliation](./09-experience-architecture/reconciliation.mdx). PH-010–016 remain planned; no app implementation is authorized.
+
+The registry preserves all earlier decisions, including the supersessions of PD-010 (historical) and PD-029 (historical), and adds PD-040–PD-043 for PH-009 review. PH-004's incoming DT-007/015/016/018 remain resolved; PH-005 resolves DT-004 conceptually. Bounded downstream questions remain in the [deferred register](./00-governance/deferred-topics.mdx), while uncommitted candidates are not feature promises. The [roadmap](./00-governance/design-roadmap.mdx) preserves PH-009 completeness review, PH-016 transition planning, and redesign-first incremental evolution after holistic design.
+
+## Checks
+
+From the repository root, run `node product-design/tooling/scripts/validate.mjs`. It checks MDX links, decision references and registry shape, and parses/renders D2 files when the D2 CLI is installed. See `product-design/tooling/README.md` for setup and renderer commands.
